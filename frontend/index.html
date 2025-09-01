@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FloresYa - Tu floristería en línea de confianza. Hermosos ramos, arreglos florales y plantas para toda ocasión. Entrega a domicilio en Venezuela.">
+    <meta name="keywords" content="flores, floristería, ramos, arreglos florales, plantas, Venezuela, entrega domicilio">
+    <title>FloresYa - Tu Floristería en Línea</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/styles.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="FloresYa - Tu Floristería en Línea">
+    <meta property="og:description" content="Hermosos ramos, arreglos florales y plantas para toda ocasión. Entrega a domicilio en Venezuela.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://floresya.com">
+    <meta property="og:image" content="/images/og-image.jpg">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <img src="/images/logoFloresYa.jpeg" alt="FloresYa Logo" class="logo-img me-2">
+                <span class="brand-text">FloresYa</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#productos">Productos</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-database-fill"></i> Test
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/pages/test.html">Test Original</a></li>
+                            <li><a class="dropdown-item" href="/pages/test-inline.html">Test Inline (Funcional)</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="categoriesDropdownToggle">
+                            Categorías
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="categoriesDropdownToggle" id="categoriesDropdown">
+                            <!-- Categories will be loaded dynamically -->
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="occasionsDropdownToggle">
+                            Ocasiones
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="occasionsDropdownToggle">
+                            <li><a class="dropdown-item" href="#" data-occasion="amor">💖 Amor</a></li>
+                            <li><a class="dropdown-item" href="#" data-occasion="birthday">🎂 Cumpleaños</a></li>
+                            <li><a class="dropdown-item" href="#" data-occasion="anniversary">💍 Aniversario</a></li>
+                            <li><a class="dropdown-item" href="#" data-occasion="graduation">🎓 Graduación</a></li>
+                            <li><a class="dropdown-item" href="#" data-occasion="friendship">🤝 Día de la Amistad</a></li>
+                            <li><a class="dropdown-item" href="#" data-occasion="condolencia">🕊️ Condolencias</a></li>
+                            <li><a class="dropdown-item" href="#" data-occasion="mother">👩 Día de la Madre</a></li>
+                            <li><a class="dropdown-item" href="#" data-occasion="yellow_flower">🌻 Flor Amarilla</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="#" id="cartToggle">
+                            <i class="bi bi-bag"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCount">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown" id="userDropdown" style="display: none;">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" id="userMenu">
+                            <i class="bi bi-person-circle"></i>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" id="viewProfile">Mi Perfil</a></li>
+                            <li><a class="dropdown-item" href="#" id="viewOrders">Mis Pedidos</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logoutBtn">Cerrar Sesión</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item" id="loginBtn">
+                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Iniciar Sesión</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section text-white text-center py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold mb-4">Flores Frescas Para Toda Ocasión</h1>
+                    <p class="lead mb-4">Descubre nuestra hermosa colección de ramos, arreglos florales y plantas. Entrega fresca y puntual en toda Venezuela.</p>
+                    <a href="#productos" class="btn btn-light btn-lg">Ver Productos</a>
+                </div>
+                <div class="col-lg-6">
+                    <img src="/images/hero-flowers.jpg" alt="Hermosas flores" class="img-fluid rounded shadow" style="max-height: 400px; object-fit: cover;">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Special Sections Navigation -->
+    <section class="special-sections py-4 bg-light">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-md-6 mb-3">
+                    <a href="#" class="special-link text-decoration-none" onclick="floresyaApp.showFloresNovias()">
+                        <div class="special-card p-4 bg-white rounded shadow-sm h-100 d-flex align-items-center justify-content-center">
+                            <div>
+                                <i class="bi bi-suit-heart-fill text-primary-custom mb-2" style="font-size: 2.5rem;"></i>
+                                <h4 class="text-primary-custom fw-bold">Flores Ya Novias</h4>
+                                <p class="text-muted mb-0">Arreglos especiales para bodas</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="special-card p-4 bg-white rounded shadow-sm h-100 d-flex align-items-center justify-content-center">
+                        <div>
+                            <i class="bi bi-clock-fill text-secondary mb-2" style="font-size: 2.5rem;"></i>
+                            <h4 class="text-secondary fw-bold">Próximamente</h4>
+                            <p class="text-muted mb-0">Nuevos servicios en camino</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dynamic Image Carousel -->
+    <section class="dynamic-carousel py-5">
+        <div class="container">
+            <div class="text-center mb-4">
+                <h3 class="fw-bold text-primary-custom" id="carouselSectionTitle">Nuestras Creaciones Destacadas</h3>
+                <p class="text-muted" id="carouselSectionSubtitle">Descubre nuestros arreglos más populares</p>
+            </div>
+            <div class="carousel-container">
+                <div class="image-carousel" id="dynamicCarousel">
+                    <!-- Dynamic images will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Products -->
+    <section id="productos" class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Productos Destacados</h2>
+                <p class="text-muted">Nuestras flores más populares y arreglos especiales</p>
+            </div>
+            
+            <!-- Search and Filters -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Buscar productos..." id="searchInput">
+                        <button class="btn btn-outline-success" type="button" id="searchBtn">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="categoryFilter">
+                        <option value="">Todas las categorías</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="sortFilter">
+                        <option value="created_at:DESC">Más recientes</option>
+                        <option value="price:ASC">Precio: Menor a mayor</option>
+                        <option value="price:DESC">Precio: Mayor a menor</option>
+                        <option value="name:ASC">Nombre: A-Z</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row" id="productsContainer">
+                <!-- Products will be loaded here -->
+            </div>
+            
+            <!-- Pagination -->
+            <nav aria-label="Productos" class="mt-4">
+                <ul class="pagination justify-content-center" id="pagination">
+                </ul>
+            </nav>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-md-3 mb-4">
+                    <div class="feature-item">
+                        <i class="bi bi-flower1 text-success mb-3" style="font-size: 3rem;"></i>
+                        <h5>Flores Frescas</h5>
+                        <p class="text-muted">Garantizamos la frescura y calidad de todas nuestras flores</p>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="feature-item">
+                        <i class="bi bi-truck text-success mb-3" style="font-size: 3rem;"></i>
+                        <h5>Entrega Rápida</h5>
+                        <p class="text-muted">Entregamos en el día que elijas, puntual y seguro</p>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="feature-item">
+                        <i class="bi bi-heart text-success mb-3" style="font-size: 3rem;"></i>
+                        <h5>Hechos con Amor</h5>
+                        <p class="text-muted">Cada arreglo es creado con dedicación y cuidado especial</p>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="feature-item">
+                        <i class="bi bi-shield-check text-success mb-3" style="font-size: 3rem;"></i>
+                        <h5>Garantía Total</h5>
+                        <p class="text-muted">Si no estás satisfecho, te devolvemos tu dinero</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-flower1 me-2"></i>FloresYa
+                    </h5>
+                    <p class="mb-3">Tu floristería en línea de confianza. Llevamos la belleza de las flores directamente a tu hogar.</p>
+                    <div class="social-links">
+                        <a href="#" class="text-white me-3"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="text-white me-3"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="text-white me-3"><i class="bi bi-twitter"></i></a>
+                        <a href="#" class="text-white"><i class="bi bi-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 mb-4">
+                    <h6 class="fw-bold mb-3">Productos</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white-50">Rosas</a></li>
+                        <li><a href="#" class="text-white-50">Bouquets</a></li>
+                        <li><a href="#" class="text-white-50">Plantas</a></li>
+                        <li><a href="#" class="text-white-50">Arreglos</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 mb-4">
+                    <h6 class="fw-bold mb-3">Ocasiones</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white-50" data-occasion="amor">Amor</a></li>
+                        <li><a href="#" class="text-white-50" data-occasion="birthday">Cumpleaños</a></li>
+                        <li><a href="#" class="text-white-50" data-occasion="anniversary">Aniversarios</a></li>
+                        <li><a href="#" class="text-white-50" data-occasion="mother">Día de la Madre</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <h6 class="fw-bold mb-3">Contacto</h6>
+                    <p class="mb-2"><i class="bi bi-geo-alt me-2"></i>Caracas, Venezuela</p>
+                    <p class="mb-2"><i class="bi bi-telephone me-2"></i>+58412-1234567</p>
+                    <p class="mb-2"><i class="bi bi-envelope me-2"></i>contacto@floresya.com</p>
+                    <p class="small text-white-50 mb-0">
+                        <i class="bi bi-clock me-2"></i>
+                        Lun-Vie: 8:00-18:00 | Sáb: 9:00-16:00
+                    </p>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; 2024 FloresYa. Todos los derechos reservados.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-white-50 me-3">Términos y Condiciones</a>
+                    <a href="#" class="text-white-50">Política de Privacidad</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Shopping Cart Offcanvas -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title">Carrito de Compras</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div id="cartItems">
+                <!-- Cart items will be loaded here -->
+            </div>
+            <div class="cart-total mt-3 pt-3 border-top">
+                <div class="d-flex justify-content-between mb-3">
+                    <strong>Total: $<span id="cartTotal">0.00</span></strong>
+                </div>
+                <button class="btn btn-success w-100" id="checkoutBtn">Proceder al Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div class="modal fade" id="productModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="productModalTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="productModalBody">
+                    <!-- Product details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Iniciar Sesión</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="loginEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="loginEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="loginPassword" class="form-label">Contraseña</label>
+                            <input type="password" class="form-control" id="loginPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Iniciar Sesión</button>
+                    </form>
+                    <div class="text-center mt-3">
+                        <p>¿No tienes cuenta? <a href="#" data-bs-toggle="modal" data-bs-target="#registerModal" data-bs-dismiss="modal">Regístrate aquí</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal fade" id="registerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Crear Cuenta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="registerForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="firstName" class="form-label">Nombre</label>
+                                    <input type="text" class="form-control" id="firstName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="lastName" class="form-label">Apellido</label>
+                                    <input type="text" class="form-control" id="lastName" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="registerEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" id="phone" placeholder="+58414-1234567">
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerPassword" class="form-label">Contraseña</label>
+                            <input type="password" class="form-control" id="registerPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Crear Cuenta</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flores Ya Novias Modal -->
+    <div class="modal fade" id="floresNoviasModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-pink text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-suit-heart-fill me-2"></i>
+                        Flores Ya Novias - Arreglos Especiales para tu Boda
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="flores-novias-section">
+                        <div class="container-fluid">
+                            <div class="row">
+                                <div class="col-lg-6 mb-4">
+                                    <div class="novias-card">
+                                        <div class="novias-icon">
+                                            <i class="bi bi-heart-fill"></i>
+                                        </div>
+                                        <h3 class="text-pink mb-3">Tu Día Especial Merece Flores Perfectas</h3>
+                                        <p class="mb-4">
+                                            En FloresYa Novias, entendemos que tu boda es el día más importante de tu vida. 
+                                            Por eso, creamos arreglos florales únicos y personalizados que harán de tu celebración 
+                                            un momento inolvidable.
+                                        </p>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <div class="feature-highlight">
+                                                    <i class="bi bi-flower1 text-pink mb-2"></i>
+                                                    <h6>Ramos de Novia</h6>
+                                                    <p class="small text-muted">Diseños únicos personalizados para ti</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <div class="feature-highlight">
+                                                    <i class="bi bi-gem text-pink mb-2"></i>
+                                                    <h6>Decoración de Altares</h6>
+                                                    <p class="small text-muted">Ambientación floral completa</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <div class="feature-highlight">
+                                                    <i class="bi bi-people-fill text-pink mb-2"></i>
+                                                    <h6>Centros de Mesa</h6>
+                                                    <p class="small text-muted">Elegancia para cada mesa</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <div class="feature-highlight">
+                                                    <i class="bi bi-suit-heart text-pink mb-2"></i>
+                                                    <h6>Arcos Florales</h6>
+                                                    <p class="small text-muted">El marco perfecto para tus votos</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 mb-4">
+                                    <div class="novias-contact-card">
+                                        <h4 class="text-pink mb-4">Solicita tu Consulta Personalizada</h4>
+                                        <form id="noviasContactForm" class="needs-validation" novalidate>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="noviaName" class="form-label">Nombre de la Novia</label>
+                                                    <input type="text" class="form-control" id="noviaName" required>
+                                                    <div class="invalid-feedback">
+                                                        Por favor ingresa tu nombre
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="noviaPhone" class="form-label">Teléfono</label>
+                                                    <input type="tel" class="form-control" id="noviaPhone" required>
+                                                    <div class="invalid-feedback">
+                                                        Por favor ingresa tu teléfono
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="noviaEmail" class="form-label">Email</label>
+                                                <input type="email" class="form-control" id="noviaEmail" required>
+                                                <div class="invalid-feedback">
+                                                    Por favor ingresa un email válido
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="weddingDate" class="form-label">Fecha de Boda</label>
+                                                    <input type="date" class="form-control" id="weddingDate" required>
+                                                    <div class="invalid-feedback">
+                                                        Por favor selecciona la fecha de boda
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="guestCount" class="form-label">Cantidad de Invitados</label>
+                                                    <select class="form-select" id="guestCount" required>
+                                                        <option value="">Selecciona...</option>
+                                                        <option value="1-50">1 - 50 invitados</option>
+                                                        <option value="51-100">51 - 100 invitados</option>
+                                                        <option value="101-200">101 - 200 invitados</option>
+                                                        <option value="201+">Más de 200 invitados</option>
+                                                    </select>
+                                                    <div class="invalid-feedback">
+                                                        Por favor selecciona la cantidad de invitados
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="weddingVenue" class="form-label">Lugar de Celebración</label>
+                                                <input type="text" class="form-control" id="weddingVenue" placeholder="Nombre del venue o dirección">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="noviasMessage" class="form-label">Cuéntanos sobre tu boda soñada</label>
+                                                <textarea class="form-control" id="noviasMessage" rows="4" placeholder="Describe tu estilo preferido, colores, tema de la boda, etc."></textarea>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="budget" class="form-label">Presupuesto Aproximado (USD)</label>
+                                                <select class="form-select" id="budget">
+                                                    <option value="">Prefiero no especificar</option>
+                                                    <option value="100-300">$100 - $300</option>
+                                                    <option value="300-600">$300 - $600</option>
+                                                    <option value="600-1000">$600 - $1,000</option>
+                                                    <option value="1000+">Más de $1,000</option>
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary-custom btn-lg w-100">
+                                                <i class="bi bi-send me-2"></i>Solicitar Consulta Gratuita
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-5">
+                                <div class="col-12 text-center">
+                                    <h4 class="text-pink mb-4">¿Por qué elegir FloresYa Novias?</h4>
+                                    <div class="row">
+                                        <div class="col-md-3 mb-4">
+                                            <div class="feature-item">
+                                                <i class="bi bi-award text-primary-custom mb-3" style="font-size: 3rem;"></i>
+                                                <h6>10+ Años de Experiencia</h6>
+                                                <p class="text-muted small">Especializados en bodas exclusivas</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 mb-4">
+                                            <div class="feature-item">
+                                                <i class="bi bi-palette text-primary-custom mb-3" style="font-size: 3rem;"></i>
+                                                <h6>Diseño Personalizado</h6>
+                                                <p class="text-muted small">Cada arreglo es único y hecho a medida</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 mb-4">
+                                            <div class="feature-item">
+                                                <i class="bi bi-clock-history text-primary-custom mb-3" style="font-size: 3rem;"></i>
+                                                <h6>Puntualidad Garantizada</h6>
+                                                <p class="text-muted small">Entrega perfecta el día de tu boda</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 mb-4">
+                                            <div class="feature-item">
+                                                <i class="bi bi-headset text-primary-custom mb-3" style="font-size: 3rem;"></i>
+                                                <h6>Soporte Completo</h6>
+                                                <p class="text-muted small">Te acompañamos en cada paso</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-overlay" id="loadingSpinner">
+        <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="/js/api.js"></script>
+    <script src="/js/cart.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/main.js"></script>
+    
+</body>
+</html>
