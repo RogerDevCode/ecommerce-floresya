@@ -96,9 +96,10 @@
                 
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link position-relative" href="#" id="cartToggle">
-                            <i class="bi bi-bag"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCount">0</span>
+                        <a class="nav-link position-relative cart-icon-wrapper" href="#" id="cartToggle" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas" title="Ver carrito">
+                            <i class="bi bi-bag-heart cart-icon"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary-custom cart-badge" id="cartCount">0</span>
+                            <span class="position-absolute cart-pulse" id="cartPulse"></span>
                         </a>
                     </li>
                     <li class="nav-item dropdown" id="userDropdown" style="display: none;">
@@ -121,44 +122,16 @@
     </nav>
 
     <!-- Hero Section -->
-    <section class="hero-section text-white text-center py-5">
+    <section class="hero-section text-white text-center py-3">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-lg-6">
-                    <h1 class="display-4 fw-bold mb-4">Flores Frescas Para Toda Ocasión</h1>
-                    <p class="lead mb-4">Descubre nuestra hermosa colección de ramos, arreglos florales y plantas. Entrega fresca y puntual en toda Venezuela.</p>
+                    <h1 class="display-5 fw-bold mb-3">Flores Frescas Para Toda Ocasión</h1>
+                    <p class="lead mb-3">Descubre nuestra hermosa colección de ramos, arreglos florales y plantas. Entrega fresca y puntual en toda Venezuela.</p>
                     <a href="#productos" class="btn btn-light btn-lg">Ver Productos</a>
                 </div>
                 <div class="col-lg-6">
-                    <img src="/images/hero-flowers.jpg" alt="Hermosas flores" class="img-fluid rounded shadow" style="max-height: 400px; object-fit: cover;">
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Special Sections Navigation -->
-    <section class="special-sections py-4 bg-light">
-        <div class="container">
-            <div class="row text-center">
-                <div class="col-md-6 mb-3">
-                    <a href="#" class="special-link text-decoration-none" onclick="floresyaApp.showFloresNovias()">
-                        <div class="special-card p-4 bg-white rounded shadow-sm h-100 d-flex align-items-center justify-content-center">
-                            <div>
-                                <i class="bi bi-suit-heart-fill text-primary-custom mb-2" style="font-size: 2.5rem;"></i>
-                                <h4 class="text-primary-custom fw-bold">Flores Ya Novias</h4>
-                                <p class="text-muted mb-0">Arreglos especiales para bodas</p>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <div class="special-card p-4 bg-white rounded shadow-sm h-100 d-flex align-items-center justify-content-center">
-                        <div>
-                            <i class="bi bi-clock-fill text-secondary mb-2" style="font-size: 2.5rem;"></i>
-                            <h4 class="text-secondary fw-bold">Próximamente</h4>
-                            <p class="text-muted mb-0">Nuevos servicios en camino</p>
-                        </div>
-                    </div>
+                    <img src="/images/hero-flowers.jpg" alt="Hermosas flores" class="img-fluid rounded shadow" style="max-height: 220px; object-fit: cover;">
                 </div>
             </div>
         </div>
@@ -260,6 +233,40 @@
         </div>
     </section>
 
+    <!-- Special Sections Navigation - Call to Action -->
+    <section class="special-sections py-5 bg-gradient-primary">
+        <div class="container">
+            <div class="text-center mb-4">
+                <h3 class="fw-bold text-white">¿Buscas algo especial?</h3>
+                <p class="lead text-white-75">Descubre nuestros servicios premium y exclusivos</p>
+            </div>
+            <div class="row text-center">
+                <div class="col-md-6 mb-3">
+                    <a href="#" class="special-link text-decoration-none" onclick="floresyaApp.showFloresNovias()">
+                        <div class="special-card p-4 bg-white rounded shadow-lg h-100 d-flex align-items-center justify-content-center hover-lift">
+                            <div>
+                                <i class="bi bi-suit-heart-fill text-primary-custom mb-3" style="font-size: 3rem;"></i>
+                                <h4 class="text-primary-custom fw-bold mb-2">Flores Ya Novias</h4>
+                                <p class="text-muted mb-3">Arreglos exclusivos para el día más especial de tu vida</p>
+                                <span class="btn btn-outline-primary-custom">Conocer más</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="special-card p-4 bg-white rounded shadow-lg h-100 d-flex align-items-center justify-content-center hover-lift">
+                        <div>
+                            <i class="bi bi-lightning-fill text-warning mb-3" style="font-size: 3rem;"></i>
+                            <h4 class="text-warning fw-bold mb-2">Entrega Express</h4>
+                            <p class="text-muted mb-3">¿Necesitas flores urgente? Entregamos en 2 horas</p>
+                            <span class="btn btn-warning">Próximamente</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer class="bg-dark text-white py-5">
         <div class="container">
@@ -318,21 +325,93 @@
         </div>
     </footer>
 
-    <!-- Shopping Cart Offcanvas -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title">Carrito de Compras</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    <!-- Enhanced Shopping Cart Offcanvas -->
+    <div class="offcanvas offcanvas-end cart-offcanvas" tabindex="-1" id="cartOffcanvas" style="width: 400px;">
+        <div class="offcanvas-header bg-gradient-primary text-white">
+            <h5 class="offcanvas-title">
+                <i class="bi bi-bag-heart me-2"></i>Mi Carrito
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
         </div>
-        <div class="offcanvas-body">
-            <div id="cartItems">
-                <!-- Cart items will be loaded here -->
-            </div>
-            <div class="cart-total mt-3 pt-3 border-top">
-                <div class="d-flex justify-content-between mb-3">
-                    <strong>Total: $<span id="cartTotal">0.00</span></strong>
+        <div class="offcanvas-body p-0">
+            <!-- Cart Content -->
+            <div class="cart-content">
+                <!-- Guest Info Banner -->
+                <div id="guestBanner" class="alert alert-info mx-3 mt-3" style="display: none;">
+                    <i class="bi bi-person-circle me-2"></i>
+                    <strong>Comprando como invitado</strong>
+                    <br><small class="text-muted">Puedes registrarte después para un seguimiento completo</small>
                 </div>
-                <button class="btn btn-success w-100" id="checkoutBtn">Proceder al Checkout</button>
+
+                <!-- Empty Cart State -->
+                <div id="emptyCart" class="text-center py-5">
+                    <i class="bi bi-bag display-1 text-muted mb-3"></i>
+                    <h6 class="text-muted">Tu carrito está vacío</h6>
+                    <p class="text-muted small">¡Agrega algunos productos para comenzar!</p>
+                    <button class="btn btn-outline-primary" data-bs-dismiss="offcanvas">
+                        Explorar productos
+                    </button>
+                </div>
+
+                <!-- Cart Items -->
+                <div id="cartItems" class="px-3">
+                    <!-- Cart items will be loaded here dynamically -->
+                </div>
+            </div>
+
+            <!-- Cart Footer -->
+            <div class="cart-footer bg-light mt-auto">
+                <div class="px-3 py-3">
+                    <!-- Quick Actions -->
+                    <div id="quickActions" class="mb-3" style="display: none;">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-secondary btn-sm flex-fill" onclick="cart.clearCart()">
+                                <i class="bi bi-trash"></i> Vaciar
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm flex-fill" onclick="cart.saveForLater()">
+                                <i class="bi bi-bookmark"></i> Guardar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Subtotal -->
+                    <div id="cartSummary" style="display: none;">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span id="cartSubtotal">$0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 text-muted small">
+                            <span>Envío:</span>
+                            <span>Gratis</span>
+                        </div>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between mb-3">
+                            <strong>Total:</strong>
+                            <strong class="text-primary-custom" id="cartTotal">$0.00</strong>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div id="cartActions" style="display: none;">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary-custom btn-lg" id="floresyaCheckoutBtn">
+                                <i class="bi bi-lightning-fill me-2"></i>¡FloresYa! Express
+                            </button>
+                            <button class="btn btn-outline-success" id="regularCheckoutBtn">
+                                <i class="bi bi-credit-card me-2"></i>Checkout Normal
+                            </button>
+                        </div>
+                        
+                        <!-- Trust Indicators -->
+                        <div class="text-center mt-3">
+                            <small class="text-muted">
+                                <i class="bi bi-shield-check text-success"></i> Compra segura
+                                <span class="mx-2">|</span>
+                                <i class="bi bi-truck text-success"></i> Envío gratis
+                            </small>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

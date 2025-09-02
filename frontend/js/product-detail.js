@@ -66,8 +66,10 @@ class ProductDetail {
     setupImages() {
         this.images = [];
         
-        // Add main image
-        if (this.product.image_url) {
+        // Add main image (prioritize primary_image)
+        if (this.product.primary_image) {
+            this.images.push(this.product.primary_image);
+        } else if (this.product.image_url) {
             this.images.push(this.product.image_url);
         }
         
@@ -341,6 +343,205 @@ function buyNow() {
     setTimeout(() => {
         window.location.href = '/pages/payment.html';
     }, 500);
+}
+
+// FloresYa rapid purchase function
+function floresYaBuyNow() {
+    if (!productDetail || !productDetail.product) {
+        api.showNotification('Error: Producto no cargado', 'danger');
+        return;
+    }
+
+    const quantity = parseInt(document.getElementById('quantity').value) || 1;
+    
+    // Check stock
+    if (productDetail.product.stock_quantity < quantity) {
+        api.showNotification('Stock insuficiente', 'warning');
+        return;
+    }
+
+    // Show loading state
+    const button = document.getElementById('floresya-btn');
+    const originalText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Procesando...';
+
+    try {
+        // Check if user is logged in
+        const user = auth.getUser();
+        
+        if (!user) {
+            // Show quick guest purchase modal
+            showFloresYaGuestModal(productDetail.product, quantity);
+        } else {
+            // Add to cart and redirect
+            const cartItem = {
+                id: productDetail.product.id,
+                name: productDetail.product.name,
+                price: parseFloat(productDetail.product.price),
+                image: productDetail.images[0],
+                quantity: quantity
+            };
+            
+            productDetail.cart.addItem(cartItem);
+            showFloresYaAnimation();
+            
+            // Redirect after animation
+            setTimeout(() => {
+                window.location.href = '/pages/payment.html?floresya=true';
+            }, 1500);
+        }
+        
+    } catch (error) {
+        console.error('Error in FloresYa purchase:', error);
+        api.showNotification('Error al procesar la compra', 'danger');
+    } finally {
+        // Reset button after delay (if not redirected)
+        setTimeout(() => {
+            button.disabled = false;
+            button.innerHTML = originalText;
+        }, 2000);
+    }
+}
+
+function showFloresYaGuestModal(product, quantity) {
+    const modalHTML = `
+        <div class="modal fade" id="floresyaGuestModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-gradient-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-lightning-fill"></i> ¡FloresYa! Express
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center mb-4">
+                            <img src="${product.primary_image || product.image_url}" alt="${product.name}" 
+                                 class="img-fluid rounded" style="max-height: 180px; object-fit: cover;">
+                            <h6 class="mt-3">${product.name}</h6>
+                            <p class="text-primary-custom fw-bold">
+                                ${api.formatCurrency(product.price * quantity)} 
+                                <small class="text-muted">(${quantity} unidad${quantity > 1 ? 'es' : ''})</small>
+                            </p>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="bi bi-rocket-takeoff"></i>
+                            <strong>¡Compra súper rápida!</strong><br>
+                            Solo llena los datos y compra en 30 segundos.
+                        </div>
+
+                        <form id="floresyaGuestForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Nombre completo *</label>
+                                    <input type="text" class="form-control" id="guestNameDetail" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Teléfono *</label>
+                                    <input type="tel" class="form-control" id="guestPhoneDetail" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="guestEmailDetail" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Dirección de entrega *</label>
+                                <textarea class="form-control" id="guestAddressDetail" rows="2" 
+                                         placeholder="Dirección completa con referencias" required></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary-custom btn-lg" onclick="processFloresYaGuest(${quantity})">
+                            <i class="bi bi-lightning-fill"></i> ¡FloresYa!
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remove existing modal if any
+    const existingModal = document.getElementById('floresyaGuestModal');
+    if (existingModal) existingModal.remove();
+
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('floresyaGuestModal'));
+    modal.show();
+}
+
+function processFloresYaGuest(quantity) {
+    const form = document.getElementById('floresyaGuestForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const guestData = {
+        name: document.getElementById('guestNameDetail').value,
+        phone: document.getElementById('guestPhoneDetail').value,
+        email: document.getElementById('guestEmailDetail').value,
+        address: document.getElementById('guestAddressDetail').value
+    };
+
+    // Store guest data in session storage
+    sessionStorage.setItem('floresya_guest', JSON.stringify(guestData));
+    sessionStorage.setItem('floresya_purchase', JSON.stringify({
+        productId: productDetail.product.id,
+        quantity,
+        timestamp: Date.now()
+    }));
+
+    // Add to cart
+    const cartItem = {
+        id: productDetail.product.id,
+        name: productDetail.product.name,
+        price: parseFloat(productDetail.product.price),
+        image: productDetail.images[0],
+        quantity: quantity
+    };
+    
+    productDetail.cart.addItem(cartItem);
+
+    // Show animation
+    showFloresYaAnimation();
+
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('floresyaGuestModal'));
+    modal.hide();
+
+    // Redirect to payment
+    setTimeout(() => {
+        window.location.href = '/pages/payment.html?floresya=true&guest=true';
+    }, 1500);
+}
+
+function showFloresYaAnimation() {
+    const animationHTML = `
+        <div id="floresya-detail-animation" class="position-fixed top-50 start-50 translate-middle" 
+             style="z-index: 9999; text-align: center;">
+            <div class="bg-primary-custom text-white p-4 rounded-3 shadow-lg">
+                <i class="bi bi-lightning-fill display-1 mb-3 floresya-pulse"></i>
+                <h4 class="fw-bold">¡FloresYa!</h4>
+                <p class="mb-0">Procesando compra express...</p>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', animationHTML);
+
+    // Remove animation after delay
+    setTimeout(() => {
+        const animation = document.getElementById('floresya-detail-animation');
+        if (animation) animation.remove();
+    }, 1500);
 }
 
 function toggleCart() {

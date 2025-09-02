@@ -8,6 +8,9 @@ class AdminApp {
         this.products = [];
         this.currentOrdersPage = 1;
         this.currentPaymentsPage = 1;
+        this.selectedFiles = [];
+        this.existingImages = [];
+        this.primaryNewImageIndex = null;
         this.init();
     }
 
@@ -820,42 +823,140 @@ class AdminApp {
         return await api.handleResponse(response);
     }
 
-    // Add carousel item
-    async addCarouselItem() {
-        const title = prompt('Título de la imagen:');
-        if (!title) return;
-
-        const description = prompt('Descripción (opcional):');
-        const imageUrl = prompt('URL de la imagen:');
-        if (!imageUrl) return;
-
-        const linkUrl = prompt('URL de enlace (opcional):');
-        const displayOrder = prompt('Orden de visualización (número):') || 0;
-
-        try {
-            const response = await fetch('/api/carousel', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title,
-                    description,
-                    image_url: imageUrl,
-                    link_url: linkUrl,
-                    display_order: parseInt(displayOrder)
-                })
+    // Add carousel item with enhanced UI
+    addCarouselItem() {
+        const modalHtml = `
+            <div class="modal fade" id="carouselModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Gestionar Carrusel de Imágenes</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <ul class="nav nav-pills mb-3" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" href="#product-tab" role="tab" data-bs-toggle="tab">
+                                        <i class="bi bi-box"></i> Desde Producto
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#manual-tab" role="tab" data-bs-toggle="tab">
+                                        <i class="bi bi-pencil"></i> Manual
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#random-tab" role="tab" data-bs-toggle="tab">
+                                        <i class="bi bi-shuffle"></i> Aleatorio
+                                    </a>
+                                </li>
+                            </ul>
+                            
+                            <div class="tab-content">
+                                <!-- Product Selection Tab -->
+                                <div class="tab-pane fade show active" id="product-tab">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle"></i>
+                                        Selecciona un producto para agregarlo al carrusel con su imagen principal
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Seleccionar Producto *</label>
+                                        <select class="form-select" id="productSelect">
+                                            <option value="">Cargando productos...</option>
+                                        </select>
+                                    </div>
+                                    <div id="productPreview" class="d-none">
+                                        <div class="card">
+                                            <img id="previewImage" class="card-img-top" style="height: 200px; object-fit: cover;">
+                                            <div class="card-body">
+                                                <h6 id="previewTitle" class="card-title"></h6>
+                                                <p id="previewDescription" class="card-text"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Manual Entry Tab -->
+                                <div class="tab-pane fade" id="manual-tab">
+                                    <form id="manualCarouselForm">
+                                        <div class="mb-3">
+                                            <label class="form-label">Título *</label>
+                                            <input type="text" class="form-control" id="carouselTitle" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Descripción</label>
+                                            <textarea class="form-control" id="carouselDescription" rows="2"></textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">URL de Imagen *</label>
+                                            <input type="url" class="form-control" id="carouselImageUrl" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">URL de Enlace</label>
+                                            <input type="url" class="form-control" id="carouselLinkUrl">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Orden de Visualización</label>
+                                            <input type="number" class="form-control" id="carouselOrder" value="0" min="0">
+                                        </div>
+                                    </form>
+                                </div>
+                                
+                                <!-- Random Generation Tab -->
+                                <div class="tab-pane fade" id="random-tab">
+                                    <div class="alert alert-warning">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        <strong>¡Atención!</strong> Esta acción reemplazará todas las imágenes actuales del carrusel.
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-shuffle display-4 text-primary mb-3"></i>
+                                            <h5>Generar Carrusel Aleatorio</h5>
+                                            <p class="text-muted">Se seleccionarán automáticamente 5 productos activos con imágenes para crear un carrusel variado</p>
+                                            <button type="button" class="btn btn-primary" onclick="adminApp.generateRandomCarousel()">
+                                                <i class="bi bi-shuffle"></i> Generar Carrusel Aleatorio
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-success" id="saveCarouselBtn" onclick="adminApp.saveCarouselItem()">
+                                <i class="bi bi-check"></i> Guardar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal if any
+        const existingModal = document.getElementById('carouselModal');
+        if (existingModal) existingModal.remove();
+        
+        // Add modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Load products for selection
+        this.loadProductsForCarousel();
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('carouselModal'));
+        modal.show();
+        
+        // Update save button visibility based on active tab
+        document.querySelectorAll('#carouselModal .nav-link').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const saveBtn = document.getElementById('saveCarouselBtn');
+                if (tab.getAttribute('href') === '#random-tab') {
+                    saveBtn.style.display = 'none';
+                } else {
+                    saveBtn.style.display = 'block';
+                }
             });
-
-            const data = await response.json();
-            if (data.success) {
-                api.showNotification('Imagen agregada al carrusel', 'success');
-                this.refreshCarousel();
-            } else {
-                api.showNotification(data.message || 'Error al agregar imagen', 'error');
-            }
-        } catch (error) {
-            console.error('Error adding carousel item:', error);
-            api.showNotification('Error al agregar imagen al carrusel', 'error');
-        }
+        });
     }
 
     // Refresh carousel
@@ -1270,7 +1371,7 @@ class AdminApp {
             <tr>
                 <td>
                     <img data-responsive
-                         data-src="${product.image_url || '/images/placeholder-product.jpg'}" 
+                         data-src="${product.primary_image || product.image_url || '/images/placeholder-product.jpg'}" 
                          data-context="admin_thumb"
                          alt="${product.name}" 
                          class="img-thumbnail" 
@@ -1288,17 +1389,33 @@ class AdminApp {
                     </span>
                 </td>
                 <td>
-                    <span class="badge ${product.active ? 'bg-success' : 'bg-secondary'}">
-                        ${product.active ? 'Activo' : 'Inactivo'}
-                    </span>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" 
+                               id="activeSwitch${product.id}" 
+                               ${product.active ? 'checked' : ''}
+                               onchange="adminApp.toggleProductStatus(${product.id}, this.checked)">
+                        <label class="form-check-label" for="activeSwitch${product.id}">
+                            <span class="badge ${product.active ? 'bg-success' : 'bg-secondary'}">
+                                ${product.active ? 'Activo' : 'Inactivo'}
+                            </span>
+                        </label>
+                    </div>
                 </td>
                 <td>
                     <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary" onclick="adminApp.editProduct(${product.id})" title="Editar">
+                        <button class="btn btn-outline-primary" onclick="adminApp.editProductInline(${product.id})" title="Editar rápido">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="adminApp.showProductForm(${product.id})" title="Editar completo">
                             <i class="bi bi-pencil"></i>
                         </button>
-                        <button class="btn btn-outline-info" onclick="adminApp.viewProduct(${product.id})" title="Ver">
+                        <button class="btn btn-outline-info" onclick="adminApp.viewProduct(${product.id})" title="Ver detalles">
                             <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-outline-${product.active ? 'warning' : 'success'}" 
+                                onclick="adminApp.toggleProductStatus(${product.id}, ${!product.active})" 
+                                title="${product.active ? 'Desactivar' : 'Activar'}">
+                            <i class="bi bi-${product.active ? 'pause' : 'play'}"></i>
                         </button>
                         <button class="btn btn-outline-danger" onclick="adminApp.deleteProduct(${product.id})" title="Eliminar">
                             <i class="bi bi-trash"></i>
@@ -1494,62 +1611,8 @@ class AdminApp {
             updateImagePreview();
         }
 
-        function updateImagePreview() {
-            const totalImages = selectedFiles.length + existingImages.length;
-            
-            previewArea.innerHTML = '';
-            
-            // Show existing images (for editing)
-            existingImages.forEach((image, index) => {
-                const imageDiv = document.createElement('div');
-                imageDiv.className = 'image-preview-item d-inline-block position-relative m-1';
-                imageDiv.innerHTML = `
-                    <img src="${image.url}" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover;">
-                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle p-1" 
-                            onclick="adminApp.removeExistingImage(${index})" style="width: 20px; height: 20px; font-size: 10px;">
-                        <i class="bi bi-x"></i>
-                    </button>
-                    ${index === 0 ? '<small class="badge bg-primary position-absolute bottom-0 start-0">Principal</small>' : ''}
-                `;
-                previewArea.appendChild(imageDiv);
-            });
-            
-            // Show new selected images
-            selectedFiles.forEach((file, index) => {
-                const imageDiv = document.createElement('div');
-                imageDiv.className = 'image-preview-item d-inline-block position-relative m-1';
-                
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    imageDiv.innerHTML = `
-                        <img src="${e.target.result}" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover;">
-                        <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle p-1" 
-                                onclick="adminApp.removeSelectedImage(${index})" style="width: 20px; height: 20px; font-size: 10px;">
-                            <i class="bi bi-x"></i>
-                        </button>
-                        ${existingImages.length === 0 && index === 0 ? '<small class="badge bg-primary position-absolute bottom-0 start-0">Principal</small>' : ''}
-                    `;
-                };
-                reader.readAsDataURL(file);
-                
-                previewArea.appendChild(imageDiv);
-            });
-
-            // Update upload area text
-            const placeholder = document.getElementById('uploadPlaceholder');
-            if (totalImages > 0) {
-                placeholder.innerHTML = `
-                    <i class="bi bi-images display-6 text-muted d-block mb-1"></i>
-                    <small class="text-muted">${totalImages}/10 imágenes seleccionadas</small>
-                `;
-            } else {
-                placeholder.innerHTML = `
-                    <i class="bi bi-cloud-upload display-4 text-muted d-block mb-2"></i>
-                    <p class="text-muted mb-2">Click aquí o arrastra imágenes</p>
-                    <small class="text-muted">Máximo 10 archivos, 5MB cada uno</small>
-                `;
-            }
-        }
+        // Reference to the method for updating image preview
+        const updateImagePreview = () => this.updateImagePreview();
 
         // Store references for removal functions
         this.selectedFiles = selectedFiles;
@@ -2005,6 +2068,587 @@ class AdminApp {
         });
 
         return [headers, ...rows].join('\n');
+    }
+
+    // =============================
+    // IMAGE MANAGEMENT FUNCTIONS
+    // =============================
+    
+    setPrimaryImage(index, type) {
+        if (type === 'existing') {
+            // Mark all existing images as non-primary
+            this.existingImages.forEach(img => img.isPrimary = false);
+            // Set selected as primary
+            this.existingImages[index].isPrimary = true;
+        } else if (type === 'new') {
+            // For new images, we'll handle this in the form submission
+            this.primaryNewImageIndex = index;
+        }
+        
+        // Re-render the preview to show changes
+        const form = document.getElementById('productForm');
+        if (form) {
+            const previewArea = document.getElementById('imagePreviewArea');
+            if (previewArea) {
+                this.updateImagePreview();
+            }
+        }
+        
+        api.showNotification('Imagen principal seleccionada', 'success');
+    }
+
+    updateImagePreview() {
+        const previewArea = document.getElementById('imagePreviewArea');
+        if (!previewArea) return;
+
+        const totalImages = this.selectedFiles.length + this.existingImages.length;
+        previewArea.innerHTML = '';
+        
+        // Show existing images (for editing)
+        this.existingImages.forEach((image, index) => {
+            const imageDiv = document.createElement('div');
+            imageDiv.className = 'image-preview-item d-inline-block position-relative m-1';
+            const isPrimary = image.isPrimary || index === 0;
+            imageDiv.innerHTML = `
+                <div class="border ${isPrimary ? 'border-primary border-2' : ''} rounded p-1">
+                    <img src="${image.url}" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover;">
+                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle p-1" 
+                            onclick="adminApp.removeExistingImage(${index})" style="width: 20px; height: 20px; font-size: 10px;">
+                        <i class="bi bi-x"></i>
+                    </button>
+                    ${isPrimary ? 
+                        '<small class="badge bg-primary position-absolute bottom-0 start-0">Principal</small>' : 
+                        `<button type="button" class="btn btn-sm btn-outline-primary position-absolute bottom-0 start-0" 
+                                 onclick="adminApp.setPrimaryImage(${index}, 'existing')" style="font-size: 10px;">
+                            <i class="bi bi-star"></i>
+                         </button>`
+                    }
+                </div>
+            `;
+            previewArea.appendChild(imageDiv);
+        });
+        
+        // Show new selected images
+        this.selectedFiles.forEach((file, index) => {
+            const imageDiv = document.createElement('div');
+            imageDiv.className = 'image-preview-item d-inline-block position-relative m-1';
+            const isPrimary = (this.existingImages.length === 0 && index === 0) || 
+                             (this.primaryNewImageIndex === index);
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imageDiv.innerHTML = `
+                    <div class="border ${isPrimary ? 'border-primary border-2' : ''} rounded p-1">
+                        <img src="${e.target.result}" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover;">
+                        <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle p-1" 
+                                onclick="adminApp.removeSelectedImage(${index})" style="width: 20px; height: 20px; font-size: 10px;">
+                            <i class="bi bi-x"></i>
+                        </button>
+                        ${isPrimary ? 
+                            '<small class="badge bg-primary position-absolute bottom-0 start-0">Principal</small>' : 
+                            `<button type="button" class="btn btn-sm btn-outline-primary position-absolute bottom-0 start-0" 
+                                     onclick="adminApp.setPrimaryImage(${index}, 'new')" style="font-size: 10px;">
+                                <i class="bi bi-star"></i>
+                             </button>`
+                        }
+                    </div>
+                `;
+            };
+            reader.readAsDataURL(file);
+            
+            previewArea.appendChild(imageDiv);
+        });
+
+        // Update upload area text
+        const placeholder = document.getElementById('uploadPlaceholder');
+        if (totalImages > 0) {
+            placeholder.innerHTML = `
+                <i class="bi bi-images display-6 text-muted d-block mb-1"></i>
+                <small class="text-muted">${totalImages}/10 imágenes seleccionadas</small>
+            `;
+        } else {
+            placeholder.innerHTML = `
+                <i class="bi bi-cloud-upload display-4 text-muted d-block mb-2"></i>
+                <p class="text-muted mb-2">Click aquí o arrastra imágenes</p>
+                <small class="text-muted">Máximo 10 archivos, 5MB cada uno</small>
+            `;
+        }
+    }
+
+    // =============================
+    // ENHANCED CAROUSEL FUNCTIONS
+    // =============================
+    
+    async loadProductsForCarousel() {
+        try {
+            const response = await api.getAllProducts({ limit: 50 });
+            if (response.success && response.data.products) {
+                const select = document.getElementById('productSelect');
+                if (select) {
+                    select.innerHTML = '<option value="">Seleccione un producto...</option>' +
+                        response.data.products
+                            .filter(p => p.image_url && p.active) // Only products with images
+                            .map(p => 
+                                `<option value="${p.id}" data-image="${p.image_url}" data-name="${p.name}" data-price="${p.price}">
+                                    ${p.name} - $${p.price} USD
+                                </option>`
+                            ).join('');
+                        
+                    // Add change event listener
+                    select.addEventListener('change', this.previewSelectedProduct.bind(this));
+                }
+            }
+        } catch (error) {
+            console.error('Error loading products for carousel:', error);
+            api.showNotification('Error cargando productos', 'error');
+        }
+    }
+
+    previewSelectedProduct() {
+        const select = document.getElementById('productSelect');
+        const preview = document.getElementById('productPreview');
+        
+        if (!select || !preview) return;
+        
+        const selectedOption = select.options[select.selectedIndex];
+        
+        if (selectedOption.value) {
+            const name = selectedOption.dataset.name;
+            const image = selectedOption.dataset.image;
+            const price = selectedOption.dataset.price;
+            
+            document.getElementById('previewImage').src = image;
+            document.getElementById('previewTitle').textContent = name;
+            document.getElementById('previewDescription').textContent = `Hermoso arreglo floral - $${price} USD`;
+            
+            preview.classList.remove('d-none');
+        } else {
+            preview.classList.add('d-none');
+        }
+    }
+
+    saveCarouselItem() {
+        const activeTab = document.querySelector('#carouselModal .tab-pane.active');
+        
+        if (activeTab && activeTab.id === 'manual-tab') {
+            this.saveManualCarouselItem();
+        } else if (activeTab && activeTab.id === 'product-tab') {
+            this.saveProductCarouselItem();
+        }
+    }
+
+    saveManualCarouselItem() {
+        const title = document.getElementById('carouselTitle')?.value;
+        const description = document.getElementById('carouselDescription')?.value;
+        const imageUrl = document.getElementById('carouselImageUrl')?.value;
+        const linkUrl = document.getElementById('carouselLinkUrl')?.value;
+        const order = parseInt(document.getElementById('carouselOrder')?.value) || 0;
+        
+        if (!title || !imageUrl) {
+            api.showNotification('Por favor complete los campos requeridos', 'warning');
+            return;
+        }
+        
+        this.createCarouselImage(title, description, imageUrl, linkUrl, order);
+    }
+
+    saveProductCarouselItem() {
+        const select = document.getElementById('productSelect');
+        if (!select) return;
+        
+        const selectedOption = select.options[select.selectedIndex];
+        
+        if (!selectedOption || !selectedOption.value) {
+            api.showNotification('Por favor seleccione un producto', 'warning');
+            return;
+        }
+        
+        const title = selectedOption.dataset.name;
+        const description = `Hermoso arreglo floral - $${selectedOption.dataset.price} USD`;
+        const imageUrl = selectedOption.dataset.image;
+        const linkUrl = `/pages/product-detail.html?id=${selectedOption.value}`;
+        const order = 0; // Auto-assign order
+        
+        this.createCarouselImage(title, description, imageUrl, linkUrl, order);
+    }
+
+    async createCarouselImage(title, description, imageUrl, linkUrl, displayOrder) {
+        try {
+            api.showLoading();
+            
+            const response = await fetch('/api/carousel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title,
+                    description,
+                    image_url: imageUrl,
+                    link_url: linkUrl,
+                    display_order: displayOrder,
+                    active: true
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                api.showNotification('Imagen agregada al carrusel exitosamente', 'success');
+                await this.refreshCarousel();
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('carouselModal'));
+                if (modal) modal.hide();
+            } else {
+                api.showNotification(data.message || 'Error al agregar imagen', 'error');
+            }
+        } catch (error) {
+            console.error('Error adding carousel item:', error);
+            api.showNotification('Error al agregar imagen al carrusel', 'error');
+        } finally {
+            api.hideLoading();
+        }
+    }
+
+    async generateRandomCarousel() {
+        try {
+            if (!confirm('¿Está seguro? Esto reemplazará todas las imágenes actuales del carrusel.')) {
+                return;
+            }
+            
+            api.showLoading();
+            api.showNotification('Generando carrusel aleatorio...', 'info');
+            
+            // Get random products
+            const response = await api.getAllProducts({ limit: 50 });
+            if (!response.success || !response.data.products) {
+                api.showNotification('Error al obtener productos', 'danger');
+                return;
+            }
+            
+            // Select products with images
+            const productsWithImages = response.data.products.filter(p => p.image_url && p.active);
+            
+            if (productsWithImages.length < 3) {
+                api.showNotification('Se necesitan al menos 3 productos activos con imágenes', 'warning');
+                return;
+            }
+            
+            // Shuffle and select 5 random products
+            const randomProducts = this.shuffleArray(productsWithImages).slice(0, 5);
+            
+            // Clear existing carousel images
+            const existingResponse = await fetch('/api/carousel/admin');
+            const existingData = await existingResponse.json();
+            
+            if (existingData.success && existingData.data.images) {
+                for (const image of existingData.data.images) {
+                    await fetch(`/api/carousel/${image.id}`, { 
+                        method: 'DELETE',
+                        headers: api.getHeaders(true)
+                    });
+                }
+            }
+            
+            // Add new random images
+            for (let i = 0; i < randomProducts.length; i++) {
+                const product = randomProducts[i];
+                await fetch('/api/carousel', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        ...api.getHeaders(true)
+                    },
+                    body: JSON.stringify({
+                        title: product.name,
+                        description: `Hermoso arreglo floral - $${product.price} USD`,
+                        image_url: product.image_url,
+                        link_url: `/pages/product-detail.html?id=${product.id}`,
+                        display_order: i + 1,
+                        active: true
+                    })
+                });
+            }
+            
+            api.showNotification(`✨ Carrusel aleatorio generado con ${randomProducts.length} productos`, 'success');
+            await this.refreshCarousel();
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('carouselModal'));
+            if (modal) modal.hide();
+            
+        } catch (error) {
+            console.error('Error generating random carousel:', error);
+            api.showNotification('Error al generar carrusel aleatorio', 'danger');
+        } finally {
+            api.hideLoading();
+        }
+    }
+
+    shuffleArray(array) {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    }
+
+    // =============================
+    // PRODUCT CRUD FUNCTIONS
+    // =============================
+
+    async toggleProductStatus(productId, newStatus) {
+        try {
+            api.showLoading();
+            
+            const response = await fetch(`/api/products/${productId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...api.getHeaders(true)
+                },
+                body: JSON.stringify({
+                    active: newStatus
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Update local data
+                const productIndex = this.products.findIndex(p => p.id === productId);
+                if (productIndex !== -1) {
+                    this.products[productIndex].active = newStatus;
+                }
+                
+                const statusText = newStatus ? 'activado' : 'desactivado';
+                api.showNotification(`Producto ${statusText} exitosamente`, 'success');
+                
+                // Update the UI elements
+                this.updateProductStatusUI(productId, newStatus);
+                
+            } else {
+                api.showNotification(data.message || 'Error al cambiar estado del producto', 'error');
+                // Revert the checkbox
+                const checkbox = document.getElementById(`activeSwitch${productId}`);
+                if (checkbox) checkbox.checked = !newStatus;
+            }
+        } catch (error) {
+            console.error('Error toggling product status:', error);
+            api.showNotification('Error al cambiar estado del producto', 'error');
+            // Revert the checkbox
+            const checkbox = document.getElementById(`activeSwitch${productId}`);
+            if (checkbox) checkbox.checked = !newStatus;
+        } finally {
+            api.hideLoading();
+        }
+    }
+
+    updateProductStatusUI(productId, isActive) {
+        // Update badge
+        const badge = document.querySelector(`#activeSwitch${productId} + label .badge`);
+        if (badge) {
+            badge.className = `badge ${isActive ? 'bg-success' : 'bg-secondary'}`;
+            badge.textContent = isActive ? 'Activo' : 'Inactivo';
+        }
+        
+        // Update toggle button
+        const toggleBtn = document.querySelector(`button[onclick*="toggleProductStatus(${productId}"]`);
+        if (toggleBtn) {
+            toggleBtn.className = `btn btn-outline-${isActive ? 'warning' : 'success'} btn-sm`;
+            toggleBtn.title = isActive ? 'Desactivar' : 'Activar';
+            
+            const icon = toggleBtn.querySelector('i');
+            if (icon) {
+                icon.className = `bi bi-${isActive ? 'pause' : 'play'}`;
+            }
+            
+            // Update onclick
+            toggleBtn.setAttribute('onclick', `adminApp.toggleProductStatus(${productId}, ${!isActive})`);
+        }
+    }
+
+    async editProductInline(productId) {
+        const product = this.products.find(p => p.id === productId);
+        if (!product) {
+            api.showNotification('Producto no encontrado', 'error');
+            return;
+        }
+
+        // Create inline edit modal
+        const modalHtml = `
+            <div class="modal fade" id="quickEditModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="bi bi-pencil-square"></i> Edición Rápida
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="quickEditForm">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="mb-3">
+                                            <label class="form-label">Nombre del Producto</label>
+                                            <input type="text" class="form-control" id="quickEditName" value="${product.name || ''}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Precio (USD)</label>
+                                            <input type="number" step="0.01" class="form-control" id="quickEditPrice" value="${product.price || ''}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Stock</label>
+                                            <input type="number" class="form-control" id="quickEditStock" value="${product.stock_quantity || 0}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Categoría</label>
+                                            <select class="form-select" id="quickEditCategory">
+                                                ${this.categories ? this.categories.map(cat => 
+                                                    `<option value="${cat.id}" ${cat.id === product.category_id ? 'selected' : ''}>${cat.name}</option>`
+                                                ).join('') : ''}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Descripción</label>
+                                    <textarea class="form-control" rows="3" id="quickEditDescription">${product.description || ''}</textarea>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="quickEditActive" ${product.active ? 'checked' : ''}>
+                                            <label class="form-check-label" for="quickEditActive">Activo</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="quickEditFeatured" ${product.featured ? 'checked' : ''}>
+                                            <label class="form-check-label" for="quickEditFeatured">Destacado</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="quickEditHomepage" ${product.show_on_homepage ? 'checked' : ''}>
+                                            <label class="form-check-label" for="quickEditHomepage">En inicio</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-primary" onclick="adminApp.saveQuickEdit(${productId})">
+                                <i class="bi bi-check"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remove existing modal
+        const existingModal = document.getElementById('quickEditModal');
+        if (existingModal) existingModal.remove();
+
+        // Add modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('quickEditModal'));
+        modal.show();
+    }
+
+    async saveQuickEdit(productId) {
+        try {
+            api.showLoading();
+
+            const updateData = {
+                name: document.getElementById('quickEditName')?.value,
+                price: parseFloat(document.getElementById('quickEditPrice')?.value),
+                stock_quantity: parseInt(document.getElementById('quickEditStock')?.value),
+                category_id: parseInt(document.getElementById('quickEditCategory')?.value),
+                description: document.getElementById('quickEditDescription')?.value,
+                active: document.getElementById('quickEditActive')?.checked,
+                featured: document.getElementById('quickEditFeatured')?.checked,
+                show_on_homepage: document.getElementById('quickEditHomepage')?.checked
+            };
+
+            const response = await fetch(`/api/products/${productId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...api.getHeaders(true)
+                },
+                body: JSON.stringify(updateData)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                api.showNotification('Producto actualizado exitosamente', 'success');
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('quickEditModal'));
+                if (modal) modal.hide();
+                
+                // Refresh products
+                await this.loadProducts();
+                
+            } else {
+                api.showNotification(data.message || 'Error al actualizar producto', 'error');
+            }
+        } catch (error) {
+            console.error('Error saving quick edit:', error);
+            api.showNotification('Error al actualizar producto', 'error');
+        } finally {
+            api.hideLoading();
+        }
+    }
+
+    // Enhanced product search with status filter
+    async searchProducts() {
+        const searchTerm = document.getElementById('productSearchInput')?.value || '';
+        const categoryFilter = document.getElementById('productCategoryFilter')?.value || '';
+        const statusFilter = document.getElementById('productStatusFilter')?.value || '';
+        
+        try {
+            api.showLoading();
+            
+            const params = new URLSearchParams();
+            if (searchTerm) params.append('search', searchTerm);
+            if (categoryFilter) params.append('category_id', categoryFilter);
+            if (statusFilter !== '') params.append('active', statusFilter);
+            
+            const response = await api.getAllProducts({ 
+                limit: 50,
+                ...Object.fromEntries(params)
+            });
+            
+            if (response.success) {
+                this.products = response.data.products || [];
+                this.renderProducts();
+                
+                const resultText = `${this.products.length} producto(s) encontrado(s)`;
+                api.showNotification(resultText, 'info');
+            }
+            
+        } catch (error) {
+            console.error('Error searching products:', error);
+            api.showNotification('Error en la búsqueda', 'danger');
+        } finally {
+            api.hideLoading();
+        }
     }
 }
 

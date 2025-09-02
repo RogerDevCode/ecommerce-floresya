@@ -31,6 +31,9 @@ const Product = sequelize.define('Product', {
   additional_images: {
     type: DataTypes.JSON,
   },
+  primary_image: {
+    type: DataTypes.STRING(255),
+  },
   active: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,

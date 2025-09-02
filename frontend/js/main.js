@@ -358,7 +358,7 @@ class FloresYaApp {
                 <div class="card product-card h-100" data-product-id="${product.id}">
                     ${product.featured ? '<span class="badge-featured">Destacado</span>' : ''}
                     <img data-responsive 
-                         data-src="${product.image_url || '/images/placeholder-product.jpg'}" 
+                         data-src="${product.primary_image || product.image_url || '/images/placeholder-product.jpg'}" 
                          data-context="card"
                          class="card-img-top product-image" 
                          alt="${product.name}">
@@ -371,9 +371,14 @@ class FloresYaApp {
                         <div class="product-price mb-3">${api.formatCurrency(product.price)}</div>
                         <div class="mt-auto">
                             ${product.stock_quantity > 0 ? `
-                                <button class="btn btn-success btn-add-to-cart w-100" data-product-id="${product.id}">
-                                    <i class="bi bi-bag-plus"></i> Agregar al Carrito
-                                </button>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-primary-custom btn-floresya fw-bold" data-product-id="${product.id}" onclick="floresyaApp.buyNow(${product.id})">
+                                        <i class="bi bi-lightning-fill"></i> ¡FloresYa!
+                                    </button>
+                                    <button class="btn btn-outline-success btn-add-to-cart" data-product-id="${product.id}">
+                                        <i class="bi bi-bag-plus"></i> Al Carrito
+                                    </button>
+                                </div>
                             ` : `
                                 <button class="btn btn-secondary w-100" disabled>
                                     Sin Stock
@@ -612,7 +617,7 @@ class FloresYaApp {
         const carouselHTML = extendedProducts.map((product, index) => {
             return `
                 <div class="carousel-item" data-product-id="${product.id}">
-                    <img src="${product.image_url || '/images/placeholder.jpg'}" 
+                    <img src="${product.primary_image || product.image_url || '/images/placeholder.jpg'}" 
                          alt="${product.name}" 
                          loading="lazy">
                     <div class="carousel-overlay">
@@ -703,6 +708,202 @@ class FloresYaApp {
     showFloresNovias() {
         const modal = new bootstrap.Modal(document.getElementById('floresNoviasModal'));
         modal.show();
+    }
+
+    // =============================
+    // FLORESYA RAPID PURCHASE FUNCTIONS
+    // =============================
+
+    async buyNow(productId, quantity = 1) {
+        try {
+            // Show loading state
+            const button = document.querySelector(`[onclick*="buyNow(${productId})"]`);
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = '<i class="bi bi-hourglass-split"></i> Procesando...';
+            }
+
+            // Get product details
+            const productResponse = await api.getProductById(productId);
+            if (!productResponse.success) {
+                api.showNotification('Error al obtener información del producto', 'danger');
+                return;
+            }
+
+            const product = productResponse.data;
+
+            // Check stock
+            if (product.stock_quantity < quantity) {
+                api.showNotification('Stock insuficiente', 'warning');
+                return;
+            }
+
+            // Check if user is logged in
+            const user = auth.getUser();
+            if (!user) {
+                // Show quick login/register modal for guests
+                this.showQuickPurchaseModal(product, quantity);
+                return;
+            }
+
+            // Add to cart and redirect to checkout
+            const addResponse = await cart.addItem(productId, quantity);
+            if (addResponse.success) {
+                // Show success animation
+                this.showFloresYaAnimation();
+                
+                // Small delay for UX, then redirect
+                setTimeout(() => {
+                    window.location.href = '/pages/payment.html?floresya=true';
+                }, 1500);
+            }
+
+        } catch (error) {
+            console.error('Error in buyNow:', error);
+            api.showNotification('Error al procesar la compra', 'danger');
+        } finally {
+            // Reset button state
+            const button = document.querySelector(`[onclick*="buyNow(${productId})"]`);
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = '<i class="bi bi-lightning-fill"></i> ¡FloresYa!';
+            }
+        }
+    }
+
+    showQuickPurchaseModal(product, quantity) {
+        const modalHTML = `
+            <div class="modal fade" id="quickPurchaseModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-gradient-primary text-white">
+                            <h5 class="modal-title">
+                                <i class="bi bi-lightning-fill"></i> ¡FloresYa! Compra Express
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="text-center mb-4">
+                                <img src="${product.primary_image || product.image_url}" alt="${product.name}" 
+                                     class="img-fluid rounded" style="max-height: 200px; object-fit: cover;">
+                                <h6 class="mt-3">${product.name}</h6>
+                                <p class="text-primary-custom fw-bold">${api.formatCurrency(product.price * quantity)}</p>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i>
+                                <strong>¡Compra como invitado en 30 segundos!</strong><br>
+                                Solo necesitamos tus datos de envío.
+                            </div>
+
+                            <form id="quickPurchaseForm">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Nombre *</label>
+                                        <input type="text" class="form-control" id="guestName" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Teléfono *</label>
+                                        <input type="tel" class="form-control" id="guestPhone" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Email *</label>
+                                    <input type="email" class="form-control" id="guestEmail" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Dirección de Entrega *</label>
+                                    <textarea class="form-control" id="guestAddress" rows="2" required></textarea>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-primary-custom" onclick="floresyaApp.processQuickPurchase(${product.id}, ${quantity})">
+                                <i class="bi bi-lightning-fill"></i> ¡FloresYa!
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remove existing modal
+        const existingModal = document.getElementById('quickPurchaseModal');
+        if (existingModal) existingModal.remove();
+
+        // Add modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('quickPurchaseModal'));
+        modal.show();
+    }
+
+    async processQuickPurchase(productId, quantity) {
+        try {
+            const form = document.getElementById('quickPurchaseForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const guestData = {
+                name: document.getElementById('guestName').value,
+                phone: document.getElementById('guestPhone').value,
+                email: document.getElementById('guestEmail').value,
+                address: document.getElementById('guestAddress').value
+            };
+
+            // Store guest data in session storage
+            sessionStorage.setItem('floresya_guest', JSON.stringify(guestData));
+            sessionStorage.setItem('floresya_purchase', JSON.stringify({
+                productId, 
+                quantity,
+                timestamp: Date.now()
+            }));
+
+            // Add to cart as guest
+            await cart.addItem(productId, quantity);
+
+            // Show animation
+            this.showFloresYaAnimation();
+
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('quickPurchaseModal'));
+            modal.hide();
+
+            // Redirect to payment
+            setTimeout(() => {
+                window.location.href = '/pages/payment.html?floresya=true&guest=true';
+            }, 1500);
+
+        } catch (error) {
+            console.error('Error processing quick purchase:', error);
+            api.showNotification('Error al procesar la compra', 'danger');
+        }
+    }
+
+    showFloresYaAnimation() {
+        // Create and show success animation
+        const animationHTML = `
+            <div id="floresya-animation" class="position-fixed top-50 start-50 translate-middle" 
+                 style="z-index: 9999; text-align: center;">
+                <div class="bg-primary-custom text-white p-4 rounded-3 shadow-lg">
+                    <i class="bi bi-lightning-fill display-1 mb-3 floresya-pulse"></i>
+                    <h4 class="fw-bold">¡FloresYa!</h4>
+                    <p class="mb-0">Redirigiendo al pago...</p>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', animationHTML);
+
+        // Remove animation after delay
+        setTimeout(() => {
+            const animation = document.getElementById('floresya-animation');
+            if (animation) animation.remove();
+        }, 1500);
     }
 
     // Bind Flores Ya Novias form events

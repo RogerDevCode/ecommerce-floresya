@@ -19,6 +19,3 @@ Paso 3: Implementa JavaScript/TypeScript para login, formulario, tira dinámica 
 Paso 4: Añade calculadora carrito (USD a BCV Bolívares) con tasa manual decimal desde admin; muestra ambas monedas; suma 7$ por envío antes de pago.
 Restricciones:
 Evita frameworks, usa SQLite solo en desarrollo (migrar a MySQL/PostgreSQL después), define campos seguridad (e.g., hash contraseñas) sin activarlos, no código obsoleto.
-Ejemplos:
-Ejemplo 1: "Crea una tira de imágenes dinámica en home con links a cards." → Output:  con img responsivas y links.
-Ejemplo 2: "Desarrolla formulario compra con calculadora USD-BCV." → Output: Formulario con input total USD y conversión.
