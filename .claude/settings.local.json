@@ -32,7 +32,8 @@
       "Bash(SUPABASE_URL=https://dcbavpdlkcjdtjdkntde.supabase.co SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjYmF2cGRsa2NqZHRqZGtudGRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3Njc4OTksImV4cCI6MjA3MjM0Mzg5OX0._iOdoiQwLCW0tDxWZvTtYZbhqoBivbWLQACPiFjr_yU node backend/src/scripts/update-carousel.js)",
       "Bash(SUPABASE_URL=https://dcbavpdlkcjdtjdkntde.supabase.co SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjYmF2cGRsa2NqZHRqZGtudGRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3Njc4OTksImV4cCI6MjA3MjM0Mzg5OX0._iOdoiQwLCW0tDxWZvTtYZbhqoBivbWLQACPiFjr_yU node -e \"\nconst { createClient } = require(''@supabase/supabase-js'');\nconst supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);\nasync function checkCarousel() {\n  console.log(''Checking carousel_images table...'');\n  const { data, error } = await supabase.from(''carousel_images'').select(''*'');\n  if (error) console.error(''Error:'', error);\n  else {\n    console.log(''Carousel images found:'', data.length);\n    console.log(''Images:'', JSON.stringify(data, null, 2));\n  }\n}\ncheckCarousel();\n\")",
       "Bash(SUPABASE_URL=https://dcbavpdlkcjdtjdkntde.supabase.co SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjYmF2cGRsa2NqZHRqZGtudGRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3Njc4OTksImV4cCI6MjA3MjM0Mzg5OX0._iOdoiQwLCW0tDxWZvTtYZbhqoBivbWLQACPiFjr_yU node backend/src/scripts/add-primary-image-column.js)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []

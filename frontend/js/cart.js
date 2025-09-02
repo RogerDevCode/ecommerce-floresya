@@ -231,7 +231,7 @@ class ShoppingCart {
 
     updateGuestBanner() {
         const guestBanner = document.getElementById('guestBanner');
-        const user = auth?.getUser();
+        const user = api?.getUser();
         
         if (guestBanner) {
             if (!user && this.items.length > 0) {
@@ -261,7 +261,7 @@ class ShoppingCart {
     }
 
     async handleFloresYaCheckout() {
-        const user = auth?.getUser();
+        const user = api?.getUser();
         
         if (!user) {
             // Guest user - show quick checkout modal

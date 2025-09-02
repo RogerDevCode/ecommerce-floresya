@@ -739,7 +739,7 @@ class FloresYaApp {
             }
 
             // Check if user is logged in
-            const user = auth.getUser();
+            const user = api.getUser();
             if (!user) {
                 // Show quick login/register modal for guests
                 this.showQuickPurchaseModal(product, quantity);
