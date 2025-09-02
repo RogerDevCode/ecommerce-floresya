@@ -1787,6 +1787,225 @@ class AdminApp {
             api.hideLoading();
         }
     }
+
+    // =============================
+    // DATABASE BROWSER FUNCTIONS
+    // =============================
+
+    async loadTableData() {
+        const tableSelect = document.getElementById('tableSelect');
+        const limitSelect = document.getElementById('limitSelect');
+        const offsetInput = document.getElementById('offsetInput');
+        
+        const table = tableSelect.value;
+        if (!table) {
+            api.showNotification('Por favor selecciona una tabla', 'warning');
+            return;
+        }
+
+        const limit = parseInt(limitSelect.value) || 25;
+        const offset = parseInt(offsetInput.value) || 0;
+
+        // Show loading
+        this.showTableLoading(true);
+
+        try {
+            const response = await fetch(`/api/database/browse/${table}?limit=${limit}&offset=${offset}`);
+            const data = await response.json();
+
+            if (data.success) {
+                this.renderTable(data.data);
+                this.updateTableInfo(data.data);
+                this.updatePagination(data.data);
+            } else {
+                api.showNotification(data.message || 'Error cargando datos', 'error');
+            }
+
+        } catch (error) {
+            console.error('Error loading table data:', error);
+            api.showNotification('Error cargando datos de la tabla', 'error');
+        } finally {
+            this.showTableLoading(false);
+        }
+    }
+
+    showTableLoading(show) {
+        const loading = document.getElementById('tableLoading');
+        const container = document.getElementById('tableContainer');
+        
+        if (show) {
+            loading.classList.remove('d-none');
+            container.style.display = 'none';
+        } else {
+            loading.classList.add('d-none');
+            container.style.display = 'block';
+        }
+    }
+
+    renderTable(data) {
+        const table = document.getElementById('dataTable');
+        const thead = table.querySelector('thead');
+        const tbody = table.querySelector('tbody');
+
+        // Clear existing content
+        thead.innerHTML = '';
+        tbody.innerHTML = '';
+
+        if (!data.rows || data.rows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="100%" class="text-center text-muted py-4">No hay datos disponibles</td></tr>';
+            return;
+        }
+
+        // Create header
+        const headerRow = document.createElement('tr');
+        data.columns.forEach(column => {
+            const th = document.createElement('th');
+            th.textContent = column;
+            th.style.minWidth = '120px';
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+
+        // Create rows
+        data.rows.forEach(row => {
+            const tr = document.createElement('tr');
+            data.columns.forEach(column => {
+                const td = document.createElement('td');
+                let value = row[column];
+                
+                // Format value for display
+                if (value === null || value === undefined) {
+                    td.innerHTML = '<span class="text-muted">NULL</span>';
+                } else if (typeof value === 'boolean') {
+                    td.innerHTML = `<span class="badge bg-${value ? 'success' : 'danger'}">${value}</span>`;
+                } else if (typeof value === 'object') {
+                    td.innerHTML = `<code>${JSON.stringify(value)}</code>`;
+                } else if (String(value).length > 100) {
+                    td.innerHTML = `<span title="${value}">${String(value).substring(0, 100)}...</span>`;
+                } else {
+                    td.textContent = value;
+                }
+                
+                td.style.maxWidth = '300px';
+                td.style.whiteSpace = 'nowrap';
+                td.style.overflow = 'hidden';
+                td.style.textOverflow = 'ellipsis';
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        });
+
+        // Show container
+        document.getElementById('tableContainer').style.display = 'block';
+    }
+
+    updateTableInfo(data) {
+        document.getElementById('recordCount').textContent = data.count;
+        document.getElementById('lastQuery').textContent = new Date().toLocaleTimeString();
+        document.getElementById('tableInfo').classList.remove('d-none');
+    }
+
+    updatePagination(data) {
+        const pagination = document.getElementById('tablePagination');
+        const currentPage = Math.floor(data.offset / data.limit) + 1;
+        const startRecord = data.offset + 1;
+        const endRecord = data.offset + data.count;
+
+        document.getElementById('currentPage').textContent = currentPage;
+        document.getElementById('recordRange').textContent = `${startRecord}-${endRecord}`;
+
+        // Update buttons
+        document.getElementById('prevPageBtn').disabled = data.offset === 0;
+        document.getElementById('nextPageBtn').disabled = !data.hasMore;
+
+        pagination.classList.remove('d-none');
+    }
+
+    refreshTableData() {
+        this.loadTableData();
+    }
+
+    nextPage() {
+        const offsetInput = document.getElementById('offsetInput');
+        const limitSelect = document.getElementById('limitSelect');
+        const limit = parseInt(limitSelect.value) || 25;
+        const currentOffset = parseInt(offsetInput.value) || 0;
+        
+        offsetInput.value = currentOffset + limit;
+        this.loadTableData();
+    }
+
+    prevPage() {
+        const offsetInput = document.getElementById('offsetInput');
+        const limitSelect = document.getElementById('limitSelect');
+        const limit = parseInt(limitSelect.value) || 25;
+        const currentOffset = parseInt(offsetInput.value) || 0;
+        
+        if (currentOffset >= limit) {
+            offsetInput.value = currentOffset - limit;
+            this.loadTableData();
+        }
+    }
+
+    async exportTableData() {
+        const tableSelect = document.getElementById('tableSelect');
+        const table = tableSelect.value;
+        
+        if (!table) {
+            api.showNotification('Por favor selecciona una tabla primero', 'warning');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/database/browse/${table}?limit=1000&offset=0`);
+            const data = await response.json();
+
+            if (data.success && data.data.rows.length > 0) {
+                // Convert to CSV
+                const csv = this.convertToCSV(data.data);
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                
+                // Download
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${table}_export_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                api.showNotification('Datos exportados exitosamente', 'success');
+            } else {
+                api.showNotification('No hay datos para exportar', 'warning');
+            }
+
+        } catch (error) {
+            console.error('Error exporting data:', error);
+            api.showNotification('Error exportando datos', 'error');
+        }
+    }
+
+    convertToCSV(data) {
+        if (!data.rows || data.rows.length === 0) return '';
+
+        const headers = data.columns.join(',');
+        const rows = data.rows.map(row => {
+            return data.columns.map(column => {
+                let value = row[column];
+                if (value === null || value === undefined) return '';
+                if (typeof value === 'object') value = JSON.stringify(value);
+                // Escape quotes and wrap in quotes if contains comma
+                value = String(value).replace(/"/g, '""');
+                if (value.includes(',') || value.includes('\n')) {
+                    value = `"${value}"`;
+                }
+                return value;
+            }).join(',');
+        });
+
+        return [headers, ...rows].join('\n');
+    }
 }
 
 // Initialize admin app when DOM is loaded

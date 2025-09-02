@@ -19,7 +19,8 @@
       "Bash(git commit:*)",
       "Bash(SUPABASE_URL=https://dcbavpdlkcjdtjdkntde.supabase.co SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjYmF2cGRsa2NqZHRqZGtudGRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3Njc4OTksImV4cCI6MjA3MjM0Mzg5OX0._iOdoiQwLCW0tDxWZvTtYZbhqoBivbWLQACPiFjr_yU node -e \"\nconst { testSupabaseConnection } = require(''./backend/src/services/supabaseClient'');\ntestSupabaseConnection().then(result => {\n  console.log(''Connection result:'', result);\n  process.exit(result ? 0 : 1);\n}).catch(err => {\n  console.error(''Test failed:'', err.message);\n  process.exit(1);\n});\n\")",
       "Bash(SUPABASE_URL=https://dcbavpdlkcjdtjdkntde.supabase.co SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjYmF2cGRsa2NqZHRqZGtudGRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3Njc4OTksImV4cCI6MjA3MjM0Mzg5OX0._iOdoiQwLCW0tDxWZvTtYZbhqoBivbWLQACPiFjr_yU node -e \"\nconst { createClient } = require(''@supabase/supabase-js'');\nconst supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);\nasync function checkTables() {\n  const { data, error } = await supabase.from(''products'').select(''id, name'').limit(3);\n  if (error) console.error(''Error:'', error);\n  else console.log(''Products found:'', data.length);\n}\ncheckTables();\n\")",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

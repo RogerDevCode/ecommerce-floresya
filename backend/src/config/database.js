@@ -61,10 +61,67 @@ const testConnection = async () => {
   }
 };
 
+// Universal query function that works with both Supabase and Sequelize
+const executeQuery = async (query, params = []) => {
+  if (useSupabase) {
+    // Convert SQL query to Supabase query
+    // This is a simplified implementation - you may need to adapt based on specific queries
+    try {
+      // For simple SELECT queries
+      if (query.toLowerCase().trim().startsWith('select')) {
+        // Parse table name from query (basic parsing)
+        const tableMatch = query.match(/from\s+(\w+)/i);
+        if (!tableMatch) throw new Error('Could not parse table name');
+        
+        const tableName = tableMatch[1];
+        
+        // Handle WHERE conditions (basic implementation)
+        if (query.includes('WHERE')) {
+          const { data, error } = await supabase
+            .from(tableName)
+            .select('*');
+          
+          if (error) throw error;
+          return data || [];
+        } else {
+          const { data, error } = await supabase
+            .from(tableName)
+            .select('*');
+          
+          if (error) throw error;
+          return data || [];
+        }
+      }
+      
+      // For other queries, we need direct SQL execution
+      // This requires the service_role key for raw SQL
+      console.warn('Non-SELECT query detected, may need service_role key');
+      throw new Error('Complex queries not yet implemented for Supabase client mode');
+      
+    } catch (error) {
+      console.error('Supabase query error:', error);
+      throw error;
+    }
+  } else {
+    // Use Sequelize for SQLite/PostgreSQL
+    try {
+      const [results] = await sequelize.query(query, {
+        replacements: params,
+        type: Sequelize.QueryTypes.SELECT
+      });
+      return results;
+    } catch (error) {
+      console.error('Sequelize query error:', error);
+      throw error;
+    }
+  }
+};
+
 // Export the sequelize instance, supabase client and the test function
 module.exports = {
   sequelize,
   supabase,
   useSupabase,
   testConnection,
+  executeQuery,
 };

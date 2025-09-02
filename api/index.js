@@ -21,6 +21,7 @@ const carouselRoutes = require('../backend/src/routes/carousel');
 const uploadRoutes = require('../backend/src/routes/upload');
 const testRoutes = require('../backend/src/routes/testRoutes');
 const imageRoutes = require('../backend/src/routes/images');
+const databaseRoutes = require('../backend/src/routes/database');
 
 const app = express();
 
@@ -95,6 +96,7 @@ app.use('/api/carousel', carouselRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/test', testRoutes);
 app.use('/api/images', imageRoutes);
+app.use('/api/database', databaseRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

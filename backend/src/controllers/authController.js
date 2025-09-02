@@ -1,6 +1,12 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { executeQuery } = require('../config/database');
+const { executeQuery, useSupabase } = require('../config/database');
+
+// Import Supabase controller if using Supabase
+let supabaseAuthController;
+if (useSupabase) {
+    supabaseAuthController = require('./authControllerSupabase');
+}
 
 const generateToken = (userId, role) => {
     return jwt.sign(
@@ -62,6 +68,12 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
+    // Use Supabase controller if available
+    if (useSupabase && supabaseAuthController) {
+        return supabaseAuthController.login(req, res);
+    }
+
+    // Fallback to traditional database
     try {
         const { email, password } = req.body;
 
