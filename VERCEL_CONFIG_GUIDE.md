@@ -8,63 +8,43 @@
 3. Click en **"Settings"** (Configuración)
 4. Click en **"Environment Variables"** (Variables de Entorno)
 
-### 2. Agregar Variables una por una
+### 2. Copiar y Pegar Variables (Una por línea)
 
-**COPIA Y PEGA EXACTAMENTE ESTAS VARIABLES:**
+**🚀 FORMATO PARA COPIAR/PEGAR FÁCIL:**
 
 #### 🔑 Variables de Base de Datos (CRÍTICAS):
 ```
-Variable: SUPABASE_URL
-Value: https://dcbavpdlkcjdtjdkntde.supabase.co
-
-Variable: SUPABASE_ANON_KEY  
-Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjYmF2cGRsa2NqZHRqZGtudGRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3Njc4OTksImV4cCI6MjA3MjM0Mzg5OX0._iOdoiQwLCW0tDxWZvTtYZbhqoBivbWLQACPiFjr_yU
-
-Variable: SUPABASE_SERVICE_KEY
-Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjYmF2cGRsa2NqZHRqZGtudGRlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1Njc2Nzg5OSwiZXhwIjoyMDcyMzQzODk5fQ.MwbJfs2vXZJMDXT5bcdYjt0_pZ1OD7V7b_v0q_3tK2Q
-
-Variable: DB_HOST
-Value: db.dcbavpdlkcjdtjdkntde.supabase.co
-
-Variable: DB_PASSWORD
-Value: r4Hn5lv7xf3JH&
-
-Variable: DB_PORT
-Value: 5432
-
-Variable: DB_NAME
-Value: postgres
-
-Variable: DB_USER  
-Value: postgres
-
-Variable: DB_SSL
-Value: true
+SUPABASE_URL=https://dcbavpdlkcjdtjdkntde.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjYmF2cGRsa2NqZHRqZGtudGRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3Njc4OTksImV4cCI6MjA3MjM0Mzg5OX0._iOdoiQwLCW0tDxWZvTtYZbhqoBivbWLQACPiFjr_yU
+SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjYmF2cGRsa2NqZHRqZGtudGRlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1Njc2Nzg5OSwiZXhwIjoyMDcyMzQzODk5fQ.MwbJfs2vXZJMDXT5bcdYjt0_pZ1OD7V7b_v0q_3tK2Q
+DB_HOST=db.dcbavpdlkcjdtjdkntde.supabase.co
+DB_PASSWORD=r4Hn5lv7xf3JH&
+DB_PORT=5432
+DB_NAME=postgres
+DB_USER=postgres
+DB_SSL=true
 ```
 
 #### 🔐 Variables de Seguridad:
 ```
-Variable: JWT_SECRET
-Value: FloresYa_Production_Secret_Key_2024_Vercel
-
-Variable: JWT_EXPIRES_IN
-Value: 7d
-
-Variable: NODE_ENV
-Value: production
+JWT_SECRET=FloresYa_Production_Secret_Key_2024_Vercel
+JWT_EXPIRES_IN=7d
+NODE_ENV=production
 ```
 
 #### ⚙️ Variables de Configuración:
 ```
-Variable: RATE_LIMIT_WINDOW_MS
-Value: 900000
-
-Variable: RATE_LIMIT_MAX_REQUESTS  
-Value: 100
-
-Variable: SQL_LOGGING
-Value: false
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+SQL_LOGGING=false
 ```
+
+#### 📝 Instrucciones para cada variable:
+1. **Copia** la línea completa (ejemplo: `SUPABASE_URL=https://...`)
+2. En Vercel, **pega** en el campo "Name" solo la parte antes del = (ejemplo: `SUPABASE_URL`)
+3. **Pega** en el campo "Value" solo la parte después del = (ejemplo: `https://...`)
+4. **Selecciona** Production, Preview, Development
+5. **Click** "Save"
 
 ### 3. Configurar Ambientes
 
@@ -78,6 +58,23 @@ Value: false
 Una vez agregadas todas las variables, deberías ver:
 - **14 variables de entorno** configuradas
 - Todas marcadas para **Production, Preview, Development**
+
+#### ✅ Checklist de variables (total: 14):
+- [ ] SUPABASE_URL
+- [ ] SUPABASE_ANON_KEY  
+- [ ] SUPABASE_SERVICE_KEY
+- [ ] DB_HOST
+- [ ] DB_PASSWORD
+- [ ] DB_PORT
+- [ ] DB_NAME
+- [ ] DB_USER
+- [ ] DB_SSL
+- [ ] JWT_SECRET
+- [ ] JWT_EXPIRES_IN
+- [ ] NODE_ENV
+- [ ] RATE_LIMIT_WINDOW_MS
+- [ ] RATE_LIMIT_MAX_REQUESTS
+- [ ] SQL_LOGGING
 
 ## 🚀 Después de Configurar Variables
 
