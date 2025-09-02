@@ -58,6 +58,7 @@ app.use(helmet({
 app.use(cors({
     origin: [
         'https://ecommerce-floresya-7.vercel.app',
+        'https://dcbavpdlkcjdtjdkntde.supabase.co',
         'https://floresya.com', 
         'https://www.floresya.com',
         'http://localhost:3000', 
@@ -139,43 +140,58 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Initialize services on first request (serverless optimization)
+// Serverless optimization - lazy initialization
 let initialized = false;
+let dbReady = false;
+
 const initializeServices = async () => {
-    if (initialized) return;
+    if (initialized) return dbReady;
     
     try {
-        console.log('🚀 Inicializando servicios FloresYa...');
+        console.log('🚀 Inicializando FloresYa serverless...');
         
-        const dbConnected = await testConnection();
-        if (!dbConnected) {
-            console.error('❌ No se pudo conectar a la base de datos');
-            throw new Error('Database connection failed');
+        // Test database connection
+        dbReady = await testConnection();
+        if (!dbReady) {
+            console.error('❌ Supabase connection failed');
+            return false;
         }
         
+        // Initialize email service (non-blocking)
         try {
             initializeEmailService();
+            console.log('📧 Email service initialized');
         } catch (emailError) {
-            console.warn('⚠️ Servicio de email no disponible:', emailError.message);
+            console.warn('⚠️ Email service unavailable (optional):', emailError.message);
         }
         
         initialized = true;
-        console.log('✅ Servicios FloresYa inicializados');
+        console.log('✅ FloresYa serverless ready');
+        return true;
+        
     } catch (error) {
-        console.error('❌ Error inicializando servicios:', error);
-        throw error;
+        console.error('❌ Initialization error:', error);
+        return false;
     }
 };
 
-// Middleware to ensure initialization
+// Efficient initialization middleware
 app.use(async (req, res, next) => {
     try {
-        await initializeServices();
+        const ready = await initializeServices();
+        if (!ready) {
+            return res.status(503).json({
+                success: false,
+                message: 'Service temporarily unavailable - database connection failed',
+                retry: true
+            });
+        }
         next();
     } catch (error) {
+        console.error('❌ Request initialization failed:', error);
         res.status(500).json({
             success: false,
-            message: 'Error de inicialización del servidor'
+            message: 'Internal server error during initialization'
         });
     }
 });

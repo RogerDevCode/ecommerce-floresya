@@ -10,10 +10,28 @@ class FloresYaApp {
     }
 
     async init() {
+        this.setupDevMode();
         await this.loadInitialData();
         this.bindEvents();
         this.loadProducts();
         this.loadDynamicCarousel();
+    }
+
+    // Setup development mode visibility
+    setupDevMode() {
+        const isProduction = window.location.hostname.includes('vercel.app') || 
+                           window.location.hostname === 'floresya.com' ||
+                           window.location.hostname === 'www.floresya.com';
+        
+        if (isProduction) {
+            // Hide DEV MODE menu in production
+            const devMenu = document.querySelector('.navbar-nav .dropdown');
+            if (devMenu && devMenu.textContent.includes('DEV MODE')) {
+                devMenu.style.display = 'none';
+            }
+        }
+        
+        console.log(isProduction ? '🚀 Production Mode' : '🛠️ Development Mode');
     }
 
     // Load initial data (categories, settings, etc.)

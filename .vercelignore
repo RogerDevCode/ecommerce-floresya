@@ -1,21 +1,50 @@
+# Node modules and dependencies
 node_modules
-.env
-.env.local
-.env.production
-.env.staging
 *.log
 .DS_Store
 .vscode
 .idea
+
+# Environment files (security)
+.env
+.env.local
+.env.production
+.env.staging
+
+# Build artifacts
 dist
 build
 coverage
+
+# Database files (SQLite - not needed in serverless)
 *.sqlite
 *.sqlite3
 database/floresya.db
-imgtemp/
+database/*.sql
+
+# Development scripts (not needed in production)
 backend/src/scripts/
+imgtemp/
+
+# Documentation (exclude most, keep essential)
 *.md
-!README.md
+!VERCEL_CONFIG_GUIDE.md
+!VERCEL_DEPLOYMENT.md
+
+# Development tools
+gitpush.sh
+temp.txt
+promptFloresYa.txt
+
+# Testing files (not needed in production)
+**/test*.html
+debug*.html
+simple-test.html
+manual-testing-checklist.html
+
+# Git files
 .git
 .gitignore
+
+# Old server file (using serverless now)
+backend/src/server.js
