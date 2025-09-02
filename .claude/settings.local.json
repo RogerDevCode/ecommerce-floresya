@@ -14,7 +14,8 @@
       "Bash(chmod:*)",
       "Bash(npm start)",
       "WebFetch(domain:supabase.com)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(cd:*)"
     ],
     "deny": [],
     "ask": []
