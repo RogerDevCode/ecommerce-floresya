@@ -1,5 +1,14 @@
 /* FloresYa - Custom Styles with Corporate Colors */
 
+/* Prevent FOUC (Flash of Unstyled Content) */
+html {
+    visibility: hidden;
+}
+
+html.stylesheets-loaded {
+    visibility: visible;
+}
+
 :root {
     --primary-pink: #FF69B4;
     --primary-white: #FFFFFF;

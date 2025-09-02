@@ -1162,6 +1162,631 @@ class AdminApp {
             testResults.scrollTop = testResults.scrollHeight;
         }
     }
+
+    // ======================= PRODUCTS MANAGEMENT =======================
+
+    async loadProducts() {
+        try {
+            api.showLoading();
+            
+            const response = await api.getAllProducts({ page: 1, limit: 50 });
+            
+            if (response.success) {
+                this.products = response.data.products || [];
+                this.renderProducts();
+                await this.loadCategories();
+            } else {
+                api.showNotification('Error al cargar productos: ' + response.message, 'danger');
+            }
+        } catch (error) {
+            console.error('Error loading products:', error);
+            api.showNotification('Error al cargar productos', 'danger');
+        } finally {
+            api.hideLoading();
+        }
+    }
+
+    renderProducts() {
+        const productsSection = document.getElementById('products-section');
+        if (!productsSection) return;
+
+        productsSection.innerHTML = `
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Gestión de Productos</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <button type="button" class="btn btn-sm btn-primary me-2" onclick="adminApp.showProductForm()">
+                        <i class="bi bi-plus-circle"></i> Nuevo Producto
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="adminApp.loadProducts()">
+                        <i class="bi bi-arrow-clockwise"></i> Actualizar
+                    </button>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Buscar productos..." id="productSearchInput">
+                        <button class="btn btn-outline-secondary" type="button" onclick="adminApp.searchProducts()">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="productCategoryFilter">
+                        <option value="">Todas las categorías</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="productStatusFilter">
+                        <option value="">Todos los estados</option>
+                        <option value="1">Activos</option>
+                        <option value="0">Inactivos</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="productsTable">
+                            <thead>
+                                <tr>
+                                    <th width="80">Imagen</th>
+                                    <th>Nombre</th>
+                                    <th>Categoría</th>
+                                    <th>Precio</th>
+                                    <th>Stock</th>
+                                    <th>Estado</th>
+                                    <th width="150">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${this.renderProductsRows()}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Populate category filter
+        this.populateProductCategoryFilter();
+    }
+
+    renderProductsRows() {
+        if (!this.products || this.products.length === 0) {
+            return `
+                <tr>
+                    <td colspan="7" class="text-center py-4">
+                        <i class="bi bi-box display-4 text-muted d-block mb-2"></i>
+                        <span class="text-muted">No hay productos disponibles</span>
+                    </td>
+                </tr>
+            `;
+        }
+
+        return this.products.map(product => `
+            <tr>
+                <td>
+                    <img data-responsive
+                         data-src="${product.image_url || '/images/placeholder-product.jpg'}" 
+                         data-context="admin_thumb"
+                         alt="${product.name}" 
+                         class="img-thumbnail" 
+                         style="width: 50px; height: 50px; object-fit: cover;">
+                </td>
+                <td>
+                    <strong>${product.name}</strong>
+                    ${product.featured ? '<span class="badge bg-warning ms-1">Destacado</span>' : ''}
+                </td>
+                <td>${product.category_name || 'Sin categoría'}</td>
+                <td>$${parseFloat(product.price).toFixed(2)}</td>
+                <td>
+                    <span class="badge ${product.stock_quantity > 10 ? 'bg-success' : product.stock_quantity > 0 ? 'bg-warning' : 'bg-danger'}">
+                        ${product.stock_quantity || 0}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge ${product.active ? 'bg-success' : 'bg-secondary'}">
+                        ${product.active ? 'Activo' : 'Inactivo'}
+                    </span>
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary" onclick="adminApp.editProduct(${product.id})" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-outline-info" onclick="adminApp.viewProduct(${product.id})" title="Ver">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="adminApp.deleteProduct(${product.id})" title="Eliminar">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async populateProductCategoryFilter() {
+        const categoryFilter = document.getElementById('productCategoryFilter');
+        if (!categoryFilter || !this.categories) return;
+
+        // Keep existing options
+        const existingOptions = categoryFilter.innerHTML;
+        
+        // Add category options
+        const categoryOptions = this.categories.map(category => 
+            `<option value="${category.id}">${category.name}</option>`
+        ).join('');
+        
+        categoryFilter.innerHTML = existingOptions + categoryOptions;
+    }
+
+    showProductForm(productId = null) {
+        const isEditing = productId !== null;
+        const modalTitle = document.getElementById('productModalTitle');
+        const modalBody = document.getElementById('productModalBody');
+        
+        modalTitle.textContent = isEditing ? 'Editar Producto' : 'Nuevo Producto';
+        
+        modalBody.innerHTML = `
+            <form id="productForm" enctype="multipart/form-data">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label for="productName" class="form-label">Nombre *</label>
+                            <input type="text" class="form-control" id="productName" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productCategory" class="form-label">Categoría *</label>
+                                    <select class="form-select" id="productCategory" required>
+                                        <option value="">Seleccionar categoría</option>
+                                        ${this.categories ? this.categories.map(cat => 
+                                            `<option value="${cat.id}">${cat.name}</option>`
+                                        ).join('') : ''}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productPrice" class="form-label">Precio (USD) *</label>
+                                    <input type="number" class="form-control" id="productPrice" step="0.01" min="0" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productStock" class="form-label">Stock *</label>
+                                    <input type="number" class="form-control" id="productStock" min="0" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productOccasion" class="form-label">Ocasión</label>
+                                    <select class="form-select" id="productOccasion">
+                                        <option value="other">Otra</option>
+                                        <option value="birthday">Cumpleaños</option>
+                                        <option value="wedding">Boda</option>
+                                        <option value="anniversary">Aniversario</option>
+                                        <option value="valentine">San Valentín</option>
+                                        <option value="funeral">Funeral</option>
+                                        <option value="graduation">Graduación</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="productDescription" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="productDescription" rows="4" 
+                                placeholder="Descripción detallada del producto..."></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="productActive" checked>
+                                    <label class="form-check-label" for="productActive">Activo</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="productFeatured">
+                                    <label class="form-check-label" for="productFeatured">Destacado</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="productHomepage">
+                                    <label class="form-check-label" for="productHomepage">Mostrar en inicio</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Imágenes del Producto</label>
+                            
+                            <!-- Image Upload Area -->
+                            <div class="image-upload-area border-2 border-dashed rounded p-3 text-center mb-3" 
+                                 id="imageUploadArea"
+                                 style="border-color: #dee2e6; min-height: 150px; cursor: pointer;"
+                                 onclick="document.getElementById('productImages').click()">
+                                <div id="uploadPlaceholder">
+                                    <i class="bi bi-cloud-upload display-4 text-muted d-block mb-2"></i>
+                                    <p class="text-muted mb-2">Click aquí o arrastra imágenes</p>
+                                    <small class="text-muted">Máximo 10 archivos, 5MB cada uno</small>
+                                </div>
+                            </div>
+                            
+                            <input type="file" 
+                                   class="form-control d-none" 
+                                   id="productImages" 
+                                   multiple 
+                                   accept="image/jpeg,image/jpg,image/png,image/webp,image/gif">
+                            
+                            <!-- Image Preview Area -->
+                            <div id="imagePreviewArea" class="mt-3">
+                                <!-- Previews will be added here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        `;
+        
+        // Initialize form functionality
+        this.initProductForm(isEditing, productId);
+        
+        // Show modal
+        const productModal = new bootstrap.Modal(document.getElementById('productModal'));
+        productModal.show();
+    }
+
+    initProductForm(isEditing, productId) {
+        const fileInput = document.getElementById('productImages');
+        const uploadArea = document.getElementById('imageUploadArea');
+        const previewArea = document.getElementById('imagePreviewArea');
+        let selectedFiles = [];
+        let existingImages = [];
+
+        // Handle file selection
+        fileInput.addEventListener('change', (e) => {
+            handleFileSelection(e.target.files);
+        });
+
+        // Handle drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#007bff';
+            uploadArea.style.backgroundColor = '#f8f9fa';
+        });
+
+        uploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#dee2e6';
+            uploadArea.style.backgroundColor = 'transparent';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#dee2e6';
+            uploadArea.style.backgroundColor = 'transparent';
+            handleFileSelection(e.dataTransfer.files);
+        });
+
+        function handleFileSelection(files) {
+            // Convert FileList to Array and add to selectedFiles
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith('image/') && selectedFiles.length + existingImages.length < 10) {
+                    selectedFiles.push(file);
+                }
+            });
+            
+            updateImagePreview();
+        }
+
+        function updateImagePreview() {
+            const totalImages = selectedFiles.length + existingImages.length;
+            
+            previewArea.innerHTML = '';
+            
+            // Show existing images (for editing)
+            existingImages.forEach((image, index) => {
+                const imageDiv = document.createElement('div');
+                imageDiv.className = 'image-preview-item d-inline-block position-relative m-1';
+                imageDiv.innerHTML = `
+                    <img src="${image.url}" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover;">
+                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle p-1" 
+                            onclick="adminApp.removeExistingImage(${index})" style="width: 20px; height: 20px; font-size: 10px;">
+                        <i class="bi bi-x"></i>
+                    </button>
+                    ${index === 0 ? '<small class="badge bg-primary position-absolute bottom-0 start-0">Principal</small>' : ''}
+                `;
+                previewArea.appendChild(imageDiv);
+            });
+            
+            // Show new selected images
+            selectedFiles.forEach((file, index) => {
+                const imageDiv = document.createElement('div');
+                imageDiv.className = 'image-preview-item d-inline-block position-relative m-1';
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imageDiv.innerHTML = `
+                        <img src="${e.target.result}" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover;">
+                        <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle p-1" 
+                                onclick="adminApp.removeSelectedImage(${index})" style="width: 20px; height: 20px; font-size: 10px;">
+                            <i class="bi bi-x"></i>
+                        </button>
+                        ${existingImages.length === 0 && index === 0 ? '<small class="badge bg-primary position-absolute bottom-0 start-0">Principal</small>' : ''}
+                    `;
+                };
+                reader.readAsDataURL(file);
+                
+                previewArea.appendChild(imageDiv);
+            });
+
+            // Update upload area text
+            const placeholder = document.getElementById('uploadPlaceholder');
+            if (totalImages > 0) {
+                placeholder.innerHTML = `
+                    <i class="bi bi-images display-6 text-muted d-block mb-1"></i>
+                    <small class="text-muted">${totalImages}/10 imágenes seleccionadas</small>
+                `;
+            } else {
+                placeholder.innerHTML = `
+                    <i class="bi bi-cloud-upload display-4 text-muted d-block mb-2"></i>
+                    <p class="text-muted mb-2">Click aquí o arrastra imágenes</p>
+                    <small class="text-muted">Máximo 10 archivos, 5MB cada uno</small>
+                `;
+            }
+        }
+
+        // Store references for removal functions
+        this.selectedFiles = selectedFiles;
+        this.existingImages = existingImages;
+
+        // Handle form submission
+        const form = document.getElementById('productForm');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.saveProduct(isEditing, productId);
+        });
+
+        // Load existing product data if editing
+        if (isEditing && productId) {
+            this.loadProductForEditing(productId, existingImages, updateImagePreview);
+        }
+    }
+
+    removeSelectedImage(index) {
+        this.selectedFiles.splice(index, 1);
+        // Re-initialize to update preview
+        const form = document.getElementById('productForm');
+        if (form) {
+            this.initProductForm(false, null);
+        }
+    }
+
+    removeExistingImage(index) {
+        this.existingImages.splice(index, 1);
+        // Update preview
+        // This would need to be implemented based on the current context
+    }
+
+    async loadProductForEditing(productId, existingImages, updateCallback) {
+        try {
+            const response = await api.getProductById(productId);
+            
+            if (response.success && response.data) {
+                const product = response.data;
+                
+                // Populate form fields
+                document.getElementById('productName').value = product.name || '';
+                document.getElementById('productCategory').value = product.category_id || '';
+                document.getElementById('productPrice').value = product.price || '';
+                document.getElementById('productStock').value = product.stock_quantity || '';
+                document.getElementById('productOccasion').value = product.occasion || 'other';
+                document.getElementById('productDescription').value = product.description || '';
+                document.getElementById('productActive').checked = product.active;
+                document.getElementById('productFeatured').checked = product.featured;
+                document.getElementById('productHomepage').checked = product.show_on_homepage;
+                
+                // Load existing images
+                existingImages.length = 0; // Clear array
+                
+                // Add main image
+                if (product.image_url) {
+                    existingImages.push({
+                        url: product.image_url,
+                        filename: product.image_url.split('/').pop()
+                    });
+                }
+                
+                // Add additional images
+                if (product.additional_images) {
+                    const additionalImages = typeof product.additional_images === 'string' 
+                        ? JSON.parse(product.additional_images) 
+                        : product.additional_images;
+                    
+                    if (Array.isArray(additionalImages)) {
+                        additionalImages.forEach(imageUrl => {
+                            existingImages.push({
+                                url: imageUrl,
+                                filename: imageUrl.split('/').pop()
+                            });
+                        });
+                    }
+                }
+                
+                updateCallback();
+            }
+        } catch (error) {
+            console.error('Error loading product for editing:', error);
+            api.showNotification('Error al cargar producto para editar', 'danger');
+        }
+    }
+
+    async saveProduct(isEditing, productId) {
+        try {
+            const formData = new FormData();
+            
+            // Add form fields
+            formData.append('name', document.getElementById('productName').value);
+            formData.append('category_id', document.getElementById('productCategory').value);
+            formData.append('price', document.getElementById('productPrice').value);
+            formData.append('stock_quantity', document.getElementById('productStock').value);
+            formData.append('occasion', document.getElementById('productOccasion').value);
+            formData.append('description', document.getElementById('productDescription').value);
+            formData.append('active', document.getElementById('productActive').checked ? 1 : 0);
+            formData.append('featured', document.getElementById('productFeatured').checked ? 1 : 0);
+            formData.append('show_on_homepage', document.getElementById('productHomepage').checked ? 1 : 0);
+            
+            // Add new images
+            if (this.selectedFiles && this.selectedFiles.length > 0) {
+                this.selectedFiles.forEach(file => {
+                    formData.append('images', file);
+                });
+            }
+            
+            // Add existing images (for updates)
+            if (this.existingImages && this.existingImages.length > 0) {
+                formData.append('existing_images', JSON.stringify(this.existingImages.map(img => img.url)));
+            }
+
+            api.showLoading();
+            
+            let response;
+            if (isEditing) {
+                response = await this.updateProduct(productId, formData);
+            } else {
+                response = await this.createProduct(formData);
+            }
+            
+            if (response.success) {
+                api.showNotification(
+                    `Producto ${isEditing ? 'actualizado' : 'creado'} exitosamente`, 
+                    'success'
+                );
+                
+                // Close modal
+                bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+                
+                // Reload products
+                await this.loadProducts();
+            } else {
+                api.showNotification('Error: ' + response.message, 'danger');
+            }
+            
+        } catch (error) {
+            console.error('Error saving product:', error);
+            api.showNotification('Error al guardar producto', 'danger');
+        } finally {
+            api.hideLoading();
+        }
+    }
+
+    async createProduct(formData) {
+        const response = await fetch('/api/products', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${api.token}`
+            },
+            body: formData
+        });
+        
+        return await response.json();
+    }
+
+    async updateProduct(productId, formData) {
+        const response = await fetch(`/api/products/${productId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${api.token}`
+            },
+            body: formData
+        });
+        
+        return await response.json();
+    }
+
+    async editProduct(productId) {
+        this.showProductForm(productId);
+    }
+
+    async viewProduct(productId) {
+        window.open(`/pages/product-detail.html?id=${productId}`, '_blank');
+    }
+
+    async deleteProduct(productId) {
+        if (!confirm('¿Estás seguro de que quieres eliminar este producto?')) {
+            return;
+        }
+
+        try {
+            api.showLoading();
+            
+            const response = await fetch(`/api/products/${productId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${api.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                api.showNotification('Producto eliminado exitosamente', 'success');
+                await this.loadProducts();
+            } else {
+                api.showNotification('Error: ' + result.message, 'danger');
+            }
+            
+        } catch (error) {
+            console.error('Error deleting product:', error);
+            api.showNotification('Error al eliminar producto', 'danger');
+        } finally {
+            api.hideLoading();
+        }
+    }
+
+    async searchProducts() {
+        const searchTerm = document.getElementById('productSearchInput').value;
+        const categoryFilter = document.getElementById('productCategoryFilter').value;
+        const statusFilter = document.getElementById('productStatusFilter').value;
+        
+        try {
+            api.showLoading();
+            
+            const params = {};
+            if (searchTerm) params.search = searchTerm;
+            if (categoryFilter) params.category = categoryFilter;
+            if (statusFilter !== '') params.active = statusFilter;
+            
+            const response = await api.getAllProducts(params);
+            
+            if (response.success) {
+                this.products = response.data.products || [];
+                this.renderProducts();
+            }
+            
+        } catch (error) {
+            console.error('Error searching products:', error);
+            api.showNotification('Error en la búsqueda', 'danger');
+        } finally {
+            api.hideLoading();
+        }
+    }
 }
 
 // Initialize admin app when DOM is loaded

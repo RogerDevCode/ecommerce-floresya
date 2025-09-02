@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Producto - FloresYa</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/product-detail.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <img src="/images/logoFloresYa.jpeg" alt="FloresYa Logo" class="logo-img me-2">
+                <span class="brand-text">FloresYa</span>
+            </a>
+            
+            <div class="d-flex align-items-center">
+                <!-- Cart Button -->
+                <button class="btn btn-outline-primary position-relative me-3" onclick="toggleCart()">
+                    <i class="bi bi-bag"></i>
+                    <span class="badge bg-danger position-absolute top-0 start-100 translate-middle" 
+                          id="cart-count" style="display: none;">0</span>
+                </button>
+                
+                <!-- Back Button -->
+                <button class="btn btn-secondary" onclick="goBack()">
+                    <i class="bi bi-arrow-left me-1"></i>Volver
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Product Detail Container -->
+    <div class="container mt-4 mb-5">
+        <div id="loading-spinner" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2">Cargando producto...</p>
+        </div>
+
+        <div id="product-content" class="row" style="display: none;">
+            <!-- Product Images Gallery -->
+            <div class="col-lg-6">
+                <div class="product-gallery">
+                    <!-- Main Image -->
+                    <div class="main-image-container mb-3">
+                        <img id="main-image" 
+                             src="" 
+                             alt="" 
+                             class="img-fluid rounded shadow-sm main-image"
+                             onclick="openImageModal()">
+                        <div class="image-overlay">
+                            <i class="bi bi-zoom-in"></i>
+                            <small>Click para ampliar</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Thumbnail Images -->
+                    <div class="thumbnails-container">
+                        <div id="thumbnails" class="d-flex gap-2 flex-wrap">
+                            <!-- Thumbnails will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Information -->
+            <div class="col-lg-6">
+                <div class="product-info">
+                    <!-- Breadcrumb -->
+                    <nav aria-label="breadcrumb" class="mb-3">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+                            <li class="breadcrumb-item"><a href="/#productos">Productos</a></li>
+                            <li class="breadcrumb-item" id="category-breadcrumb">Categoría</li>
+                            <li class="breadcrumb-item active" aria-current="page" id="product-breadcrumb">Producto</li>
+                        </ol>
+                    </nav>
+
+                    <!-- Product Title -->
+                    <h1 id="product-title" class="product-title mb-3">Título del Producto</h1>
+                    
+                    <!-- Product Summary -->
+                    <div class="product-summary mb-3">
+                        <p id="product-summary" class="text-muted">Resumen del producto...</p>
+                    </div>
+                    
+                    <!-- Price -->
+                    <div class="price-section mb-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="price-usd h3 text-primary mb-0" id="price-usd">$0.00</span>
+                            <span class="price-ves h5 text-muted mb-0" id="price-ves">Bs. 0.00</span>
+                        </div>
+                        <small class="text-muted">Precio incluye envío</small>
+                    </div>
+
+                    <!-- Stock Status -->
+                    <div class="stock-status mb-4">
+                        <div id="stock-available" class="alert alert-success" style="display: none;">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <strong>Disponible</strong> - <span id="stock-quantity">0</span> unidades en stock
+                        </div>
+                        <div id="stock-unavailable" class="alert alert-warning" style="display: none;">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Agotado</strong> - Producto no disponible
+                        </div>
+                    </div>
+
+                    <!-- Quantity Selector -->
+                    <div class="quantity-selector mb-4">
+                        <label class="form-label">Cantidad:</label>
+                        <div class="input-group quantity-input" style="width: 150px;">
+                            <button class="btn btn-outline-secondary" type="button" onclick="changeQuantity(-1)">
+                                <i class="bi bi-dash"></i>
+                            </button>
+                            <input type="number" 
+                                   class="form-control text-center" 
+                                   id="quantity" 
+                                   value="1" 
+                                   min="1" 
+                                   max="99">
+                            <button class="btn btn-outline-secondary" type="button" onclick="changeQuantity(1)">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons mb-4">
+                        <div class="d-grid gap-2">
+                            <button id="add-to-cart-btn" 
+                                    class="btn btn-primary btn-lg" 
+                                    onclick="addToCart()">
+                                <i class="bi bi-bag-plus me-2"></i>Agregar al Carrito
+                            </button>
+                            <button id="buy-now-btn" 
+                                    class="btn btn-success btn-lg" 
+                                    onclick="buyNow()">
+                                <i class="bi bi-credit-card me-2"></i>Comprar Ahora
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Product Features -->
+                    <div class="product-features">
+                        <h5>Características:</h5>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-truck text-primary me-2"></i>Entrega a domicilio</li>
+                            <li><i class="bi bi-shield-check text-success me-2"></i>Garantía de frescura</li>
+                            <li><i class="bi bi-heart text-danger me-2"></i>Arreglo hecho a mano</li>
+                            <li><i class="bi bi-clock text-info me-2"></i>Entrega el mismo día</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Description Section -->
+        <div id="product-description-section" class="row mt-5" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title mb-0">Descripción Detallada</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="product-description" class="product-description">
+                            <!-- Description content will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-image-title">Imagen del Producto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modal-image" src="" alt="" class="img-fluid">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shopping Cart Offcanvas -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title">Carrito de Compras</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div id="cart-items">
+                <!-- Cart items will be populated by JavaScript -->
+            </div>
+            <div class="cart-footer mt-auto">
+                <div class="cart-total mb-3">
+                    <strong>Total: <span id="cart-total">$0.00</span></strong>
+                </div>
+                <div class="d-grid">
+                    <a href="/pages/payment.html" class="btn btn-primary">
+                        Proceder al Pago
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/responsive-image.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/cart.js"></script>
+    <script src="/js/product-detail.js"></script>
+</body>
+</html>

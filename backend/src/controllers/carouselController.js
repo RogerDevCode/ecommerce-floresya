@@ -1,12 +1,28 @@
 const { CarouselImage } = require('../models');
+const { supabase, useSupabase } = require('../config/database');
 
 // Get all carousel images
 const getAllCarouselImages = async (req, res) => {
     try {
-        const images = await CarouselImage.findAll({
-            where: { active: true },
-            order: [['display_order', 'ASC'], ['created_at', 'DESC']]
-        });
+        let images;
+
+        if (useSupabase) {
+            const { data, error } = await supabase
+                .from('carousel_images')
+                .select('*')
+                .eq('active', true)
+                .order('display_order', { ascending: true });
+            
+            if (error) {
+                throw error;
+            }
+            images = data || [];
+        } else {
+            images = await CarouselImage.findAll({
+                where: { active: true },
+                order: [['display_order', 'ASC'], ['created_at', 'DESC']]
+            });
+        }
 
         res.json({
             success: true,

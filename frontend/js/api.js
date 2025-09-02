@@ -146,6 +146,35 @@ class FloresYaAPI {
         }
     }
 
+    // Alias for getProductById
+    async getProduct(id) {
+        return await this.getProductById(id);
+    }
+
+    // Get all products with admin support
+    async getAllProducts(params = {}) {
+        try {
+            this.showLoading();
+            
+            // Add admin_mode if user is admin
+            const user = this.getUser();
+            if (user && user.role === 'admin') {
+                params.admin_mode = 'true';
+            }
+            
+            const queryString = new URLSearchParams(params).toString();
+            const response = await fetch(`${this.baseURL}/products?${queryString}`, {
+                headers: this.getHeaders(true) // Include auth for admin
+            });
+
+            return await this.handleResponse(response);
+        } catch (error) {
+            throw error;
+        } finally {
+            this.hideLoading();
+        }
+    }
+
     // Category methods
     async getCategories() {
         try {

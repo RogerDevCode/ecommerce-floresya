@@ -1,9 +1,25 @@
 const { Setting } = require('../models');
+const { supabase, useSupabase } = require('../config/database');
 
 const getSetting = async (req, res) => {
     try {
         const { key } = req.params;
-        const setting = await Setting.findOne({ where: { setting_key: key } });
+        let setting;
+
+        if (useSupabase) {
+            const { data, error } = await supabase
+                .from('settings')
+                .select('*')
+                .eq('setting_key', key)
+                .single();
+            
+            if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+                throw error;
+            }
+            setting = data;
+        } else {
+            setting = await Setting.findOne({ where: { setting_key: key } });
+        }
 
         if (!setting) {
             return res.status(404).json({ success: false, message: 'Setting not found' });
@@ -40,14 +56,28 @@ const updateSetting = async (req, res) => {
 // Get homepage settings
 const getHomepageSettings = async (req, res) => {
     try {
-        const { Op } = require('sequelize');
-        const settings = await Setting.findAll({
-            where: {
-                setting_key: {
-                    [Op.like]: 'homepage_%'
-                }
+        let settings;
+
+        if (useSupabase) {
+            const { data, error } = await supabase
+                .from('settings')
+                .select('*')
+                .like('setting_key', 'homepage_%');
+            
+            if (error) {
+                throw error;
             }
-        });
+            settings = data || [];
+        } else {
+            const { Op } = require('sequelize');
+            settings = await Setting.findAll({
+                where: {
+                    setting_key: {
+                        [Op.like]: 'homepage_%'
+                    }
+                }
+            });
+        }
 
         const homepageSettings = {};
         settings.forEach(setting => {

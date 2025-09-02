@@ -163,6 +163,16 @@ class FloresYaApp {
     bindProductEvents() {
         // Delegate product card events
         document.addEventListener('click', (e) => {
+            // Product card click (redirect to detail page)
+            const productCard = e.target.closest('.product-card');
+            if (productCard && !e.target.closest('.btn-add-to-cart') && !e.target.closest('.btn-view-details')) {
+                e.preventDefault();
+                const productId = parseInt(productCard.dataset.productId);
+                if (productId) {
+                    window.location.href = `/pages/product-detail.html?id=${productId}`;
+                }
+            }
+
             // Add to cart button
             if (e.target.classList.contains('btn-add-to-cart') || e.target.closest('.btn-add-to-cart')) {
                 e.preventDefault();
@@ -173,24 +183,9 @@ class FloresYaApp {
                 }
             }
 
-            // Product details button
-            if (e.target.classList.contains('btn-view-details') || e.target.closest('.btn-view-details')) {
-                e.preventDefault();
-                const btn = e.target.classList.contains('btn-view-details') ? e.target : e.target.closest('.btn-view-details');
-                const productId = parseInt(btn.dataset.productId);
-                if (productId) {
-                    this.showProductDetails(productId);
-                }
-            }
+            // Product details button functionality removed - using direct page navigation instead
 
-            // Product card click (excluding buttons)
-            if (e.target.closest('.product-card') && !e.target.closest('button')) {
-                const card = e.target.closest('.product-card');
-                const productId = parseInt(card.dataset.productId);
-                if (productId) {
-                    this.showProductDetails(productId);
-                }
-            }
+            // Product card click is already handled above - no duplicate needed
         });
     }
 
@@ -344,10 +339,11 @@ class FloresYaApp {
             <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
                 <div class="card product-card h-100" data-product-id="${product.id}">
                     ${product.featured ? '<span class="badge-featured">Destacado</span>' : ''}
-                    <img src="${product.image_url || '/images/placeholder.jpg'}" 
+                    <img data-responsive 
+                         data-src="${product.image_url || '/images/placeholder-product.jpg'}" 
+                         data-context="card"
                          class="card-img-top product-image" 
-                         alt="${product.name}"
-                         loading="lazy">
+                         alt="${product.name}">
                     <div class="card-body">
                         <h5 class="card-title">${product.name}</h5>
                         <p class="card-text">${product.description ? this.truncateText(product.description, 80) : ''}</p>
@@ -445,146 +441,9 @@ class FloresYaApp {
         container.innerHTML = paginationHTML;
     }
 
-    // Show product details modal
-    async showProductDetails(productId) {
-        try {
-            const response = await api.getProductById(productId);
-            
-            if (response.success) {
-                this.renderProductModal(response.data.product, response.data.related_products);
-            }
+    // Product details are now handled by the dedicated product-detail.html page
 
-        } catch (error) {
-            api.handleError(error);
-        }
-    }
-
-    // Render product modal
-    renderProductModal(product, relatedProducts = []) {
-        const modal = document.getElementById('productModal');
-        const title = document.getElementById('productModalTitle');
-        const body = document.getElementById('productModalBody');
-
-        if (!modal || !title || !body) return;
-
-        title.textContent = product.name;
-
-        const occasionText = {
-            'amor': 'Amor',
-            'birthday': 'Cumpleaños',
-            'anniversary': 'Aniversario',
-            'graduation': 'Graduación',
-            'friendship': 'Día de la Amistad',
-            'condolencia': 'Condolencias',
-            'mother': 'Día de la Madre',
-            'yellow_flower': 'Flor Amarilla',
-            'other': 'General'
-        }[product.occasion] || 'General';
-
-        const imagesHtml = product.additional_images && product.additional_images.length > 0 
-            ? product.additional_images.map(img => `<img src="${img}" class="img-thumbnail me-2" style="width: 80px; height: 80px; object-fit: cover;">`).join('')
-            : '';
-
-        const relatedHtml = relatedProducts.length > 0 
-            ? `
-                <h6 class="mt-4">Productos Relacionados</h6>
-                <div class="row">
-                    ${relatedProducts.map(related => `
-                        <div class="col-md-3 mb-3">
-                            <div class="card">
-                                <img src="${related.image_url || '/images/placeholder.jpg'}" class="card-img-top" style="height: 120px; object-fit: cover;">
-                                <div class="card-body p-2">
-                                    <h6 class="card-title small">${related.name}</h6>
-                                    <p class="card-text small mb-2">${api.formatCurrency(related.price)}</p>
-                                    <button class="btn btn-sm btn-outline-success w-100 btn-add-to-cart" data-product-id="${related.id}">
-                                        <i class="bi bi-bag-plus"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            ` : '';
-
-        body.innerHTML = `
-            <div class="row">
-                <div class="col-md-6">
-                    <img src="${product.image_url || '/images/placeholder.jpg'}" 
-                         class="img-fluid rounded mb-3" 
-                         alt="${product.name}">
-                    ${imagesHtml ? `<div class="additional-images">${imagesHtml}</div>` : ''}
-                </div>
-                <div class="col-md-6">
-                    <div class="product-occasion mb-3">
-                        <span class="badge-occasion">${occasionText}</span>
-                        ${product.featured ? '<span class="badge bg-danger ms-2">Destacado</span>' : ''}
-                    </div>
-                    
-                    <div class="product-price mb-3 fs-4 fw-bold text-success">
-                        ${api.formatCurrency(product.price)}
-                    </div>
-                    
-                    ${product.description ? `
-                        <div class="mb-3">
-                            <h6>Descripción</h6>
-                            <p>${product.description}</p>
-                        </div>
-                    ` : ''}
-                    
-                    <div class="mb-3">
-                        <h6>Disponibilidad</h6>
-                        <p class="${product.stock_quantity > 0 ? 'text-success' : 'text-danger'}">
-                            ${product.stock_quantity > 0 ? `${product.stock_quantity} unidades disponibles` : 'Sin stock'}
-                        </p>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <h6>Categoría</h6>
-                        <p>${product.category_name || 'Sin categoría'}</p>
-                    </div>
-                    
-                    <div class="quantity-selector mb-3">
-                        <label for="productQuantity" class="form-label">Cantidad</label>
-                        <div class="input-group" style="max-width: 150px;">
-                            <button type="button" class="btn btn-outline-secondary" onclick="this.nextElementSibling.stepDown()">-</button>
-                            <input type="number" class="form-control text-center" id="productQuantity" value="1" min="1" max="${product.stock_quantity}">
-                            <button type="button" class="btn btn-outline-secondary" onclick="this.previousElementSibling.stepUp()">+</button>
-                        </div>
-                    </div>
-                    
-                    ${product.stock_quantity > 0 ? `
-                        <button class="btn btn-success btn-lg w-100" onclick="window.floresyaApp.addToCartFromModal(${product.id})">
-                            <i class="bi bi-bag-plus"></i> Agregar al Carrito
-                        </button>
-                    ` : `
-                        <button class="btn btn-secondary btn-lg w-100" disabled>
-                            Sin Stock
-                        </button>
-                    `}
-                </div>
-            </div>
-            ${relatedHtml}
-        `;
-
-        const bsModal = new bootstrap.Modal(modal);
-        bsModal.show();
-    }
-
-    // Add to cart from modal
-    addToCartFromModal(productId) {
-        const quantityInput = document.getElementById('productQuantity');
-        const quantity = quantityInput ? parseInt(quantityInput.value) : 1;
-        
-        if (window.cart) {
-            window.cart.addItem(productId, quantity);
-            
-            // Hide modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
-            if (modal) {
-                modal.hide();
-            }
-        }
-    }
+    // Product modal functionality removed - using dedicated product-detail.html page instead
 
     // Utility function to truncate text
     truncateText(text, maxLength) {
@@ -896,9 +755,54 @@ class FloresYaApp {
     }
 }
 
-// Initialize app when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🌸 FloresYa: DOM loaded, initializing app...');
+// Wait for stylesheets to load before initializing
+function waitForStylesheets() {
+    return new Promise((resolve) => {
+        if (document.readyState === 'complete') {
+            resolve();
+            return;
+        }
+        
+        // Check if all stylesheets are loaded
+        const links = document.querySelectorAll('link[rel="stylesheet"]');
+        let loadedCount = 0;
+        
+        function checkLoaded() {
+            loadedCount++;
+            if (loadedCount >= links.length) {
+                // Wait an additional frame to ensure layout is stable
+                requestAnimationFrame(resolve);
+            }
+        }
+        
+        if (links.length === 0) {
+            requestAnimationFrame(resolve);
+            return;
+        }
+        
+        links.forEach(link => {
+            if (link.sheet) {
+                checkLoaded();
+            } else {
+                link.addEventListener('load', checkLoaded);
+            }
+        });
+        
+        // Fallback timeout
+        setTimeout(resolve, 1000);
+    });
+}
+
+// Initialize app when DOM and stylesheets are loaded
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('🌸 FloresYa: DOM loaded, waiting for stylesheets...');
+    
+    // Wait for stylesheets to load
+    await waitForStylesheets();
+    
+    // Make page visible after stylesheets are loaded
+    document.documentElement.classList.add('stylesheets-loaded');
+    console.log('🎨 Stylesheets loaded, initializing app...');
     
     // Check if Bootstrap is loaded
     if (typeof bootstrap === 'undefined') {

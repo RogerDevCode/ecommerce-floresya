@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - FloresYa Imágenes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .product-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .product-image {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .product-name {
+            font-weight: bold;
+            color: #333;
+        }
+        .product-price {
+            color: #e91e63;
+            font-size: 1.2em;
+        }
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2em;
+        }
+        .error {
+            color: red;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌸 FloresYa - Test de Imágenes</h1>
+    <div id="loading" class="loading">Cargando productos...</div>
+    <div id="error" class="error" style="display: none;"></div>
+    <div id="products" class="product-grid"></div>
+
+    <script>
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/products?limit=12');
+                const data = await response.json();
+                
+                document.getElementById('loading').style.display = 'none';
+                
+                if (!data.success) {
+                    throw new Error(data.message || 'Error cargando productos');
+                }
+                
+                const productsContainer = document.getElementById('products');
+                
+                data.data.products.forEach(product => {
+                    const productCard = document.createElement('div');
+                    productCard.className = 'product-card';
+                    
+                    productCard.innerHTML = `
+                        <h3 class="product-name">${product.name}</h3>
+                        <img 
+                            src="${product.image_url}" 
+                            alt="${product.name}"
+                            class="product-image"
+                            onerror="this.src='/images/placeholder-product.svg'"
+                        >
+                        <p class="product-price">$${product.price}</p>
+                        <p><small>Categoría: ${product.category_name || 'N/A'}</small></p>
+                        <details>
+                            <summary>URLs de imágenes</summary>
+                            <p><strong>Large:</strong> <br><a href="${product.image_url}" target="_blank">Ver imagen</a></p>
+                            ${product.additional_images && product.additional_images.length > 0 ? `
+                                <p><strong>Medium:</strong> <br><a href="${product.additional_images[0]}" target="_blank">Ver imagen</a></p>
+                                <p><strong>Thumb:</strong> <br><a href="${product.additional_images[1]}" target="_blank">Ver imagen</a></p>
+                            ` : ''}
+                        </details>
+                    `;
+                    
+                    productsContainer.appendChild(productCard);
+                });
+                
+                console.log(`✅ Cargados ${data.data.products.length} productos`);
+                
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = `Error: ${error.message}`;
+                console.error('Error:', error);
+            }
+        }
+        
+        // Cargar productos al iniciar
+        loadProducts();
+    </script>
+</body>
+</html>

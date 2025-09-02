@@ -17,7 +17,9 @@ const categoryRoutes = require('./routes/categories');
 const settingsRoutes = require('./routes/settings');
 const paymentMethodRoutes = require('./routes/paymentMethods');
 const carouselRoutes = require('./routes/carousel');
+const uploadRoutes = require('./routes/upload');
 const testRoutes = require('./routes/testRoutes');
+const imageRoutes = require('./routes/images');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -83,7 +85,9 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/payment-methods', paymentMethodRoutes);
 app.use('/api/carousel', carouselRoutes);
+app.use('/api/upload', uploadRoutes);
 app.use('/api/test', testRoutes);
+app.use('/api/images', imageRoutes);
 
 app.get('/api/health', (req, res) => {
     res.json({
