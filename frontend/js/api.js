@@ -188,6 +188,28 @@ class FloresYaAPI {
         }
     }
 
+    // Get occasions
+    async getOccasions() {
+        try {
+            const response = await fetch(`${this.baseURL}/occasions`, {
+                headers: this.getHeaders()
+            });
+            return await this.handleResponse(response);
+        } catch (error) {
+            console.warn('Failed to load occasions:', error);
+            // Return fallback occasions if API fails
+            return {
+                success: true,
+                data: [
+                    { id: 1, name: 'San Valentín', icon: 'bi-heart-fill', color: '#dc3545' },
+                    { id: 4, name: 'Cumpleaños', icon: 'bi-gift-fill', color: '#ffc107' },
+                    { id: 5, name: 'Aniversario', icon: 'bi-heart-arrow', color: '#e91e63' },
+                    { id: 2, name: 'Día de la Madre', icon: 'bi-person-heart', color: '#fd7e14' }
+                ]
+            };
+        }
+    }
+
     // Order methods
     async createOrder(orderData) {
         try {

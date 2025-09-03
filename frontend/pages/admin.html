@@ -104,6 +104,10 @@
                     <a href="#" class="list-group-item list-group-item-action" data-section="products">
                         <i class="bi bi-box-seam me-2"></i>Productos
                     </a>
+                    <a href="#" class="list-group-item list-group-item-action" data-section="occasions">
+                        <i class="bi bi-calendar-heart me-2"></i>Ocasiones
+                        <span class="badge bg-primary rounded-pill ms-auto" id="totalOccasionsCount">0</span>
+                    </a>
                     <a href="#" class="list-group-item list-group-item-action" data-section="carousel">
                         <i class="bi bi-images me-2"></i>Carrusel
                     </a>
@@ -368,6 +372,132 @@
 
                     <div id="productsContent">
                         <!-- Products will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Occasions Section -->
+                <div id="occasions-section" class="content-section">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2"><i class="bi bi-calendar-heart me-2"></i>Gestión de Ocasiones</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-sm btn-success me-2" onclick="adminApp.createOccasion()">
+                                <i class="bi bi-plus"></i> Nueva Ocasión
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="adminApp.refreshOccasions()">
+                                <i class="bi bi-arrow-clockwise"></i> Actualizar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Occasions Statistics -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary">
+                                        <i class="bi bi-calendar-heart"></i>
+                                        <span id="totalOccasions">0</span>
+                                    </h5>
+                                    <p class="card-text small text-muted">Total Ocasiones</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5 class="card-title text-success">
+                                        <i class="bi bi-check-circle"></i>
+                                        <span id="activeOccasions">0</span>
+                                    </h5>
+                                    <p class="card-text small text-muted">Activas</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5 class="card-title text-info">
+                                        <i class="bi bi-link-45deg"></i>
+                                        <span id="occasionRelations">0</span>
+                                    </h5>
+                                    <p class="card-text small text-muted">Relaciones con Productos</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5 class="card-title text-warning">
+                                        <i class="bi bi-star"></i>
+                                        <span id="topOccasion">-</span>
+                                    </h5>
+                                    <p class="card-text small text-muted">Más Popular</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Occasions Management -->
+                    <div class="card">
+                        <div class="card-header">
+                            <ul class="nav nav-tabs card-header-tabs" id="occasionsTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="occasions-list-tab" data-bs-toggle="tab" 
+                                            data-bs-target="#occasions-list" type="button" role="tab">
+                                        <i class="bi bi-list-ul"></i> Lista de Ocasiones
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="occasions-relations-tab" data-bs-toggle="tab" 
+                                            data-bs-target="#occasions-relations" type="button" role="tab">
+                                        <i class="bi bi-diagram-3"></i> Relaciones Productos
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="occasions-analytics-tab" data-bs-toggle="tab" 
+                                            data-bs-target="#occasions-analytics" type="button" role="tab">
+                                        <i class="bi bi-graph-up"></i> Analytics
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card-body">
+                            <div class="tab-content" id="occasionsTabContent">
+                                <!-- Occasions List Tab -->
+                                <div class="tab-pane fade show active" id="occasions-list" role="tabpanel">
+                                    <div id="occasionsContent">
+                                        <!-- Occasions will be loaded here -->
+                                    </div>
+                                </div>
+                                
+                                <!-- Occasions Relations Tab -->
+                                <div class="tab-pane fade" id="occasions-relations" role="tabpanel">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6>Productos por Ocasión</h6>
+                                        <select class="form-select form-select-sm" style="width: auto;" id="occasionFilter">
+                                            <option value="">Todas las ocasiones</option>
+                                        </select>
+                                    </div>
+                                    <div id="occasionRelationsContent">
+                                        <!-- Relations will be loaded here -->
+                                    </div>
+                                </div>
+                                
+                                <!-- Occasions Analytics Tab -->
+                                <div class="tab-pane fade" id="occasions-analytics" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <canvas id="occasionsChart" width="400" height="200"></canvas>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div id="occasionsAnalyticsData">
+                                                <!-- Analytics data will be loaded here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

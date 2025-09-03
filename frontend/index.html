@@ -82,14 +82,7 @@
                             Ocasiones
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="occasionsDropdownToggle">
-                            <li><a class="dropdown-item" href="#" data-occasion="amor">💖 Amor</a></li>
-                            <li><a class="dropdown-item" href="#" data-occasion="birthday">🎂 Cumpleaños</a></li>
-                            <li><a class="dropdown-item" href="#" data-occasion="anniversary">💍 Aniversario</a></li>
-                            <li><a class="dropdown-item" href="#" data-occasion="graduation">🎓 Graduación</a></li>
-                            <li><a class="dropdown-item" href="#" data-occasion="friendship">🤝 Día de la Amistad</a></li>
-                            <li><a class="dropdown-item" href="#" data-occasion="condolencia">🕊️ Condolencias</a></li>
-                            <li><a class="dropdown-item" href="#" data-occasion="mother">👩 Día de la Madre</a></li>
-                            <li><a class="dropdown-item" href="#" data-occasion="yellow_flower">🌻 Flor Amarilla</a></li>
+                            <!-- Occasions will be loaded dynamically -->
                         </ul>
                     </li>
                 </ul>
@@ -451,6 +444,24 @@
                         </div>
                         <button type="submit" class="btn btn-success w-100">Iniciar Sesión</button>
                     </form>
+                    
+                    <!-- DEV ONLY: Quick Login Buttons -->
+                    <div class="dev-only-section bg-warning bg-opacity-10 p-2 rounded mt-3">
+                        <small class="text-muted d-block mb-2"><i class="bi bi-wrench"></i> Desarrollo - Acceso Rápido:</small>
+                        <div class="row">
+                            <div class="col-6">
+                                <button type="button" class="btn btn-outline-primary btn-sm w-100" onclick="fillAdminCredentials()">
+                                    <i class="bi bi-person-gear"></i> Admin
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button type="button" class="btn btn-outline-info btn-sm w-100" onclick="fillClientCredentials()">
+                                    <i class="bi bi-person"></i> Cliente
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="text-center mt-3">
                         <p>¿No tienes cuenta? <a href="#" data-bs-toggle="modal" data-bs-target="#registerModal" data-bs-dismiss="modal">Regístrate aquí</a></p>
                     </div>

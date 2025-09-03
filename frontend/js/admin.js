@@ -6,6 +6,7 @@ class AdminApp {
         this.orders = [];
         this.payments = [];
         this.products = [];
+        this.occasions = [];
         this.currentOrdersPage = 1;
         this.currentPaymentsPage = 1;
         this.selectedFiles = [];
@@ -139,6 +140,9 @@ class AdminApp {
                 break;
             case 'products':
                 this.loadProducts();
+                break;
+            case 'occasions':
+                this.loadOccasions();
                 break;
             case 'settings':
                 this.loadSettings();
@@ -1486,16 +1490,15 @@ class AdminApp {
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="productOccasion" class="form-label">Ocasión</label>
-                                    <select class="form-select" id="productOccasion">
-                                        <option value="other">Otra</option>
-                                        <option value="birthday">Cumpleaños</option>
-                                        <option value="wedding">Boda</option>
-                                        <option value="anniversary">Aniversario</option>
-                                        <option value="valentine">San Valentín</option>
-                                        <option value="funeral">Funeral</option>
-                                        <option value="graduation">Graduación</option>
-                                    </select>
+                                    <label class="form-label">Ocasiones</label>
+                                    <div class="border rounded p-2" style="max-height: 150px; overflow-y: auto;">
+                                        <div id="productOccasionsContainer">
+                                            <div class="text-muted text-center py-2">
+                                                <small>Cargando ocasiones...</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted">Selecciona todas las ocasiones apropiadas para este producto</small>
                                 </div>
                             </div>
                         </div>
@@ -1624,6 +1627,9 @@ class AdminApp {
             e.preventDefault();
             this.saveProduct(isEditing, productId);
         });
+
+        // Load occasions for the multi-select
+        this.loadProductOccasions();
 
         // Load existing product data if editing
         if (isEditing && productId) {
@@ -2175,6 +2181,100 @@ class AdminApp {
         }
     }
 
+    async loadProductOccasions() {
+        const container = document.getElementById('productOccasionsContainer');
+        if (!container) return;
+
+        try {
+            // Show loading
+            container.innerHTML = `
+                <div class="text-center py-2">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <small class="text-muted ms-2">Cargando ocasiones...</small>
+                </div>
+            `;
+
+            // Load occasions from API
+            const response = await fetch('/api/occasions', {
+                headers: {
+                    'Authorization': `Bearer ${api.token}`
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success && result.data) {
+                const occasions = result.data.sort((a, b) => a.sort_order - b.sort_order);
+                
+                if (occasions.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-2">
+                            <small class="text-muted">No hay ocasiones disponibles</small>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Create checkboxes for each occasion
+                container.innerHTML = occasions.map(occasion => `
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" 
+                               id="occasion_${occasion.id}" 
+                               value="${occasion.id}"
+                               data-occasion-name="${occasion.name}">
+                        <label class="form-check-label d-flex align-items-center" for="occasion_${occasion.id}">
+                            <i class="bi ${occasion.icon || 'bi-calendar-heart'}" 
+                               style="color: ${occasion.color || '#28a745'}; margin-right: 8px;"></i>
+                            <span>${occasion.name}</span>
+                            ${occasion.description ? 
+                                `<small class="text-muted ms-2">${occasion.description}</small>` : 
+                                ''
+                            }
+                        </label>
+                    </div>
+                `).join('');
+                
+            } else {
+                container.innerHTML = `
+                    <div class="text-center py-2">
+                        <small class="text-danger">Error cargando ocasiones</small>
+                    </div>
+                `;
+            }
+            
+        } catch (error) {
+            console.error('Error loading occasions:', error);
+            container.innerHTML = `
+                <div class="text-center py-2">
+                    <small class="text-danger">Error cargando ocasiones</small>
+                </div>
+            `;
+        }
+    }
+
+    getSelectedOccasions() {
+        const container = document.getElementById('productOccasionsContainer');
+        if (!container) return [];
+
+        const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
+        return Array.from(checkboxes).map(cb => ({
+            id: parseInt(cb.value),
+            name: cb.dataset.occasionName
+        }));
+    }
+
+    setSelectedOccasions(occasionIds) {
+        const container = document.getElementById('productOccasionsContainer');
+        if (!container) return;
+
+        const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => {
+            cb.checked = occasionIds.includes(parseInt(cb.value));
+        });
+    }
+
     // =============================
     // ENHANCED CAROUSEL FUNCTIONS
     // =============================
@@ -2649,6 +2749,454 @@ class AdminApp {
         } finally {
             api.hideLoading();
         }
+    }
+
+    // OCCASIONS MANAGEMENT METHODS
+
+    // Load occasions section
+    async loadOccasions() {
+        try {
+            api.showLoading();
+            await this.loadOccasionsList();
+            await this.updateOccasionsStats();
+        } catch (error) {
+            console.error('Error loading occasions:', error);
+            api.showNotification('Error al cargar ocasiones', 'danger');
+        } finally {
+            api.hideLoading();
+        }
+    }
+
+    // Load occasions list
+    async loadOccasionsList() {
+        try {
+            const response = await fetch('/api/occasions', {
+                headers: api.getHeaders()
+            });
+            const data = await api.handleResponse(response);
+            
+            if (data.success) {
+                this.occasions = data.data;
+                this.renderOccasionsList();
+                this.updateOccasionFilter();
+            }
+        } catch (error) {
+            console.error('Error loading occasions list:', error);
+            api.showNotification('Error al cargar lista de ocasiones', 'danger');
+        }
+    }
+
+    // Render occasions list
+    renderOccasionsList() {
+        const container = document.getElementById('occasionsContent');
+        if (!container) return;
+
+        if (this.occasions.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3 text-muted">No hay ocasiones disponibles</h5>
+                    <button type="button" class="btn btn-primary mt-2" onclick="adminApp.createOccasion()">
+                        <i class="bi bi-plus"></i> Crear Primera Ocasión
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        const tableHTML = `
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Ícono</th>
+                            <th>Color</th>
+                            <th>Orden</th>
+                            <th>Estado</th>
+                            <th>Productos</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${this.occasions.map(occasion => `
+                            <tr>
+                                <td><span class="badge bg-secondary">${occasion.id}</span></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="${occasion.icon || 'bi-star'}" style="color: ${occasion.color}; font-size: 1.2rem;"></i>
+                                        <strong class="ms-2">${occasion.name}</strong>
+                                    </div>
+                                </td>
+                                <td class="text-muted">${occasion.description || '-'}</td>
+                                <td><code>${occasion.icon || 'N/A'}</code></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="color-preview me-2" style="width: 20px; height: 20px; background: ${occasion.color}; border-radius: 3px; border: 1px solid #ddd;"></div>
+                                        <code>${occasion.color}</code>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">${occasion.sort_order}</span>
+                                </td>
+                                <td>
+                                    <span class="badge ${occasion.active ? 'bg-success' : 'bg-secondary'}">
+                                        ${occasion.active ? 'Activa' : 'Inactiva'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-info" onclick="adminApp.viewOccasionProducts(${occasion.id})">
+                                        <i class="bi bi-eye"></i> Ver
+                                    </button>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="adminApp.editOccasion(${occasion.id})">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-${occasion.active ? 'warning' : 'success'}" 
+                                                onclick="adminApp.toggleOccasionStatus(${occasion.id}, ${!occasion.active})">
+                                            <i class="bi bi-${occasion.active ? 'pause' : 'play'}-circle"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="adminApp.deleteOccasion(${occasion.id})">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        container.innerHTML = tableHTML;
+    }
+
+    // Update occasions statistics
+    async updateOccasionsStats() {
+        try {
+            const totalOccasions = this.occasions.length;
+            const activeOccasions = this.occasions.filter(o => o.active).length;
+            
+            document.getElementById('totalOccasions').textContent = totalOccasions;
+            document.getElementById('activeOccasions').textContent = activeOccasions;
+            document.getElementById('totalOccasionsCount').textContent = totalOccasions;
+            document.getElementById('occasionRelations').textContent = '8'; // Placeholder
+            document.getElementById('topOccasion').textContent = 'San Valentín';
+        } catch (error) {
+            console.error('Error updating occasions stats:', error);
+        }
+    }
+
+    // Update occasion filter dropdown
+    updateOccasionFilter() {
+        const filter = document.getElementById('occasionFilter');
+        if (!filter) return;
+
+        filter.innerHTML = '<option value="">Todas las ocasiones</option>' + 
+            this.occasions
+                .filter(o => o.active)
+                .map(o => `<option value="${o.id}">${o.name}</option>`)
+                .join('');
+    }
+
+    // Create new occasion
+    async createOccasion() {
+        const modalHTML = `
+            <div class="modal fade" id="occasionModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="bi bi-plus-circle me-2"></i>Nueva Ocasión
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="occasionForm">
+                                <div class="mb-3">
+                                    <label for="occasionName" class="form-label">Nombre *</label>
+                                    <input type="text" class="form-control" id="occasionName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="occasionDescription" class="form-label">Descripción</label>
+                                    <textarea class="form-control" id="occasionDescription" rows="3"></textarea>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="occasionIcon" class="form-label">Ícono Bootstrap</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i id="iconPreview" class="bi bi-star"></i>
+                                            </span>
+                                            <input type="text" class="form-control" id="occasionIcon" 
+                                                   placeholder="bi-heart-fill" value="bi-star">
+                                        </div>
+                                        <small class="form-text text-muted">
+                                            <a href="https://icons.getbootstrap.com" target="_blank">Ver íconos disponibles</a>
+                                        </small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="occasionColor" class="form-label">Color</label>
+                                        <input type="color" class="form-control form-control-color" id="occasionColor" value="#28a745">
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <label for="occasionOrder" class="form-label">Orden de visualización</label>
+                                    <input type="number" class="form-control" id="occasionOrder" value="${this.occasions.length + 1}" min="0">
+                                </div>
+                                <div class="form-check mt-3">
+                                    <input class="form-check-input" type="checkbox" id="occasionActive" checked>
+                                    <label class="form-check-label" for="occasionActive">
+                                        Ocasión activa
+                                    </label>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-success" onclick="adminApp.saveOccasion()">
+                                <i class="bi bi-check2"></i> Guardar Ocasión
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const existingModal = document.getElementById('occasionModal');
+        if (existingModal) existingModal.remove();
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        const modal = new bootstrap.Modal(document.getElementById('occasionModal'));
+        modal.show();
+
+        document.getElementById('occasionIcon').addEventListener('input', (e) => {
+            document.getElementById('iconPreview').className = `bi ${e.target.value || 'bi-star'}`;
+        });
+    }
+
+    // Save occasion
+    async saveOccasion(occasionId = null) {
+        try {
+            const form = document.getElementById('occasionForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const occasionData = {
+                name: document.getElementById('occasionName').value,
+                description: document.getElementById('occasionDescription').value,
+                icon: document.getElementById('occasionIcon').value || 'bi-star',
+                color: document.getElementById('occasionColor').value,
+                sort_order: parseInt(document.getElementById('occasionOrder').value),
+                active: document.getElementById('occasionActive').checked
+            };
+
+            api.showLoading();
+
+            const url = occasionId ? `/api/occasions/${occasionId}` : '/api/occasions';
+            const method = occasionId ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: api.getHeaders(true),
+                body: JSON.stringify(occasionData)
+            });
+
+            const data = await api.handleResponse(response);
+
+            if (data.success) {
+                api.showNotification(
+                    occasionId ? 'Ocasión actualizada exitosamente' : 'Ocasión creada exitosamente', 
+                    'success'
+                );
+                
+                const modal = bootstrap.Modal.getInstance(document.getElementById('occasionModal'));
+                if (modal) modal.hide();
+
+                await this.loadOccasions();
+            }
+        } catch (error) {
+            console.error('Error saving occasion:', error);
+            api.showNotification('Error al guardar ocasión', 'danger');
+        } finally {
+            api.hideLoading();
+        }
+    }
+
+    // Edit occasion
+    async editOccasion(occasionId) {
+        const occasion = this.occasions.find(o => o.id === occasionId);
+        if (!occasion) return;
+
+        await this.createOccasion();
+
+        document.getElementById('occasionName').value = occasion.name;
+        document.getElementById('occasionDescription').value = occasion.description || '';
+        document.getElementById('occasionIcon').value = occasion.icon || 'bi-star';
+        document.getElementById('occasionColor').value = occasion.color || '#28a745';
+        document.getElementById('occasionOrder').value = occasion.sort_order || 0;
+        document.getElementById('occasionActive').checked = occasion.active;
+
+        document.querySelector('#occasionModal .modal-title').innerHTML = 
+            '<i class="bi bi-pencil me-2"></i>Editar Ocasión';
+
+        const saveButton = document.querySelector('#occasionModal .btn-success');
+        saveButton.setAttribute('onclick', `adminApp.saveOccasion(${occasionId})`);
+        saveButton.innerHTML = '<i class="bi bi-check2"></i> Actualizar Ocasión';
+
+        document.getElementById('iconPreview').className = `bi ${occasion.icon || 'bi-star'}`;
+    }
+
+    // Toggle occasion status
+    async toggleOccasionStatus(occasionId, newStatus) {
+        try {
+            api.showLoading();
+
+            const response = await fetch(`/api/occasions/${occasionId}`, {
+                method: 'PUT',
+                headers: api.getHeaders(true),
+                body: JSON.stringify({ active: newStatus })
+            });
+
+            const data = await api.handleResponse(response);
+
+            if (data.success) {
+                api.showNotification(
+                    `Ocasión ${newStatus ? 'activada' : 'desactivada'} exitosamente`, 
+                    'success'
+                );
+                await this.loadOccasions();
+            }
+        } catch (error) {
+            console.error('Error toggling occasion status:', error);
+            api.showNotification('Error al cambiar estado de ocasión', 'danger');
+        } finally {
+            api.hideLoading();
+        }
+    }
+
+    // Delete occasion
+    async deleteOccasion(occasionId) {
+        const occasion = this.occasions.find(o => o.id === occasionId);
+        if (!occasion) return;
+
+        if (!confirm(`¿Estás seguro de que quieres eliminar la ocasión "${occasion.name}"?\n\nEsta acción no se puede deshacer.`)) {
+            return;
+        }
+
+        try {
+            api.showLoading();
+
+            const response = await fetch(`/api/occasions/${occasionId}`, {
+                method: 'DELETE',
+                headers: api.getHeaders(true)
+            });
+
+            const data = await api.handleResponse(response);
+
+            if (data.success) {
+                api.showNotification('Ocasión eliminada exitosamente', 'success');
+                await this.loadOccasions();
+            }
+        } catch (error) {
+            console.error('Error deleting occasion:', error);
+            api.showNotification('Error al eliminar ocasión', 'danger');
+        } finally {
+            api.hideLoading();
+        }
+    }
+
+    // View occasion products
+    async viewOccasionProducts(occasionId) {
+        try {
+            const occasion = this.occasions.find(o => o.id === occasionId);
+            if (!occasion) return;
+
+            api.showLoading();
+
+            const response = await fetch(`/api/occasions/${occasionId}/products`, {
+                headers: api.getHeaders()
+            });
+            
+            const data = await api.handleResponse(response);
+
+            if (data.success) {
+                this.showOccasionProductsModal(occasion, data.data);
+            }
+        } catch (error) {
+            console.error('Error loading occasion products:', error);
+            api.showNotification('Error al cargar productos de la ocasión', 'danger');
+        } finally {
+            api.hideLoading();
+        }
+    }
+
+    // Show occasion products modal
+    showOccasionProductsModal(occasion, products) {
+        const modalHTML = `
+            <div class="modal fade" id="occasionProductsModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="${occasion.icon}" style="color: ${occasion.color};"></i>
+                                Productos para ${occasion.name}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            ${products.length === 0 ? `
+                                <div class="text-center py-4">
+                                    <i class="bi bi-box text-muted" style="font-size: 3rem;"></i>
+                                    <h6 class="mt-3 text-muted">No hay productos asociados a esta ocasión</h6>
+                                </div>
+                            ` : `
+                                <div class="row">
+                                    ${products.map(product => `
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <div class="d-flex">
+                                                        <img src="${product.primary_image || product.image_url}" 
+                                                             class="rounded me-3" width="60" height="60" style="object-fit: cover;">
+                                                        <div class="flex-grow-1">
+                                                            <h6 class="card-title mb-1">${product.name}</h6>
+                                                            <strong class="text-success">$${product.price}</strong>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const existingModal = document.getElementById('occasionProductsModal');
+        if (existingModal) existingModal.remove();
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        const modal = new bootstrap.Modal(document.getElementById('occasionProductsModal'));
+        modal.show();
+    }
+
+    // Refresh occasions
+    async refreshOccasions() {
+        await this.loadOccasions();
+        api.showNotification('Ocasiones actualizadas', 'success');
     }
 }
 

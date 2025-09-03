@@ -6,6 +6,7 @@ class FloresYaApp {
         this.currentFilters = {};
         this.products = [];
         this.categories = [];
+        this.occasions = [];
         this.init();
     }
 
@@ -34,7 +35,7 @@ class FloresYaApp {
         console.log(isProduction ? '🚀 Production Mode' : '🛠️ Development Mode');
     }
 
-    // Load initial data (categories, settings, etc.)
+    // Load initial data (categories, occasions, settings, etc.)
     async loadInitialData() {
         try {
             // Load categories
@@ -44,6 +45,14 @@ class FloresYaApp {
                 this.categories = categoriesResponse.data.categories;
                 this.populateCategoryFilter();
                 this.populateCategoryDropdown();
+            }
+
+            // Load occasions
+            const occasionsResponse = await api.getOccasions();
+            
+            if (occasionsResponse.success) {
+                this.occasions = occasionsResponse.data;
+                this.populateOccasionsDropdown();
             }
 
             // Load settings if needed
@@ -120,6 +129,46 @@ class FloresYaApp {
                     <i class="bi bi-flower1 me-2"></i>${category.name}
                 </a>`;
                 categoriesDropdown.appendChild(li);
+            });
+        }
+    }
+
+    // Populate navigation occasions dropdown
+    populateOccasionsDropdown() {
+        const occasionsDropdown = document.querySelector('#occasionsDropdownToggle + .dropdown-menu');
+        if (!occasionsDropdown) {
+            console.warn('Occasions dropdown not found');
+            return;
+        }
+
+        console.log('Populating occasions dropdown with', this.occasions.length, 'occasions');
+        occasionsDropdown.innerHTML = '';
+
+        if (this.occasions.length > 0) {
+            this.occasions.forEach(occasion => {
+                const li = document.createElement('li');
+                li.innerHTML = `<a class="dropdown-item" href="#productos" data-occasion-id="${occasion.id}">
+                    <i class="${occasion.icon || 'bi bi-calendar-event'} me-2" style="color: ${occasion.color || '#28a745'}"></i>
+                    ${occasion.name}
+                </a>`;
+                occasionsDropdown.appendChild(li);
+            });
+        } else {
+            // Add fallback occasions if none loaded from API
+            const fallbackOccasions = [
+                { id: 1, name: 'San Valentín', icon: 'bi-heart-fill', color: '#dc3545' },
+                { id: 4, name: 'Cumpleaños', icon: 'bi-gift-fill', color: '#ffc107' },
+                { id: 5, name: 'Aniversario', icon: 'bi-heart-arrow', color: '#e91e63' },
+                { id: 2, name: 'Día de la Madre', icon: 'bi-person-heart', color: '#fd7e14' }
+            ];
+            
+            fallbackOccasions.forEach(occasion => {
+                const li = document.createElement('li');
+                li.innerHTML = `<a class="dropdown-item" href="#productos" data-occasion-id="${occasion.id}">
+                    <i class="${occasion.icon} me-2" style="color: ${occasion.color}"></i>
+                    ${occasion.name}
+                </a>`;
+                occasionsDropdown.appendChild(li);
             });
         }
     }
@@ -220,6 +269,10 @@ class FloresYaApp {
                 e.preventDefault();
                 this.filterByOccasion(e.target.dataset.occasion);
             }
+            if (e.target.dataset.occasionId) {
+                e.preventDefault();
+                this.filterByOccasionId(parseInt(e.target.dataset.occasionId));
+            }
         });
 
         // Pagination clicks
@@ -285,6 +338,17 @@ class FloresYaApp {
         this.currentPage = 1;
         this.loadProducts();
 
+        // Scroll to products section
+        document.getElementById('productos')?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Filter by occasion ID (new occasions system)
+    filterByOccasionId(occasionId) {
+        console.log('FloresYa: Filtering by occasion ID:', occasionId);
+        this.currentFilters.occasionId = occasionId;
+        delete this.currentFilters.occasion; // Clear old occasion filter
+        this.currentPage = 1;
+        this.loadProducts();
         // Scroll to products section
         document.getElementById('productos')?.scrollIntoView({ behavior: 'smooth' });
     }
@@ -1047,3 +1111,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     console.log('🎉 FloresYa: All systems initialized!');
 });
+
+// DEV ONLY: Quick login functions for development testing
+// These functions should be removed in production
+window.fillAdminCredentials = function() {
+    const emailField = document.getElementById('loginEmail');
+    const passwordField = document.getElementById('loginPassword');
+    
+    if (emailField && passwordField) {
+        emailField.value = 'admin@floresya.com';
+        passwordField.value = 'admin123';
+        
+        // Add visual feedback
+        emailField.classList.add('bg-success', 'bg-opacity-10');
+        passwordField.classList.add('bg-success', 'bg-opacity-10');
+        
+        setTimeout(() => {
+            emailField.classList.remove('bg-success', 'bg-opacity-10');
+            passwordField.classList.remove('bg-success', 'bg-opacity-10');
+        }, 1500);
+    }
+};
+
+window.fillClientCredentials = function() {
+    const emailField = document.getElementById('loginEmail');
+    const passwordField = document.getElementById('loginPassword');
+    
+    if (emailField && passwordField) {
+        emailField.value = 'cliente@example.com';
+        passwordField.value = 'cliente123';
+        
+        // Add visual feedback
+        emailField.classList.add('bg-info', 'bg-opacity-10');
+        passwordField.classList.add('bg-info', 'bg-opacity-10');
+        
+        setTimeout(() => {
+            emailField.classList.remove('bg-info', 'bg-opacity-10');
+            passwordField.classList.remove('bg-info', 'bg-opacity-10');
+        }, 1500);
+    }
+};
