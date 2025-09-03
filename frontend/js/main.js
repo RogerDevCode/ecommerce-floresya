@@ -484,15 +484,28 @@ class FloresYaApp {
             'other': 'General'
         }[product.occasion] || 'General';
 
+        // Parse additional images if available
+        const additionalImages = product.additional_images ? 
+            (typeof product.additional_images === 'string' ? 
+                JSON.parse(product.additional_images) : 
+                product.additional_images) : [];
+
+        const primaryImage = product.primary_image || product.image_url || '/images/placeholder-product.jpg';
+        const allImages = [primaryImage, ...additionalImages].filter(img => img && img !== '');
+
         return `
             <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
                 <div class="card product-card h-100" data-product-id="${product.id}">
                     ${product.featured ? '<span class="badge-featured">Destacado</span>' : ''}
-                    <img data-responsive 
-                         data-src="${product.primary_image || product.image_url || '/images/placeholder-product.jpg'}" 
-                         data-context="card"
-                         class="card-img-top product-image" 
-                         alt="${product.name}">
+                    <div class="product-image-container">
+                        <img data-responsive 
+                             data-src="${primaryImage}" 
+                             data-context="card"
+                             class="card-img-top product-image" 
+                             alt="${product.name}"
+                             data-images='${JSON.stringify(allImages)}'
+                             data-current-index="0">
+                    </div>
                     <div class="card-body">
                         <h5 class="card-title">${product.name}</h5>
                         <p class="card-text">${product.description ? this.truncateText(product.description, 80) : ''}</p>

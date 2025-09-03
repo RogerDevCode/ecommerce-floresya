@@ -354,7 +354,21 @@ class AuthManager {
         // Update modal content
         this.updateOrdersModal(orders);
         
-        const modal = new bootstrap.Modal(ordersModal);
+        // Get existing modal instance or create new one
+        let modal = bootstrap.Modal.getInstance(ordersModal);
+        if (!modal) {
+            modal = new bootstrap.Modal(ordersModal, {
+                backdrop: true,
+                keyboard: true
+            });
+        }
+        
+        // Clean up any existing backdrop before showing
+        const existingBackdrop = document.querySelector('.modal-backdrop');
+        if (existingBackdrop) {
+            existingBackdrop.remove();
+        }
+        
         modal.show();
     }
 
@@ -378,6 +392,18 @@ class AuthManager {
                 </div>
             </div>
         `;
+
+        // Add event listeners to clean up backdrop when modal is hidden
+        modal.addEventListener('hidden.bs.modal', () => {
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+            // Also clean up body classes
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+        });
 
         return modal;
     }

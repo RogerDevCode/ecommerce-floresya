@@ -7,6 +7,19 @@ const generateOrderNumber = () => {
     return `FL-${date}-${random}`;
 };
 
+const safeParse = (data) => {
+    if (!data) return null;
+    if (typeof data === 'object') return data;
+    if (typeof data === 'string') {
+        try {
+            return JSON.parse(data);
+        } catch (e) {
+            return data;
+        }
+    }
+    return data;
+};
+
 const createOrder = async (req, res) => {
     let connection;
     try {
@@ -207,11 +220,11 @@ const getOrder = async (req, res) => {
             data: {
                 order: {
                     ...orderData,
-                    shipping_address: JSON.parse(orderData.shipping_address),
-                    billing_address: orderData.billing_address ? JSON.parse(orderData.billing_address) : null,
+                    shipping_address: safeParse(orderData.shipping_address),
+                    billing_address: safeParse(orderData.billing_address),
                     items: orderItems.map(item => ({
                         ...item,
-                        product_snapshot: item.product_snapshot ? JSON.parse(item.product_snapshot) : null
+                        product_snapshot: safeParse(item.product_snapshot)
                     })),
                     status_history: statusHistory
                 }
@@ -229,9 +242,20 @@ const getOrder = async (req, res) => {
 
 const getUserOrders = async (req, res) => {
     try {
+        console.log('🔍 getUserOrders - Starting request');
         const { page = 1, limit = 10, status } = req.query;
+        
+        if (!req.user || !req.user.id) {
+            console.error('❌ getUserOrders - No user or user ID in request');
+            return res.status(401).json({
+                success: false,
+                message: 'Usuario no autenticado'
+            });
+        }
+        
         const userId = req.user.id;
         const offset = (page - 1) * limit;
+        console.log('📊 getUserOrders - User ID:', userId, 'Page:', page, 'Limit:', limit);
 
         let whereClause = 'WHERE o.user_id = ?';
         let params = [userId];
@@ -264,8 +288,8 @@ const getUserOrders = async (req, res) => {
             data: {
                 orders: orders.map(order => ({
                     ...order,
-                    shipping_address: order.shipping_address ? JSON.parse(order.shipping_address) : null,
-                    billing_address: order.billing_address ? JSON.parse(order.billing_address) : null
+                    shipping_address: safeParse(order.shipping_address),
+                    billing_address: safeParse(order.billing_address)
                 })),
                 pagination: {
                     page: parseInt(page),
@@ -334,8 +358,8 @@ const getAllOrders = async (req, res) => {
             data: {
                 orders: orders.map(order => ({
                     ...order,
-                    shipping_address: order.shipping_address ? JSON.parse(order.shipping_address) : null,
-                    billing_address: order.billing_address ? JSON.parse(order.billing_address) : null
+                    shipping_address: safeParse(order.shipping_address),
+                    billing_address: safeParse(order.billing_address)
                 })),
                 pagination: {
                     page: parseInt(page),

@@ -215,3 +215,42 @@ All located in `backend/src/scripts/`:
 - **seed-categories.js**: Load default occasions/categories
 - **add-products.js**: Sample product data
 - **process-product-images.js**: Batch image optimization
+
+## Recent Fixes and Issues Resolved
+
+### JSON Parsing Issues (2025-09-03)
+- **Issue**: 500 Internal Server Error on `/api/orders/my-orders` due to JSON parsing errors
+- **Cause**: `JSON.parse()` being called on data that was already parsed as objects from Supabase
+- **Solution**: Created `safeParse()` helper function in `orderController.js` that handles both string and object data
+- **Files Modified**: 
+  - `backend/src/controllers/orderController.js:10-21` - Added safeParse helper
+  - `backend/src/controllers/orderController.js:223-227,278-279` - Applied safeParse to shipping/billing addresses and product snapshots
+
+### Cross-Origin Stylesheet Access Fix
+- **Issue**: Console errors for cross-origin CSS access from CDN stylesheets
+- **Solution**: Added try-catch blocks in `waitForStylesheets()` function in `main.js`
+- **Files Modified**: `frontend/js/main.js` - Enhanced stylesheet loading error handling
+
+### Dropdown Synchronization Enhancement
+- **Issue**: Occasions dropdown in navbar not synchronized with filter dropdown
+- **Solution**: Implemented bidirectional synchronization in `filterByOccasionId()` function
+- **Features Added**: 
+  - "Todas las ocasiones" option in both dropdowns
+  - Proper icon styling and visual feedback
+  - Event delegation for dynamic content
+- **Files Modified**: 
+  - `frontend/js/main.js:160-180` - Enhanced dropdown population
+  - `frontend/js/main.js:filterByOccasionId()` - Bidirectional sync
+  - `frontend/index.html` - Updated navbar dropdown structure
+
+### Admin Panel Access
+- **Feature Added**: Admin panel option in user dropdown menu
+- **Implementation**: Role-based visibility in auth.js
+- **Files Modified**:
+  - `frontend/index.html` - Added admin panel menu item
+  - `frontend/js/auth.js:updateAuthState()` - Role-based visibility logic
+
+### Dev/Prod Mode Toggle
+- **Feature Added**: Development/Production mode toggle in navbar
+- **Implementation**: Environment detection and UI toggle
+- **Files Modified**: `frontend/index.html` - Added mode toggle button
