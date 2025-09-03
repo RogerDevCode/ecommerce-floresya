@@ -25,21 +25,81 @@ class FloresYaApp {
                            window.location.hostname === 'floresya.com' ||
                            window.location.hostname === 'www.floresya.com';
         
+        // Store current mode
+        this.isProductionMode = isProduction;
+        
         if (isProduction) {
             // Use requestAnimationFrame to avoid forcing layout during initial render
             requestAnimationFrame(() => {
-                // Hide DEV MODE menu in production using a more specific selector
-                const devMenus = document.querySelectorAll('.navbar-nav .dropdown');
-                devMenus.forEach(dropdown => {
-                    const linkElement = dropdown.querySelector('a[role="button"]');
-                    if (linkElement && linkElement.innerHTML.includes('DEV MODE')) {
-                        dropdown.style.display = 'none';
-                    }
-                });
+                this.hideDevMode();
             });
         }
         
+        // Initialize toggle button with multiple frame delays to avoid layout forcing
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                this.updateDevModeToggle();
+            });
+        });
+        
         console.log(isProduction ? '🚀 Production Mode' : '🛠️ Development Mode');
+    }
+    
+    // Toggle between dev and production mode
+    toggleDevMode() {
+        this.isProductionMode = !this.isProductionMode;
+        
+        if (this.isProductionMode) {
+            this.hideDevMode();
+            if (window.api && window.api.showNotification) {
+                api.showNotification('Modo Producción activado', 'success');
+            }
+            console.log('🚀 Switched to Production Mode');
+        } else {
+            this.showDevMode();
+            if (window.api && window.api.showNotification) {
+                api.showNotification('Modo Desarrollador activado', 'info');
+            }
+            console.log('🛠️ Switched to Development Mode');
+        }
+        
+        // Update toggle button text
+        this.updateDevModeToggle();
+    }
+    
+    // Hide dev mode elements
+    hideDevMode() {
+        const devMenus = document.querySelectorAll('.navbar-nav .dropdown');
+        devMenus.forEach(dropdown => {
+            const linkElement = dropdown.querySelector('a[role="button"]');
+            if (linkElement && linkElement.innerHTML.includes('DEV MODE')) {
+                dropdown.style.display = 'none';
+            }
+        });
+    }
+    
+    // Show dev mode elements
+    showDevMode() {
+        const devMenus = document.querySelectorAll('.navbar-nav .dropdown');
+        devMenus.forEach(dropdown => {
+            const linkElement = dropdown.querySelector('a[role="button"]');
+            if (linkElement && linkElement.innerHTML.includes('DEV MODE')) {
+                dropdown.style.display = 'block';
+            }
+        });
+    }
+    
+    // Update dev mode toggle button
+    updateDevModeToggle() {
+        const toggleBtn = document.getElementById('devModeToggle');
+        if (toggleBtn) {
+            toggleBtn.innerHTML = this.isProductionMode ? 
+                '<i class="bi bi-code-slash"></i> Activar Dev' : 
+                '<i class="bi bi-shield-check"></i> Activar Prod';
+            toggleBtn.className = this.isProductionMode ? 
+                'btn btn-outline-warning btn-sm' : 
+                'btn btn-outline-success btn-sm';
+        }
     }
 
     // Load initial data (occasions, settings, etc.)
@@ -208,9 +268,15 @@ class FloresYaApp {
         // Occasion dropdown clicks (replacing category dropdown)
         document.addEventListener('click', (e) => {
             // Handle occasion ID clicks (new system)
-            if (e.target.dataset.occasionId) {
+            if (e.target.dataset.occasionId !== undefined) {
                 e.preventDefault();
-                this.filterByOccasionId(parseInt(e.target.dataset.occasionId));
+                const occasionId = e.target.dataset.occasionId;
+                // Handle empty string as "show all"
+                if (occasionId === '') {
+                    this.filterByOccasionId('');
+                } else {
+                    this.filterByOccasionId(parseInt(occasionId));
+                }
             }
             
             // Handle legacy occasion clicks (for backwards compatibility)
@@ -249,10 +315,12 @@ class FloresYaApp {
         const sortFilter = document.getElementById('sortFilter');
 
         if (occasionFilter) {
-            this.currentFilters.occasionId = occasionFilter.value || undefined;
-            // Clear old filters
-            delete this.currentFilters.category_id;
-            delete this.currentFilters.occasion;
+            const occasionId = occasionFilter.value;
+            console.log('FloresYa: Filter changed to occasion ID:', occasionId);
+            
+            // Use the unified filterByOccasionId function to maintain sync
+            this.filterByOccasionId(occasionId);
+            return; // Early return to avoid double loading
         }
 
         if (sortFilter) {
@@ -265,14 +333,23 @@ class FloresYaApp {
         this.loadProducts();
     }
 
-    // Filter by occasion (replaces filterByCategory)
+    // Filter by occasion ID (new occasions system) - SINGLE UNIFIED VERSION
     filterByOccasionId(occasionId) {
+        console.log('FloresYa: Filtering by occasion ID:', occasionId);
+        
+        // Sync both dropdowns
         const occasionFilter = document.getElementById('occasionFilter');
         if (occasionFilter) {
-            occasionFilter.value = occasionId;
+            occasionFilter.value = occasionId || '';
         }
         
-        this.currentFilters.occasionId = occasionId;
+        // Handle empty occasionId as "show all"
+        if (occasionId === '' || occasionId === null || occasionId === undefined) {
+            delete this.currentFilters.occasionId;
+        } else {
+            this.currentFilters.occasionId = occasionId;
+        }
+        
         // Clear old filters
         delete this.currentFilters.category_id;
         delete this.currentFilters.occasion;
@@ -283,23 +360,14 @@ class FloresYaApp {
         document.getElementById('productos')?.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // Filter by occasion
+    // Filter by occasion (legacy compatibility)
     filterByOccasion(occasion) {
+        console.log('FloresYa: Filtering by occasion (legacy):', occasion);
         this.currentFilters.occasion = occasion;
+        delete this.currentFilters.occasionId; // Clear new occasion filter
         this.currentPage = 1;
         this.loadProducts();
 
-        // Scroll to products section
-        document.getElementById('productos')?.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    // Filter by occasion ID (new occasions system)
-    filterByOccasionId(occasionId) {
-        console.log('FloresYa: Filtering by occasion ID:', occasionId);
-        this.currentFilters.occasionId = occasionId;
-        delete this.currentFilters.occasion; // Clear old occasion filter
-        this.currentPage = 1;
-        this.loadProducts();
         // Scroll to products section
         document.getElementById('productos')?.scrollIntoView({ behavior: 'smooth' });
     }
@@ -341,10 +409,12 @@ class FloresYaApp {
         if (products.length === 0) {
             container.innerHTML = `
                 <div class="col-12">
-                    <div class="empty-state">
-                        <i class="bi bi-search"></i>
-                        <h6>No se encontraron productos</h6>
-                        <p class="text-muted">Intenta ajustar tus filtros de búsqueda</p>
+                    <div class="empty-state text-center py-5">
+                        <img src="/images/logoFloresYa.jpeg" alt="FloresYa" class="mb-4" style="max-width: 120px; opacity: 0.6;">
+                        <i class="bi bi-search display-1 text-muted mb-3"></i>
+                        <h4 class="text-primary-custom mb-3">No encontramos productos</h4>
+                        <p class="text-muted mb-4">No hay productos disponibles con los filtros aplicados</p>
+                        <button class="btn btn-outline-primary-custom" onclick="floresyaApp.clearAllFilters()">Ver todos los productos</button>
                     </div>
                 </div>
             `;
@@ -921,6 +991,23 @@ class FloresYaApp {
         }, 1500);
     }
 
+    // Clear all filters and show all products
+    clearAllFilters() {
+        this.currentFilters = {};
+        this.currentPage = 1;
+        
+        // Reset filter dropdowns
+        const occasionFilter = document.getElementById('occasionFilter');
+        const sortFilter = document.getElementById('sortFilter');
+        const searchInput = document.getElementById('searchInput');
+        
+        if (occasionFilter) occasionFilter.value = '';
+        if (sortFilter) sortFilter.value = 'created_at:DESC';
+        if (searchInput) searchInput.value = '';
+        
+        this.loadProducts();
+    }
+
     // Bind Flores Ya Novias form events
     bindFloresNoviasForm() {
         const form = document.getElementById('noviasContactForm');
@@ -989,41 +1076,58 @@ class FloresYaApp {
     }
 }
 
-// Wait for stylesheets to load before initializing
+// Wait for stylesheets to load before initializing - Optimized to prevent layout forcing
 function waitForStylesheets() {
     return new Promise((resolve) => {
         if (document.readyState === 'complete') {
-            resolve();
+            // Use double requestAnimationFrame to ensure layout is stable
+            requestAnimationFrame(() => {
+                requestAnimationFrame(resolve);
+            });
             return;
         }
         
-        // Check if all stylesheets are loaded
+        // Check if all stylesheets are loaded without forcing layout
         const links = document.querySelectorAll('link[rel="stylesheet"]');
         let loadedCount = 0;
         
         function checkLoaded() {
             loadedCount++;
             if (loadedCount >= links.length) {
-                // Wait an additional frame to ensure layout is stable
-                requestAnimationFrame(resolve);
+                // Wait multiple frames to ensure layout is completely stable
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(resolve);
+                    });
+                });
             }
         }
         
         if (links.length === 0) {
-            requestAnimationFrame(resolve);
+            requestAnimationFrame(() => {
+                requestAnimationFrame(resolve);
+            });
             return;
         }
         
         links.forEach(link => {
-            if (link.sheet) {
+            // Check for loaded stylesheets without triggering layout
+            if (link.sheet && link.sheet.cssRules) {
                 checkLoaded();
+            } else if (link.sheet) {
+                checkLoaded(); // Stylesheet exists but may be loading
             } else {
-                link.addEventListener('load', checkLoaded);
+                link.addEventListener('load', checkLoaded, { once: true });
+                link.addEventListener('error', checkLoaded, { once: true }); // Handle load errors
             }
         });
         
-        // Fallback timeout
-        setTimeout(resolve, 1000);
+        // Fallback timeout - reduced to prevent long waits
+        setTimeout(() => {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(resolve);
+            });
+        }, 800);
     });
 }
 

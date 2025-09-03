@@ -23,7 +23,17 @@ npm run lint
 
 # Run tests
 npm test
+
+# Quick server scripts (kill port 3000 processes and start)
+./ss.sh                  # Comprehensive server startup with checks
+./qs.sh                  # Fast restart (kills port 3000 and starts demo)
 ```
+
+### Server Management Scripts
+- `ss.sh` (start-server) - Complete server startup script with port cleanup and dependency checks
+- `qs.sh` (quick-start) - Fast server restart script for development
+- Both scripts automatically kill processes using port 3000 before starting the server
+- Use `./ss.sh` for first-time setup, `./qs.sh` for quick restarts
 
 ### Database Management Scripts
 Located in `backend/src/scripts/`:

@@ -29,6 +29,56 @@ body {
     background-color: var(--primary-white);
 }
 
+/* Fix h1 sectioned element warning - Specific targeting */
+h1 {
+    font-size: 2.5rem !important;
+    margin: 0.67em 0 !important;
+    line-height: 1.2 !important;
+}
+
+/* Hero section h1 specific styles */
+.hero-section h1 {
+    font-size: 2.5rem !important;
+    margin: 0.5em 0 !important;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    font-weight: 800 !important;
+}
+
+/* Responsive h1 adjustments */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2rem !important;
+    }
+    
+    .hero-section h1 {
+        font-size: 1.75rem !important;
+    }
+}
+
+/* Empty state styles */
+.empty-state {
+    padding: 3rem 1rem;
+    text-align: center;
+    background-color: rgba(255, 105, 180, 0.05);
+    border-radius: 15px;
+    border: 2px dashed rgba(255, 105, 180, 0.2);
+    transition: all 0.3s ease;
+}
+
+.empty-state:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 105, 180, 0.1);
+}
+
+.empty-state img {
+    filter: grayscale(20%);
+    transition: filter 0.3s ease;
+}
+
+.empty-state:hover img {
+    filter: grayscale(0%);
+}
+
 .text-primary-custom {
     color: var(--primary-pink) !important;
 }

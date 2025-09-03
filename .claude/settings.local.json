@@ -4,7 +4,12 @@
       "Bash(npm run dev:*)",
       "Bash(curl:*)",
       "Bash(chmod:*)",
-      "Bash(./gitpush.sh:*)"
+      "Bash(./gitpush.sh:*)",
+      "Bash(npm run demo:*)",
+      "Bash(npm run lint)",
+      "Bash(./quick-start.sh:*)",
+      "Bash(./qs.sh)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
