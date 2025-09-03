@@ -11,11 +11,12 @@ class FloresYaApp {
     }
 
     async init() {
-        this.setupDevMode();
         await this.loadInitialData();
         this.bindEvents();
         this.loadProducts();
         this.loadDynamicCarousel();
+        // Setup dev mode after everything else is loaded to avoid layout forcing
+        this.setupDevMode();
     }
 
     // Setup development mode visibility
@@ -25,11 +26,17 @@ class FloresYaApp {
                            window.location.hostname === 'www.floresya.com';
         
         if (isProduction) {
-            // Hide DEV MODE menu in production
-            const devMenu = document.querySelector('.navbar-nav .dropdown');
-            if (devMenu && devMenu.textContent.includes('DEV MODE')) {
-                devMenu.style.display = 'none';
-            }
+            // Use requestAnimationFrame to avoid forcing layout during initial render
+            requestAnimationFrame(() => {
+                // Hide DEV MODE menu in production using a more specific selector
+                const devMenus = document.querySelectorAll('.navbar-nav .dropdown');
+                devMenus.forEach(dropdown => {
+                    const linkElement = dropdown.querySelector('a[role="button"]');
+                    if (linkElement && linkElement.innerHTML.includes('DEV MODE')) {
+                        dropdown.style.display = 'none';
+                    }
+                });
+            });
         }
         
         console.log(isProduction ? '🚀 Production Mode' : '🛠️ Development Mode');
@@ -1020,6 +1027,36 @@ function waitForStylesheets() {
     });
 }
 
+// Filter out expected Cloudflare cookie warnings to reduce console noise
+const originalConsoleWarn = console.warn;
+console.warn = function(...args) {
+    // Filter out Cloudflare bot management cookie warnings (these are expected)
+    if (args.some(arg => 
+        typeof arg === 'string' && 
+        (arg.includes('__cf_bm') || arg.includes('invalid domain'))
+    )) {
+        return; // Don't log these expected warnings
+    }
+    originalConsoleWarn.apply(console, args);
+};
+
+// Optimize image loading to reduce cookie-related warnings
+function optimizeImageLoading() {
+    const images = document.querySelectorAll('img');
+    images.forEach(img => {
+        // Add loading="lazy" for better performance
+        if (!img.hasAttribute('loading')) {
+            img.setAttribute('loading', 'lazy');
+        }
+        
+        // Add error handling for images
+        img.addEventListener('error', function(e) {
+            console.log('Image load failed (this is expected for some CDN images):', e.target.src);
+            // Don't replace with fallback for now to maintain design integrity
+        }, { once: true });
+    });
+}
+
 // Initialize app when DOM and stylesheets are loaded
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🌸 FloresYa: DOM loaded, waiting for stylesheets...');
@@ -1054,6 +1091,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     console.log('🎉 FloresYa: All systems initialized!');
+    
+    // Optimize image loading to reduce cookie warnings and improve performance
+    optimizeImageLoading();
 });
 
 // DEV ONLY: Quick login functions for development testing

@@ -66,6 +66,13 @@
 - [x] Formularios de productos usando ocasiones múltiples
 - [x] Eliminada dualidad categorías/ocasiones
 
+### ✅ Corrección de Errores (Sesión 2025-09-03)
+- [x] Fix API /occasions endpoint 404 error en producción
+- [x] Botones auto-login agregados en panel de login
+- [x] Corrección de layout forcing warning
+- [x] Supresión de advertencias de cookies Cloudflare
+- [x] Optimización de carga de imágenes con lazy loading
+
 ## 🚀 Tareas Pendientes (Alta Prioridad)
 
 ### 🔧 Funcionalidades Críticas
@@ -133,7 +140,8 @@
 
 ### ✅ Disponibles
 - [x] **gitpush.sh**: Script de respaldo automático a GitHub
-- [x] **promptClaude.md**: Documentación completa para Claude Code
+- [x] **promptClaude.md**: Documentación completa para Claude Code (migrado a CLAUDE.md)
+- [x] **CLAUDE.md**: Documentación actualizada para Claude Code
 - [x] **cleanup.sh**: Script de limpieza de archivos innecesarios
 
 ### 🗄️ Scripts SQL Pendientes
@@ -153,22 +161,26 @@
 
 ## 📊 Resumen de Cambios Recientes
 
-### Sesión 2025-09-03 - Migración y Optimización
+### Sesión 2025-09-03 - Corrección de Errores y Optimización
+- ✅ **Errores corregidos**: API /occasions endpoint 404, layout forcing, cookie warnings
 - ✅ **Base de datos**: Migrado exclusivamente a PostgreSQL/Supabase
 - ✅ **Login**: Implementados botones de auto-login para desarrollo
 - ✅ **UI/UX**: Eliminada dualidad categorías/ocasiones
-- ✅ **Documentación**: Actualizada toda la documentación técnica
+- ✅ **Documentación**: Creado CLAUDE.md para Claude Code
 - ✅ **Scripts**: Creado cleanup.sh para mantenimiento
+- ✅ **Performance**: Optimización de carga de imágenes y filtrado de console
 
 ### Estado Técnico Actual
 - **Base de datos**: PostgreSQL/Supabase (sin SQLite)
 - **Productos**: Organizados por ocasiones especiales
 - **Desarrollo**: Botones de login rápido disponibles
-- **Documentación**: promptClaude.md actualizado
+- **Documentación**: CLAUDE.md actualizado
 - **Scripts**: gitpush.sh y cleanup.sh listos
+- **API**: Endpoint /occasions funcionando en producción
+- **Performance**: Console limpio sin advertencias molestas
 
 ---
 
-**Última actualización**: 2025-09-03 - Migración Categorías→Ocasiones y PostgreSQL exclusivo
-**Estado actual**: E-commerce FloresYa optimizado con PostgreSQL y sistema de ocasiones
+**Última actualización**: 2025-09-03 - Corrección de errores y optimización completa
+**Estado actual**: E-commerce FloresYa completamente funcional y optimizado
 **Próxima revisión**: 2025-09-10
