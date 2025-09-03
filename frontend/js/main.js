@@ -11,12 +11,22 @@ class FloresYaApp {
     }
 
     async init() {
-        await this.loadInitialData();
-        this.bindEvents();
-        this.loadProducts();
-        this.loadDynamicCarousel();
-        // Setup dev mode after everything else is loaded to avoid layout forcing
-        this.setupDevMode();
+        // Defer heavy operations to avoid layout forcing
+        requestAnimationFrame(async () => {
+            await this.loadInitialData();
+            this.bindEvents();
+            
+            // Load products and carousel in next frame
+            requestAnimationFrame(() => {
+                this.loadProducts();
+                this.loadDynamicCarousel();
+                
+                // Setup dev mode last
+                requestAnimationFrame(() => {
+                    this.setupDevMode();
+                });
+            });
+        });
     }
 
     // Setup development mode visibility
@@ -151,6 +161,19 @@ class FloresYaApp {
         console.log('Populating occasions dropdown with', this.occasions.length, 'occasions');
         occasionsDropdown.innerHTML = '';
 
+        // Add "Todas las ocasiones" option first
+        const allOccasionsLi = document.createElement('li');
+        allOccasionsLi.innerHTML = `<a class="dropdown-item" href="#productos" data-occasion-id="">
+            <i class="bi bi-calendar-heart me-2" style="color: #6c757d"></i>
+            Todas las ocasiones
+        </a>`;
+        occasionsDropdown.appendChild(allOccasionsLi);
+        
+        // Add divider
+        const divider = document.createElement('li');
+        divider.innerHTML = '<hr class="dropdown-divider">';
+        occasionsDropdown.appendChild(divider);
+
         if (this.occasions.length > 0) {
             this.occasions.forEach(occasion => {
                 const li = document.createElement('li');
@@ -217,11 +240,12 @@ class FloresYaApp {
 
     // Bind filter events
     bindFilterEvents() {
-        const categoryFilter = document.getElementById('categoryFilter');
+        const occasionFilter = document.getElementById('occasionFilter');
         const sortFilter = document.getElementById('sortFilter');
 
-        if (categoryFilter) {
-            categoryFilter.addEventListener('change', () => {
+        if (occasionFilter) {
+            occasionFilter.addEventListener('change', () => {
+                console.log('Occasion filter changed:', occasionFilter.value);
                 this.handleFilterChange();
             });
         }
@@ -337,11 +361,14 @@ class FloresYaApp {
     filterByOccasionId(occasionId) {
         console.log('FloresYa: Filtering by occasion ID:', occasionId);
         
-        // Sync both dropdowns
+        // Sync the select dropdown
         const occasionFilter = document.getElementById('occasionFilter');
         if (occasionFilter) {
             occasionFilter.value = occasionId || '';
         }
+        
+        // Sync the navbar dropdown text (visual feedback)
+        this.updateNavbarDropdownText(occasionId);
         
         // Handle empty occasionId as "show all"
         if (occasionId === '' || occasionId === null || occasionId === undefined) {
@@ -358,6 +385,25 @@ class FloresYaApp {
 
         // Scroll to products section
         document.getElementById('productos')?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Update navbar dropdown text to show selected occasion
+    updateNavbarDropdownText(occasionId) {
+        const navbarDropdownToggle = document.getElementById('occasionsDropdownToggle');
+        if (!navbarDropdownToggle) return;
+        
+        if (!occasionId || occasionId === '') {
+            navbarDropdownToggle.textContent = 'Ocasiones';
+            return;
+        }
+        
+        // Find the occasion name
+        const selectedOccasion = this.occasions.find(occ => occ.id == occasionId);
+        if (selectedOccasion) {
+            navbarDropdownToggle.innerHTML = `<i class="${selectedOccasion.icon || 'bi bi-calendar-event'} me-2"></i>${selectedOccasion.name}`;
+        } else {
+            navbarDropdownToggle.textContent = 'Ocasiones';
+        }
     }
 
     // Filter by occasion (legacy compatibility)
@@ -1005,6 +1051,9 @@ class FloresYaApp {
         if (sortFilter) sortFilter.value = 'created_at:DESC';
         if (searchInput) searchInput.value = '';
         
+        // Reset navbar dropdown text
+        this.updateNavbarDropdownText('');
+        
         this.loadProducts();
     }
 
@@ -1079,11 +1128,17 @@ class FloresYaApp {
 // Wait for stylesheets to load before initializing - Optimized to prevent layout forcing
 function waitForStylesheets() {
     return new Promise((resolve) => {
-        if (document.readyState === 'complete') {
-            // Use double requestAnimationFrame to ensure layout is stable
+        // Enhanced method to avoid layout forcing
+        const safeResolve = () => {
             requestAnimationFrame(() => {
-                requestAnimationFrame(resolve);
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(resolve);
+                });
             });
+        };
+        
+        if (document.readyState === 'complete') {
+            safeResolve();
             return;
         }
         
@@ -1094,40 +1149,43 @@ function waitForStylesheets() {
         function checkLoaded() {
             loadedCount++;
             if (loadedCount >= links.length) {
-                // Wait multiple frames to ensure layout is completely stable
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(resolve);
-                    });
-                });
+                safeResolve();
             }
         }
         
         if (links.length === 0) {
-            requestAnimationFrame(() => {
-                requestAnimationFrame(resolve);
-            });
+            safeResolve();
             return;
         }
         
         links.forEach(link => {
             // Check for loaded stylesheets without triggering layout
-            if (link.sheet && link.sheet.cssRules) {
-                checkLoaded();
-            } else if (link.sheet) {
-                checkLoaded(); // Stylesheet exists but may be loading
-            } else {
-                link.addEventListener('load', checkLoaded, { once: true });
-                link.addEventListener('error', checkLoaded, { once: true }); // Handle load errors
+            try {
+                // Try to access cssRules safely
+                if (link.sheet && link.sheet.cssRules) {
+                    checkLoaded();
+                } else if (link.sheet) {
+                    // Stylesheet loaded but cssRules not accessible (cross-origin)
+                    checkLoaded();
+                } else {
+                    link.addEventListener('load', checkLoaded, { once: true });
+                    link.addEventListener('error', checkLoaded, { once: true }); // Handle load errors
+                }
+            } catch (e) {
+                // Cross-origin stylesheet - can't access cssRules but it's loaded
+                if (link.sheet) {
+                    checkLoaded();
+                } else {
+                    link.addEventListener('load', checkLoaded, { once: true });
+                    link.addEventListener('error', checkLoaded, { once: true });
+                }
             }
         });
         
         // Fallback timeout - reduced to prevent long waits
         setTimeout(() => {
-            requestAnimationFrame(() => {
-                requestAnimationFrame(resolve);
-            });
-        }, 800);
+            safeResolve();
+        }, 600);
     });
 }
 
