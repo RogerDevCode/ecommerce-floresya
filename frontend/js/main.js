@@ -1223,39 +1223,42 @@ function optimizeImageLoading() {
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🌸 FloresYa: DOM loaded, waiting for stylesheets...');
     
-    // Wait for stylesheets to load
-    await waitForStylesheets();
-    
-    // Make page visible after stylesheets are loaded
-    document.documentElement.classList.add('stylesheets-loaded');
-    console.log('🎨 Stylesheets loaded, initializing app...');
-    
-    // Check if Bootstrap is loaded
-    if (typeof bootstrap === 'undefined') {
-        console.error('❌ Bootstrap not loaded!');
-        return;
-    }
-    console.log('✅ Bootstrap loaded');
-    
-    // Initialize main app
-    window.floresyaApp = new FloresYaApp();
-    
-    // Initialize auth manager
-    if (typeof AuthManager !== 'undefined') {
-        window.authManager = new AuthManager();
-        console.log('✅ Auth Manager initialized');
-    }
-    
-    // Initialize cart
-    if (typeof ShoppingCart !== 'undefined') {
-        window.cart = new ShoppingCart();
-        console.log('✅ Shopping Cart initialized');
-    }
-    
-    console.log('🎉 FloresYa: All systems initialized!');
-    
-    // Optimize image loading to reduce cookie warnings and improve performance
-    optimizeImageLoading();
+    // Use setTimeout to further reduce layout forcing
+    setTimeout(async () => {
+        // Wait for stylesheets to load
+        await waitForStylesheets();
+        
+        // Make page visible after stylesheets are loaded
+        document.documentElement.classList.add('stylesheets-loaded');
+        console.log('🎨 Stylesheets loaded, initializing app...');
+        
+        // Check if Bootstrap is loaded
+        if (typeof bootstrap === 'undefined') {
+            console.error('❌ Bootstrap not loaded!');
+            return;
+        }
+        console.log('✅ Bootstrap loaded');
+        
+        // Initialize main app
+        window.floresyaApp = new FloresYaApp();
+        
+        // Initialize auth manager
+        if (typeof AuthManager !== 'undefined') {
+            window.authManager = new AuthManager();
+            console.log('✅ Auth Manager initialized');
+        }
+        
+        // Initialize cart
+        if (typeof ShoppingCart !== 'undefined') {
+            window.cart = new ShoppingCart();
+            console.log('✅ Shopping Cart initialized');
+        }
+        
+        console.log('🎉 FloresYa: All systems initialized!');
+        
+        // Optimize image loading to reduce cookie warnings and improve performance
+        optimizeImageLoading();
+    }, 10);
 });
 
 // DEV ONLY: Quick login functions for development testing

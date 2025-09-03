@@ -244,11 +244,9 @@ const getUserOrders = async (req, res) => {
         const orders = await executeQuery(`
             SELECT 
                 o.*,
-                COUNT(oi.id) as items_count
+                0 as items_count
             FROM orders o
-            LEFT JOIN order_items oi ON o.id = oi.order_id
             ${whereClause}
-            GROUP BY o.id
             ORDER BY o.created_at DESC
             LIMIT ? OFFSET ?
         `, [...params, parseInt(limit), parseInt(offset)]);
@@ -266,7 +264,8 @@ const getUserOrders = async (req, res) => {
             data: {
                 orders: orders.map(order => ({
                     ...order,
-                    shipping_address: JSON.parse(order.shipping_address)
+                    shipping_address: order.shipping_address ? JSON.parse(order.shipping_address) : null,
+                    billing_address: order.billing_address ? JSON.parse(order.billing_address) : null
                 })),
                 pagination: {
                     page: parseInt(page),
@@ -335,7 +334,8 @@ const getAllOrders = async (req, res) => {
             data: {
                 orders: orders.map(order => ({
                     ...order,
-                    shipping_address: JSON.parse(order.shipping_address)
+                    shipping_address: order.shipping_address ? JSON.parse(order.shipping_address) : null,
+                    billing_address: order.billing_address ? JSON.parse(order.billing_address) : null
                 })),
                 pagination: {
                     page: parseInt(page),

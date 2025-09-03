@@ -11,7 +11,8 @@
       "Bash(./qs.sh)",
       "Bash(git add:*)",
       "Bash(git push:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []

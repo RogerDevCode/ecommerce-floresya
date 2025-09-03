@@ -149,6 +149,7 @@ class AuthManager {
         const loginBtn = document.getElementById('loginBtn');
         const userDropdown = document.getElementById('userDropdown');
         const userMenu = document.getElementById('userMenu');
+        const adminPanel = document.getElementById('adminPanel');
 
         if (isAuthenticated && user) {
             // Show user menu, hide login button
@@ -157,10 +158,20 @@ class AuthManager {
             if (userMenu) {
                 userMenu.innerHTML = `<i class="bi bi-person-circle"></i> ${user.first_name}`;
             }
+            
+            // Show admin panel option only for admin users
+            if (adminPanel) {
+                if (user.role === 'admin') {
+                    adminPanel.style.display = 'block';
+                } else {
+                    adminPanel.style.display = 'none';
+                }
+            }
         } else {
             // Show login button, hide user menu
             if (loginBtn) loginBtn.style.display = 'block';
             if (userDropdown) userDropdown.style.display = 'none';
+            if (adminPanel) adminPanel.style.display = 'none';
         }
     }
 
