@@ -1118,8 +1118,8 @@ class AdminApp {
                 { url: '/api/products/featured', name: 'Get Featured Products' },
                 { url: '/api/products/homepage', name: 'Get Homepage Products' }
             ],
-            categories: [
-                { url: '/api/categories', name: 'Get All Categories' }
+            occasions: [
+                { url: '/api/occasions', name: 'Get All Occasions' }
             ],
             carousel: [
                 { url: '/api/carousel', name: 'Get Carousel Images' },
@@ -1241,7 +1241,7 @@ class AdminApp {
         // Run all tests
         await this.testAPI('health');
         await this.testAPI('products');
-        await this.testAPI('categories');
+        await this.testAPI('occasions');
         await this.testAPI('carousel');
         await this.testAPI('homepage');
         this.testCSP();
@@ -1279,7 +1279,7 @@ class AdminApp {
             if (response.success) {
                 this.products = response.data.products || [];
                 this.renderProducts();
-                await this.loadCategories();
+                await this.loadOccasions();
             } else {
                 api.showNotification('Error al cargar productos: ' + response.message, 'danger');
             }
@@ -1318,8 +1318,8 @@ class AdminApp {
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <select class="form-select" id="productCategoryFilter">
-                        <option value="">Todas las categorías</option>
+                    <select class="form-select" id="productOccasionFilter">
+                        <option value="">Todas las ocasiones</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -1339,7 +1339,7 @@ class AdminApp {
                                 <tr>
                                     <th width="80">Imagen</th>
                                     <th>Nombre</th>
-                                    <th>Categoría</th>
+                                    <th>Ocasiones</th>
                                     <th>Precio</th>
                                     <th>Stock</th>
                                     <th>Estado</th>
@@ -1355,8 +1355,8 @@ class AdminApp {
             </div>
         `;
 
-        // Populate category filter
-        this.populateProductCategoryFilter();
+        // Populate occasion filter
+        this.populateProductOccasionFilter();
     }
 
     renderProductsRows() {
@@ -1385,7 +1385,7 @@ class AdminApp {
                     <strong>${product.name}</strong>
                     ${product.featured ? '<span class="badge bg-warning ms-1">Destacado</span>' : ''}
                 </td>
-                <td>${product.category_name || 'Sin categoría'}</td>
+                <td>${product.occasions?.map(o => o.name).join(', ') || 'Sin ocasiones'}</td>
                 <td>$${parseFloat(product.price).toFixed(2)}</td>
                 <td>
                     <span class="badge ${product.stock_quantity > 10 ? 'bg-success' : product.stock_quantity > 0 ? 'bg-warning' : 'bg-danger'}">
@@ -1430,19 +1430,31 @@ class AdminApp {
         `).join('');
     }
 
-    async populateProductCategoryFilter() {
-        const categoryFilter = document.getElementById('productCategoryFilter');
-        if (!categoryFilter || !this.categories) return;
+    async populateProductOccasionFilter() {
+        const occasionFilter = document.getElementById('productOccasionFilter');
+        if (!occasionFilter || !this.occasions) return;
 
         // Keep existing options
-        const existingOptions = categoryFilter.innerHTML;
+        const existingOptions = occasionFilter.innerHTML;
         
-        // Add category options
-        const categoryOptions = this.categories.map(category => 
-            `<option value="${category.id}">${category.name}</option>`
+        // Add occasion options
+        const occasionOptions = this.occasions.map(occasion => 
+            `<option value="${occasion.id}">${occasion.name}</option>`
         ).join('');
         
-        categoryFilter.innerHTML = existingOptions + categoryOptions;
+        occasionFilter.innerHTML = existingOptions + occasionOptions;
+    }
+
+    async loadOccasions() {
+        try {
+            const response = await api.getOccasions();
+            if (response.success) {
+                this.occasions = response.data || [];
+                console.log('Loaded occasions:', this.occasions.length);
+            }
+        } catch (error) {
+            console.error('Error loading occasions:', error);
+        }
     }
 
     showProductForm(productId = null) {
@@ -1464,13 +1476,13 @@ class AdminApp {
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="productCategory" class="form-label">Categoría *</label>
-                                    <select class="form-select" id="productCategory" required>
-                                        <option value="">Seleccionar categoría</option>
-                                        ${this.categories ? this.categories.map(cat => 
-                                            `<option value="${cat.id}">${cat.name}</option>`
+                                    <label for="productOccasions" class="form-label">Ocasiones</label>
+                                    <select class="form-select" id="productOccasions" multiple>
+                                        ${this.occasions ? this.occasions.map(occasion => 
+                                            `<option value="${occasion.id}">${occasion.name}</option>`
                                         ).join('') : ''}
                                     </select>
+                                    <div class="form-text">Mantén Ctrl/Cmd para seleccionar múltiples ocasiones</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -2611,12 +2623,13 @@ class AdminApp {
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label class="form-label">Categoría</label>
-                                            <select class="form-select" id="quickEditCategory">
-                                                ${this.categories ? this.categories.map(cat => 
-                                                    `<option value="${cat.id}" ${cat.id === product.category_id ? 'selected' : ''}>${cat.name}</option>`
+                                            <label class="form-label">Ocasiones</label>
+                                            <select class="form-select" id="quickEditOccasions" multiple>
+                                                ${this.occasions ? this.occasions.map(occasion => 
+                                                    `<option value="${occasion.id}">${occasion.name}</option>`
                                                 ).join('') : ''}
                                             </select>
+                                            <div class="form-text">Mantén Ctrl/Cmd para seleccionar múltiples</div>
                                         </div>
                                     </div>
                                 </div>

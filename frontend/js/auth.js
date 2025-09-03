@@ -604,6 +604,44 @@ class AuthManager {
     }
 }
 
+// Development helper functions for quick login
+function fillAdminCredentials() {
+    const emailField = document.getElementById('loginEmail');
+    const passwordField = document.getElementById('loginPassword');
+    
+    if (emailField && passwordField) {
+        emailField.value = 'admin@floresya.com';
+        passwordField.value = 'admin123';
+    }
+}
+
+function fillClientCredentials() {
+    const emailField = document.getElementById('loginEmail');
+    const passwordField = document.getElementById('loginPassword');
+    
+    if (emailField && passwordField) {
+        emailField.value = 'cliente@ejemplo.com';
+        passwordField.value = 'customer123';
+    }
+}
+
+// Hide dev buttons in production
+function setupDevModeVisibility() {
+    const isProduction = window.location.hostname.includes('vercel.app') || 
+                       window.location.hostname === 'floresya.com' ||
+                       window.location.hostname === 'www.floresya.com';
+    
+    if (isProduction) {
+        const devSections = document.querySelectorAll('.dev-only-section');
+        devSections.forEach(section => {
+            section.style.display = 'none';
+        });
+    }
+}
+
+// Initialize dev mode visibility on DOM load
+document.addEventListener('DOMContentLoaded', setupDevModeVisibility);
+
 // Initialize auth manager when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.authManager = new AuthManager();

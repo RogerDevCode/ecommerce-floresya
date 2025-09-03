@@ -35,23 +35,15 @@ class FloresYaApp {
         console.log(isProduction ? '🚀 Production Mode' : '🛠️ Development Mode');
     }
 
-    // Load initial data (categories, occasions, settings, etc.)
+    // Load initial data (occasions, settings, etc.)
     async loadInitialData() {
         try {
-            // Load categories
-            const categoriesResponse = await api.getCategories();
-            
-            if (categoriesResponse.success) {
-                this.categories = categoriesResponse.data.categories;
-                this.populateCategoryFilter();
-                this.populateCategoryDropdown();
-            }
-
-            // Load occasions
+            // Load occasions (replacing categories)
             const occasionsResponse = await api.getOccasions();
             
             if (occasionsResponse.success) {
                 this.occasions = occasionsResponse.data;
+                this.populateOccasionFilter();
                 this.populateOccasionsDropdown();
             }
 
@@ -63,75 +55,23 @@ class FloresYaApp {
         }
     }
 
-    // Populate category filter dropdown
-    populateCategoryFilter() {
-        const categoryFilter = document.getElementById('categoryFilter');
-        if (!categoryFilter) return;
+    // Populate occasion filter dropdown
+    populateOccasionFilter() {
+        const occasionFilter = document.getElementById('occasionFilter');
+        if (!occasionFilter) return;
 
-        categoryFilter.innerHTML = '<option value="">Todas las categorías</option>';
+        occasionFilter.innerHTML = '<option value="">Todas las ocasiones</option>';
         
-        this.categories.forEach(category => {
+        this.occasions.forEach(occasion => {
             const option = document.createElement('option');
-            option.value = category.id;
-            option.textContent = category.name;
-            categoryFilter.appendChild(option);
+            option.value = occasion.id;
+            option.textContent = occasion.name;
+            occasionFilter.appendChild(option);
         });
     }
 
-    // Populate navigation category dropdown
-    populateCategoryDropdown() {
-        const categoriesDropdown = document.getElementById('categoriesDropdown');
-        if (!categoriesDropdown) {
-            console.warn('Categories dropdown not found');
-            return;
-        }
-
-        console.log('Populating categories dropdown with', this.categories.length, 'categories');
-        categoriesDropdown.innerHTML = '';
-        
-        // Add "All Categories" option
-        const allLi = document.createElement('li');
-        allLi.innerHTML = `<a class="dropdown-item" href="#productos" data-category-id="">
-            <i class="bi bi-grid me-2"></i>Todas las categorías
-        </a>`;
-        categoriesDropdown.appendChild(allLi);
-
-        if (this.categories.length > 0) {
-            // Add separator
-            const separator = document.createElement('li');
-            separator.innerHTML = '<hr class="dropdown-divider">';
-            categoriesDropdown.appendChild(separator);
-            
-            // Add category options
-            this.categories.forEach(category => {
-                const li = document.createElement('li');
-                li.innerHTML = `<a class="dropdown-item" href="#productos" data-category-id="${category.id}">
-                    <i class="bi bi-flower1 me-2"></i>${category.name}
-                </a>`;
-                categoriesDropdown.appendChild(li);
-            });
-        } else {
-            // Add fallback categories if none loaded from API
-            const fallbackCategories = [
-                { id: 1, name: 'Rosas' },
-                { id: 2, name: 'Bouquets' },
-                { id: 3, name: 'Arreglos' },
-                { id: 4, name: 'Plantas' }
-            ];
-            
-            const separator = document.createElement('li');
-            separator.innerHTML = '<hr class="dropdown-divider">';
-            categoriesDropdown.appendChild(separator);
-            
-            fallbackCategories.forEach(category => {
-                const li = document.createElement('li');
-                li.innerHTML = `<a class="dropdown-item" href="#productos" data-category-id="${category.id}">
-                    <i class="bi bi-flower1 me-2"></i>${category.name}
-                </a>`;
-                categoriesDropdown.appendChild(li);
-            });
-        }
-    }
+    // This method is now handled by populateOccasionsDropdown() below
+    // Keeping this for backwards compatibility, but it's effectively a no-op
 
     // Populate navigation occasions dropdown
     populateOccasionsDropdown() {
@@ -258,20 +198,18 @@ class FloresYaApp {
 
     // Bind navigation events
     bindNavigationEvents() {
-        // Category dropdown clicks
+        // Occasion dropdown clicks (replacing category dropdown)
         document.addEventListener('click', (e) => {
-            if (e.target.dataset.categoryId) {
-                e.preventDefault();
-                this.filterByCategory(parseInt(e.target.dataset.categoryId));
-            }
-
-            if (e.target.dataset.occasion) {
-                e.preventDefault();
-                this.filterByOccasion(e.target.dataset.occasion);
-            }
+            // Handle occasion ID clicks (new system)
             if (e.target.dataset.occasionId) {
                 e.preventDefault();
                 this.filterByOccasionId(parseInt(e.target.dataset.occasionId));
+            }
+            
+            // Handle legacy occasion clicks (for backwards compatibility)
+            if (e.target.dataset.occasion) {
+                e.preventDefault();
+                this.filterByOccasion(e.target.dataset.occasion);
             }
         });
 
@@ -300,11 +238,14 @@ class FloresYaApp {
 
     // Handle filter changes
     handleFilterChange() {
-        const categoryFilter = document.getElementById('categoryFilter');
+        const occasionFilter = document.getElementById('occasionFilter');
         const sortFilter = document.getElementById('sortFilter');
 
-        if (categoryFilter) {
-            this.currentFilters.category_id = categoryFilter.value || undefined;
+        if (occasionFilter) {
+            this.currentFilters.occasionId = occasionFilter.value || undefined;
+            // Clear old filters
+            delete this.currentFilters.category_id;
+            delete this.currentFilters.occasion;
         }
 
         if (sortFilter) {
@@ -317,14 +258,17 @@ class FloresYaApp {
         this.loadProducts();
     }
 
-    // Filter by category
-    filterByCategory(categoryId) {
-        const categoryFilter = document.getElementById('categoryFilter');
-        if (categoryFilter) {
-            categoryFilter.value = categoryId;
+    // Filter by occasion (replaces filterByCategory)
+    filterByOccasionId(occasionId) {
+        const occasionFilter = document.getElementById('occasionFilter');
+        if (occasionFilter) {
+            occasionFilter.value = occasionId;
         }
         
-        this.currentFilters.category_id = categoryId;
+        this.currentFilters.occasionId = occasionId;
+        // Clear old filters
+        delete this.currentFilters.category_id;
+        delete this.currentFilters.occasion;
         this.currentPage = 1;
         this.loadProducts();
 

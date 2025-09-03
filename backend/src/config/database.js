@@ -1,12 +1,8 @@
 const { Sequelize } = require('sequelize');
-const path = require('path');
 const { supabase, testSupabaseConnection } = require('../services/supabaseClient');
 require('dotenv').config();
 
-// Define the path to the SQLite database file (legacy/fallback)
-const DB_PATH = path.join(__dirname, '../../../database/floresya.db');
-
-// Create a new Sequelize instance
+// Create a new Sequelize instance - PostgreSQL/Supabase ONLY
 let sequelize;
 let useSupabase = false;
 
@@ -36,13 +32,9 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
   });
   console.log('🐘 Using PostgreSQL/Supabase database configuration');
 } else {
-  // Fallback to SQLite
-  sequelize = new Sequelize({
-    dialect: 'sqlite',
-    storage: DB_PATH,
-    logging: process.env.SQL_LOGGING === 'true' ? console.log : false,
-  });
-  console.log('🗃️ Using SQLite database configuration (fallback)');
+  // No fallback - PostgreSQL/Supabase required
+  console.error('❌ ERROR: PostgreSQL/Supabase configuration required. Please set SUPABASE_URL and SUPABASE_ANON_KEY or PostgreSQL connection variables.');
+  process.exit(1);
 }
 
 // Function to test the database connection
@@ -103,7 +95,7 @@ const executeQuery = async (query, params = []) => {
       throw error;
     }
   } else {
-    // Use Sequelize for SQLite/PostgreSQL
+    // Use Sequelize for PostgreSQL
     try {
       const [results] = await sequelize.query(query, {
         replacements: params,
@@ -111,7 +103,7 @@ const executeQuery = async (query, params = []) => {
       });
       return results;
     } catch (error) {
-      console.error('Sequelize query error:', error);
+      console.error('PostgreSQL query error:', error);
       throw error;
     }
   }
