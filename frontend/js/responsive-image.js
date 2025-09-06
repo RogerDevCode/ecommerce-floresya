@@ -26,6 +26,28 @@ class ResponsiveImageUtil {
             };
         }
 
+        // Prevent double processing of URLs that already have duplicate suffixes
+        if (baseUrl.includes('-medium.webp-thumb.webp') || 
+            baseUrl.includes('-thumb.webp-thumb.webp') || 
+            baseUrl.includes('-large.webp-thumb.webp') ||
+            baseUrl.includes('-medium.webp-medium.webp') ||
+            baseUrl.includes('-thumb.webp-medium.webp')) {
+            console.warn('ResponsiveImage: Double-processed URL detected, returning original:', baseUrl);
+            // Try to clean the URL by removing the duplicate suffix
+            const cleanUrl = baseUrl
+                .replace('-medium.webp-thumb.webp', '-medium.webp')
+                .replace('-thumb.webp-thumb.webp', '-thumb.webp')
+                .replace('-large.webp-thumb.webp', '-large.webp')
+                .replace('-medium.webp-medium.webp', '-medium.webp')
+                .replace('-thumb.webp-medium.webp', '-thumb.webp');
+            
+            return {
+                thumb: cleanUrl,
+                medium: cleanUrl,
+                large: cleanUrl
+            };
+        }
+
         // For Supabase images, we need to replace the size in the path
         // From: /large/filename-large.webp
         // To: /medium/filename-medium.webp or /thumb/filename-thumb.webp
@@ -46,7 +68,17 @@ class ResponsiveImageUtil {
         if (baseUrl.includes('supabase.co/storage')) {
             // Use local proxy as fallback for CORS issues
             const filename = baseUrl.split('/').pop();
-            const baseFilename = filename.replace('-large.webp', '');
+            
+            // Remove any existing size suffix to get base filename
+            let baseFilename = filename
+                .replace('-large.webp', '')
+                .replace('-medium.webp', '') 
+                .replace('-thumb.webp', '');
+                
+            // If filename still has .webp, remove it for proper reconstruction
+            if (baseFilename.endsWith('.webp')) {
+                baseFilename = baseFilename.replace('.webp', '');
+            }
             
             return {
                 large: `/api/images/direct/large/${baseFilename}-large.webp`,

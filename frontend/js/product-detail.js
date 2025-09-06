@@ -92,22 +92,49 @@ class ProductDetail {
         if (this.images.length === 0) {
             this.images.push('/images/placeholder-product.jpg');
         }
+        
+        console.log('🖼️ Product images loaded:', this.images);
     }
 
     renderProduct() {
         // Hide loading and show content
-        document.getElementById('loading-spinner').style.display = 'none';
-        document.getElementById('product-content').style.display = 'block';
-        document.getElementById('product-description-section').style.display = 'block';
+        console.log('🔄 About to show product content...');
+        const spinner = document.getElementById('loading-spinner');
+        const content = document.getElementById('product-content');
+        const description = document.getElementById('product-description-section');
+        
+        console.log('🔍 Elements found:', { spinner: !!spinner, content: !!content, description: !!description });
+        
+        if (spinner) {
+            spinner.style.display = 'none';
+            console.log('✅ Loading spinner hidden');
+        }
+        if (content) {
+            content.style.display = 'block';
+            console.log('✅ Product content shown');
+        } else {
+            console.error('❌ Product content element not found!');
+        }
+        if (description) {
+            description.style.display = 'block';
+            console.log('✅ Product description shown');
+        }
 
         // Set page title
         document.title = `${this.product.name} - FloresYa`;
         document.getElementById('page-title').textContent = `${this.product.name} - FloresYa`;
+        
+        console.log('🔍 Content visibility check:', {
+            spinner: document.getElementById('loading-spinner').style.display,
+            content: document.getElementById('product-content').style.display,
+            contentVisible: window.getComputedStyle(document.getElementById('product-content')).display
+        });
 
         // Render images
         this.renderImages();
 
         // Render product info
+                console.log('🔄 About to render product info...');
         this.renderProductInfo();
 
         // Render description
@@ -122,9 +149,57 @@ class ProductDetail {
         const mainImage = document.getElementById('main-image');
         const currentImageUrl = this.images[this.currentImageIndex] || '/images/placeholder-product.jpg';
         
-        // Use responsive image utility
-        window.responsiveImage.makeResponsive(mainImage, currentImageUrl, 'detail');
+        // For main image, use direct URL or get appropriate size
+        let displayUrl = currentImageUrl;
+        if (!currentImageUrl.includes('placeholder') && currentImageUrl.includes('supabase')) {
+            // Get the medium/large URL for detail view
+            const responsiveUrls = window.responsiveImage.getResponsiveUrls(currentImageUrl);
+            displayUrl = responsiveUrls.large || responsiveUrls.medium || currentImageUrl;
+        }
+        
+        mainImage.src = displayUrl;
+        mainImage.srcset = window.responsiveImage.generateSrcSet(currentImageUrl);
+        mainImage.sizes = window.responsiveImage.generateSizes('detail');
         mainImage.alt = this.product.name;
+        mainImage.loading = 'eager'; // Load main image immediately
+        
+        // Add load/error event listeners for debugging
+        mainImage.onload = () => {
+            console.log('✅ Main image loaded successfully:', displayUrl);
+            console.log('📐 Image dimensions:', {
+                naturalWidth: mainImage.naturalWidth,
+                naturalHeight: mainImage.naturalHeight,
+                displayWidth: mainImage.width,
+                displayHeight: mainImage.height
+            });
+            
+            // Check if image is visible
+            const rect = mainImage.getBoundingClientRect();
+            const computedStyle = window.getComputedStyle(mainImage);
+            console.log('👁️ Image visibility BEFORE fix:', {
+                position: rect,
+                visible: rect.width > 0 && rect.height > 0,
+                opacity: computedStyle.opacity,
+                display: computedStyle.display,
+                visibility: computedStyle.visibility
+            });
+            
+            // FORCE visibility - this fixes the hidden image problem!
+            mainImage.style.visibility = 'visible';
+            mainImage.style.opacity = '1';
+            
+            console.log('🔧 Forced image visibility to visible');
+        };
+        
+        mainImage.onerror = (error) => {
+            console.error('❌ Main image failed to load:', displayUrl, error);
+        };
+        
+        console.log('🖼️ Main image set:', {
+            original: currentImageUrl,
+            display: displayUrl,
+            srcset: mainImage.srcset
+        });
 
         // Set modal image
         document.getElementById('modal-image-title').textContent = this.product.name;
@@ -136,18 +211,44 @@ class ProductDetail {
         this.images.forEach((imageUrl, index) => {
             const thumbnail = document.createElement('img');
             
-            // Use responsive image utility for thumbnails
-            window.responsiveImage.makeResponsive(thumbnail, imageUrl, 'thumbnail');
+            // For thumbnails, use direct URL if it's already a thumbnail or get thumb URL if not
+            let thumbUrl = imageUrl;
+            if (!imageUrl.includes('-thumb.webp') && !imageUrl.includes('/thumb/')) {
+                // Only process if it's not already a thumbnail
+                const responsiveUrls = window.responsiveImage.getResponsiveUrls(imageUrl);
+                thumbUrl = responsiveUrls.thumb;
+            }
+            
+            thumbnail.src = thumbUrl;
             thumbnail.alt = `${this.product.name} - Imagen ${index + 1}`;
             thumbnail.className = `thumbnail ${index === this.currentImageIndex ? 'active' : ''}`;
             thumbnail.onclick = () => this.selectImage(index);
+            thumbnail.loading = 'lazy';
+            
+            // Add debugging for thumbnails
+            thumbnail.onload = () => {
+                console.log(`✅ Thumbnail ${index + 1} loaded:`, thumbUrl);
+                
+                // Force thumbnail visibility too
+                thumbnail.style.visibility = 'visible';
+                thumbnail.style.opacity = '1';
+                
+                console.log(`🔧 Forced thumbnail ${index + 1} visibility`);
+            };
+            
+            thumbnail.onerror = (error) => {
+                console.error(`❌ Thumbnail ${index + 1} failed:`, thumbUrl, error);
+            };
             
             thumbnailsContainer.appendChild(thumbnail);
         });
     }
 
     renderProductInfo() {
-        // Product title
+        console.log('📋 Starting renderProductInfo function...');
+                console.log('📦 Product data:', this.product);
+                
+                // Product title
         document.getElementById('product-title').textContent = this.product.name;
 
         // Product summary (use first part of description or name)
@@ -169,7 +270,7 @@ class ProductDetail {
         const stockUnavailable = document.getElementById('stock-unavailable');
         const quantityInput = document.getElementById('quantity');
         const addToCartBtn = document.getElementById('add-to-cart-btn');
-        const buyNowBtn = document.getElementById('buy-now-btn');
+        const buyNowBtn = document.getElementById('floresya-btn');
 
         if (stockQuantity > 0) {
             stockAvailable.style.display = 'block';
@@ -188,7 +289,7 @@ class ProductDetail {
             addToCartBtn.disabled = true;
             buyNowBtn.disabled = true;
             addToCartBtn.innerHTML = '<i class="bi bi-x-circle me-2"></i>Agotado';
-            buyNowBtn.innerHTML = '<i class="bi bi-x-circle me-2"></i>No Disponible';
+            buyNowBtn.innerHTML = '<i class="bi bi-x-circle me-2"></i>¡FloresYa! - No Disponible';
         }
     }
 

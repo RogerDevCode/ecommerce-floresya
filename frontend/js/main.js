@@ -485,10 +485,22 @@ class FloresYaApp {
         }[product.occasion] || 'General';
 
         // Parse additional images if available
-        const additionalImages = product.additional_images ? 
+        let additionalImages = product.additional_images ? 
             (typeof product.additional_images === 'string' ? 
                 JSON.parse(product.additional_images) : 
                 product.additional_images) : [];
+
+        // 🌸 Add local image variations with MORE DRAMATIC differences for better hover visibility
+        const localImageVariations = {
+            6: ['/images/products/girasoles-zoom.webp', '/images/products/girasoles-vivid.webp', '/images/products/girasoles-bright.webp'], // Bouquet de Girasoles
+            7: ['/images/products/arreglo-funebre-zoom.webp', '/images/products/arreglo-funebre-vivid.webp', '/images/products/arreglo-funebre-bright.webp'], // Arreglo Fúnebre  
+            9: ['/images/products/orquideas-zoom.webp', '/images/products/orquideas-vivid.webp', '/images/products/orquideas-bright.webp'], // Orquídeas Exóticas
+            10: ['/images/products/ramo-novia-zoom.webp', '/images/products/ramo-novia-vivid.webp', '/images/products/ramo-novia-bright.webp'] // Ramo de Novia Clásico
+        };
+
+        if (localImageVariations[product.id]) {
+            additionalImages = localImageVariations[product.id];
+        }
 
         const primaryImage = product.primary_image || product.image_url || '/images/placeholder-product.jpg';
         const allImages = [primaryImage, ...additionalImages].filter(img => img && img !== '');

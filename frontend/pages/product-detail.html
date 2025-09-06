@@ -12,31 +12,78 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/product-detail.css">
+    <link rel="stylesheet" href="/css/product-detail-enhanced.css">
+    <link rel="stylesheet" href="/css/professional-layout-fix.css">
+    <link rel="stylesheet" href="/css/mobile-conversion-optimizer.css">
+    <link rel="stylesheet" href="/css/compact-navigation.css">
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+    <!-- Enhanced Navigation with Gamification -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-gradient-primary shadow-lg sticky-top">
         <div class="container">
+            <!-- Logo and Brand -->
             <a class="navbar-brand d-flex align-items-center" href="/">
-                <img src="/images/logoFloresYa.jpeg" alt="FloresYa Logo" class="logo-img me-2">
-                <span class="brand-text">FloresYa</span>
+                <div class="logo-container">
+                    <img src="/images/logoFloresYa.jpeg" alt="FloresYa Logo" class="logo-img me-2">
+                    <div class="logo-sparkle"></div>
+                </div>
+                <div class="brand-container">
+                    <span class="brand-text">FloresYa</span>
+                    <small class="brand-tagline">🌸 Flores que enamoran</small>
+                </div>
             </a>
             
-            <div class="d-flex align-items-center">
-                <!-- Cart Button -->
-                <button class="btn btn-outline-primary position-relative me-3" onclick="toggleCart()">
-                    <i class="bi bi-bag"></i>
-                    <span class="badge bg-danger position-absolute top-0 start-100 translate-middle" 
-                          id="cart-count" style="display: none;">0</span>
+            <!-- Progress Bar for User Journey -->
+            <div class="user-journey d-none d-md-flex flex-grow-1 justify-content-center mx-4">
+                <div class="journey-step active">
+                    <div class="step-icon">🌸</div>
+                    <small>Explorar</small>
+                </div>
+                <div class="journey-line"></div>
+                <div class="journey-step current">
+                    <div class="step-icon">💖</div>
+                    <small>Personalizar</small>
+                </div>
+                <div class="journey-line"></div>
+                <div class="journey-step">
+                    <div class="step-icon">🎁</div>
+                    <small>Finalizar</small>
+                </div>
+            </div>
+            
+            <!-- Action Buttons with Gamification -->
+            <div class="nav-actions d-flex align-items-center">
+                <!-- Quick Actions -->
+                <button class="btn btn-glass me-2" onclick="window.location.href='/'" title="Inicio">
+                    <i class="bi bi-house-heart"></i>
+                    <span class="d-none d-sm-inline ms-1">Inicio</span>
                 </button>
                 
-                <!-- Back Button -->
-                <button class="btn btn-secondary" onclick="goBack()">
-                    <i class="bi bi-arrow-left me-1"></i>Volver
+                <!-- Cart with Animation -->
+                <button class="btn btn-cart position-relative me-2" onclick="toggleCart()">
+                    <i class="bi bi-bag-heart cart-icon"></i>
+                    <span class="badge cart-badge position-absolute" id="cart-count" style="display: none;">0</span>
+                    <span class="d-none d-sm-inline ms-1">Carrito</span>
+                    <div class="cart-pulse"></div>
                 </button>
+                
+                <!-- Back Button with Style -->
+                <button class="btn btn-back" onclick="goBack()">
+                    <i class="bi bi-arrow-left-heart me-1"></i>
+                    <span class="d-none d-sm-inline">Volver</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Floating Achievement Notification -->
+        <div id="achievement-toast" class="achievement-toast">
+            <div class="achievement-icon">🏆</div>
+            <div class="achievement-text">
+                <strong>¡Logro Desbloqueado!</strong>
+                <small>Explorador de Flores</small>
             </div>
         </div>
     </nav>
@@ -51,117 +98,501 @@
         </div>
 
         <div id="product-content" class="row" style="display: none;">
-            <!-- Product Images Gallery -->
+            <!-- Product Images Gallery with Gamification -->
             <div class="col-lg-6">
-                <div class="product-gallery">
-                    <!-- Main Image -->
+                <div class="product-gallery-enhanced">
+                    <!-- Achievement Badge for Image Viewing -->
+                    <div class="gallery-achievement">
+                        <div class="achievement-badge" id="image-explorer-badge">
+                            <i class="bi bi-camera"></i>
+                            <span>Explorador Visual</span>
+                            <div class="badge-progress">
+                                <div class="progress-fill" id="image-progress"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Main Image with Enhanced Features -->
                     <div class="main-image-container mb-3">
                         <img id="main-image" 
                              src="" 
                              alt="" 
-                             class="img-fluid rounded shadow-sm main-image"
+                             class="img-fluid rounded shadow-lg main-image"
                              onclick="openImageModal()">
+                        
+                        <!-- Interactive Overlays -->
                         <div class="image-overlay">
-                            <i class="bi bi-zoom-in"></i>
-                            <small>Click para ampliar</small>
+                            <div class="overlay-content">
+                                <i class="bi bi-zoom-in"></i>
+                                <small>Click para ampliar</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Image Quality Badge -->
+                        <div class="quality-badge">
+                            <i class="bi bi-patch-check-fill"></i>
+                            <span>HD Quality</span>
+                        </div>
+                        
+                        <!-- Love/Favorite Button -->
+                        <button class="love-button" onclick="toggleFavorite()" id="love-btn">
+                            <i class="bi bi-heart"></i>
+                            <span class="love-count">128</span>
+                        </button>
+                        
+                        <!-- Share Button -->
+                        <button class="share-button" onclick="shareProduct()">
+                            <i class="bi bi-share"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Enhanced Thumbnails with Progress -->
+                    <div class="thumbnails-container">
+                        <div class="thumbnails-header">
+                            <h6 class="mb-2">
+                                <i class="bi bi-images"></i>
+                                Ver todas las fotos 
+                                <span class="thumbnail-counter">(<span id="current-image">1</span>/<span id="total-images">3</span>)</span>
+                            </h6>
+                        </div>
+                        <div id="thumbnails" class="d-flex gap-2 flex-wrap">
+                            <!-- Thumbnails will be populated by JavaScript -->
+                        </div>
+                        
+                        <!-- Image Navigation Dots -->
+                        <div class="image-dots mt-2" id="image-dots">
+                            <!-- Dots will be populated by JavaScript -->
                         </div>
                     </div>
                     
-                    <!-- Thumbnail Images -->
-                    <div class="thumbnails-container">
-                        <div id="thumbnails" class="d-flex gap-2 flex-wrap">
-                            <!-- Thumbnails will be populated by JavaScript -->
+                    <!-- Trust Signals -->
+                    <div class="trust-signals mt-3">
+                        <div class="trust-item">
+                            <i class="bi bi-shield-check text-success"></i>
+                            <small>Imagen 100% Real</small>
+                        </div>
+                        <div class="trust-item">
+                            <i class="bi bi-camera text-primary"></i>
+                            <small>Foto del Producto Real</small>
+                        </div>
+                        <div class="trust-item">
+                            <i class="bi bi-eye text-info"></i>
+                            <small><span id="view-count">1,247</span> vistas hoy</small>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Product Information -->
+            <!-- Enhanced Product Information with Gamification -->
             <div class="col-lg-6">
-                <div class="product-info">
-                    <!-- Breadcrumb -->
+                <div class="product-info-enhanced">
+                    <!-- Live Activity Banner -->
+                    <div class="live-activity-banner mb-3">
+                        <div class="activity-indicator">
+                            <div class="pulse-dot"></div>
+                            <span class="live-text">¡EN VIVO!</span>
+                        </div>
+                        <span class="activity-text">
+                            <strong id="live-viewers">12</strong> personas están viendo este producto ahora
+                        </span>
+                    </div>
+
+                    <!-- Enhanced Breadcrumb with Icons -->
                     <nav aria-label="breadcrumb" class="mb-3">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
-                            <li class="breadcrumb-item"><a href="/#productos">Productos</a></li>
-                            <li class="breadcrumb-item" id="category-breadcrumb">Categoría</li>
-                            <li class="breadcrumb-item active" aria-current="page" id="product-breadcrumb">Producto</li>
+                        <ol class="breadcrumb-enhanced">
+                            <li><a href="/"><i class="bi bi-house-heart"></i> Inicio</a></li>
+                            <li><a href="/#productos"><i class="bi bi-grid-3x3-gap"></i> Productos</a></li>
+                            <li id="category-breadcrumb"><i class="bi bi-tag"></i> Categoría</li>
+                            <li class="active" id="product-breadcrumb"><i class="bi bi-flower1"></i> Producto</li>
                         </ol>
                     </nav>
 
-                    <!-- Product Title -->
-                    <h1 id="product-title" class="product-title mb-3">Título del Producto</h1>
-                    
-                    <!-- Product Summary -->
-                    <div class="product-summary mb-3">
-                        <p id="product-summary" class="text-muted">Resumen del producto...</p>
+                    <!-- Product Title with Social Proof -->
+                    <div class="product-header mb-3">
+                        <h1 id="product-title" class="product-title-enhanced">Título del Producto</h1>
+                        <div class="social-proof">
+                            <div class="rating-stars">
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <i class="bi bi-star-half text-warning"></i>
+                                <span class="rating-text">4.8 (324 reseñas)</span>
+                            </div>
+                            <div class="bestseller-badge">
+                                <i class="bi bi-fire"></i>
+                                <span>¡Más Vendido!</span>
+                            </div>
+                        </div>
                     </div>
                     
-                    <!-- Price -->
-                    <div class="price-section mb-4">
-                        <div class="d-flex align-items-center gap-3">
-                            <span class="price-usd h3 text-primary mb-0" id="price-usd">$0.00</span>
-                            <span class="price-ves h5 text-muted mb-0" id="price-ves">Bs. 0.00</span>
+                    <!-- Product Summary with Highlights -->
+                    <div class="product-summary-enhanced mb-4">
+                        <p id="product-summary" class="summary-text">Resumen del producto...</p>
+                        <div class="highlight-tags">
+                            <span class="tag tag-fresh"><i class="bi bi-leaf"></i> Fresco</span>
+                            <span class="tag tag-handmade"><i class="bi bi-heart-fill"></i> Hecho a Mano</span>
+                            <span class="tag tag-premium"><i class="bi bi-gem"></i> Premium</span>
                         </div>
-                        <small class="text-muted">Precio incluye envío</small>
+                    </div>
+                    
+                    <!-- Enhanced Price Section with Gamification -->
+                    <div class="price-section-enhanced mb-4">
+                        <div class="price-container">
+                            <div class="main-price">
+                                <span class="current-price" id="price-usd">$0.00</span>
+                                <span class="currency-converter" id="price-ves">Bs. 0.00</span>
+                            </div>
+                            <div class="price-benefits">
+                                <div class="savings-badge">
+                                    <i class="bi bi-piggy-bank"></i>
+                                    <span>Ahorras $5.00</span>
+                                </div>
+                                <div class="free-shipping">
+                                    <i class="bi bi-truck"></i>
+                                    <span>Envío GRATIS</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Price Comparison -->
+                        <div class="price-comparison">
+                            <small class="text-muted">
+                                <del>Precio regular: $45.00</del>
+                                <span class="discount-percent">-11%</span>
+                            </small>
+                        </div>
                     </div>
 
-                    <!-- Stock Status -->
-                    <div class="stock-status mb-4">
-                        <div id="stock-available" class="alert alert-success" style="display: none;">
-                            <i class="bi bi-check-circle me-2"></i>
-                            <strong>Disponible</strong> - <span id="stock-quantity">0</span> unidades en stock
+                    <!-- Urgency and Scarcity Section -->
+                    <div class="urgency-section mb-4">
+                        <div class="urgency-timer">
+                            <div class="timer-icon">⏰</div>
+                            <div class="timer-content">
+                                <strong>¡Oferta por tiempo limitado!</strong>
+                                <div class="countdown-timer" id="countdown-timer">
+                                    <span class="time-unit">
+                                        <span class="time-number" id="hours">23</span>
+                                        <span class="time-label">h</span>
+                                    </span>
+                                    <span class="separator">:</span>
+                                    <span class="time-unit">
+                                        <span class="time-number" id="minutes">45</span>
+                                        <span class="time-label">m</span>
+                                    </span>
+                                    <span class="separator">:</span>
+                                    <span class="time-unit">
+                                        <span class="time-number" id="seconds">32</span>
+                                        <span class="time-label">s</span>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                        <div id="stock-unavailable" class="alert alert-warning" style="display: none;">
-                            <i class="bi bi-exclamation-triangle me-2"></i>
-                            <strong>Agotado</strong> - Producto no disponible
+                        
+                        <div class="stock-pressure">
+                            <div class="stock-bar">
+                                <div class="stock-fill" style="width: 25%"></div>
+                            </div>
+                            <div class="stock-text">
+                                <span class="text-danger"><strong>¡Solo 3 disponibles!</strong></span>
+                                <small>Se ha vendido el 75% del stock hoy</small>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Quantity Selector -->
-                    <div class="quantity-selector mb-4">
-                        <label class="form-label">Cantidad:</label>
-                        <div class="input-group quantity-input" style="width: 150px;">
-                            <button class="btn btn-outline-secondary" type="button" onclick="changeQuantity(-1)">
+                    <!-- Product Customization Section -->
+                    <div class="customization-section mb-4">
+                        <h5 class="customization-title">
+                            <i class="bi bi-palette"></i>
+                            Personaliza tu arreglo
+                            <span class="customization-badge">NUEVO</span>
+                        </h5>
+                        
+                        <!-- Ribbon Color Selection -->
+                        <div class="customization-option mb-3">
+                            <label class="option-label">Color de la cinta:</label>
+                            <div class="color-selector">
+                                <input type="radio" name="ribbon-color" id="ribbon-pink" value="pink" checked>
+                                <label for="ribbon-pink" class="color-option color-pink" title="Rosa">
+                                    <div class="color-preview"></div>
+                                    <span class="color-name">Rosa</span>
+                                </label>
+                                
+                                <input type="radio" name="ribbon-color" id="ribbon-red" value="red">
+                                <label for="ribbon-red" class="color-option color-red" title="Rojo">
+                                    <div class="color-preview"></div>
+                                    <span class="color-name">Rojo</span>
+                                </label>
+                                
+                                <input type="radio" name="ribbon-color" id="ribbon-gold" value="gold">
+                                <label for="ribbon-gold" class="color-option color-gold" title="Dorado">
+                                    <div class="color-preview"></div>
+                                    <span class="color-name">Dorado</span>
+                                </label>
+                                
+                                <input type="radio" name="ribbon-color" id="ribbon-white" value="white">
+                                <label for="ribbon-white" class="color-option color-white" title="Blanco">
+                                    <div class="color-preview"></div>
+                                    <span class="color-name">Blanco</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Wrapping Paper Selection -->
+                        <div class="customization-option mb-3">
+                            <label class="option-label">Papel de envoltorio:</label>
+                            <div class="paper-selector">
+                                <div class="paper-option" data-paper="transparent">
+                                    <div class="paper-preview paper-transparent"></div>
+                                    <span class="paper-name">Transparente</span>
+                                    <span class="paper-price">Gratis</span>
+                                </div>
+                                <div class="paper-option" data-paper="kraft">
+                                    <div class="paper-preview paper-kraft"></div>
+                                    <span class="paper-name">Kraft</span>
+                                    <span class="paper-price">+$2</span>
+                                </div>
+                                <div class="paper-option" data-paper="floral">
+                                    <div class="paper-preview paper-floral"></div>
+                                    <span class="paper-name">Floral</span>
+                                    <span class="paper-price">+$3</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Personal Message -->
+                        <div class="customization-option mb-3">
+                            <label class="option-label">
+                                <i class="bi bi-card-text"></i>
+                                Mensaje personalizado (opcional):
+                            </label>
+                            <textarea class="form-control message-input" 
+                                      id="personal-message" 
+                                      placeholder="Escribe tu mensaje aquí... (máx. 100 caracteres)"
+                                      maxlength="100"></textarea>
+                            <div class="character-counter">
+                                <span id="char-count">0</span>/100 caracteres
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quantity Selector Enhanced -->
+                    <div class="quantity-section mb-4">
+                        <label class="form-label quantity-label">
+                            <i class="bi bi-123"></i>
+                            Cantidad:
+                        </label>
+                        <div class="quantity-controls">
+                            <button class="quantity-btn quantity-decrease" onclick="changeQuantity(-1)">
                                 <i class="bi bi-dash"></i>
                             </button>
                             <input type="number" 
-                                   class="form-control text-center" 
+                                   class="quantity-input" 
                                    id="quantity" 
                                    value="1" 
                                    min="1" 
-                                   max="99">
-                            <button class="btn btn-outline-secondary" type="button" onclick="changeQuantity(1)">
+                                   max="10">
+                            <button class="quantity-btn quantity-increase" onclick="changeQuantity(1)">
                                 <i class="bi bi-plus"></i>
                             </button>
                         </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="action-buttons mb-4">
-                        <div class="d-grid gap-2">
-                            <button id="floresya-btn" 
-                                    class="btn btn-primary-custom btn-lg btn-floresya fw-bold" 
-                                    onclick="floresYaBuyNow()">
-                                <i class="bi bi-lightning-fill me-2"></i>¡FloresYa! - Compra Express
-                            </button>
-                            <button id="add-to-cart-btn" 
-                                    class="btn btn-outline-primary btn-lg" 
-                                    onclick="addToCart()">
-                                <i class="bi bi-bag-plus me-2"></i>Agregar al Carrito
-                            </button>
+                        <!-- Stock Status Elements -->
+                        <div id="stock-available" class="stock-status-available">
+                            <div class="stock-info">
+                                <i class="bi bi-check-circle text-success"></i>
+                                <span><strong id="stock-quantity">10</strong> unidades disponibles</span>
+                            </div>
+                        </div>
+                        
+                        <div id="stock-unavailable" class="stock-status-unavailable" style="display: none;">
+                            <div class="stock-info">
+                                <i class="bi bi-x-circle text-danger"></i>
+                                <span>Producto agotado</span>
+                            </div>
+                        </div>
+                        
+                        <div class="quantity-benefits">
+                            <small class="text-muted">
+                                <i class="bi bi-gift"></i>
+                                Compra 2 y obtén 10% de descuento
+                            </small>
                         </div>
                     </div>
 
-                    <!-- Product Features -->
-                    <div class="product-features">
-                        <h5>Características:</h5>
-                        <ul class="list-unstyled">
-                            <li><i class="bi bi-truck text-primary me-2"></i>Entrega a domicilio</li>
-                            <li><i class="bi bi-shield-check text-success me-2"></i>Garantía de frescura</li>
-                            <li><i class="bi bi-heart text-danger me-2"></i>Arreglo hecho a mano</li>
-                            <li><i class="bi bi-clock text-info me-2"></i>Entrega el mismo día</li>
-                        </ul>
+                    <!-- Enhanced Action Buttons with Maximum Conversion Optimization -->
+                    <div class="action-buttons-enhanced mb-4">
+                        <!-- Conversion Optimization Banner -->
+                        <div class="conversion-banner mb-3">
+                            <div class="banner-content">
+                                <span class="banner-icon">✨</span>
+                                <div class="banner-text">
+                                    <strong>¡MOMENTO PERFECTO PARA COMPRAR!</strong>
+                                    <small>Máxima frescura • Entrega express • Precio especial</small>
+                                </div>
+                                <span class="banner-pulse"></span>
+                            </div>
+                        </div>
+                        <!-- Primary CTA with Animation -->
+                        <button id="floresya-btn" 
+                                class="btn btn-floresya-enhanced btn-lg fw-bold w-100 mb-2" 
+                                onclick="floresYaBuyNow()">
+                            <div class="btn-content">
+                                <div class="btn-icon">
+                                    <i class="bi bi-lightning-fill"></i>
+                                </div>
+                                <div class="btn-text">
+                                    <span class="btn-main">¡FloresYa! - Compra Express</span>
+                                    <small class="btn-sub">Entrega en 2-4 horas • Sin costo adicional</small>
+                                </div>
+                                <div class="btn-savings">
+                                    <small>Ahorras $15 vs otras florerías</small>
+                                </div>
+                                <div class="btn-shine"></div>
+                            </div>
+                        </button>
+                        
+                        <!-- Secondary CTA -->
+                        <button id="add-to-cart-btn" 
+                                class="btn btn-cart-enhanced btn-lg w-100 mb-2" 
+                                onclick="addToCart()">
+                            <i class="bi bi-bag-heart me-2"></i>
+                            Agregar al Carrito
+                            <span class="cart-animation"></span>
+                        </button>
+                        
+                        <!-- Enhanced Secondary Actions with Traditional E-commerce Elements -->
+                        <div class="secondary-actions">
+                            <button class="btn btn-wishlist" onclick="addToWishlist()" title="Agregar a lista de deseos">
+                                <i class="bi bi-heart"></i>
+                                <span>Favoritos</span>
+                            </button>
+                            <button class="btn btn-compare" onclick="addToCompare()" title="Comparar productos">
+                                <i class="bi bi-arrow-left-right"></i>
+                                <span>Comparar</span>
+                            </button>
+                            <button class="btn btn-question" onclick="askQuestion()" title="Hacer una pregunta">
+                                <i class="bi bi-chat-dots"></i>
+                                <span>Consultar</span>
+                            </button>
+                            <button class="btn btn-share" onclick="shareProduct()" title="Compartir producto">
+                                <i class="bi bi-share"></i>
+                                <span>Compartir</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Traditional E-commerce Navigation Links -->
+                        <div class="traditional-nav-links mt-3">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <a href="/" class="nav-link-traditional">
+                                        <i class="bi bi-house-door"></i>
+                                        Volver al Inicio
+                                    </a>
+                                </div>
+                                <div class="col-6">
+                                    <a href="/#productos" class="nav-link-traditional">
+                                        <i class="bi bi-grid-3x3-gap"></i>
+                                        Ver Más Productos
+                                    </a>
+                                </div>
+                                <div class="col-6">
+                                    <a href="/pages/payment.html" class="nav-link-traditional payment-shortcut">
+                                        <i class="bi bi-credit-card"></i>
+                                        Ir a Pagar Ahora
+                                    </a>
+                                </div>
+                                <div class="col-6">
+                                    <a href="#" class="nav-link-traditional" onclick="viewSimilar()">
+                                        <i class="bi bi-flower1"></i>
+                                        Productos Similares
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Trust and Security Section with Impulse Triggers -->
+                    <div class="trust-section mb-4">
+                        <h6 class="trust-title">
+                            <i class="bi bi-shield-check"></i>
+                            Tu compra está 100% protegida
+                            <span class="verified-badge">✓ VERIFICADO</span>
+                        </h6>
+                        <div class="trust-features">
+                            <div class="trust-item">
+                                <i class="bi bi-truck text-success"></i>
+                                <div class="trust-content">
+                                    <strong>Entrega Express GRATIS</strong>
+                                    <small>2-4 horas en Caracas • Garantizada</small>
+                                </div>
+                            </div>
+                            <div class="trust-item">
+                                <i class="bi bi-leaf text-success"></i>
+                                <div class="trust-content">
+                                    <strong>Frescura Garantizada</strong>
+                                    <small>7 días o devolvemos tu dinero</small>
+                                </div>
+                            </div>
+                            <div class="trust-item">
+                                <i class="bi bi-heart-fill text-danger"></i>
+                                <div class="trust-content">
+                                    <strong>Hecho con Amor</strong>
+                                    <small>Por artesanos venezolanos</small>
+                                </div>
+                            </div>
+                            <div class="trust-item">
+                                <i class="bi bi-award text-warning"></i>
+                                <div class="trust-content">
+                                    <strong>5,847+ Clientes Felices</strong>
+                                    <small>⭐ 4.9/5 en reseñas este mes</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Payment Security Badges -->
+                        <div class="security-badges mt-3">
+                            <div class="badge-item">
+                                <i class="bi bi-shield-lock-fill text-success"></i>
+                                <small>SSL Seguro</small>
+                            </div>
+                            <div class="badge-item">
+                                <i class="bi bi-credit-card text-primary"></i>
+                                <small>Pago Móvil</small>
+                            </div>
+                            <div class="badge-item">
+                                <i class="bi bi-currency-dollar text-success"></i>
+                                <small>Zelle</small>
+                            </div>
+                            <div class="badge-item">
+                                <i class="bi bi-bank text-info"></i>
+                                <small>Transferencia</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Impulse Buying Triggers Section -->
+                    <div class="impulse-triggers mb-4">
+                        <div class="trigger-item order-trigger">
+                            <div class="trigger-icon">🔥</div>
+                            <div class="trigger-content">
+                                <strong>¡ÚLTIMA OPORTUNIDAD!</strong>
+                                <small>Solo quedan pocas unidades disponibles hoy</small>
+                            </div>
+                        </div>
+                        <div class="trigger-item social-trigger">
+                            <div class="trigger-icon">👥</div>
+                            <div class="trigger-content">
+                                <strong><span id="recent-purchases">23</span> personas compraron esto</strong>
+                                <small>en las últimas 2 horas</small>
+                            </div>
+                        </div>
+                        <div class="trigger-item scarcity-trigger">
+                            <div class="trigger-icon">⚡</div>
+                            <div class="trigger-content">
+                                <strong>OFERTA FLASH ACTIVA</strong>
+                                <small>Termina cuando se agote el stock</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -224,9 +655,16 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/css-visibility-fix.js"></script>
+    <script src="/css-debug.js"></script>
     <script src="/js/responsive-image.js"></script>
     <script src="/js/api.js"></script>
     <script src="/js/cart.js"></script>
+    <script src="/js/product-gamification.js"></script>
+    <script src="/js/advanced-conversion-optimizer.js"></script>
+    <script src="/js/intelligent-cross-sell.js"></script>
+    <script src="/js/one-click-express-checkout.js"></script>
+    <script src="/js/strategic-buy-buttons.js"></script>
     <script src="/js/product-detail.js"></script>
 </body>
-</html>
+</html><script src="/debug-fix.js"></script>
