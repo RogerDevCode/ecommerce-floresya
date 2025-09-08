@@ -1,35 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run dev:*)",
-      "Bash(curl:*)",
-      "Bash(chmod:*)",
-      "Bash(./gitpush.sh:*)",
-      "Bash(npm run demo:*)",
-      "Bash(npm run lint)",
-      "Bash(./quick-start.sh:*)",
-      "Bash(./qs.sh)",
-      "Bash(git add:*)",
-      "Bash(git push:*)",
-      "Bash(pkill:*)",
-      "Bash(node:*)",
-      "Bash(__NEW_LINE__ wget -O ramo-novia-original.webp \"https://dcbavpdlkcjdtjdkntde.supabase.co/storage/v1/object/public/product-images/large/ramo-de-novia-clasico-3-large.webp\")",
-      "Bash(__NEW_LINE__ wget -O orquideas-original.webp \"https://dcbavpdlkcjdtjdkntde.supabase.co/storage/v1/object/public/product-images/large/orqu-deas-exoticas-2-large.webp\")",
-      "Bash(__NEW_LINE__ wget -O arreglo-funebre-original.webp \"https://dcbavpdlkcjdtjdkntde.supabase.co/storage/v1/object/public/product-images/large/arreglo-funebre-large.webp\")",
-      "Bash(__NEW_LINE__ wget -O girasoles-original.webp \"https://dcbavpdlkcjdtjdkntde.supabase.co/storage/v1/object/public/product-images/large/bouquet-de-girasoles-2-large.webp\")",
-      "Bash(__NEW_LINE__ ls -la)",
-      "Bash(npm init:*)",
-      "Bash(npm install:*)",
-      "Bash(./upload_and_update.sh)",
-      "Bash(/tmp/update_via_api.sh)",
-      "Bash(grep:*)",
-      "Bash(__NEW_LINE__ magick ramo-novia-zoom.webp -modulate 120,150,100 -contrast +10 ramo-novia-vivid.webp)",
-      "Bash(__NEW_LINE__ magick orquideas-zoom.webp -modulate 110,140,100 -contrast +10 orquideas-vivid.webp)",
-      "Bash(__NEW_LINE__ magick arreglo-funebre-zoom.webp -modulate 130,120,100 -contrast +5 arreglo-funebre-vivid.webp)",
-      "Bash(__NEW_LINE__ magick girasoles-zoom.webp -modulate 125,160,100 -contrast +15 girasoles-vivid.webp)",
-      "Bash(__NEW_LINE__ echo \"✅ Created vivid variations\")",
-      "Bash(convert:*)",
-      "Bash(sed:*)"
+      "Bash(NODE_ENV=development DEBUG=* node backend/src/server.js)"
     ],
     "deny": [],
     "ask": []

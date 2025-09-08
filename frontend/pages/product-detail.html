@@ -3,613 +3,437 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FloresYa - Detalle del producto. Descubre nuestros hermosos arreglos florales con entrega a domicilio.">
     <title id="page-title">Producto - FloresYa</title>
     
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/css/styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/js/logger.js" as="script">
+    
+    <!-- Critical CSS inline for better FCP -->
+    <style>
+        html { visibility: hidden; opacity: 0; transition: opacity 0.3s ease; }
+        html.loaded { visibility: visible; opacity: 1; }
+        .loading-skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); animation: skeleton-loading 1.5s infinite; }
+        @keyframes skeleton-loading { 0% { background-position: -200px 0; } 100% { background-position: calc(200px + 100%) 0; } }
+        .premium-gradient { background: linear-gradient(135deg, #FF69B4, #FF1493, #FF69B4); }
+        .glass-effect { backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.95); }
+        .pulse-shadow { box-shadow: 0 0 0 0 rgba(255, 105, 180, 0.7); animation: pulse-pink 2s infinite; }
+        @keyframes pulse-pink { 0% { box-shadow: 0 0 0 0 rgba(255, 105, 180, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(255, 105, 180, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 105, 180, 0); } }
+    </style>
+    
+    <!-- Fallback stylesheets -->
+    <noscript>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="/css/styles.css">
+    </noscript>
+    
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="/css/product-detail.css">
-    <link rel="stylesheet" href="/css/product-detail-enhanced.css">
-    <link rel="stylesheet" href="/css/professional-layout-fix.css">
-    <link rel="stylesheet" href="/css/mobile-conversion-optimizer.css">
-    <link rel="stylesheet" href="/css/compact-navigation.css">
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Producto FloresYa">
+    <meta property="og:description" content="Hermosos arreglos florales con entrega a domicilio">
+    <meta property="og:type" content="product">
+    <meta property="og:image" content="/images/og-product.jpg">
 </head>
 <body>
-    <!-- Enhanced Navigation with Gamification -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-gradient-primary shadow-lg sticky-top">
+    <!-- Enhanced Navigation with Trust Indicators -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
         <div class="container">
-            <!-- Logo and Brand -->
             <a class="navbar-brand d-flex align-items-center" href="/">
-                <div class="logo-container">
-                    <img src="/images/logoFloresYa.jpeg" alt="FloresYa Logo" class="logo-img me-2">
-                    <div class="logo-sparkle"></div>
-                </div>
-                <div class="brand-container">
-                    <span class="brand-text">FloresYa</span>
-                    <small class="brand-tagline">🌸 Flores que enamoran</small>
+                <img src="/images/placeholder-product-2.webp" alt="FloresYa Logo" class="logo-img me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px;">
+                <div>
+                    <span class="brand-text fw-bold text-primary-custom">FloresYa</span>
+                    <small class="d-block text-muted" style="font-size: 0.75rem;">🌸 Flores que enamoran</small>
                 </div>
             </a>
             
-            <!-- Progress Bar for User Journey -->
-            <div class="user-journey d-none d-md-flex flex-grow-1 justify-content-center mx-4">
-                <div class="journey-step active">
-                    <div class="step-icon">🌸</div>
-                    <small>Explorar</small>
+            <div class="d-flex align-items-center">
+                <!-- Trust Badge -->
+                <div class="trust-badge d-none d-md-flex align-items-center me-3">
+                    <i class="bi bi-shield-check text-success me-1"></i>
+                    <small class="text-success fw-medium">Compra Segura</small>
                 </div>
-                <div class="journey-line"></div>
-                <div class="journey-step current">
-                    <div class="step-icon">💖</div>
-                    <small>Personalizar</small>
-                </div>
-                <div class="journey-line"></div>
-                <div class="journey-step">
-                    <div class="step-icon">🎁</div>
-                    <small>Finalizar</small>
-                </div>
-            </div>
-            
-            <!-- Action Buttons with Gamification -->
-            <div class="nav-actions d-flex align-items-center">
-                <!-- Quick Actions -->
-                <button class="btn btn-glass me-2" onclick="window.location.href='/'" title="Inicio">
-                    <i class="bi bi-house-heart"></i>
-                    <span class="d-none d-sm-inline ms-1">Inicio</span>
-                </button>
                 
-                <!-- Cart with Animation -->
-                <button class="btn btn-cart position-relative me-2" onclick="toggleCart()">
-                    <i class="bi bi-bag-heart cart-icon"></i>
-                    <span class="badge cart-badge position-absolute" id="cart-count" style="display: none;">0</span>
-                    <span class="d-none d-sm-inline ms-1">Carrito</span>
-                    <div class="cart-pulse"></div>
-                </button>
+                <!-- Cart with enhanced visual feedback -->
+                <a class="nav-link position-relative cart-icon-wrapper me-3" href="#" id="cartToggle" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas" title="Ver carrito">
+                    <i class="bi bi-bag-heart cart-icon fs-5 text-primary-custom"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary-custom" id="cart-count" style="display: none;">0</span>
+                    <span class="position-absolute cart-pulse pulse-shadow rounded-circle" style="width: 40px; height: 40px; top: -5px; left: -5px;"></span>
+                </a>
                 
-                <!-- Back Button with Style -->
-                <button class="btn btn-back" onclick="goBack()">
-                    <i class="bi bi-arrow-left-heart me-1"></i>
-                    <span class="d-none d-sm-inline">Volver</span>
-                </button>
-            </div>
-        </div>
-        
-        <!-- Floating Achievement Notification -->
-        <div id="achievement-toast" class="achievement-toast">
-            <div class="achievement-icon">🏆</div>
-            <div class="achievement-text">
-                <strong>¡Logro Desbloqueado!</strong>
-                <small>Explorador de Flores</small>
+                <!-- Back to Home -->
+                <a class="btn btn-outline-primary btn-sm" href="/">
+                    <i class="bi bi-house me-1"></i>
+                    Inicio
+                </a>
             </div>
         </div>
     </nav>
 
-    <!-- Product Detail Container -->
-    <div class="container mt-4 mb-5">
-        <div id="loading-spinner" class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="d-flex justify-content-center align-items-center" style="min-height: 60vh;">
+        <div class="text-center">
+            <div class="spinner-border text-primary-custom mb-3" role="status">
                 <span class="visually-hidden">Cargando...</span>
             </div>
-            <p class="mt-2">Cargando producto...</p>
+            <p class="text-muted">Cargando producto...</p>
+        </div>
+    </div>
+
+    <!-- Main Product Content -->
+    <div id="product-content" style="display: none;">
+        <!-- Breadcrumb -->
+        <div class="container mt-3">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/" class="text-primary-custom">Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="/#productos" class="text-primary-custom" id="category-breadcrumb">Productos</a></li>
+                    <li class="breadcrumb-item active" id="product-breadcrumb">Producto</li>
+                </ol>
+            </nav>
         </div>
 
-        <div id="product-content" class="row" style="display: none;">
-            <!-- Product Images Gallery with Gamification -->
-            <div class="col-lg-6">
-                <div class="product-gallery-enhanced">
-                    <!-- Achievement Badge for Image Viewing -->
-                    <div class="gallery-achievement">
-                        <div class="achievement-badge" id="image-explorer-badge">
-                            <i class="bi bi-camera"></i>
-                            <span>Explorador Visual</span>
-                            <div class="badge-progress">
-                                <div class="progress-fill" id="image-progress"></div>
+        <!-- Product Detail Section -->
+        <div class="container my-4">
+            <div class="row">
+                <!-- Product Images Column -->
+                <div class="col-lg-6 mb-4">
+                    <div class="product-images-container">
+                        <!-- Main Image -->
+                        <div class="main-image-wrapper position-relative mb-3">
+                            <img id="main-image" src="/images/placeholder-product-2.webp" alt="Producto" 
+                                 class="img-fluid rounded-3 shadow-lg cursor-pointer"
+                                 style="width: 100%; height: 400px; object-fit: cover; transition: transform 0.3s ease;"
+                                 onmouseover="this.style.transform='scale(1.05)'"
+                                 onmouseout="this.style.transform='scale(1)'">
+                            
+                            <!-- Image Zoom Indicator -->
+                            <div class="position-absolute top-0 end-0 m-3">
+                                <span class="badge bg-dark bg-opacity-75 text-white">
+                                    <i class="bi bi-zoom-in"></i> Click para ampliar
+                                </span>
+                            </div>
+                            
+                            <!-- Image Counter -->
+                            <div class="position-absolute bottom-0 start-0 m-3">
+                                <span class="badge glass-effect text-dark">
+                                    <span id="current-image">1</span> / <span id="total-images">1</span>
+                                </span>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Main Image with Enhanced Features -->
-                    <div class="main-image-container mb-3">
-                        <img id="main-image" 
-                             src="" 
-                             alt="" 
-                             class="img-fluid rounded shadow-lg main-image"
-                             onclick="openImageModal()">
                         
-                        <!-- Interactive Overlays -->
-                        <div class="image-overlay">
-                            <div class="overlay-content">
-                                <i class="bi bi-zoom-in"></i>
-                                <small>Click para ampliar</small>
-                            </div>
-                        </div>
-                        
-                        <!-- Image Quality Badge -->
-                        <div class="quality-badge">
-                            <i class="bi bi-patch-check-fill"></i>
-                            <span>HD Quality</span>
-                        </div>
-                        
-                        <!-- Love/Favorite Button -->
-                        <button class="love-button" onclick="toggleFavorite()" id="love-btn">
-                            <i class="bi bi-heart"></i>
-                            <span class="love-count">128</span>
-                        </button>
-                        
-                        <!-- Share Button -->
-                        <button class="share-button" onclick="shareProduct()">
-                            <i class="bi bi-share"></i>
-                        </button>
-                    </div>
-                    
-                    <!-- Enhanced Thumbnails with Progress -->
-                    <div class="thumbnails-container">
-                        <div class="thumbnails-header">
-                            <h6 class="mb-2">
-                                <i class="bi bi-images"></i>
-                                Ver todas las fotos 
-                                <span class="thumbnail-counter">(<span id="current-image">1</span>/<span id="total-images">3</span>)</span>
-                            </h6>
-                        </div>
-                        <div id="thumbnails" class="d-flex gap-2 flex-wrap">
+                        <!-- Thumbnails -->
+                        <div class="row g-2" id="thumbnails">
                             <!-- Thumbnails will be populated by JavaScript -->
                         </div>
-                        
-                        <!-- Image Navigation Dots -->
-                        <div class="image-dots mt-2" id="image-dots">
-                            <!-- Dots will be populated by JavaScript -->
-                        </div>
                     </div>
-                    
-                    <!-- Trust Signals -->
-                    <div class="trust-signals mt-3">
-                        <div class="trust-item">
-                            <i class="bi bi-shield-check text-success"></i>
-                            <small>Imagen 100% Real</small>
+                </div>
+                
+                <!-- Product Information Column -->
+                <div class="col-lg-6">
+                    <div class="product-info">
+                        <!-- Product Title -->
+                        <h1 id="product-title" class="h3 fw-bold mb-3 text-dark">Cargando producto...</h1>
+                        
+                        <!-- Product Summary -->
+                        <p id="product-summary" class="lead text-muted mb-4">Información del producto...</p>
+                        
+                        <!-- Price Section with Enhanced Design -->
+                        <div class="price-section mb-4 p-4 rounded-3" style="background: linear-gradient(135deg, rgba(255, 105, 180, 0.1), rgba(255, 20, 147, 0.05));">
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <div class="price-usd">
+                                        <span class="h4 fw-bold text-primary-custom mb-0" id="price-usd">$0.00</span>
+                                        <small class="d-block text-muted">Precio en USD</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="price-ves">
+                                        <span class="h5 fw-semibold text-success mb-0" id="price-ves">Bs. 0.00</span>
+                                        <small class="d-block text-muted">Precio en Bs.</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Price Benefits -->
+                            <div class="row mt-3">
+                                <div class="col-6">
+                                    <small class="text-success d-flex align-items-center">
+                                        <i class="bi bi-truck me-1"></i>
+                                        Envío gratis
+                                    </small>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-success d-flex align-items-center">
+                                        <i class="bi bi-shield-check me-1"></i>
+                                        Garantizado
+                                    </small>
+                                </div>
+                            </div>
                         </div>
-                        <div class="trust-item">
-                            <i class="bi bi-camera text-primary"></i>
-                            <small>Foto del Producto Real</small>
+                        
+                        <!-- Stock Status -->
+                        <div class="stock-section mb-4">
+                            <div id="stock-available" style="display: none;">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    <span class="fw-medium text-success">En stock</span>
+                                    <span class="badge bg-success ms-2" id="stock-quantity">0</span>
+                                </div>
+                                <small class="text-muted">¡Últimas unidades disponibles!</small>
+                            </div>
+                            <div id="stock-unavailable" style="display: none;">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                    <span class="fw-medium text-danger">Sin stock</span>
+                                </div>
+                                <small class="text-muted">Contáctanos para disponibilidad</small>
+                            </div>
                         </div>
-                        <div class="trust-item">
-                            <i class="bi bi-eye text-info"></i>
-                            <small><span id="view-count">1,247</span> vistas hoy</small>
+                        
+                        <!-- Quantity Selector -->
+                        <div class="quantity-section mb-4">
+                            <label for="quantity" class="form-label fw-medium">Cantidad:</label>
+                            <div class="d-flex align-items-center">
+                                <button class="btn btn-outline-secondary" type="button" onclick="decreaseQuantity()">
+                                    <i class="bi bi-dash"></i>
+                                </button>
+                                <input type="number" id="quantity" class="form-control text-center mx-2" style="width: 80px;" value="1" min="1" max="10">
+                                <button class="btn btn-outline-secondary" type="button" onclick="increaseQuantity()">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Call-to-Action Buttons -->
+                        <div class="cta-section mb-4">
+                            <div class="d-grid gap-2">
+                                <!-- Primary CTA: FloresYa Express -->
+                                <button class="btn btn-lg premium-gradient text-white fw-bold pulse-shadow" id="floresya-express-btn" onclick="floresYaBuyNow()">
+                                    <i class="bi bi-lightning-fill me-2"></i>
+                                    ¡FloresYa! Express
+                                    <small class="d-block" style="font-size: 0.8rem;">Compra rápida sin registro</small>
+                                </button>
+                                
+                                <!-- Secondary CTA: Add to Cart -->
+                                <button class="btn btn-outline-primary btn-lg fw-medium" id="add-to-cart-btn">
+                                    <i class="bi bi-bag-plus me-2"></i>
+                                    Agregar al Carrito
+                                </button>
+                            </div>
+                            
+                            <!-- Trust Indicators -->
+                            <div class="trust-indicators mt-3 text-center">
+                                <small class="text-muted d-flex align-items-center justify-content-center flex-wrap gap-3">
+                                    <span><i class="bi bi-shield-check text-success me-1"></i>Compra segura</span>
+                                    <span><i class="bi bi-truck text-success me-1"></i>Entrega garantizada</span>
+                                    <span><i class="bi bi-arrow-repeat text-success me-1"></i>Satisfacción 100%</span>
+                                </small>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Enhanced Product Information with Gamification -->
-            <div class="col-lg-6">
-                <div class="product-info-enhanced">
-                    <!-- Live Activity Banner -->
-                    <div class="live-activity-banner mb-3">
-                        <div class="activity-indicator">
-                            <div class="pulse-dot"></div>
-                            <span class="live-text">¡EN VIVO!</span>
-                        </div>
-                        <span class="activity-text">
-                            <strong id="live-viewers">12</strong> personas están viendo este producto ahora
-                        </span>
-                    </div>
-
-                    <!-- Enhanced Breadcrumb with Icons -->
-                    <nav aria-label="breadcrumb" class="mb-3">
-                        <ol class="breadcrumb-enhanced">
-                            <li><a href="/"><i class="bi bi-house-heart"></i> Inicio</a></li>
-                            <li><a href="/#productos"><i class="bi bi-grid-3x3-gap"></i> Productos</a></li>
-                            <li id="category-breadcrumb"><i class="bi bi-tag"></i> Categoría</li>
-                            <li class="active" id="product-breadcrumb"><i class="bi bi-flower1"></i> Producto</li>
-                        </ol>
-                    </nav>
-
-                    <!-- Product Title with Social Proof -->
-                    <div class="product-header mb-3">
-                        <h1 id="product-title" class="product-title-enhanced">Título del Producto</h1>
-                        <div class="social-proof">
-                            <div class="rating-stars">
-                                <i class="bi bi-star-fill text-warning"></i>
-                                <i class="bi bi-star-fill text-warning"></i>
-                                <i class="bi bi-star-fill text-warning"></i>
-                                <i class="bi bi-star-fill text-warning"></i>
-                                <i class="bi bi-star-half text-warning"></i>
-                                <span class="rating-text">4.8 (324 reseñas)</span>
-                            </div>
-                            <div class="bestseller-badge">
-                                <i class="bi bi-fire"></i>
-                                <span>¡Más Vendido!</span>
-                            </div>
-                        </div>
-                    </div>
+            
+            <!-- Product Details Tabs -->
+            <div class="row mt-5">
+                <div class="col-12">
+                    <ul class="nav nav-tabs" id="productTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description" type="button" role="tab">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Descripción
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab">
+                                <i class="bi bi-list-ul me-1"></i>
+                                Detalles
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="care-tab" data-bs-toggle="tab" data-bs-target="#care" type="button" role="tab">
+                                <i class="bi bi-heart me-1"></i>
+                                Cuidados
+                            </button>
+                        </li>
+                    </ul>
                     
-                    <!-- Product Summary with Highlights -->
-                    <div class="product-summary-enhanced mb-4">
-                        <p id="product-summary" class="summary-text">Resumen del producto...</p>
-                        <div class="highlight-tags">
-                            <span class="tag tag-fresh"><i class="bi bi-leaf"></i> Fresco</span>
-                            <span class="tag tag-handmade"><i class="bi bi-heart-fill"></i> Hecho a Mano</span>
-                            <span class="tag tag-premium"><i class="bi bi-gem"></i> Premium</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Enhanced Price Section with Gamification -->
-                    <div class="price-section-enhanced mb-4">
-                        <div class="price-container">
-                            <div class="main-price">
-                                <span class="current-price" id="price-usd">$0.00</span>
-                                <span class="currency-converter" id="price-ves">Bs. 0.00</span>
-                            </div>
-                            <div class="price-benefits">
-                                <div class="savings-badge">
-                                    <i class="bi bi-piggy-bank"></i>
-                                    <span>Ahorras $5.00</span>
-                                </div>
-                                <div class="free-shipping">
-                                    <i class="bi bi-truck"></i>
-                                    <span>Envío GRATIS</span>
+                    <div class="tab-content mt-4" id="productTabsContent">
+                        <!-- Description Tab -->
+                        <div class="tab-pane fade show active" id="description" role="tabpanel">
+                            <div class="p-4 bg-light rounded-3">
+                                <div id="product-description">
+                                    <p class="text-muted">Cargando descripción...</p>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Price Comparison -->
-                        <div class="price-comparison">
-                            <small class="text-muted">
-                                <del>Precio regular: $45.00</del>
-                                <span class="discount-percent">-11%</span>
-                            </small>
-                        </div>
-                    </div>
-
-                    <!-- Urgency and Scarcity Section -->
-                    <div class="urgency-section mb-4">
-                        <div class="urgency-timer">
-                            <div class="timer-icon">⏰</div>
-                            <div class="timer-content">
-                                <strong>¡Oferta por tiempo limitado!</strong>
-                                <div class="countdown-timer" id="countdown-timer">
-                                    <span class="time-unit">
-                                        <span class="time-number" id="hours">23</span>
-                                        <span class="time-label">h</span>
-                                    </span>
-                                    <span class="separator">:</span>
-                                    <span class="time-unit">
-                                        <span class="time-number" id="minutes">45</span>
-                                        <span class="time-label">m</span>
-                                    </span>
-                                    <span class="separator">:</span>
-                                    <span class="time-unit">
-                                        <span class="time-number" id="seconds">32</span>
-                                        <span class="time-label">s</span>
-                                    </span>
+                        <!-- Details Tab -->
+                        <div class="tab-pane fade" id="details" role="tabpanel">
+                            <div class="p-4 bg-light rounded-3">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <strong>Categoría:</strong>
+                                        <span id="product-category" class="ms-2 text-muted">No especificada</span>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <strong>Ocasión:</strong>
+                                        <span id="product-occasion" class="ms-2 text-muted">General</span>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <strong>Stock:</strong>
+                                        <span id="stock-info" class="ms-2 text-muted">0 unidades</span>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <strong>SKU:</strong>
+                                        <span id="product-sku" class="ms-2 text-muted">N/A</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="stock-pressure">
-                            <div class="stock-bar">
-                                <div class="stock-fill" style="width: 25%"></div>
-                            </div>
-                            <div class="stock-text">
-                                <span class="text-danger"><strong>¡Solo 3 disponibles!</strong></span>
-                                <small>Se ha vendido el 75% del stock hoy</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product Customization Section -->
-                    <div class="customization-section mb-4">
-                        <h5 class="customization-title">
-                            <i class="bi bi-palette"></i>
-                            Personaliza tu arreglo
-                            <span class="customization-badge">NUEVO</span>
-                        </h5>
-                        
-                        <!-- Ribbon Color Selection -->
-                        <div class="customization-option mb-3">
-                            <label class="option-label">Color de la cinta:</label>
-                            <div class="color-selector">
-                                <input type="radio" name="ribbon-color" id="ribbon-pink" value="pink" checked>
-                                <label for="ribbon-pink" class="color-option color-pink" title="Rosa">
-                                    <div class="color-preview"></div>
-                                    <span class="color-name">Rosa</span>
-                                </label>
-                                
-                                <input type="radio" name="ribbon-color" id="ribbon-red" value="red">
-                                <label for="ribbon-red" class="color-option color-red" title="Rojo">
-                                    <div class="color-preview"></div>
-                                    <span class="color-name">Rojo</span>
-                                </label>
-                                
-                                <input type="radio" name="ribbon-color" id="ribbon-gold" value="gold">
-                                <label for="ribbon-gold" class="color-option color-gold" title="Dorado">
-                                    <div class="color-preview"></div>
-                                    <span class="color-name">Dorado</span>
-                                </label>
-                                
-                                <input type="radio" name="ribbon-color" id="ribbon-white" value="white">
-                                <label for="ribbon-white" class="color-option color-white" title="Blanco">
-                                    <div class="color-preview"></div>
-                                    <span class="color-name">Blanco</span>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <!-- Wrapping Paper Selection -->
-                        <div class="customization-option mb-3">
-                            <label class="option-label">Papel de envoltorio:</label>
-                            <div class="paper-selector">
-                                <div class="paper-option" data-paper="transparent">
-                                    <div class="paper-preview paper-transparent"></div>
-                                    <span class="paper-name">Transparente</span>
-                                    <span class="paper-price">Gratis</span>
-                                </div>
-                                <div class="paper-option" data-paper="kraft">
-                                    <div class="paper-preview paper-kraft"></div>
-                                    <span class="paper-name">Kraft</span>
-                                    <span class="paper-price">+$2</span>
-                                </div>
-                                <div class="paper-option" data-paper="floral">
-                                    <div class="paper-preview paper-floral"></div>
-                                    <span class="paper-name">Floral</span>
-                                    <span class="paper-price">+$3</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Personal Message -->
-                        <div class="customization-option mb-3">
-                            <label class="option-label">
-                                <i class="bi bi-card-text"></i>
-                                Mensaje personalizado (opcional):
-                            </label>
-                            <textarea class="form-control message-input" 
-                                      id="personal-message" 
-                                      placeholder="Escribe tu mensaje aquí... (máx. 100 caracteres)"
-                                      maxlength="100"></textarea>
-                            <div class="character-counter">
-                                <span id="char-count">0</span>/100 caracteres
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Quantity Selector Enhanced -->
-                    <div class="quantity-section mb-4">
-                        <label class="form-label quantity-label">
-                            <i class="bi bi-123"></i>
-                            Cantidad:
-                        </label>
-                        <div class="quantity-controls">
-                            <button class="quantity-btn quantity-decrease" onclick="changeQuantity(-1)">
-                                <i class="bi bi-dash"></i>
-                            </button>
-                            <input type="number" 
-                                   class="quantity-input" 
-                                   id="quantity" 
-                                   value="1" 
-                                   min="1" 
-                                   max="10">
-                            <button class="quantity-btn quantity-increase" onclick="changeQuantity(1)">
-                                <i class="bi bi-plus"></i>
-                            </button>
-                        </div>
-                        <!-- Stock Status Elements -->
-                        <div id="stock-available" class="stock-status-available">
-                            <div class="stock-info">
-                                <i class="bi bi-check-circle text-success"></i>
-                                <span><strong id="stock-quantity">10</strong> unidades disponibles</span>
-                            </div>
-                        </div>
-                        
-                        <div id="stock-unavailable" class="stock-status-unavailable" style="display: none;">
-                            <div class="stock-info">
-                                <i class="bi bi-x-circle text-danger"></i>
-                                <span>Producto agotado</span>
-                            </div>
-                        </div>
-                        
-                        <div class="quantity-benefits">
-                            <small class="text-muted">
-                                <i class="bi bi-gift"></i>
-                                Compra 2 y obtén 10% de descuento
-                            </small>
-                        </div>
-                    </div>
-
-                    <!-- Enhanced Action Buttons with Maximum Conversion Optimization -->
-                    <div class="action-buttons-enhanced mb-4">
-                        <!-- Conversion Optimization Banner -->
-                        <div class="conversion-banner mb-3">
-                            <div class="banner-content">
-                                <span class="banner-icon">✨</span>
-                                <div class="banner-text">
-                                    <strong>¡MOMENTO PERFECTO PARA COMPRAR!</strong>
-                                    <small>Máxima frescura • Entrega express • Precio especial</small>
-                                </div>
-                                <span class="banner-pulse"></span>
-                            </div>
-                        </div>
-                        <!-- Primary CTA with Animation -->
-                        <button id="floresya-btn" 
-                                class="btn btn-floresya-enhanced btn-lg fw-bold w-100 mb-2" 
-                                onclick="floresYaBuyNow()">
-                            <div class="btn-content">
-                                <div class="btn-icon">
-                                    <i class="bi bi-lightning-fill"></i>
-                                </div>
-                                <div class="btn-text">
-                                    <span class="btn-main">¡FloresYa! - Compra Express</span>
-                                    <small class="btn-sub">Entrega en 2-4 horas • Sin costo adicional</small>
-                                </div>
-                                <div class="btn-savings">
-                                    <small>Ahorras $15 vs otras florerías</small>
-                                </div>
-                                <div class="btn-shine"></div>
-                            </div>
-                        </button>
-                        
-                        <!-- Secondary CTA -->
-                        <button id="add-to-cart-btn" 
-                                class="btn btn-cart-enhanced btn-lg w-100 mb-2" 
-                                onclick="addToCart()">
-                            <i class="bi bi-bag-heart me-2"></i>
-                            Agregar al Carrito
-                            <span class="cart-animation"></span>
-                        </button>
-                        
-                        <!-- Enhanced Secondary Actions with Traditional E-commerce Elements -->
-                        <div class="secondary-actions">
-                            <button class="btn btn-wishlist" onclick="addToWishlist()" title="Agregar a lista de deseos">
-                                <i class="bi bi-heart"></i>
-                                <span>Favoritos</span>
-                            </button>
-                            <button class="btn btn-compare" onclick="addToCompare()" title="Comparar productos">
-                                <i class="bi bi-arrow-left-right"></i>
-                                <span>Comparar</span>
-                            </button>
-                            <button class="btn btn-question" onclick="askQuestion()" title="Hacer una pregunta">
-                                <i class="bi bi-chat-dots"></i>
-                                <span>Consultar</span>
-                            </button>
-                            <button class="btn btn-share" onclick="shareProduct()" title="Compartir producto">
-                                <i class="bi bi-share"></i>
-                                <span>Compartir</span>
-                            </button>
-                        </div>
-                        
-                        <!-- Traditional E-commerce Navigation Links -->
-                        <div class="traditional-nav-links mt-3">
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <a href="/" class="nav-link-traditional">
-                                        <i class="bi bi-house-door"></i>
-                                        Volver al Inicio
-                                    </a>
-                                </div>
-                                <div class="col-6">
-                                    <a href="/#productos" class="nav-link-traditional">
-                                        <i class="bi bi-grid-3x3-gap"></i>
-                                        Ver Más Productos
-                                    </a>
-                                </div>
-                                <div class="col-6">
-                                    <a href="/pages/payment.html" class="nav-link-traditional payment-shortcut">
-                                        <i class="bi bi-credit-card"></i>
-                                        Ir a Pagar Ahora
-                                    </a>
-                                </div>
-                                <div class="col-6">
-                                    <a href="#" class="nav-link-traditional" onclick="viewSimilar()">
-                                        <i class="bi bi-flower1"></i>
-                                        Productos Similares
-                                    </a>
+                        <!-- Care Instructions Tab -->
+                        <div class="tab-pane fade" id="care" role="tabpanel">
+                            <div class="p-4 bg-light rounded-3">
+                                <h5 class="fw-bold mb-3">
+                                    <i class="bi bi-flower1 me-2 text-primary-custom"></i>
+                                    Cuidados para tus flores
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="d-flex align-items-start">
+                                            <i class="bi bi-droplet text-primary me-2 mt-1"></i>
+                                            <div>
+                                                <strong>Agua fresca</strong>
+                                                <p class="small text-muted mb-0">Cambia el agua cada 2-3 días</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="d-flex align-items-start">
+                                            <i class="bi bi-scissors text-primary me-2 mt-1"></i>
+                                            <div>
+                                                <strong>Corte diagonal</strong>
+                                                <p class="small text-muted mb-0">Recorta los tallos bajo agua</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="d-flex align-items-start">
+                                            <i class="bi bi-sun text-primary me-2 mt-1"></i>
+                                            <div>
+                                                <strong>Luz indirecta</strong>
+                                                <p class="small text-muted mb-0">Evita la luz solar directa</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="d-flex align-items-start">
+                                            <i class="bi bi-thermometer-half text-primary me-2 mt-1"></i>
+                                            <div>
+                                                <strong>Temperatura</strong>
+                                                <p class="small text-muted mb-0">Mantén en lugar fresco</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Enhanced Trust and Security Section with Impulse Triggers -->
-                    <div class="trust-section mb-4">
-                        <h6 class="trust-title">
-                            <i class="bi bi-shield-check"></i>
-                            Tu compra está 100% protegida
-                            <span class="verified-badge">✓ VERIFICADO</span>
-                        </h6>
-                        <div class="trust-features">
-                            <div class="trust-item">
-                                <i class="bi bi-truck text-success"></i>
-                                <div class="trust-content">
-                                    <strong>Entrega Express GRATIS</strong>
-                                    <small>2-4 horas en Caracas • Garantizada</small>
-                                </div>
+                </div>
+            </div>
+            
+            <!-- Related Products Section -->
+            <div class="row mt-5">
+                <div class="col-12">
+                    <h3 class="fw-bold mb-4 text-center">
+                        <i class="bi bi-flower2 me-2 text-primary-custom"></i>
+                        Productos Relacionados
+                    </h3>
+                    <div id="related-products">
+                        <!-- Related products will be loaded here -->
+                        <div class="text-center py-4">
+                            <div class="spinner-border spinner-border-sm text-primary-custom" role="status">
+                                <span class="visually-hidden">Cargando...</span>
                             </div>
-                            <div class="trust-item">
-                                <i class="bi bi-leaf text-success"></i>
-                                <div class="trust-content">
-                                    <strong>Frescura Garantizada</strong>
-                                    <small>7 días o devolvemos tu dinero</small>
-                                </div>
-                            </div>
-                            <div class="trust-item">
-                                <i class="bi bi-heart-fill text-danger"></i>
-                                <div class="trust-content">
-                                    <strong>Hecho con Amor</strong>
-                                    <small>Por artesanos venezolanos</small>
-                                </div>
-                            </div>
-                            <div class="trust-item">
-                                <i class="bi bi-award text-warning"></i>
-                                <div class="trust-content">
-                                    <strong>5,847+ Clientes Felices</strong>
-                                    <small>⭐ 4.9/5 en reseñas este mes</small>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Payment Security Badges -->
-                        <div class="security-badges mt-3">
-                            <div class="badge-item">
-                                <i class="bi bi-shield-lock-fill text-success"></i>
-                                <small>SSL Seguro</small>
-                            </div>
-                            <div class="badge-item">
-                                <i class="bi bi-credit-card text-primary"></i>
-                                <small>Pago Móvil</small>
-                            </div>
-                            <div class="badge-item">
-                                <i class="bi bi-currency-dollar text-success"></i>
-                                <small>Zelle</small>
-                            </div>
-                            <div class="badge-item">
-                                <i class="bi bi-bank text-info"></i>
-                                <small>Transferencia</small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Impulse Buying Triggers Section -->
-                    <div class="impulse-triggers mb-4">
-                        <div class="trigger-item order-trigger">
-                            <div class="trigger-icon">🔥</div>
-                            <div class="trigger-content">
-                                <strong>¡ÚLTIMA OPORTUNIDAD!</strong>
-                                <small>Solo quedan pocas unidades disponibles hoy</small>
-                            </div>
-                        </div>
-                        <div class="trigger-item social-trigger">
-                            <div class="trigger-icon">👥</div>
-                            <div class="trigger-content">
-                                <strong><span id="recent-purchases">23</span> personas compraron esto</strong>
-                                <small>en las últimas 2 horas</small>
-                            </div>
-                        </div>
-                        <div class="trigger-item scarcity-trigger">
-                            <div class="trigger-icon">⚡</div>
-                            <div class="trigger-content">
-                                <strong>OFERTA FLASH ACTIVA</strong>
-                                <small>Termina cuando se agote el stock</small>
-                            </div>
+                            <p class="text-muted mt-2">Cargando productos relacionados...</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Product Description Section -->
-        <div id="product-description-section" class="row mt-5" style="display: none;">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title mb-0">Descripción Detallada</h3>
+    <!-- FloresYa Express Modal -->
+    <div class="modal fade" id="floresyaGuestModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header premium-gradient text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-lightning-fill me-2"></i>
+                        ¡FloresYa! Express
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <h6 class="fw-bold">Compra rápida sin registro</h6>
+                        <p class="text-muted">Completa tu pedido en menos de 2 minutos</p>
                     </div>
-                    <div class="card-body">
-                        <div id="product-description" class="product-description">
-                            <!-- Description content will be populated by JavaScript -->
+                    
+                    <form id="floresyaGuestForm" class="needs-validation" novalidate>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="guestNameDetail" class="form-label">Nombre completo *</label>
+                                <input type="text" class="form-control" id="guestNameDetail" required>
+                                <div class="invalid-feedback">Por favor ingresa tu nombre completo</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="guestPhoneDetail" class="form-label">Teléfono *</label>
+                                <input type="tel" class="form-control" id="guestPhoneDetail" placeholder="+58414-1234567" required>
+                                <div class="invalid-feedback">Por favor ingresa tu teléfono</div>
+                            </div>
                         </div>
-                    </div>
+                        <div class="mb-3">
+                            <label for="guestEmailDetail" class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="guestEmailDetail" required>
+                            <div class="invalid-feedback">Por favor ingresa un email válido</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="guestAddressDetail" class="form-label">Dirección de entrega *</label>
+                            <textarea class="form-control" id="guestAddressDetail" rows="3" placeholder="Incluye referencias y puntos de referencia" required></textarea>
+                            <div class="invalid-feedback">Por favor ingresa la dirección de entrega</div>
+                        </div>
+                        
+                        <!-- Order Summary -->
+                        <div class="order-summary p-3 bg-light rounded mb-3">
+                            <h6 class="fw-bold mb-2">Resumen del pedido:</h6>
+                            <div class="d-flex justify-content-between">
+                                <span>Producto:</span>
+                                <span id="modal-product-name">-</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Cantidad:</span>
+                                <span id="modal-quantity">1</span>
+                            </div>
+                            <div class="d-flex justify-content-between fw-bold">
+                                <span>Total:</span>
+                                <span id="modal-total">$0.00</span>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn premium-gradient text-white w-100 fw-bold" onclick="submitFloresYaGuest()">
+                            <i class="bi bi-send me-2"></i>
+                            ¡Realizar Pedido Express!
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -617,37 +441,46 @@
 
     <!-- Image Modal -->
     <div class="modal fade" id="imageModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modal-image-title">Imagen del Producto</h5>
+                    <h5 class="modal-title">Vista ampliada</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <img id="modal-image" src="" alt="" class="img-fluid">
+                    <img id="modal-image" src="" alt="Vista ampliada" class="img-fluid">
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Shopping Cart Offcanvas -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title">Carrito de Compras</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    <!-- FloresYa Animation (for Express purchases) -->
+    <div id="floresya-detail-animation" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 105, 180, 0.9); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+        <div class="text-center text-white">
+            <div class="spinner-border mb-3" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Procesando...</span>
+            </div>
+            <h3 class="fw-bold">🌸 ¡Procesando tu FloresYa! Express...</h3>
+            <p>Tu pedido está siendo preparado con amor</p>
+        </div>
+    </div>
+
+    <!-- Cart Offcanvas (Enhanced) -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas" style="width: 400px;">
+        <div class="offcanvas-header premium-gradient text-white">
+            <h5 class="offcanvas-title">
+                <i class="bi bi-bag-heart me-2"></i>
+                Mi Carrito
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
         </div>
         <div class="offcanvas-body">
-            <div id="cart-items">
-                <!-- Cart items will be populated by JavaScript -->
-            </div>
-            <div class="cart-footer mt-auto">
-                <div class="cart-total mb-3">
-                    <strong>Total: <span id="cart-total">$0.00</span></strong>
-                </div>
-                <div class="d-grid">
-                    <a href="/pages/payment.html" class="btn btn-primary">
-                        Proceder al Pago
-                    </a>
+            <div id="cart-content">
+                <!-- Cart will be populated by JavaScript -->
+                <div class="text-center py-5">
+                    <i class="bi bi-bag display-1 text-muted mb-3"></i>
+                    <h6 class="text-muted">Tu carrito está vacío</h6>
+                    <p class="text-muted small">¡Agrega algunos productos hermosos!</p>
                 </div>
             </div>
         </div>
@@ -655,16 +488,73 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/css-visibility-fix.js"></script>
-    <script src="/css-debug.js"></script>
-    <script src="/js/responsive-image.js"></script>
-    <script src="/js/api.js"></script>
+    <script src="/js/logger.js"></script>
+    <script src="/js/performance-optimizer.js"></script>
     <script src="/js/cart.js"></script>
-    <script src="/js/product-gamification.js"></script>
-    <script src="/js/advanced-conversion-optimizer.js"></script>
-    <script src="/js/intelligent-cross-sell.js"></script>
-    <script src="/js/one-click-express-checkout.js"></script>
-    <script src="/js/strategic-buy-buttons.js"></script>
     <script src="/js/product-detail.js"></script>
+
+    <script>
+        // Initialize page when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            document.documentElement.classList.add('loaded');
+            console.log('✅ Product detail page loaded');
+            
+            // Initialize product detail functionality
+            if (typeof ProductDetail !== 'undefined') {
+                new ProductDetail();
+            } else {
+                console.error('❌ ProductDetail class not found');
+            }
+        });
+
+        // Global functions for quantity controls
+        function decreaseQuantity() {
+            const input = document.getElementById('quantity');
+            let value = parseInt(input.value) || 1;
+            if (value > 1) {
+                input.value = value - 1;
+            }
+        }
+
+        function increaseQuantity() {
+            const input = document.getElementById('quantity');
+            let value = parseInt(input.value) || 1;
+            const max = parseInt(input.getAttribute('max')) || 10;
+            if (value < max) {
+                input.value = value + 1;
+            }
+        }
+
+        function floresYaBuyNow() {
+            console.log('🚀 FloresYa Express initiated');
+            const modal = new bootstrap.Modal(document.getElementById('floresyaGuestModal'));
+            
+            // Populate modal with current product info
+            const productName = document.getElementById('product-title').textContent;
+            const quantity = document.getElementById('quantity').value;
+            const price = document.getElementById('price-usd').textContent;
+            
+            document.getElementById('modal-product-name').textContent = productName;
+            document.getElementById('modal-quantity').textContent = quantity;
+            document.getElementById('modal-total').textContent = price;
+            
+            modal.show();
+        }
+
+        function submitFloresYaGuest() {
+            console.log('📤 Submitting FloresYa Express order');
+            // Add form validation and submission logic here
+            // This would connect to your backend API
+            
+            // Show animation
+            document.getElementById('floresya-detail-animation').style.display = 'flex';
+            
+            setTimeout(() => {
+                document.getElementById('floresya-detail-animation').style.display = 'none';
+                alert('¡Gracias! Tu pedido FloresYa Express está siendo procesado. 🌸');
+                bootstrap.Modal.getInstance(document.getElementById('floresyaGuestModal')).hide();
+            }, 2000);
+        }
+    </script>
 </body>
-</html><script src="/debug-fix.js"></script>
+</html>

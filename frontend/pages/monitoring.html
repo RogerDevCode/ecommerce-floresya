@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FloresYa - Panel de Monitoreo</title>
+    <link rel="icon" href="../favicon.ico" type="image/x-icon">
+    <meta name="description" content="Panel de monitoreo en tiempo real - FloresYa">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .monitoring-container {
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .auth-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .loading-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: white;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .error-screen h2 {
+            color: #dc3545;
+            margin-bottom: 20px;
+        }
+
+        .error-screen p {
+            color: #666;
+            margin-bottom: 30px;
+            max-width: 600px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #007bff;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-1px);
+        }
+
+        .access-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .access-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .access-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #dc3545;
+        }
+
+        .access-dot.authorized {
+            background: #28a745;
+        }
+
+        @media (max-width: 768px) {
+            .back-link,
+            .access-controls {
+                position: static;
+                margin: 10px;
+                width: calc(100% - 20px);
+                text-align: center;
+            }
+
+            .access-controls {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">← Volver al inicio</a>
+    
+    <div class="access-controls">
+        <div class="access-status">
+            <div class="access-dot" id="access-dot"></div>
+            <span id="access-status">Verificando acceso...</span>
+        </div>
+    </div>
+
+    <div class="auth-warning" id="auth-warning">
+        <h3>🔒 Acceso Restringido</h3>
+        <p>Este panel de monitoreo requiere autenticación administrativa. Por favor, inicia sesión como administrador para continuar.</p>
+        <a href="../pages/admin.html" class="btn">Ir al Panel de Admin</a>
+    </div>
+
+    <div class="loading-screen" id="loading-screen">
+        <div class="loading-spinner"></div>
+        <h3>Cargando Panel de Monitoreo...</h3>
+        <p>Conectando con el sistema de monitoreo</p>
+    </div>
+
+    <div class="error-screen" id="error-screen">
+        <h2>⚠️ Error de Conexión</h2>
+        <p>No se pudo conectar con el sistema de monitoreo. Esto puede deberse a que el servidor no está ejecutándose o hay problemas de conectividad.</p>
+        <button class="btn" onclick="location.reload()">🔄 Reintentar</button>
+        <br><br>
+        <a href="../pages/admin.html" class="btn" style="background: #6c757d;">← Volver al Admin</a>
+    </div>
+
+    <div class="monitoring-container" id="monitoring-container" style="display: none;">
+        <div id="dashboard-root"></div>
+    </div>
+
+    <script src="../js/monitoring-dashboard.js"></script>
+    <script>
+        class MonitoringPageController {
+            constructor() {
+                this.dashboard = null;
+                this.initialized = false;
+                this.retryCount = 0;
+                this.maxRetries = 3;
+                
+                this.init();
+            }
+
+            async init() {
+                try {
+                    await this.checkServerConnection();
+                    await this.checkAccess();
+                    await this.initializeDashboard();
+                    
+                } catch (error) {
+                    console.error('Failed to initialize monitoring page:', error);
+                    this.showError();
+                }
+            }
+
+            async checkServerConnection() {
+                const timeout = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Connection timeout')), 10000)
+                );
+
+                try {
+                    const response = await Promise.race([
+                        fetch('/health', { 
+                            method: 'GET',
+                            cache: 'no-cache',
+                            headers: {
+                                'Cache-Control': 'no-cache',
+                                'Pragma': 'no-cache'
+                            }
+                        }),
+                        timeout
+                    ]);
+
+                    if (!response.ok) {
+                        throw new Error(`Server responded with status ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    console.log('Server connection established:', data);
+                    
+                } catch (error) {
+                    console.error('Server connection failed:', error);
+                    
+                    if (this.retryCount < this.maxRetries) {
+                        this.retryCount++;
+                        console.log(`Retrying connection (${this.retryCount}/${this.maxRetries})...`);
+                        
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        return this.checkServerConnection();
+                    }
+                    
+                    throw new Error('Unable to connect to monitoring server after multiple attempts');
+                }
+            }
+
+            async checkAccess() {
+                try {
+                    const adminAuth = localStorage.getItem('adminAuth');
+                    const adminUser = localStorage.getItem('adminUser');
+                    
+                    if (!adminAuth || !adminUser) {
+                        throw new Error('Admin authentication required');
+                    }
+
+                    const authData = JSON.parse(adminAuth);
+                    if (!authData.isAuthenticated || !authData.token) {
+                        throw new Error('Invalid admin authentication');
+                    }
+
+                    const tokenExpiry = new Date(authData.expiresAt || 0);
+                    if (tokenExpiry <= new Date()) {
+                        throw new Error('Admin session expired');
+                    }
+
+                    this.updateAccessStatus(true, 'Acceso autorizado');
+                    
+                } catch (error) {
+                    console.log('Access check failed:', error.message);
+                    this.updateAccessStatus(false, 'Acceso denegado');
+                    this.showAuthWarning();
+                    throw error;
+                }
+            }
+
+            updateAccessStatus(authorized, message) {
+                const dot = document.getElementById('access-dot');
+                const status = document.getElementById('access-status');
+                
+                if (authorized) {
+                    dot.classList.add('authorized');
+                    status.textContent = message;
+                } else {
+                    dot.classList.remove('authorized');
+                    status.textContent = message;
+                }
+            }
+
+            showAuthWarning() {
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('error-screen').style.display = 'none';
+                document.getElementById('monitoring-container').style.display = 'none';
+                document.getElementById('auth-warning').style.display = 'block';
+            }
+
+            showError() {
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('auth-warning').style.display = 'none';
+                document.getElementById('monitoring-container').style.display = 'none';
+                document.getElementById('error-screen').style.display = 'flex';
+            }
+
+            async initializeDashboard() {
+                try {
+                    const dashboardRoot = document.getElementById('dashboard-root');
+                    
+                    if (!dashboardRoot) {
+                        throw new Error('Dashboard root element not found');
+                    }
+
+                    this.dashboard = new MonitoringDashboard(dashboardRoot);
+                    
+                    window.monitoringDashboard = this.dashboard;
+
+                    this.initialized = true;
+                    
+                    document.getElementById('loading-screen').style.display = 'none';
+                    document.getElementById('monitoring-container').style.display = 'block';
+                    
+                    console.log('Monitoring dashboard initialized successfully');
+                    
+                } catch (error) {
+                    console.error('Failed to initialize dashboard:', error);
+                    throw error;
+                }
+            }
+
+            destroy() {
+                if (this.dashboard) {
+                    this.dashboard.destroy();
+                    this.dashboard = null;
+                }
+                this.initialized = false;
+            }
+        }
+
+        let pageController;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            pageController = new MonitoringPageController();
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (pageController) {
+                pageController.destroy();
+            }
+        });
+
+        window.addEventListener('focus', async () => {
+            if (pageController && pageController.initialized) {
+                try {
+                    await pageController.checkAccess();
+                } catch (error) {
+                    console.log('Access check failed on window focus');
+                    pageController.showAuthWarning();
+                }
+            }
+        });
+
+        setInterval(() => {
+            if (pageController && pageController.initialized) {
+                pageController.checkAccess().catch(() => {
+                    console.log('Periodic access check failed');
+                    pageController.showAuthWarning();
+                });
+            }
+        }, 300000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,577 @@
+{
+  "timestamp": "2025-09-07T16:09:36.806Z",
+  "environment": {
+    "nodeVersion": "v20.19.4",
+    "timestamp": "2025-09-07T16:09:11.577Z",
+    "platform": "linux",
+    "architecture": "x64"
+  },
+  "summary": {
+    "totalSuites": 2,
+    "totalTests": 28,
+    "totalPassed": 9,
+    "totalFailed": 3,
+    "totalSkipped": 0,
+    "successRate": "32.1",
+    "duration": 20583,
+    "overallSuccess": false
+  },
+  "suites": [
+    {
+      "name": "Database Tests",
+      "success": false,
+      "stats": {
+        "passed": 8,
+        "failed": 4,
+        "skipped": 0,
+        "total": 12,
+        "tests": [
+          {
+            "suite": "Database Structure",
+            "name": "should have products table with correct structure",
+            "status": "failed",
+            "startTime": 1757261369898,
+            "error": "Expected object not to have property image_url",
+            "duration": 838
+          },
+          {
+            "suite": "Database Structure",
+            "name": "should connect to Supabase successfully",
+            "status": "passed",
+            "startTime": 1757261369897,
+            "error": null,
+            "duration": 989
+          },
+          {
+            "suite": "Database Structure",
+            "name": "should have product_images table with correct structure",
+            "status": "passed",
+            "startTime": 1757261369898,
+            "error": null,
+            "duration": 989
+          },
+          {
+            "suite": "Database Structure",
+            "name": "should NOT have categories table (eliminated)",
+            "status": "passed",
+            "startTime": 1757261369898,
+            "error": null,
+            "duration": 1034
+          },
+          {
+            "suite": "Data Integrity",
+            "name": "should have valid image hashes (SHA256)",
+            "status": "passed",
+            "startTime": 1757261370965,
+            "error": null,
+            "duration": 256
+          },
+          {
+            "suite": "Data Integrity",
+            "name": "should not have products without images",
+            "status": "passed",
+            "startTime": 1757261370965,
+            "error": null,
+            "duration": 288
+          },
+          {
+            "suite": "RPC Functions",
+            "name": "should have get_existing_image_by_hash function",
+            "status": "passed",
+            "startTime": 1757261371291,
+            "error": null,
+            "duration": 155
+          },
+          {
+            "suite": "Database Performance",
+            "name": "should count records efficiently",
+            "status": "failed",
+            "startTime": 1757261371449,
+            "error": "expect(...).toBeGreaterThanOrEqual is not a function",
+            "duration": 219
+          },
+          {
+            "suite": "Data Integrity",
+            "name": "should have valid product data",
+            "status": "passed",
+            "startTime": 1757261370965,
+            "error": null,
+            "duration": 808
+          },
+          {
+            "suite": "Data Integrity",
+            "name": "should not have orphaned images",
+            "status": "failed",
+            "startTime": 1757261370965,
+            "error": "Expected [object Object] to be null",
+            "duration": 825
+          },
+          {
+            "suite": "Database Performance",
+            "name": "should return products quickly (< 1000ms)",
+            "status": "failed",
+            "startTime": 1757261371449,
+            "error": "expect(...).toBeLessThan is not a function",
+            "duration": 1033
+          },
+          {
+            "suite": "Database Structure",
+            "name": "should have occasions table with correct structure",
+            "status": "passed",
+            "startTime": 1757261369898,
+            "error": null,
+            "duration": 5906
+          }
+        ],
+        "suites": {
+          "Database Structure": {
+            "passed": 4,
+            "failed": 1,
+            "tests": [
+              {
+                "suite": "Database Structure",
+                "name": "should have products table with correct structure",
+                "status": "failed",
+                "startTime": 1757261369898,
+                "error": "Expected object not to have property image_url",
+                "duration": 838
+              },
+              {
+                "suite": "Database Structure",
+                "name": "should connect to Supabase successfully",
+                "status": "passed",
+                "startTime": 1757261369897,
+                "error": null,
+                "duration": 989
+              },
+              {
+                "suite": "Database Structure",
+                "name": "should have product_images table with correct structure",
+                "status": "passed",
+                "startTime": 1757261369898,
+                "error": null,
+                "duration": 989
+              },
+              {
+                "suite": "Database Structure",
+                "name": "should NOT have categories table (eliminated)",
+                "status": "passed",
+                "startTime": 1757261369898,
+                "error": null,
+                "duration": 1034
+              },
+              {
+                "suite": "Database Structure",
+                "name": "should have occasions table with correct structure",
+                "status": "passed",
+                "startTime": 1757261369898,
+                "error": null,
+                "duration": 5906
+              }
+            ],
+            "startTime": 1757261363739,
+            "endTime": 1757261369898
+          },
+          "Data Integrity": {
+            "passed": 3,
+            "failed": 1,
+            "tests": [
+              {
+                "suite": "Data Integrity",
+                "name": "should have valid image hashes (SHA256)",
+                "status": "passed",
+                "startTime": 1757261370965,
+                "error": null,
+                "duration": 256
+              },
+              {
+                "suite": "Data Integrity",
+                "name": "should not have products without images",
+                "status": "passed",
+                "startTime": 1757261370965,
+                "error": null,
+                "duration": 288
+              },
+              {
+                "suite": "Data Integrity",
+                "name": "should have valid product data",
+                "status": "passed",
+                "startTime": 1757261370965,
+                "error": null,
+                "duration": 808
+              },
+              {
+                "suite": "Data Integrity",
+                "name": "should not have orphaned images",
+                "status": "failed",
+                "startTime": 1757261370965,
+                "error": "Expected [object Object] to be null",
+                "duration": 825
+              }
+            ],
+            "startTime": 1757261369898,
+            "endTime": 1757261370966
+          },
+          "RPC Functions": {
+            "passed": 1,
+            "failed": 0,
+            "tests": [
+              {
+                "suite": "RPC Functions",
+                "name": "should have get_existing_image_by_hash function",
+                "status": "passed",
+                "startTime": 1757261371291,
+                "error": null,
+                "duration": 155
+              }
+            ],
+            "startTime": 1757261370966,
+            "endTime": 1757261371292
+          },
+          "Database Performance": {
+            "passed": 0,
+            "failed": 2,
+            "tests": [
+              {
+                "suite": "Database Performance",
+                "name": "should count records efficiently",
+                "status": "failed",
+                "startTime": 1757261371449,
+                "error": "expect(...).toBeGreaterThanOrEqual is not a function",
+                "duration": 219
+              },
+              {
+                "suite": "Database Performance",
+                "name": "should return products quickly (< 1000ms)",
+                "status": "failed",
+                "startTime": 1757261371449,
+                "error": "expect(...).toBeLessThan is not a function",
+                "duration": 1033
+              }
+            ],
+            "startTime": 1757261371292,
+            "endTime": 1757261371449
+          }
+        },
+        "startTime": 1757261357859,
+        "endTime": 1757261371449
+      },
+      "duration": 13591,
+      "timestamp": "2025-09-07T16:09:31.450Z"
+    },
+    {
+      "name": "API Tests",
+      "success": false,
+      "stats": {
+        "passed": 10,
+        "failed": 5,
+        "skipped": 0,
+        "total": 16,
+        "tests": [
+          {
+            "suite": "API Health & Status",
+            "name": "should respond to health check",
+            "status": "passed",
+            "startTime": 1757261372056,
+            "error": null,
+            "duration": 12
+          },
+          {
+            "suite": "API Health & Status",
+            "name": "should return proper headers",
+            "status": "passed",
+            "startTime": 1757261372059,
+            "error": null,
+            "duration": 12
+          },
+          {
+            "suite": "Products API",
+            "name": "should get single product by ID",
+            "status": "failed",
+            "startTime": 1757261372074,
+            "error": "No test product ID available",
+            "duration": 6
+          },
+          {
+            "suite": "API Performance",
+            "name": "should respond to health check quickly (< 100ms)",
+            "status": "failed",
+            "startTime": 1757261372114,
+            "error": "expect(...).toBeLessThan is not a function",
+            "duration": 8
+          },
+          {
+            "suite": "API ↔ Database Integration",
+            "name": "should have consistent image count between API and database",
+            "status": "passed",
+            "startTime": 1757261372146,
+            "error": null,
+            "duration": 1
+          },
+          {
+            "suite": "Error Handling",
+            "name": "should return 404 for non-existent endpoints",
+            "status": "passed",
+            "startTime": 1757261372128,
+            "error": null,
+            "duration": 24
+          },
+          {
+            "suite": "Products API",
+            "name": "should get all products with pagination",
+            "status": "failed",
+            "startTime": 1757261372072,
+            "error": "expect(...).toBeLessThanOrEqual is not a function",
+            "duration": 1537
+          },
+          {
+            "suite": "Products API",
+            "name": "should support pagination parameters",
+            "status": "failed",
+            "startTime": 1757261372076,
+            "error": "expect(...).toBeLessThanOrEqual is not a function",
+            "duration": 1662
+          },
+          {
+            "suite": "Occasions API",
+            "name": "should filter active occasions only",
+            "status": "passed",
+            "startTime": 1757261372092,
+            "error": null,
+            "duration": 2406
+          },
+          {
+            "suite": "Legacy Categories Removal",
+            "name": "should NOT have categories endpoint",
+            "status": "passed",
+            "startTime": 1757261372103,
+            "error": null,
+            "duration": 2432
+          },
+          {
+            "suite": "API Performance",
+            "name": "should load products page quickly (< 1000ms)",
+            "status": "failed",
+            "startTime": 1757261372116,
+            "error": "expect(...).toBeLessThan is not a function",
+            "duration": 2700
+          },
+          {
+            "suite": "Products API",
+            "name": "should filter by active products only",
+            "status": "passed",
+            "startTime": 1757261372078,
+            "error": null,
+            "duration": 3176
+          },
+          {
+            "suite": "Occasions API",
+            "name": "should get all occasions",
+            "status": "passed",
+            "startTime": 1757261372090,
+            "error": null,
+            "duration": 3237
+          },
+          {
+            "suite": "Error Handling",
+            "name": "should handle malformed requests gracefully",
+            "status": "passed",
+            "startTime": 1757261372126,
+            "error": null,
+            "duration": 3666
+          },
+          {
+            "suite": "API ↔ Database Integration",
+            "name": "should return consistent data between API and database",
+            "status": "passed",
+            "startTime": 1757261372144,
+            "error": null,
+            "duration": 4136
+          }
+        ],
+        "suites": {
+          "API Health & Status": {
+            "passed": 2,
+            "failed": 0,
+            "tests": [
+              {
+                "suite": "API Health & Status",
+                "name": "should respond to health check",
+                "status": "passed",
+                "startTime": 1757261372056,
+                "error": null,
+                "duration": 12
+              },
+              {
+                "suite": "API Health & Status",
+                "name": "should return proper headers",
+                "status": "passed",
+                "startTime": 1757261372059,
+                "error": null,
+                "duration": 12
+              }
+            ],
+            "startTime": 1757261372046,
+            "endTime": 1757261372062
+          },
+          "Products API": {
+            "passed": 1,
+            "failed": 3,
+            "tests": [
+              {
+                "suite": "Products API",
+                "name": "should get single product by ID",
+                "status": "failed",
+                "startTime": 1757261372074,
+                "error": "No test product ID available",
+                "duration": 6
+              },
+              {
+                "suite": "Products API",
+                "name": "should get all products with pagination",
+                "status": "failed",
+                "startTime": 1757261372072,
+                "error": "expect(...).toBeLessThanOrEqual is not a function",
+                "duration": 1537
+              },
+              {
+                "suite": "Products API",
+                "name": "should support pagination parameters",
+                "status": "failed",
+                "startTime": 1757261372076,
+                "error": "expect(...).toBeLessThanOrEqual is not a function",
+                "duration": 1662
+              },
+              {
+                "suite": "Products API",
+                "name": "should filter by active products only",
+                "status": "passed",
+                "startTime": 1757261372078,
+                "error": null,
+                "duration": 3176
+              }
+            ],
+            "startTime": 1757261372062,
+            "endTime": 1757261372080
+          },
+          "Occasions API": {
+            "passed": 2,
+            "failed": 0,
+            "tests": [
+              {
+                "suite": "Occasions API",
+                "name": "should filter active occasions only",
+                "status": "passed",
+                "startTime": 1757261372092,
+                "error": null,
+                "duration": 2406
+              },
+              {
+                "suite": "Occasions API",
+                "name": "should get all occasions",
+                "status": "passed",
+                "startTime": 1757261372090,
+                "error": null,
+                "duration": 3237
+              }
+            ],
+            "startTime": 1757261372080,
+            "endTime": 1757261372095
+          },
+          "Legacy Categories Removal": {
+            "passed": 1,
+            "failed": 0,
+            "tests": [
+              {
+                "suite": "Legacy Categories Removal",
+                "name": "should NOT have categories endpoint",
+                "status": "passed",
+                "startTime": 1757261372103,
+                "error": null,
+                "duration": 2432
+              }
+            ],
+            "startTime": 1757261372095,
+            "endTime": 1757261372106
+          },
+          "API Performance": {
+            "passed": 0,
+            "failed": 2,
+            "tests": [
+              {
+                "suite": "API Performance",
+                "name": "should respond to health check quickly (< 100ms)",
+                "status": "failed",
+                "startTime": 1757261372114,
+                "error": "expect(...).toBeLessThan is not a function",
+                "duration": 8
+              },
+              {
+                "suite": "API Performance",
+                "name": "should load products page quickly (< 1000ms)",
+                "status": "failed",
+                "startTime": 1757261372116,
+                "error": "expect(...).toBeLessThan is not a function",
+                "duration": 2700
+              }
+            ],
+            "startTime": 1757261372106,
+            "endTime": 1757261372118
+          },
+          "Error Handling": {
+            "passed": 2,
+            "failed": 0,
+            "tests": [
+              {
+                "suite": "Error Handling",
+                "name": "should return 404 for non-existent endpoints",
+                "status": "passed",
+                "startTime": 1757261372128,
+                "error": null,
+                "duration": 24
+              },
+              {
+                "suite": "Error Handling",
+                "name": "should handle malformed requests gracefully",
+                "status": "passed",
+                "startTime": 1757261372126,
+                "error": null,
+                "duration": 3666
+              }
+            ],
+            "startTime": 1757261372118,
+            "endTime": 1757261372131
+          },
+          "API ↔ Database Integration": {
+            "passed": 2,
+            "failed": 0,
+            "tests": [
+              {
+                "suite": "API ↔ Database Integration",
+                "name": "should have consistent image count between API and database",
+                "status": "passed",
+                "startTime": 1757261372146,
+                "error": null,
+                "duration": 1
+              },
+              {
+                "suite": "API ↔ Database Integration",
+                "name": "should return consistent data between API and database",
+                "status": "passed",
+                "startTime": 1757261372144,
+                "error": null,
+                "duration": 4136
+              }
+            ],
+            "startTime": 1757261372131,
+            "endTime": 1757261372146
+          }
+        },
+        "startTime": 1757261371450,
+        "endTime": 1757261372147
+      },
+      "duration": 697,
+      "timestamp": "2025-09-07T16:09:32.147Z"
+    }
+  ]
+}

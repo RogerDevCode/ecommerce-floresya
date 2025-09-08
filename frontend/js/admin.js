@@ -1,4 +1,4 @@
-// Admin Panel JavaScript for FloresYa
+// Admin Panel JavaScript for FloresYa - Enhanced with Logging and CRUD
 
 class AdminApp {
     constructor() {
@@ -12,6 +12,7 @@ class AdminApp {
         this.selectedFiles = [];
         this.existingImages = [];
         this.primaryNewImageIndex = null;
+        this.logger = window.logger || console; // Enhanced logging
         this.init();
     }
 
@@ -1006,7 +1007,7 @@ class AdminApp {
                 html += `
                     <div class="col-md-6 col-lg-4 mb-3">
                         <div class="card">
-                            <img src="${image.image_url}" class="card-img-top" alt="${image.title}" style="height: 200px; object-fit: cover;" onerror="this.src='/images/placeholder.jpg'">
+                            <img src="${image.image_url}" class="card-img-top" alt="${image.title}" style="height: 200px; object-fit: cover;" onerror="this.src='/images/placeholder-product-2.webp'">
                             <div class="card-body">
                                 <h6 class="card-title">${image.title} ${statusBadge}</h6>
                                 <p class="card-text text-muted small">${image.description || 'Sin descripción'}</p>
@@ -1375,7 +1376,7 @@ class AdminApp {
             <tr>
                 <td>
                     <img data-responsive
-                         data-src="${product.primary_image || product.image_url || '/images/placeholder-product.jpg'}" 
+                         data-src="${product.primary_image || product.image_url || '/images/placeholder-product-2.webp'}" 
                          data-context="admin_thumb"
                          alt="${product.name}" 
                          class="img-thumbnail" 
@@ -1809,12 +1810,19 @@ class AdminApp {
     }
 
     async deleteProduct(productId) {
+        const timer = this.logger.startTimer ? this.logger.startTimer('deleteProduct') : null;
+        
+        this.logger.user && this.logger.user('ADMIN', 'Delete product initiated', { productId });
+        
         if (!confirm('¿Estás seguro de que quieres eliminar este producto?')) {
+            this.logger.user && this.logger.user('ADMIN', 'Delete product cancelled by user', { productId });
             return;
         }
 
         try {
             api.showLoading();
+            
+            this.logger.info && this.logger.info('ADMIN', 'Sending delete request', { productId });
             
             const response = await fetch(`/api/products/${productId}`, {
                 method: 'DELETE',
@@ -1827,17 +1835,35 @@ class AdminApp {
             const result = await response.json();
             
             if (result.success) {
+                this.logger.success && this.logger.success('ADMIN', 'Product deleted successfully', { 
+                    productId,
+                    adminUser: api.getUser()?.email
+                });
+                
                 api.showNotification('Producto eliminado exitosamente', 'success');
                 await this.loadProducts();
             } else {
+                this.logger.error && this.logger.error('ADMIN', 'Product deletion failed', {
+                    productId,
+                    error: result.message,
+                    responseStatus: response.status
+                });
+                
                 api.showNotification('Error: ' + result.message, 'danger');
             }
             
         } catch (error) {
+            this.logger.error && this.logger.error('ADMIN', 'Delete product error', {
+                productId,
+                error: error.message,
+                stack: error.stack
+            });
+            
             console.error('Error deleting product:', error);
             api.showNotification('Error al eliminar producto', 'danger');
         } finally {
             api.hideLoading();
+            timer && timer.end('ADMIN');
         }
     }
 

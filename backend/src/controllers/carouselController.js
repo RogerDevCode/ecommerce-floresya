@@ -1,4 +1,10 @@
-const { CarouselImage } = require('../models');
+const {
+    log,          // Función principal
+    logger,       // Alias con métodos .info(), .warn(), etc.
+    requestLogger, // Middleware Express
+    startTimer     // Para medir tiempos de ejecución
+} = require('../utils/logger.js');
+
 const { supabase, useSupabase } = require('../config/database');
 
 // Get all carousel images
@@ -18,10 +24,7 @@ const getAllCarouselImages = async (req, res) => {
             }
             images = data || [];
         } else {
-            images = await CarouselImage.findAll({
-                where: { active: true },
-                order: [['display_order', 'ASC'], ['created_at', 'DESC']]
-            });
+            throw new Error('Only Supabase is supported in this application');
         }
 
         res.json({
@@ -40,9 +43,21 @@ const getAllCarouselImages = async (req, res) => {
 // Get all carousel images for admin (including inactive)
 const getAllCarouselImagesAdmin = async (req, res) => {
     try {
-        const images = await CarouselImage.findAll({
-            order: [['display_order', 'ASC'], ['created_at', 'DESC']]
-        });
+        let images;
+
+        if (useSupabase) {
+            const { data, error } = await supabase
+                .from('carousel_images')
+                .select('*')
+                .order('display_order', { ascending: true });
+            
+            if (error) {
+                throw error;
+            }
+            images = data || [];
+        } else {
+            throw new Error('Only Supabase is supported in this application');
+        }
 
         res.json({
             success: true,
@@ -61,10 +76,24 @@ const getAllCarouselImagesAdmin = async (req, res) => {
 const getCarouselImageById = async (req, res) => {
     try {
         const { id } = req.params;
-        const image = await CarouselImage.findByPk(id);
+        let image;
 
-        if (!image) {
-            return res.status(404).json({ success: false, message: 'Carousel image not found' });
+        if (useSupabase) {
+            const { data, error } = await supabase
+                .from('carousel_images')
+                .select('*')
+                .eq('id', id)
+                .single();
+            
+            if (error) {
+                if (error.code === 'PGRST116') { // No rows found
+                    return res.status(404).json({ success: false, message: 'Carousel image not found' });
+                }
+                throw error;
+            }
+            image = data;
+        } else {
+            throw new Error('Only Supabase is supported in this application');
         }
 
         res.json({ success: true, data: image });
@@ -78,15 +107,29 @@ const getCarouselImageById = async (req, res) => {
 const createCarouselImage = async (req, res) => {
     try {
         const { title, description, image_url, link_url, display_order, active } = req.body;
+        let image;
 
-        const image = await CarouselImage.create({
-            title,
-            description,
-            image_url,
-            link_url,
-            display_order: display_order || 0,
-            active: active !== undefined ? active : true
-        });
+        if (useSupabase) {
+            const { data, error } = await supabase
+                .from('carousel_images')
+                .insert({
+                    title,
+                    description,
+                    image_url,
+                    link_url,
+                    display_order: display_order || 0,
+                    active: active !== undefined ? active : true
+                })
+                .select()
+                .single();
+            
+            if (error) {
+                throw error;
+            }
+            image = data;
+        } else {
+            throw new Error('Only Supabase is supported in this application');
+        }
 
         res.status(201).json({
             success: true,
@@ -104,25 +147,52 @@ const updateCarouselImage = async (req, res) => {
     try {
         const { id } = req.params;
         const { title, description, image_url, link_url, display_order, active } = req.body;
+        let updatedImage;
 
-        const image = await CarouselImage.findByPk(id);
-        if (!image) {
-            return res.status(404).json({ success: false, message: 'Carousel image not found' });
+        if (useSupabase) {
+            // First check if the image exists
+            const { data: existingImage, error: findError } = await supabase
+                .from('carousel_images')
+                .select('*')
+                .eq('id', id)
+                .single();
+
+            if (findError) {
+                if (findError.code === 'PGRST116') {
+                    return res.status(404).json({ success: false, message: 'Carousel image not found' });
+                }
+                throw findError;
+            }
+
+            // Update the image
+            const updateData = {
+                title: title || existingImage.title,
+                description: description !== undefined ? description : existingImage.description,
+                image_url: image_url || existingImage.image_url,
+                link_url: link_url !== undefined ? link_url : existingImage.link_url,
+                display_order: display_order !== undefined ? display_order : existingImage.display_order,
+                active: active !== undefined ? active : existingImage.active
+            };
+
+            const { data, error } = await supabase
+                .from('carousel_images')
+                .update(updateData)
+                .eq('id', id)
+                .select()
+                .single();
+            
+            if (error) {
+                throw error;
+            }
+            updatedImage = data;
+        } else {
+            throw new Error('Only Supabase is supported in this application');
         }
-
-        await image.update({
-            title: title || image.title,
-            description: description !== undefined ? description : image.description,
-            image_url: image_url || image.image_url,
-            link_url: link_url !== undefined ? link_url : image.link_url,
-            display_order: display_order !== undefined ? display_order : image.display_order,
-            active: active !== undefined ? active : image.active
-        });
 
         res.json({
             success: true,
             message: 'Carousel image updated successfully',
-            data: image
+            data: updatedImage
         });
     } catch (error) {
         console.error('Error updating carousel image:', error);
@@ -134,14 +204,35 @@ const updateCarouselImage = async (req, res) => {
 const deleteCarouselImage = async (req, res) => {
     try {
         const { id } = req.params;
-        const image = await CarouselImage.findByPk(id);
 
-        if (!image) {
-            return res.status(404).json({ success: false, message: 'Carousel image not found' });
+        if (useSupabase) {
+            // Check if image exists first
+            const { data: existingImage, error: findError } = await supabase
+                .from('carousel_images')
+                .select('id')
+                .eq('id', id)
+                .single();
+
+            if (findError) {
+                if (findError.code === 'PGRST116') {
+                    return res.status(404).json({ success: false, message: 'Carousel image not found' });
+                }
+                throw findError;
+            }
+
+            // Soft delete by setting active to false
+            const { error } = await supabase
+                .from('carousel_images')
+                .update({ active: false })
+                .eq('id', id);
+            
+            if (error) {
+                throw error;
+            }
+        } else {
+            throw new Error('Only Supabase is supported in this application');
         }
 
-        // Soft delete by setting active to false
-        await image.update({ active: false });
         res.json({ success: true, message: 'Carousel image deleted successfully' });
     } catch (error) {
         console.error('Error deleting carousel image:', error);
@@ -158,12 +249,20 @@ const updateCarouselOrder = async (req, res) => {
             return res.status(400).json({ success: false, message: 'imageOrders must be an array' });
         }
 
-        // Update each image order
-        for (const { id, display_order } of imageOrders) {
-            await CarouselImage.update(
-                { display_order },
-                { where: { id } }
-            );
+        if (useSupabase) {
+            // Update each image order
+            for (const { id, display_order } of imageOrders) {
+                const { error } = await supabase
+                    .from('carousel_images')
+                    .update({ display_order })
+                    .eq('id', id);
+                
+                if (error) {
+                    throw error;
+                }
+            }
+        } else {
+            throw new Error('Only Supabase is supported in this application');
         }
 
         res.json({

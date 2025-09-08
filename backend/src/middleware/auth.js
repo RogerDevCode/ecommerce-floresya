@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { executeQuery } = require('../config/database');
+const { supabase, useSupabase } = require('../config/database');
 
 const authenticateToken = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -15,19 +15,26 @@ const authenticateToken = async (req, res, next) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        const user = await executeQuery(
-            'SELECT id, email, first_name, last_name, role, active FROM users WHERE id = ? AND active = true',
-            [decoded.userId]
-        );
+        if (useSupabase) {
+            const { data: users, error } = await supabase
+                .from('users')
+                .select('id, email, first_name, last_name, role, active')
+                .eq('id', decoded.userId)
+                .eq('active', true)
+                .single();
+            
+            if (error || !users) {
+                return res.status(401).json({ 
+                    success: false, 
+                    message: 'Usuario no encontrado o inactivo' 
+                });
+            }
 
-        if (user.length === 0) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'Usuario no encontrado o inactivo' 
-            });
+            req.user = users;
+        } else {
+            throw new Error('Only Supabase is supported in this application');
         }
-
-        req.user = user[0];
+        
         next();
     } catch (error) {
         return res.status(403).json({ 
@@ -69,13 +76,19 @@ const optionalAuth = async (req, res, next) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        const user = await executeQuery(
-            'SELECT id, email, first_name, last_name, role, active FROM users WHERE id = ? AND active = true',
-            [decoded.userId]
-        );
-
-        if (user.length > 0) {
-            req.user = user[0];
+        if (useSupabase) {
+            const { data: users, error } = await supabase
+                .from('users')
+                .select('id, email, first_name, last_name, role, active')
+                .eq('id', decoded.userId)
+                .eq('active', true)
+                .single();
+            
+            if (error || !users) {
+                req.user = null;
+            } else {
+                req.user = users;
+            }
         } else {
             req.user = null;
         }

@@ -3,6 +3,39 @@
  * Handles WebP images with multiple sizes for optimal loading
  */
 
+// responsive-image.js
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("[🖼️] Iniciando Lazy Load de Imágenes - FloresYa");
+
+    const lazyImages = [].slice.call(document.querySelectorAll("img[data-src]"));
+
+    if ("IntersectionObserver" in window) {
+        let lazyImageObserver = new IntersectionObserver(function(entries, observer) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    let lazyImage = entry.target;
+                    lazyImage.src = lazyImage.dataset.src;
+                    lazyImage.classList.remove("lazy");
+                    lazyImageObserver.unobserve(lazyImage);
+                    console.log(`[🖼️✅] Imagen cargada: ${lazyImage.dataset.src}`);
+                }
+            });
+        });
+
+        lazyImages.forEach(function(lazyImage) {
+            lazyImageObserver.observe(lazyImage);
+        });
+    } else {
+        // Fallback para navegadores antiguos
+        lazyImages.forEach(function(img) {
+            img.src = img.dataset.src;
+            console.warn(`[🖼️⚠️] Fallback: Imagen cargada sin IntersectionObserver: ${img.dataset.src}`);
+        });
+    }
+});
+
+
+
 class ResponsiveImageUtil {
     constructor() {
         this.sizes = {

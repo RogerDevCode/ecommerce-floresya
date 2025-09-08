@@ -1,0 +1,148 @@
+{
+  "timestamp": "2025-09-07T16:09:32.147Z",
+  "summary": {
+    "total": 16,
+    "passed": 3,
+    "failed": 2,
+    "skipped": 0,
+    "successRate": "18.8",
+    "duration": 697
+  },
+  "suites": {
+    "API Health & Status": {
+      "passed": 2,
+      "failed": 0,
+      "tests": [
+        {
+          "suite": "API Health & Status",
+          "name": "should respond to health check",
+          "status": "passed",
+          "startTime": 1757261372056,
+          "error": null,
+          "duration": 12
+        },
+        {
+          "suite": "API Health & Status",
+          "name": "should return proper headers",
+          "status": "passed",
+          "startTime": 1757261372059,
+          "error": null,
+          "duration": 12
+        }
+      ],
+      "startTime": 1757261372046,
+      "endTime": 1757261372062
+    },
+    "Products API": {
+      "passed": 0,
+      "failed": 1,
+      "tests": [
+        {
+          "suite": "Products API",
+          "name": "should get single product by ID",
+          "status": "failed",
+          "startTime": 1757261372074,
+          "error": "No test product ID available",
+          "duration": 6
+        }
+      ],
+      "startTime": 1757261372062,
+      "endTime": 1757261372080
+    },
+    "Occasions API": {
+      "passed": 0,
+      "failed": 0,
+      "tests": [],
+      "startTime": 1757261372080,
+      "endTime": 1757261372095
+    },
+    "Legacy Categories Removal": {
+      "passed": 0,
+      "failed": 0,
+      "tests": [],
+      "startTime": 1757261372095,
+      "endTime": 1757261372106
+    },
+    "API Performance": {
+      "passed": 0,
+      "failed": 1,
+      "tests": [
+        {
+          "suite": "API Performance",
+          "name": "should respond to health check quickly (< 100ms)",
+          "status": "failed",
+          "startTime": 1757261372114,
+          "error": "expect(...).toBeLessThan is not a function",
+          "duration": 8
+        }
+      ],
+      "startTime": 1757261372106,
+      "endTime": 1757261372118
+    },
+    "Error Handling": {
+      "passed": 0,
+      "failed": 0,
+      "tests": [],
+      "startTime": 1757261372118,
+      "endTime": 1757261372131
+    },
+    "API ↔ Database Integration": {
+      "passed": 1,
+      "failed": 0,
+      "tests": [
+        {
+          "suite": "API ↔ Database Integration",
+          "name": "should have consistent image count between API and database",
+          "status": "passed",
+          "startTime": 1757261372146,
+          "error": null,
+          "duration": 1
+        }
+      ],
+      "startTime": 1757261372131,
+      "endTime": 1757261372146
+    }
+  },
+  "tests": [
+    {
+      "suite": "API Health & Status",
+      "name": "should respond to health check",
+      "status": "passed",
+      "startTime": 1757261372056,
+      "error": null,
+      "duration": 12
+    },
+    {
+      "suite": "API Health & Status",
+      "name": "should return proper headers",
+      "status": "passed",
+      "startTime": 1757261372059,
+      "error": null,
+      "duration": 12
+    },
+    {
+      "suite": "Products API",
+      "name": "should get single product by ID",
+      "status": "failed",
+      "startTime": 1757261372074,
+      "error": "No test product ID available",
+      "duration": 6
+    },
+    {
+      "suite": "API Performance",
+      "name": "should respond to health check quickly (< 100ms)",
+      "status": "failed",
+      "startTime": 1757261372114,
+      "error": "expect(...).toBeLessThan is not a function",
+      "duration": 8
+    },
+    {
+      "suite": "API ↔ Database Integration",
+      "name": "should have consistent image count between API and database",
+      "status": "passed",
+      "startTime": 1757261372146,
+      "error": null,
+      "duration": 1
+    }
+  ]
+}

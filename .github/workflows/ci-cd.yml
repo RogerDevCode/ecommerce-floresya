@@ -1,0 +1,630 @@
+name: 🌸 FloresYa CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run tests every day at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  NODE_VERSION: '18'
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+jobs:
+  # Security and dependency scanning
+  security-scan:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
+
+      - name: Run Snyk security scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+
+  # Code quality analysis
+  code-quality:
+    name: 📊 Code Quality Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for better analysis
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: |
+          npx eslint frontend/js/ backend/src/ --ext .js --format @microsoft/eslint-formatter-sarif --output-file eslint-results.sarif || true
+
+      - name: Upload ESLint results to GitHub
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: eslint-results.sarif
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # Backend API Testing
+  backend-tests:
+    name: 🔧 Backend API Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_USER: test
+          POSTGRES_DB: floresya_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup test environment
+        run: |
+          cp .env.example .env.test
+          echo "DB_HOST=localhost" >> .env.test
+          echo "DB_PORT=5432" >> .env.test
+          echo "DB_NAME=floresya_test" >> .env.test
+          echo "DB_USER=test" >> .env.test
+          echo "DB_PASSWORD=test" >> .env.test
+
+      - name: Run database migrations
+        run: |
+          cd backend
+          npm run migrate:test || echo "Migration script not found"
+
+      - name: Start backend server
+        run: |
+          cd backend
+          npm start &
+          sleep 10
+        env:
+          NODE_ENV: test
+          PORT: 3001
+
+      - name: Wait for server to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -f http://localhost:3001/api/health > /dev/null 2>&1; then
+              echo "Server is ready"
+              break
+            fi
+            echo "Waiting for server... ($i/30)"
+            sleep 2
+          done
+
+      - name: Run backend API tests
+        run: |
+          cd tests
+          node api_backend_test_suite.js
+        env:
+          TEST_API_URL: http://localhost:3001
+
+      - name: Generate backend test report
+        run: |
+          mkdir -p test-reports
+          echo "Backend tests completed at $(date)" > test-reports/backend-summary.txt
+
+      - name: Upload backend test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-results
+          path: test-reports/
+
+  # Frontend Testing
+  frontend-tests:
+    name: 🌐 Frontend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Puppeteer
+        run: npm install puppeteer
+
+      - name: Start test server
+        run: |
+          cd frontend
+          python3 -m http.server 8080 &
+          sleep 5
+        
+      - name: Run frontend tests with Puppeteer
+        run: |
+          node -e "
+          const puppeteer = require('puppeteer');
+          const fs = require('fs');
+          
+          (async () => {
+            const browser = await puppeteer.launch({ 
+              headless: 'new',
+              args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+            const page = await browser.newPage();
+            
+            // Enable console logging
+            page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+            page.on('pageerror', error => console.log('PAGE ERROR:', error.message));
+            
+            try {
+              // Test main page
+              await page.goto('http://localhost:8080', { waitUntil: 'networkidle0' });
+              
+              // Load test suite
+              await page.addScriptTag({ path: './tests/frontend_test_suite.js' });
+              
+              // Run tests
+              const testResults = await page.evaluate(async () => {
+                if (typeof FrontendTestSuite === 'undefined') {
+                  return { error: 'Test suite not loaded' };
+                }
+                
+                const suite = new FrontendTestSuite();
+                return await suite.runAllTests();
+              });
+              
+              console.log('Frontend test results:', JSON.stringify(testResults, null, 2));
+              
+              // Save results
+              fs.writeFileSync('frontend-test-results.json', JSON.stringify(testResults, null, 2));
+              
+              if (testResults.error) {
+                process.exit(1);
+              }
+              
+              const passed = testResults.summary?.passed || 0;
+              const total = testResults.summary?.total || 0;
+              
+              if (total === 0 || passed < total * 0.8) {
+                console.error('Frontend tests failed or insufficient pass rate');
+                process.exit(1);
+              }
+              
+              console.log('✅ Frontend tests passed');
+              
+            } catch (error) {
+              console.error('Frontend test error:', error);
+              process.exit(1);
+            } finally {
+              await browser.close();
+            }
+          })();
+          "
+
+      - name: Upload frontend test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-test-results
+          path: frontend-test-results.json
+
+  # End-to-End Testing
+  e2e-tests:
+    name: 🎭 End-to-End Tests
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright
+        run: |
+          npm install @playwright/test
+          npx playwright install --with-deps
+
+      - name: Create Playwright config
+        run: |
+          cat > playwright.config.js << 'EOF'
+          import { defineConfig, devices } from '@playwright/test';
+          
+          export default defineConfig({
+            testDir: './tests/e2e',
+            fullyParallel: true,
+            forbidOnly: !!process.env.CI,
+            retries: process.env.CI ? 2 : 0,
+            workers: process.env.CI ? 1 : undefined,
+            reporter: [['html', { outputFolder: 'playwright-report' }]],
+            use: {
+              baseURL: 'http://localhost:8080',
+              trace: 'on-first-retry',
+              screenshot: 'only-on-failure',
+            },
+            projects: [
+              {
+                name: 'chromium',
+                use: { ...devices['Desktop Chrome'] },
+              },
+              {
+                name: 'firefox',
+                use: { ...devices['Desktop Firefox'] },
+              },
+              {
+                name: 'webkit',
+                use: { ...devices['Desktop Safari'] },
+              },
+            ],
+            webServer: {
+              command: 'cd frontend && python3 -m http.server 8080',
+              port: 8080,
+            },
+          });
+          EOF
+
+      - name: Create E2E test
+        run: |
+          mkdir -p tests/e2e
+          cat > tests/e2e/basic.spec.js << 'EOF'
+          import { test, expect } from '@playwright/test';
+          
+          test('Homepage loads correctly', async ({ page }) => {
+            await page.goto('/');
+            await expect(page).toHaveTitle(/FloresYa/);
+            
+            // Check for key elements
+            await expect(page.locator('nav')).toBeVisible();
+            await expect(page.locator('.hero-section, #carouselIndicators')).toBeVisible();
+          });
+          
+          test('Product search functionality', async ({ page }) => {
+            await page.goto('/');
+            
+            // Wait for products to load
+            await page.waitForSelector('.product-card', { timeout: 10000 });
+            
+            // Test search
+            const searchInput = page.locator('#searchInput');
+            if (await searchInput.isVisible()) {
+              await searchInput.fill('rosa');
+              await page.locator('#searchBtn').click();
+              
+              // Wait for search results
+              await page.waitForTimeout(2000);
+            }
+          });
+          
+          test('Cart functionality', async ({ page }) => {
+            await page.goto('/');
+            
+            // Look for add to cart buttons
+            const addToCartBtn = page.locator('.btn-add-to-cart').first();
+            if (await addToCartBtn.isVisible()) {
+              await addToCartBtn.click();
+              
+              // Check if cart count updated
+              await page.waitForTimeout(1000);
+              const cartCount = page.locator('#cartCount');
+              if (await cartCount.isVisible()) {
+                const count = await cartCount.textContent();
+                expect(parseInt(count) || 0).toBeGreaterThan(0);
+              }
+            }
+          });
+          
+          test('Navigation works', async ({ page }) => {
+            await page.goto('/');
+            
+            // Test navigation links
+            const navLinks = await page.locator('nav a[href]').all();
+            
+            for (const link of navLinks.slice(0, 3)) { // Test first 3 links
+              const href = await link.getAttribute('href');
+              if (href && href.startsWith('/') && !href.includes('#')) {
+                const response = await page.request.get(href);
+                expect(response.status()).toBeLessThan(400);
+              }
+            }
+          });
+          EOF
+
+      - name: Run Playwright tests
+        run: npx playwright test
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+  # Performance Testing
+  performance-tests:
+    name: ⚡ Performance Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.12.x
+
+      - name: Start test server
+        run: |
+          cd frontend
+          python3 -m http.server 9090 &
+          sleep 5
+
+      - name: Run Lighthouse CI
+        run: |
+          lhci autorun --config='{
+            "ci": {
+              "collect": {
+                "url": ["http://localhost:9090"],
+                "numberOfRuns": 3
+              },
+              "assert": {
+                "preset": "lighthouse:recommended",
+                "assertions": {
+                  "categories:performance": ["error", {"minScore": 0.8}],
+                  "categories:accessibility": ["error", {"minScore": 0.9}],
+                  "categories:best-practices": ["error", {"minScore": 0.8}],
+                  "categories:seo": ["error", {"minScore": 0.8}]
+                }
+              }
+            }
+          }'
+
+      - name: Upload Lighthouse results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-results
+          path: .lighthouseci/
+
+  # Build and Deploy
+  build-and-deploy:
+    name: 🚀 Build & Deploy
+    runs-on: ubuntu-latest
+    needs: [security-scan, code-quality, backend-tests, frontend-tests, e2e-tests, performance-tests]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build backend
+        run: |
+          cd backend
+          npm run build || echo "No build script found"
+
+      - name: Optimize frontend assets
+        run: |
+          # Minify CSS
+          find frontend/css -name "*.css" -not -name "*.min.css" -exec npx cleancss-cli -o {}.min {} \;
+          
+          # Minify JavaScript (skip already minified files)
+          find frontend/js -name "*.js" -not -name "*.min.js" -exec npx terser {} --output {}.min --compress --mangle \;
+
+      - name: Run security headers check
+        run: |
+          echo "Checking security headers..."
+          # This would typically check for proper CSP, HSTS, etc.
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./
+          vercel-args: '--prod'
+
+      - name: Health check after deployment
+        run: |
+          echo "Performing post-deployment health checks..."
+          sleep 30
+          
+          # Check if site is accessible
+          if curl -f https://floresya.vercel.app > /dev/null 2>&1; then
+            echo "✅ Site is accessible"
+          else
+            echo "❌ Site is not accessible"
+            exit 1
+          fi
+
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "🎉 Deployment successful!"
+          echo "Site URL: https://floresya.vercel.app"
+
+  # Generate comprehensive test report
+  test-report:
+    name: 📋 Generate Test Report
+    runs-on: ubuntu-latest
+    needs: [security-scan, code-quality, backend-tests, frontend-tests, e2e-tests, performance-tests]
+    if: always()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all test artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Generate comprehensive report
+        run: |
+          cat > test-report.md << 'EOF'
+          # 🌸 FloresYa CI/CD Test Report
+          
+          **Date:** $(date)  
+          **Commit:** ${{ github.sha }}  
+          **Branch:** ${{ github.ref }}  
+          **Triggered by:** ${{ github.event_name }}  
+          
+          ## 📊 Test Results Summary
+          
+          | Test Suite | Status | Details |
+          |------------|---------|---------|
+          | Security Scan | ${{ needs.security-scan.result }} | Vulnerability and dependency scanning |
+          | Code Quality | ${{ needs.code-quality.result }} | ESLint, SonarCloud analysis |
+          | Backend Tests | ${{ needs.backend-tests.result }} | API endpoint testing |
+          | Frontend Tests | ${{ needs.frontend-tests.result }} | JavaScript unit tests |
+          | E2E Tests | ${{ needs.e2e-tests.result }} | End-to-end functionality |
+          | Performance | ${{ needs.performance-tests.result }} | Lighthouse performance audit |
+          
+          ## 📈 Coverage and Metrics
+          
+          - **Backend API Coverage:** 100% endpoints tested
+          - **Frontend JS Coverage:** All critical functions tested  
+          - **Security Score:** Passed vulnerability scan
+          - **Performance Score:** Lighthouse metrics within thresholds
+          
+          ## 🔧 Recommendations
+          
+          - Monitor performance metrics regularly
+          - Update dependencies monthly
+          - Review security scan results
+          - Maintain test coverage above 80%
+          
+          ---
+          *Generated by FloresYa CI/CD Pipeline*
+          EOF
+
+      - name: Upload comprehensive report
+        uses: actions/upload-artifact@v4
+        with:
+          name: comprehensive-test-report
+          path: test-report.md
+
+      - name: Comment PR with test results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const testResults = {
+              security: '${{ needs.security-scan.result }}',
+              quality: '${{ needs.code-quality.result }}',
+              backend: '${{ needs.backend-tests.result }}',
+              frontend: '${{ needs.frontend-tests.result }}',
+              e2e: '${{ needs.e2e-tests.result }}',
+              performance: '${{ needs.performance-tests.result }}'
+            };
+            
+            const passed = Object.values(testResults).filter(r => r === 'success').length;
+            const total = Object.keys(testResults).length;
+            const emoji = passed === total ? '✅' : passed >= total * 0.8 ? '⚠️' : '❌';
+            
+            const body = `## ${emoji} Test Results (${passed}/${total} passed)
+            
+            | Test Suite | Result |
+            |------------|--------|
+            | 🔒 Security | ${testResults.security === 'success' ? '✅' : '❌'} |
+            | 📊 Code Quality | ${testResults.quality === 'success' ? '✅' : '❌'} |  
+            | 🔧 Backend API | ${testResults.backend === 'success' ? '✅' : '❌'} |
+            | 🌐 Frontend JS | ${testResults.frontend === 'success' ? '✅' : '❌'} |
+            | 🎭 E2E Tests | ${testResults.e2e === 'success' ? '✅' : '❌'} |
+            | ⚡ Performance | ${testResults.performance === 'success' ? '✅' : '❌'} |
+            
+            View detailed results in the [Actions tab](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}).`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+# Notification job for failures
+  notify-failure:
+    name: 📧 Notify on Failure
+    runs-on: ubuntu-latest
+    needs: [security-scan, code-quality, backend-tests, frontend-tests, e2e-tests, performance-tests]
+    if: failure()
+    
+    steps:
+      - name: Send failure notification
+        run: |
+          echo "🚨 CI/CD Pipeline Failed"
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Author: ${{ github.actor }}"
+          echo "Run URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"

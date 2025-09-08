@@ -1,5 +1,6 @@
 const { executeQuery } = require('../config/database');
 const { sendOrderConfirmationEmail, sendOrderStatusUpdateEmail } = require('../services/emailService');
+const { errorHandlers } = require('../utils/errorHandler');
 
 const generateOrderNumber = () => {
     const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -149,11 +150,7 @@ const createOrder = async (req, res) => {
         if (connection) {
             await connection.rollback();
         }
-        console.error('Error creando orden:', error);
-        res.status(500).json({
-            success: false,
-            message: error.message || 'Error interno del servidor'
-        });
+        errorHandlers.handleOrderError(res, error, 'create_order');
     } finally {
         if (connection) {
             connection.release();

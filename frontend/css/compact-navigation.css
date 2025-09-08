@@ -5,13 +5,13 @@
 
 /* Main Navbar Compact Optimization */
 .navbar {
-    padding: 0.25rem 0 !important; /* Reduced from default 0.5rem */
-    min-height: 50px !important; /* Compact height */
-    max-height: 60px !important; /* Prevent expansion */
+    padding: 0.15rem 0 !important; /* Further reduced */
+    min-height: 40px !important; /* More compact height */
+    max-height: 50px !important; /* Prevent expansion */
 }
 
 .navbar .container {
-    padding: 0.25rem 1rem !important;
+    padding: 0.15rem 1rem !important;
 }
 
 /* Logo and Brand Compact */
@@ -21,7 +21,7 @@
 }
 
 .logo-img {
-    height: 32px !important; /* Reduced from larger size */
+    height: 28px !important; /* Further reduced from 32px */
     width: auto !important;
 }
 
@@ -42,8 +42,8 @@
 
 /* User Journey Compact Design */
 .user-journey {
-    max-width: 280px !important; /* Reduced width */
-    height: 35px !important; /* Fixed compact height */
+    max-width: 240px !important; /* Further reduced width */
+    height: 30px !important; /* More compact height */
     align-items: center !important;
 }
 

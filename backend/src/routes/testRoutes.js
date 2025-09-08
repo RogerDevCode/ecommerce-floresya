@@ -4,14 +4,14 @@ const {
     testCategories, 
     testProducts, 
     testConnection, 
-    testFilteredProducts 
+    testHello 
 } = require('../controllers/testController');
 
 // Test routes for debugging and verification
 router.get('/connection', testConnection);
 router.get('/categories', testCategories);
 router.get('/products', testProducts);
-router.get('/filtered-products', testFilteredProducts);
+router.get('/hello', testHello);
 
 // Health check endpoint specifically for test
 router.get('/health', (req, res) => {

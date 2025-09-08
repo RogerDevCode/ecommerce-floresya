@@ -1,4 +1,5 @@
-const { createClient } = require('@supabase/supabase-js');
+const { databaseService } = require('../services/databaseService');
+const { errorHandlers } = require('../utils/errorHandler');
 
 // Temporary mock data for development until migration is applied
 const mockOccasions = [
@@ -17,16 +18,11 @@ const mockProductOccasions = [
     {product_id: 6, occasion_id: 6}  // Bouquet de Girasoles -> Graduación
 ];
 
-const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY
-);
-
 // Helper function to check if occasions table exists
 const occasionsTableExists = async () => {
     try {
-        const { data, error } = await supabase.from('occasions').select('id').limit(1);
-        return !error;
+        await databaseService.count('occasions');
+        return true;
     } catch {
         return false;
     }
@@ -46,25 +42,17 @@ const getAllOccasions = async (req, res) => {
             });
         }
 
-        const { data, error } = await supabase
-            .from('occasions')
-            .select('*')
-            .eq('active', true)
-            .order('sort_order', { ascending: true });
-
-        if (error) throw error;
+        const { data } = await databaseService.query('occasions', {
+            eq: { active: true },
+            order: { column: 'sort_order', ascending: true }
+        });
 
         res.json({
             success: true,
             data: data
         });
     } catch (error) {
-        console.error('Error getting occasions:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener ocasiones',
-            error: error.message
-        });
+        errorHandlers.handleGenericError(res, error, 'get_all_occasions');
     }
 };
 
@@ -89,33 +77,23 @@ const getOccasionById = async (req, res) => {
             });
         }
 
-        const { data, error } = await supabase
-            .from('occasions')
-            .select('*')
-            .eq('id', id)
-            .single();
+        const { data } = await databaseService.query('occasions', {
+            eq: { id }
+        });
 
-        if (error) {
-            if (error.code === 'PGRST116') {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Ocasión no encontrada'
-                });
-            }
-            throw error;
+        if (!data || data.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Ocasión no encontrada'
+            });
         }
 
         res.json({
             success: true,
-            data: data
+            data: data[0]
         });
     } catch (error) {
-        console.error('Error getting occasion:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener ocasión',
-            error: error.message
-        });
+        errorHandlers.handleGenericError(res, error, 'get_occasion_by_id');
     }
 };
 
@@ -141,10 +119,15 @@ const getProductsByOccasion = async (req, res) => {
                 });
             }
 
-            // Get actual products from products table
+            // Get actual products from products table - NEW SYSTEM (no image_url legacy)
             const { data: products, error } = await supabase
                 .from('products')
-                .select('id, name, description, price, image_url, primary_image, active')
+                .select(`
+                    id, name, description, price, active,
+                    images:product_images(
+                        id, url_large, is_primary, display_order
+                    )
+                `)
                 .in('id', productIds)
                 .eq('active', true)
                 .limit(parseInt(limit));
@@ -172,12 +155,7 @@ const getProductsByOccasion = async (req, res) => {
             data: data
         });
     } catch (error) {
-        console.error('Error getting products by occasion:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener productos por ocasión',
-            error: error.message
-        });
+        errorHandlers.handleGenericError(res, error, 'get_products_by_occasion');
     }
 };
 
@@ -217,12 +195,7 @@ const getProductOccasions = async (req, res) => {
             data: data
         });
     } catch (error) {
-        console.error('Error getting product occasions:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener ocasiones del producto',
-            error: error.message
-        });
+        errorHandlers.handleGenericError(res, error, 'get_product_occasions');
     }
 };
 
@@ -267,12 +240,7 @@ const createOccasion = async (req, res) => {
             message: 'Ocasión creada exitosamente'
         });
     } catch (error) {
-        console.error('Error creating occasion:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al crear ocasión',
-            error: error.message
-        });
+        errorHandlers.handleGenericError(res, error, 'create_occasion');
     }
 };
 
@@ -323,12 +291,7 @@ const updateOccasion = async (req, res) => {
             message: 'Ocasión actualizada exitosamente'
         });
     } catch (error) {
-        console.error('Error updating occasion:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al actualizar ocasión',
-            error: error.message
-        });
+        errorHandlers.handleGenericError(res, error, 'update_occasion');
     }
 };
 
@@ -358,12 +321,7 @@ const deleteOccasion = async (req, res) => {
             message: 'Ocasión eliminada exitosamente'
         });
     } catch (error) {
-        console.error('Error deleting occasion:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al eliminar ocasión',
-            error: error.message
-        });
+        errorHandlers.handleGenericError(res, error, 'delete_occasion');
     }
 };
 
@@ -406,12 +364,7 @@ const addProductToOccasion = async (req, res) => {
             message: 'Producto asociado a ocasión exitosamente'
         });
     } catch (error) {
-        console.error('Error adding product to occasion:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al asociar producto a ocasión',
-            error: error.message
-        });
+        errorHandlers.handleGenericError(res, error, 'add_product_to_occasion');
     }
 };
 
@@ -442,12 +395,7 @@ const removeProductFromOccasion = async (req, res) => {
             message: 'Producto removido de ocasión exitosamente'
         });
     } catch (error) {
-        console.error('Error removing product from occasion:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al remover producto de ocasión',
-            error: error.message
-        });
+        errorHandlers.handleGenericError(res, error, 'remove_product_from_occasion');
     }
 };
 

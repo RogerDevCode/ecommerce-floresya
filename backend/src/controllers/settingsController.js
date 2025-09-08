@@ -1,4 +1,3 @@
-const { Setting } = require('../models');
 const { supabase, useSupabase } = require('../config/database');
 
 const getSetting = async (req, res) => {
@@ -18,7 +17,7 @@ const getSetting = async (req, res) => {
             }
             setting = data;
         } else {
-            setting = await Setting.findOne({ where: { setting_key: key } });
+            throw new Error('Only Supabase is supported in this application');
         }
 
         if (!setting) {
@@ -37,16 +36,37 @@ const updateSetting = async (req, res) => {
         const { key } = req.params;
         const { value } = req.body;
 
-        const [setting, created] = await Setting.findOrCreate({
-            where: { setting_key: key },
-            defaults: { setting_value: value }
-        });
-
-        if (!created) {
-            await setting.update({ setting_value: value });
+        if (useSupabase) {
+            // Try to update first
+            const { data: updateResult, error: updateError } = await supabase
+                .from('settings')
+                .update({ setting_value: value })
+                .eq('setting_key', key)
+                .select();
+            
+            if (updateError && updateError.code !== 'PGRST116') {
+                throw updateError;
+            }
+            
+            // If no rows were updated, insert new
+            if (!updateResult || updateResult.length === 0) {
+                const { data: insertResult, error: insertError } = await supabase
+                    .from('settings')
+                    .insert({ setting_key: key, setting_value: value })
+                    .select()
+                    .single();
+                
+                if (insertError) {
+                    throw insertError;
+                }
+                
+                return res.json({ success: true, message: `Setting ${key} updated successfully.`, data: insertResult });
+            }
+            
+            res.json({ success: true, message: `Setting ${key} updated successfully.`, data: updateResult[0] });
+        } else {
+            throw new Error('Only Supabase is supported in this application');
         }
-
-        res.json({ success: true, message: `Setting ${key} updated successfully.`, data: setting });
     } catch (error) {
         console.error(`Error updating setting ${req.params.key}:`, error);
         res.status(500).json({ success: false, message: 'Internal server error' });
@@ -69,14 +89,7 @@ const getHomepageSettings = async (req, res) => {
             }
             settings = data || [];
         } else {
-            const { Op } = require('sequelize');
-            settings = await Setting.findAll({
-                where: {
-                    setting_key: {
-                        [Op.like]: 'homepage_%'
-                    }
-                }
-            });
+            throw new Error('Only Supabase is supported in this application');
         }
 
         const homepageSettings = {};
@@ -99,17 +112,30 @@ const updateHomepageSettings = async (req, res) => {
     try {
         const settings = req.body;
 
-        for (const [key, value] of Object.entries(settings)) {
-            if (key.startsWith('homepage_')) {
-                const [setting, created] = await Setting.findOrCreate({
-                    where: { setting_key: key },
-                    defaults: { setting_value: value }
-                });
-
-                if (!created) {
-                    await setting.update({ setting_value: value });
+        if (useSupabase) {
+            for (const [key, value] of Object.entries(settings)) {
+                if (key.startsWith('homepage_')) {
+                    // Try to update first
+                    const { data: updateResult, error: updateError } = await supabase
+                        .from('settings')
+                        .update({ setting_value: value })
+                        .eq('setting_key', key)
+                        .select();
+                    
+                    // If no rows were updated, insert new
+                    if (!updateResult || updateResult.length === 0) {
+                        const { error: insertError } = await supabase
+                            .from('settings')
+                            .insert({ setting_key: key, setting_value: value });
+                        
+                        if (insertError) {
+                            throw insertError;
+                        }
+                    }
                 }
             }
+        } else {
+            throw new Error('Only Supabase is supported in this application');
         }
 
         res.json({ 

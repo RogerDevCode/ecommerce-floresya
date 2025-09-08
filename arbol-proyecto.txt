@@ -1,0 +1,322 @@
+.
+├── api
+│   └── index.js
+├── api_testing_suite.js
+├── arbol-proyecto.txt
+├── backend
+│   └── src
+│       ├── config
+│       │   └── database.js
+│       ├── controllers
+│       │   ├── authController.js
+│       │   ├── authControllerSupabase.js
+│       │   ├── carouselController.js
+│       │   ├── categoryController.js
+│       │   ├── occasionController.js
+│       │   ├── orderController.js
+│       │   ├── paymentController.js
+│       │   ├── paymentMethodController.js
+│       │   ├── productController.js
+│       │   ├── productControllerSupabase.js
+│       │   ├── settingsController.js
+│       │   └── testController.js
+│       ├── docs
+│       │   └── swagger.js
+│       ├── middleware
+│       │   ├── auth.js
+│       │   ├── monitoringMiddleware.js
+│       │   ├── upload.js
+│       │   └── validation.js
+│       ├── models
+│       │   ├── CarouselImage.js
+│       │   ├── Category.js
+│       │   ├── index.js
+│       │   ├── PaymentMethod.js
+│       │   ├── Product.js
+│       │   └── Setting.js
+│       ├── routes
+│       │   ├── auth.js
+│       │   ├── carousel.js
+│       │   ├── categories.js
+│       │   ├── database.js
+│       │   ├── imageProcessor.js
+│       │   ├── images.js
+│       │   ├── logs.js
+│       │   ├── occasions.js
+│       │   ├── orders.js
+│       │   ├── paymentMethods.js
+│       │   ├── payments.js
+│       │   ├── products.js
+│       │   ├── settings.js
+│       │   ├── testRoutes.js
+│       │   └── upload.js
+│       ├── scripts
+│       │   ├── add-primary-image-column.js
+│       │   ├── add-products.js
+│       │   ├── init-db-dev.js
+│       │   ├── init-db.js
+│       │   ├── process-product-images.js
+│       │   ├── reset-db.js
+│       │   ├── seed-categories.js
+│       │   └── update-categories.js
+│       ├── server.js
+│       ├── services
+│       │   ├── databaseService.js
+│       │   ├── emailService.js
+│       │   ├── imageHashService.js
+│       │   ├── imageProcessing.js
+│       │   ├── imageUploadService.js
+│       │   ├── monitoringService.js
+│       │   ├── supabaseAdmin.js
+│       │   └── supabaseClient.js
+│       └── utils
+│           ├── errorHandler.js
+│           ├── logger.js
+│           └── supabaseClient.js
+├── database
+│   ├── schema_postgres.sql
+│   └── seed_data_postgres.sql
+├── demo-server.js
+├── docs
+│   ├── API_DOCUMENTATION.md
+│   ├── DEPLOYMENT_GUIDE.md
+│   └── PAYMENT_METHODS.md
+├── frontend
+│   ├── css
+│   │   ├── admin.css
+│   │   ├── compact-navigation.css
+│   │   ├── product-detail.css
+│   │   ├── product-detail-minimal.css
+│   │   └── styles.css
+│   ├── images
+│   │   ├── converted_1200x1200_webp
+│   │   ├── favicon.ico
+│   │   ├── hero-flowers.jpg
+│   │   ├── hero-flowers.webp
+│   │   ├── logoFloresYa.jpeg
+│   │   ├── placeholder-product-2.webp
+│   │   ├── placeholder-product.jpg
+│   │   ├── placeholder-product.webp
+│   │   └── products
+│   │       ├── arreglo-funebre-bright.webp
+│   │       ├── arreglo-funebre-original.webp
+│   │       ├── arreglo-funebre-vivid.webp
+│   │       ├── arreglo-funebre-zoom.webp
+│   │       ├── girasoles-bright.webp
+│   │       ├── girasoles-original.webp
+│   │       ├── girasoles-vivid.webp
+│   │       ├── girasoles-zoom.webp
+│   │       ├── large
+│   │       │   ├── arreglo-de-mesa-elegante-1-large.webp
+│   │       │   ├── arreglo-de-mesa-elegante-2-large.webp
+│   │       │   ├── arreglo-funebre-1-large.webp
+│   │       │   ├── arreglo-funebre-2-large.webp
+│   │       │   ├── arreglo-funebre-3-large.webp
+│   │       │   ├── arreglo-funebre-large.webp
+│   │       │   ├── bouquet-de-girasoles-1-large.webp
+│   │       │   ├── bouquet-de-girasoles-2-large.webp
+│   │       │   ├── bouquet-primaveral-1-large.webp
+│   │       │   ├── bouquet-primaveral-2-large.webp
+│   │       │   ├── bouquet-primaveral-large.webp
+│   │       │   ├── orqu-deas-exoticas-1-large.webp
+│   │       │   ├── orqu-deas-exoticas-2-large.webp
+│   │       │   ├── plantas-suculentas-1-large.webp
+│   │       │   ├── plantas-suculentas-2-large.webp
+│   │       │   ├── ramo-de-novia-clasico-1-large.webp
+│   │       │   ├── ramo-de-novia-clasico-2-large.webp
+│   │       │   ├── ramo-de-novia-clasico-3-large.webp
+│   │       │   ├── ramo-novia-large.webp
+│   │       │   ├── rosa-blanca-premium-1-large.webp
+│   │       │   ├── rosa-blanca-premium-2-large.webp
+│   │       │   ├── rosas-rojas-clasicas-large.webp
+│   │       │   ├── rosas-rosadas-romanticas-1-large.webp
+│   │       │   └── rosas-rosadas-romanticas-2-large.webp
+│   │       ├── medium
+│   │       │   ├── arreglo-de-mesa-elegante-1-medium.webp
+│   │       │   ├── arreglo-de-mesa-elegante-2-medium.webp
+│   │       │   ├── arreglo-funebre-1-medium.webp
+│   │       │   ├── arreglo-funebre-2-medium.webp
+│   │       │   ├── arreglo-funebre-3-medium.webp
+│   │       │   ├── arreglo-funebre-medium.webp
+│   │       │   ├── bouquet-de-girasoles-1-medium.webp
+│   │       │   ├── bouquet-de-girasoles-2-medium.webp
+│   │       │   ├── bouquet-primaveral-1-medium.webp
+│   │       │   ├── bouquet-primaveral-2-medium.webp
+│   │       │   ├── bouquet-primaveral-medium.webp
+│   │       │   ├── orqu-deas-exoticas-1-medium.webp
+│   │       │   ├── orqu-deas-exoticas-2-medium.webp
+│   │       │   ├── plantas-suculentas-1-medium.webp
+│   │       │   ├── plantas-suculentas-2-medium.webp
+│   │       │   ├── ramo-de-novia-clasico-1-medium.webp
+│   │       │   ├── ramo-de-novia-clasico-2-medium.webp
+│   │       │   ├── ramo-de-novia-clasico-3-medium.webp
+│   │       │   ├── ramo-novia-medium.webp
+│   │       │   ├── rosa-blanca-premium-1-medium.webp
+│   │       │   ├── rosa-blanca-premium-2-medium.webp
+│   │       │   ├── rosas-rojas-clasicas-medium.webp
+│   │       │   ├── rosas-rosadas-romanticas-1-medium.webp
+│   │       │   └── rosas-rosadas-romanticas-2-medium.webp
+│   │       ├── orquideas-bright.webp
+│   │       ├── orquideas-original.webp
+│   │       ├── orquideas-vivid.webp
+│   │       ├── orquideas-zoom.webp
+│   │       ├── ramo-novia-bright.webp
+│   │       ├── ramo-novia-original.webp
+│   │       ├── ramo-novia-vivid.webp
+│   │       ├── ramo-novia-zoom.webp
+│   │       ├── test-product_md.webp
+│   │       ├── test-product_sm.webp
+│   │       ├── test-product_thumb.webp
+│   │       ├── test-product.webp
+│   │       └── thumb
+│   │           ├── arreglo-de-mesa-elegante-1-thumb.webp
+│   │           ├── arreglo-de-mesa-elegante-2-thumb.webp
+│   │           ├── arreglo-funebre-1-thumb.webp
+│   │           ├── arreglo-funebre-2-thumb.webp
+│   │           ├── arreglo-funebre-3-thumb.webp
+│   │           ├── arreglo-funebre-thumb.webp
+│   │           ├── bouquet-de-girasoles-1-thumb.webp
+│   │           ├── bouquet-de-girasoles-2-thumb.webp
+│   │           ├── bouquet-primaveral-1-thumb.webp
+│   │           ├── bouquet-primaveral-2-thumb.webp
+│   │           ├── bouquet-primaveral-thumb.webp
+│   │           ├── orqu-deas-exoticas-1-thumb.webp
+│   │           ├── orqu-deas-exoticas-2-thumb.webp
+│   │           ├── plantas-suculentas-1-thumb.webp
+│   │           ├── plantas-suculentas-2-thumb.webp
+│   │           ├── ramo-de-novia-clasico-1-thumb.webp
+│   │           ├── ramo-de-novia-clasico-2-thumb.webp
+│   │           ├── ramo-de-novia-clasico-3-thumb.webp
+│   │           ├── ramo-novia-thumb.webp
+│   │           ├── rosa-blanca-premium-1-thumb.webp
+│   │           ├── rosa-blanca-premium-2-thumb.webp
+│   │           ├── rosas-rojas-clasicas-thumb.webp
+│   │           ├── rosas-rosadas-romanticas-1-thumb.webp
+│   │           └── rosas-rosadas-romanticas-2-thumb.webp
+│   ├── index.html
+│   ├── js
+│   │   ├── accessibility-enhancer.js
+│   │   ├── admin-enhancements.js
+│   │   ├── admin.js
+│   │   ├── api.js
+│   │   ├── auth.js
+│   │   ├── cart.js
+│   │   ├── dali-loader.js
+│   │   ├── logger.js
+│   │   ├── main.js
+│   │   ├── monitoring-dashboard.js
+│   │   ├── payment.js
+│   │   ├── performance-monitor.js
+│   │   ├── performance-optimizer.js
+│   │   ├── product-detail.js
+│   │   ├── product-image-hover.js
+│   │   ├── responsive-image.js
+│   │   └── test.js
+│   └── pages
+│       ├── admin.html
+│       ├── error.html
+│       ├── monitoring.html
+│       ├── payment.html
+│       ├── product-detail.html
+│       ├── test.html
+│       ├── test-inline.html
+│       └── under-construction.html
+├── gitpush.sh
+├── oldfiles
+│   ├── backend
+│   │   └── src
+│   │       ├── controllers
+│   │       │   └── productController.js.bak
+│   │       └── scripts
+│   │           ├── calculate-storage-size.js
+│   │           ├── check-bucket-policies.js
+│   │           ├── check-missing-tables.js
+│   │           ├── init-db-sqlite-backup.js
+│   │           ├── inspect-tables.js
+│   │           ├── setup-storage.js
+│   │           ├── update-carousel.js
+│   │           └── verify-categories.js
+│   ├── database
+│   │   ├── floresya.db
+│   │   ├── migrate_to_postgres.sh
+│   │   ├── migration_postgres_data.sql
+│   │   ├── migration_postgres_schema.sql
+│   │   ├── MIGRATION_README.md
+│   │   ├── schema.sql
+│   │   ├── schema_sqlite.sql
+│   │   ├── scripts
+│   │   │   └── simulate-migration.js
+│   │   ├── seed_data.sql
+│   │   ├── seed_data_sqlite.sql
+│   │   ├── sql
+│   │   │   ├── improve-categories-occasions.sql
+│   │   │   ├── migration-occasions-v1-fixed.sql
+│   │   │   └── migration-occasions-v1.sql
+│   │   └── update_categories.sql
+│   ├── frontend
+│   │   ├── css
+│   │   │   ├── mobile-conversion-optimizer.css
+│   │   │   ├── product-detail-enhanced.css
+│   │   │   └── professional-layout-fix.css
+│   │   ├── js
+│   │   │   ├── advanced-conversion-optimizer.js
+│   │   │   ├── css-debug.js
+│   │   │   ├── css-visibility-fix.js
+│   │   │   ├── debug-fix.js
+│   │   │   ├── intelligent-cross-sell.js
+│   │   │   ├── one-click-express-checkout.js
+│   │   │   ├── product-gamification.js
+│   │   │   └── strategic-buy-buttons.js
+│   │   └── pages
+│   │       ├── debug-images.html
+│   │       ├── product-detail-clean.html
+│   │       └── product-detail-original.html
+│   └── scripts
+│       ├── create-products-local.js
+│       └── upload-images-script.js
+├── package.json
+├── package-lock.json
+├── prompt.md
+├── qs.sh
+├── README_DEMO.md
+├── scripts
+│   └── deploy-check.js
+├── test_api_simple.js
+├── TESTING_REPORT_FINAL.md
+├── test_product_upload.js
+├── tests
+│   ├── api_backend_test_suite.js
+│   ├── e2e
+│   │   ├── package.json
+│   │   ├── playwright.config.js
+│   │   ├── README.md
+│   │   └── specs
+│   │       ├── admin.spec.js
+│   │       ├── auth.setup.js
+│   │       ├── homepage.spec.js
+│   │       └── product-detail.spec.js
+│   ├── frontend_test_suite.js
+│   ├── reports
+│   │   ├── comprehensive-report-2025-09-07T15-50-22-186Z.json
+│   │   ├── comprehensive-report-2025-09-07T16-09-36-806Z.json
+│   │   ├── test-report-2025-09-07T15-50-19-478Z.json
+│   │   ├── test-report-2025-09-07T15-50-20-095Z.json
+│   │   ├── test-report-2025-09-07T16-09-31-449Z.json
+│   │   ├── test-report-2025-09-07T16-09-32-147Z.json
+│   │   └── test-report-2025-09-07T16-10-50-313Z.json
+│   ├── runAll.js
+│   ├── run_complete_testing.js
+│   ├── testRunner.js
+│   ├── unit
+│   │   ├── api.test.js
+│   │   └── database.test.js
+│   └── watchTests.js
+├── test-server.js
+├── tree.txt
+├── uploads
+│   ├── payments
+│   └── products
+├── vercel.json
+└── verify_new_system.js
+
+47 directories, 273 files

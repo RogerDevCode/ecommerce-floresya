@@ -1,83 +1,122 @@
-// Main JavaScript functionality for FloresYa
+/**
+ * 🌸 FloresYaApp - Motor principal de la experiencia de usuario
+ * Carga diferida, eventos delegados, optimizado para conversión y performance.
+ */
 
 class FloresYaApp {
     constructor() {
         this.currentPage = 1;
         this.currentFilters = {};
         this.products = [];
-        this.categories = [];
         this.occasions = [];
+        this.isProductionMode = false;
+        this.logger = window.floresyaLogger || console;
+        this.performanceOptimizer = null;
+        this.accessibilityEnhancer = null;
+        
         this.init();
     }
 
     async init() {
-        // Defer heavy operations to avoid layout forcing
-        requestAnimationFrame(async () => {
-            await this.loadInitialData();
-            this.bindEvents();
-            
-            // Load products and carousel in next frame
-            requestAnimationFrame(() => {
-                this.loadProducts();
-                this.loadDynamicCarousel();
-                
-                // Setup dev mode last
-                requestAnimationFrame(() => {
-                    this.setupDevMode();
-                });
+        const initTimer = this.logger.startTimer ? this.logger.startTimer('FloresYaApp.init') : null;
+        
+        try {
+            this.logger.info('APP', 'Inicializando FloresYa', {
+                url: window.location.href,
+                timestamp: new Date().toISOString()
             });
-        });
+
+            // Inicializar módulos críticos
+            this.initializePerformanceOptimizer();
+            this.initializeAccessibilityEnhancer();
+
+            // Defer operaciones pesadas
+            requestAnimationFrame(() => {
+                this.loadInitialData()
+                    .then(() => {
+                        this.bindEvents();
+                        requestAnimationFrame(() => {
+                            this.loadProducts();
+                            this.loadDynamicCarousel();
+                            requestAnimationFrame(() => {
+                                this.setupDevMode();
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        this.logger.error('APP', 'Error cargando datos iniciales', { error: error.message });
+                    });
+            });
+
+            this.logger.success('APP', '✅ FloresYa inicializado correctamente');
+
+        } catch (error) {
+            this.logger.error('APP', 'Error crítico en inicialización', { error: error.message });
+            throw error;
+        } finally {
+            if (initTimer) initTimer.end('APP');
+        }
     }
 
-    // Setup development mode visibility
-    setupDevMode() {
-        const isProduction = window.location.hostname.includes('vercel.app') || 
-                           window.location.hostname === 'floresya.com' ||
-                           window.location.hostname === 'www.floresya.com';
-        
-        // Store current mode
-        this.isProductionMode = isProduction;
-        
-        if (isProduction) {
-            // Use requestAnimationFrame to avoid forcing layout during initial render
-            requestAnimationFrame(() => {
-                this.hideDevMode();
+    // ============ INICIALIZACIÓN DE MÓDULOS ============
+
+    initializePerformanceOptimizer() {
+        if (typeof PerformanceOptimizer !== 'undefined') {
+            this.performanceOptimizer = new PerformanceOptimizer({
+                lazyLoadOffset: 200,
+                imageQuality: 'auto',
+                enableWebP: true,
+                enablePrefetch: true,
+                debounceDelay: 150,
+                intersectionThreshold: 0.15
             });
+            this.logger.info('APP', '✅ Optimizador de performance inicializado');
         }
-        
-        // Initialize toggle button with multiple frame delays to avoid layout forcing
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                this.updateDevModeToggle();
-            });
-        });
-        
-        console.log(isProduction ? '🚀 Production Mode' : '🛠️ Development Mode');
     }
-    
-    // Toggle between dev and production mode
+
+    initializeAccessibilityEnhancer() {
+        if (typeof AccessibilityEnhancer !== 'undefined') {
+            this.accessibilityEnhancer = new AccessibilityEnhancer({
+                enableKeyboardNavigation: true,
+                enableAriaLabels: true,
+                enableFocusManagement: true,
+                announceChanges: true
+            });
+            this.logger.info('APP', '✅ Mejorador de accesibilidad inicializado');
+        }
+    }
+
+    // ============ MODO DESARROLLO/PRODUCCIÓN ============
+
+    setupDevMode() {
+        this.isProductionMode = window.location.hostname.includes('vercel.app') || 
+                               window.location.hostname === 'floresya.com' ||
+                               window.location.hostname === 'www.floresya.com';
+
+        if (this.isProductionMode) {
+            this.hideDevMode();
+            this.logger.info('APP', '🚀 Modo Producción');
+        } else {
+            this.logger.info('APP', '🛠️ Modo Desarrollo');
+        }
+
+        this.updateDevModeToggle();
+    }
+
     toggleDevMode() {
         this.isProductionMode = !this.isProductionMode;
         
         if (this.isProductionMode) {
             this.hideDevMode();
-            if (window.api && window.api.showNotification) {
-                api.showNotification('Modo Producción activado', 'success');
-            }
-            console.log('🚀 Switched to Production Mode');
+            this.logger.info('APP', '🚀 Cambiado a Modo Producción');
         } else {
             this.showDevMode();
-            if (window.api && window.api.showNotification) {
-                api.showNotification('Modo Desarrollador activado', 'info');
-            }
-            console.log('🛠️ Switched to Development Mode');
+            this.logger.info('APP', '🛠️ Cambiado a Modo Desarrollo');
         }
-        
-        // Update toggle button text
+
         this.updateDevModeToggle();
     }
-    
-    // Hide dev mode elements
+
     hideDevMode() {
         const devMenus = document.querySelectorAll('.navbar-nav .dropdown');
         devMenus.forEach(dropdown => {
@@ -87,8 +126,7 @@ class FloresYaApp {
             }
         });
     }
-    
-    // Show dev mode elements
+
     showDevMode() {
         const devMenus = document.querySelectorAll('.navbar-nav .dropdown');
         devMenus.forEach(dropdown => {
@@ -98,8 +136,7 @@ class FloresYaApp {
             }
         });
     }
-    
-    // Update dev mode toggle button
+
     updateDevModeToggle() {
         const toggleBtn = document.getElementById('devModeToggle');
         if (toggleBtn) {
@@ -112,33 +149,26 @@ class FloresYaApp {
         }
     }
 
-    // Load initial data (occasions, settings, etc.)
+    // ============ CARGA DE DATOS ============
+
     async loadInitialData() {
         try {
-            // Load occasions (replacing categories)
             const occasionsResponse = await api.getOccasions();
-            
             if (occasionsResponse.success) {
                 this.occasions = occasionsResponse.data;
                 this.populateOccasionFilter();
                 this.populateOccasionsDropdown();
             }
-
-            // Load settings if needed
-            // const settingsResponse = await api.getSettings();
-
         } catch (error) {
-            console.error('Error loading initial data:', error);
+            this.logger.error('APP', 'Error cargando ocasiones', { error: error.message });
         }
     }
 
-    // Populate occasion filter dropdown
     populateOccasionFilter() {
         const occasionFilter = document.getElementById('occasionFilter');
         if (!occasionFilter) return;
 
         occasionFilter.innerHTML = '<option value="">Todas las ocasiones</option>';
-        
         this.occasions.forEach(occasion => {
             const option = document.createElement('option');
             option.value = occasion.id;
@@ -147,33 +177,26 @@ class FloresYaApp {
         });
     }
 
-    // This method is now handled by populateOccasionsDropdown() below
-    // Keeping this for backwards compatibility, but it's effectively a no-op
-
-    // Populate navigation occasions dropdown
     populateOccasionsDropdown() {
         const occasionsDropdown = document.querySelector('#occasionsDropdownToggle + .dropdown-menu');
-        if (!occasionsDropdown) {
-            console.warn('Occasions dropdown not found');
-            return;
-        }
+        if (!occasionsDropdown) return;
 
-        console.log('Populating occasions dropdown with', this.occasions.length, 'occasions');
         occasionsDropdown.innerHTML = '';
-
-        // Add "Todas las ocasiones" option first
+        
+        // Opción "Todas las ocasiones"
         const allOccasionsLi = document.createElement('li');
         allOccasionsLi.innerHTML = `<a class="dropdown-item" href="#productos" data-occasion-id="">
             <i class="bi bi-calendar-heart me-2" style="color: #6c757d"></i>
             Todas las ocasiones
         </a>`;
         occasionsDropdown.appendChild(allOccasionsLi);
-        
-        // Add divider
+
+        // Divider
         const divider = document.createElement('li');
         divider.innerHTML = '<hr class="dropdown-divider">';
         occasionsDropdown.appendChild(divider);
 
+        // Opciones de ocasiones
         if (this.occasions.length > 0) {
             this.occasions.forEach(occasion => {
                 const li = document.createElement('li');
@@ -183,27 +206,11 @@ class FloresYaApp {
                 </a>`;
                 occasionsDropdown.appendChild(li);
             });
-        } else {
-            // Add fallback occasions if none loaded from API
-            const fallbackOccasions = [
-                { id: 1, name: 'San Valentín', icon: 'bi-heart-fill', color: '#dc3545' },
-                { id: 4, name: 'Cumpleaños', icon: 'bi-gift-fill', color: '#ffc107' },
-                { id: 5, name: 'Aniversario', icon: 'bi-heart-arrow', color: '#e91e63' },
-                { id: 2, name: 'Día de la Madre', icon: 'bi-person-heart', color: '#fd7e14' }
-            ];
-            
-            fallbackOccasions.forEach(occasion => {
-                const li = document.createElement('li');
-                li.innerHTML = `<a class="dropdown-item" href="#productos" data-occasion-id="${occasion.id}">
-                    <i class="${occasion.icon} me-2" style="color: ${occasion.color}"></i>
-                    ${occasion.name}
-                </a>`;
-                occasionsDropdown.appendChild(li);
-            });
         }
     }
 
-    // Bind all events
+    // ============ EVENTOS ============
+
     bindEvents() {
         this.bindSearchEvents();
         this.bindFilterEvents();
@@ -212,7 +219,6 @@ class FloresYaApp {
         this.bindMenuEvents();
     }
 
-    // Bind search events
     bindSearchEvents() {
         const searchInput = document.getElementById('searchInput');
         const searchBtn = document.getElementById('searchBtn');
@@ -238,32 +244,33 @@ class FloresYaApp {
         }
     }
 
-    // Bind filter events
     bindFilterEvents() {
         const occasionFilter = document.getElementById('occasionFilter');
         const sortFilter = document.getElementById('sortFilter');
 
         if (occasionFilter) {
             occasionFilter.addEventListener('change', () => {
-                console.log('Occasion filter changed:', occasionFilter.value);
-                this.handleFilterChange();
+                this.filterByOccasionId(occasionFilter.value);
             });
         }
 
         if (sortFilter) {
             sortFilter.addEventListener('change', () => {
-                this.handleFilterChange();
+                const [sort, order] = sortFilter.value.split(':');
+                this.currentFilters.sort = sort;
+                this.currentFilters.order = order;
+                this.currentPage = 1;
+                this.loadProducts();
             });
         }
     }
 
-    // Bind product events
     bindProductEvents() {
-        // Delegate product card events
+        // Delegación de eventos para tarjetas de producto
         document.addEventListener('click', (e) => {
-            // Product card click (redirect to detail page)
+            // Click en tarjeta (navegación a detalle)
             const productCard = e.target.closest('.product-card');
-            if (productCard && !e.target.closest('.btn-add-to-cart') && !e.target.closest('.btn-view-details')) {
+            if (productCard && !e.target.closest('.btn-add-to-cart') && !e.target.closest('.btn-floresya')) {
                 e.preventDefault();
                 const productId = parseInt(productCard.dataset.productId);
                 if (productId) {
@@ -271,7 +278,17 @@ class FloresYaApp {
                 }
             }
 
-            // Add to cart button
+            // Click en "¡FloresYa!" (compra rápida)
+            if (e.target.classList.contains('btn-floresya') || e.target.closest('.btn-floresya')) {
+                e.preventDefault();
+                const btn = e.target.classList.contains('btn-floresya') ? e.target : e.target.closest('.btn-floresya');
+                const productId = parseInt(btn.dataset.productId);
+                if (productId) {
+                    this.buyNow(productId, 1);
+                }
+            }
+
+            // Click en "Al Carrito"
             if (e.target.classList.contains('btn-add-to-cart') || e.target.closest('.btn-add-to-cart')) {
                 e.preventDefault();
                 const btn = e.target.classList.contains('btn-add-to-cart') ? e.target : e.target.closest('.btn-add-to-cart');
@@ -280,37 +297,19 @@ class FloresYaApp {
                     window.cart.addItem(productId, 1);
                 }
             }
-
-            // Product details button functionality removed - using direct page navigation instead
-
-            // Product card click is already handled above - no duplicate needed
         });
     }
 
-    // Bind navigation events
     bindNavigationEvents() {
-        // Occasion dropdown clicks (replacing category dropdown)
+        // Click en dropdown de ocasiones
         document.addEventListener('click', (e) => {
-            // Handle occasion ID clicks (new system)
             if (e.target.dataset.occasionId !== undefined) {
                 e.preventDefault();
-                const occasionId = e.target.dataset.occasionId;
-                // Handle empty string as "show all"
-                if (occasionId === '') {
-                    this.filterByOccasionId('');
-                } else {
-                    this.filterByOccasionId(parseInt(occasionId));
-                }
-            }
-            
-            // Handle legacy occasion clicks (for backwards compatibility)
-            if (e.target.dataset.occasion) {
-                e.preventDefault();
-                this.filterByOccasion(e.target.dataset.occasion);
+                this.filterByOccasionId(e.target.dataset.occasionId);
             }
         });
 
-        // Pagination clicks
+        // Click en paginación
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('page-link') && e.target.dataset.page) {
                 e.preventDefault();
@@ -323,7 +322,8 @@ class FloresYaApp {
         });
     }
 
-    // Handle search
+    // ============ FILTROS Y BÚSQUEDA ============
+
     handleSearch() {
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
@@ -333,101 +333,54 @@ class FloresYaApp {
         }
     }
 
-    // Handle filter changes
-    handleFilterChange() {
-        const occasionFilter = document.getElementById('occasionFilter');
-        const sortFilter = document.getElementById('sortFilter');
-
-        if (occasionFilter) {
-            const occasionId = occasionFilter.value;
-            console.log('FloresYa: Filter changed to occasion ID:', occasionId);
-            
-            // Use the unified filterByOccasionId function to maintain sync
-            this.filterByOccasionId(occasionId);
-            return; // Early return to avoid double loading
-        }
-
-        if (sortFilter) {
-            const [sort, order] = sortFilter.value.split(':');
-            this.currentFilters.sort = sort;
-            this.currentFilters.order = order;
-        }
-
-        this.currentPage = 1;
-        this.loadProducts();
-    }
-
-    // Filter by occasion ID (new occasions system) - SINGLE UNIFIED VERSION
     filterByOccasionId(occasionId) {
-        console.log('FloresYa: Filtering by occasion ID:', occasionId);
-        
-        // Sync the select dropdown
+        // Sincronizar dropdowns
         const occasionFilter = document.getElementById('occasionFilter');
+        const navbarDropdownToggle = document.getElementById('occasionsDropdownToggle');
+
         if (occasionFilter) {
             occasionFilter.value = occasionId || '';
         }
-        
-        // Sync the navbar dropdown text (visual feedback)
-        this.updateNavbarDropdownText(occasionId);
-        
-        // Handle empty occasionId as "show all"
+
+        if (navbarDropdownToggle) {
+            if (!occasionId || occasionId === '') {
+                navbarDropdownToggle.textContent = 'Ocasiones';
+            } else {
+                const selectedOccasion = this.occasions.find(occ => occ.id == occasionId);
+                if (selectedOccasion) {
+                    navbarDropdownToggle.innerHTML = `<i class="${selectedOccasion.icon || 'bi bi-calendar-event'} me-2"></i>${selectedOccasion.name}`;
+                } else {
+                    navbarDropdownToggle.textContent = 'Ocasiones';
+                }
+            }
+        }
+
+        // Aplicar filtro
         if (occasionId === '' || occasionId === null || occasionId === undefined) {
             delete this.currentFilters.occasionId;
         } else {
             this.currentFilters.occasionId = occasionId;
         }
-        
-        // Clear old filters
-        delete this.currentFilters.category_id;
+
         delete this.currentFilters.occasion;
         this.currentPage = 1;
         this.loadProducts();
 
-        // Scroll to products section
+        // Scroll suave a productos
         document.getElementById('productos')?.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // Update navbar dropdown text to show selected occasion
-    updateNavbarDropdownText(occasionId) {
-        const navbarDropdownToggle = document.getElementById('occasionsDropdownToggle');
-        if (!navbarDropdownToggle) return;
-        
-        if (!occasionId || occasionId === '') {
-            navbarDropdownToggle.textContent = 'Ocasiones';
-            return;
-        }
-        
-        // Find the occasion name
-        const selectedOccasion = this.occasions.find(occ => occ.id == occasionId);
-        if (selectedOccasion) {
-            navbarDropdownToggle.innerHTML = `<i class="${selectedOccasion.icon || 'bi bi-calendar-event'} me-2"></i>${selectedOccasion.name}`;
-        } else {
-            navbarDropdownToggle.textContent = 'Ocasiones';
-        }
-    }
+    // ============ CARGA Y RENDERIZADO DE PRODUCTOS ============
 
-    // Filter by occasion (legacy compatibility)
-    filterByOccasion(occasion) {
-        console.log('FloresYa: Filtering by occasion (legacy):', occasion);
-        this.currentFilters.occasion = occasion;
-        delete this.currentFilters.occasionId; // Clear new occasion filter
-        this.currentPage = 1;
-        this.loadProducts();
-
-        // Scroll to products section
-        document.getElementById('productos')?.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    // Load products with current filters
     async loadProducts() {
         try {
             const params = {
                 page: this.currentPage,
-                limit: 12,
+                limit: 100,
                 ...this.currentFilters
             };
 
-            // Remove undefined values
+            // Limpiar parámetros vacíos
             Object.keys(params).forEach(key => {
                 if (params[key] === undefined || params[key] === '') {
                     delete params[key];
@@ -435,19 +388,16 @@ class FloresYaApp {
             });
 
             const response = await api.getProducts(params);
-            
             if (response.success) {
                 this.products = response.data.products;
                 this.renderProducts(response.data.products);
                 this.renderPagination(response.data.pagination);
             }
-
         } catch (error) {
-            api.handleError(error);
+            this.logger.error('APP', 'Error cargando productos', { error: error.message });
         }
     }
 
-    // Render products grid
     renderProducts(products) {
         const container = document.getElementById('productsContainer');
         if (!container) return;
@@ -456,11 +406,19 @@ class FloresYaApp {
             container.innerHTML = `
                 <div class="col-12">
                     <div class="empty-state text-center py-5">
-                        <img src="/images/logoFloresYa.jpeg" alt="FloresYa" class="mb-4" style="max-width: 120px; opacity: 0.6;">
-                        <i class="bi bi-search display-1 text-muted mb-3"></i>
-                        <h4 class="text-primary-custom mb-3">No encontramos productos</h4>
+                        <svg width="120" height="120" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="100" cy="100" r="95" fill="#FF1493" stroke="#fff" stroke-width="4"/>
+                            <path d="M100 60 C90 70, 85 85, 90 100 C95 115, 110 115, 115 100 C120 85, 115 70, 105 60 Z" fill="#fff" />
+                            <circle cx="100" cy="70" r="5" fill="#fff"/>
+                            <text x="100" y="140" font-family="Arial, sans-serif" font-size="20" fill="#fff" text-anchor="middle" opacity="0.9">
+                                No disponible
+                            </text>
+                        </svg>
+                        <h4 class="text-primary-custom mb-3 mt-4">No encontramos productos</h4>
                         <p class="text-muted mb-4">No hay productos disponibles con los filtros aplicados</p>
-                        <button class="btn btn-outline-primary-custom" onclick="floresyaApp.clearAllFilters()">Ver todos los productos</button>
+                        <button class="btn btn-outline-primary-custom" onclick="floresyaApp.clearAllFilters()">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Ver todos los productos
+                        </button>
                     </div>
                 </div>
             `;
@@ -470,7 +428,6 @@ class FloresYaApp {
         container.innerHTML = products.map(product => this.createProductCard(product)).join('');
     }
 
-    // Create product card HTML
     createProductCard(product) {
         const occasionText = {
             'amor': 'Amor',
@@ -484,47 +441,81 @@ class FloresYaApp {
             'other': 'General'
         }[product.occasion] || 'General';
 
-        // Parse additional images if available
-        let additionalImages = product.additional_images ? 
-            (typeof product.additional_images === 'string' ? 
-                JSON.parse(product.additional_images) : 
-                product.additional_images) : [];
-
-        // 🌸 Add local image variations with MORE DRAMATIC differences for better hover visibility
-        const localImageVariations = {
-            6: ['/images/products/girasoles-zoom.webp', '/images/products/girasoles-vivid.webp', '/images/products/girasoles-bright.webp'], // Bouquet de Girasoles
-            7: ['/images/products/arreglo-funebre-zoom.webp', '/images/products/arreglo-funebre-vivid.webp', '/images/products/arreglo-funebre-bright.webp'], // Arreglo Fúnebre  
-            9: ['/images/products/orquideas-zoom.webp', '/images/products/orquideas-vivid.webp', '/images/products/orquideas-bright.webp'], // Orquídeas Exóticas
-            10: ['/images/products/ramo-novia-zoom.webp', '/images/products/ramo-novia-vivid.webp', '/images/products/ramo-novia-bright.webp'] // Ramo de Novia Clásico
-        };
-
-        if (localImageVariations[product.id]) {
-            additionalImages = localImageVariations[product.id];
+        // Imágenes de Supabase
+        let allProductImages = [];
+        if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+            const sortedImages = product.images
+                .sort((a, b) => a.display_order - b.display_order)
+                .map(img => img.url_large)
+                .filter(url => url && url !== '');
+            allProductImages = sortedImages;
+        } else {
+            // Placeholder SVG integrado
+            allProductImages = ['data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9Ijk1IiBmaWxsPSIjRkYxNDkzIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iNCIvPgogICAgPHBhdGggZD0iTTEwMCA2MCBDOTAgNzAsIDg1IDg1LCA5MCAxMDAgQzk1IDExNSwgMTEwIDExNSwgMTE1IDEwMCBDMTIwIDg1LCAxMTUgNzAsIDEwNSA2MCBaIiBmaWxsPSIjZmZmIiAvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iNzAiIHI9IjUiIGZpbGw9IiNmZmYiLz4KICAgIDx0ZXh0IHg9IjEwMCIgeT0iMTQwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+CiAgICAgICAgTm8gZGlzcG9uaWJsZQogICAgPC90ZXh0Pgo8L3N2Zz4='];
         }
 
-        const primaryImage = product.primary_image || product.image_url || '/images/placeholder-product.jpg';
-        const allImages = [primaryImage, ...additionalImages].filter(img => img && img !== '');
+        const dataImages = allProductImages.length > 1 ? JSON.stringify(allProductImages) : JSON.stringify([allProductImages[0]]);
+        const primaryImage = allProductImages[0];
 
         return `
             <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                <div class="card product-card h-100" data-product-id="${product.id}">
-                    ${product.featured ? '<span class="badge-featured">Destacado</span>' : ''}
-                    <div class="product-image-container">
+                <div class="card product-card h-100 hover-lift" data-product-id="${product.id}">
+                    <div class="product-image-container position-relative">
+                        ${product.featured ? '<span class="badge-featured position-absolute top-0 start-0 m-2 badge premium-gradient text-white fw-bold z-index-10"><i class="bi bi-star-fill me-1"></i>Destacado</span>' : ''}
+                        
+                        <!-- Stock Badge -->
+                        <span class="position-absolute top-0 end-0 m-2 badge glass-morphism ${product.stock > 0 ? 'text-success' : 'text-warning'} z-index-10">
+                            <i class="bi bi-${product.stock > 0 ? 'check-circle' : 'clock'} me-1"></i>
+                            ${product.stock > 0 ? 'Disponible' : 'Consultar'}
+                        </span>
+                        
                         <img data-responsive 
                              data-src="${primaryImage}" 
                              data-context="card"
                              class="card-img-top product-image" 
                              alt="${product.name}"
-                             data-images='${JSON.stringify(allImages)}'
-                             data-current-index="0">
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title">${product.name}</h5>
-                        <p class="card-text">${product.description ? this.truncateText(product.description, 80) : ''}</p>
-                        <div class="product-occasion mb-2">
-                            <span class="badge-occasion">${occasionText}</span>
+                             data-images='${dataImages}'
+                             data-current-index="0"
+                             loading="lazy"
+                             style="height: 250px; object-fit: cover; transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);"
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9Ijk1IiBmaWxsPSIjRkYxNDkzIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iNCIvPgogICAgPHBhdGggZD0iTTEwMCA2MCBDOTAgNzAsIDg1IDg1LCA5MCAxMDAgQzk1IDExNSwgMTEwIDExNSwgMTE1IDEwMCBDMTIwIDg1LCAxMTUgNzAsIDEwNSA2MCBaIiBmaWxsPSIjZmZmIiAvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iNzAiIHI9IjUiIGZpbGw9IiNmZmYiLz4KICAgIDx0ZXh0IHg9IjEwMCIgeT0iMTQwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+CiAgICAgICAgTm8gZGlzcG9uaWJsZQogICAgPC90ZXh0Pgo8L3N2Zz4='">
+                        
+                        <!-- Quick Add Button (appears on hover) -->
+                        <div class="position-absolute bottom-0 end-0 m-2 d-none d-md-block">
+                            <button class="btn btn-primary-custom btn-sm rounded-circle pulse-shadow" onclick="event.stopPropagation(); floresyaApp.addToCart(${product.id})" title="Agregar al carrito rápido">
+                                <i class="bi bi-plus"></i>
+                            </button>
                         </div>
-                        <div class="product-price mb-3">${api.formatCurrency(product.price)}</div>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title fw-bold mb-2">${product.name}</h5>
+                        <p class="card-text text-muted flex-grow-1 small">${product.description ? this.truncateText(product.description, 80) : 'Hermoso arreglo floral perfecto para cualquier ocasión'}</p>
+                        
+                        <!-- Occasion Badge with Premium Style -->
+                        <div class="product-occasion mb-2">
+                            <span class="badge trust-badge">
+                                <i class="bi bi-flower1 me-1"></i>${occasionText}
+                            </span>
+                        </div>
+                        
+                        <!-- Price Section with Enhanced Design -->
+                        <div class="price-highlight mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="h5 text-primary-custom fw-bold mb-0">${api.formatCurrency(product.price)}</span>
+                            </div>
+                            <small class="text-muted">
+                                <i class="bi bi-truck me-1"></i>Envío gratis incluido
+                            </small>
+                        </div>
+                        
+                        <!-- Trust Indicator -->
+                        <div class="text-center mb-3">
+                            <small class="text-muted">
+                                <i class="bi bi-star-fill text-warning me-1"></i>
+                                <span class="fw-medium">4.8</span> • 100% garantizado
+                            </small>
+                        </div>
+                        
                         <div class="mt-auto">
                             ${product.stock_quantity > 0 ? `
                                 <div class="d-grid gap-2">
@@ -537,7 +528,7 @@ class FloresYaApp {
                                 </div>
                             ` : `
                                 <button class="btn btn-secondary w-100" disabled>
-                                    Sin Stock
+                                    <i class="bi bi-x-circle"></i> Sin Stock
                                 </button>
                             `}
                         </div>
@@ -547,13 +538,11 @@ class FloresYaApp {
         `;
     }
 
-    // Render pagination
     renderPagination(pagination) {
         const container = document.getElementById('pagination');
         if (!container) return;
 
         const { page, pages, total } = pagination;
-
         if (pages <= 1) {
             container.innerHTML = '';
             return;
@@ -561,22 +550,12 @@ class FloresYaApp {
 
         let paginationHTML = '';
 
-        // Previous button
-        if (page > 1) {
-            paginationHTML += `
-                <li class="page-item">
-                    <a class="page-link" href="#" data-page="${page - 1}">Anterior</a>
-                </li>
-            `;
-        } else {
-            paginationHTML += `
-                <li class="page-item disabled">
-                    <span class="page-link">Anterior</span>
-                </li>
-            `;
-        }
+        // Botón anterior
+        paginationHTML += page > 1 ? 
+            `<li class="page-item"><a class="page-link" href="#" data-page="${page - 1}">« Anterior</a></li>` :
+            `<li class="page-item disabled"><span class="page-link">« Anterior</span></li>`;
 
-        // Page numbers
+        // Números de página
         const startPage = Math.max(1, page - 2);
         const endPage = Math.min(pages, page + 2);
 
@@ -602,147 +581,74 @@ class FloresYaApp {
             paginationHTML += `<li class="page-item"><a class="page-link" href="#" data-page="${pages}">${pages}</a></li>`;
         }
 
-        // Next button
-        if (page < pages) {
-            paginationHTML += `
-                <li class="page-item">
-                    <a class="page-link" href="#" data-page="${page + 1}">Siguiente</a>
-                </li>
-            `;
-        } else {
-            paginationHTML += `
-                <li class="page-item disabled">
-                    <span class="page-link">Siguiente</span>
-                </li>
-            `;
-        }
+        // Botón siguiente
+        paginationHTML += page < pages ? 
+            `<li class="page-item"><a class="page-link" href="#" data-page="${page + 1}">Siguiente »</a></li>` :
+            `<li class="page-item disabled"><span class="page-link">Siguiente »</span></li>`;
 
         container.innerHTML = paginationHTML;
     }
 
-    // Product details are now handled by the dedicated product-detail.html page
-
-    // Product modal functionality removed - using dedicated product-detail.html page instead
-
-    // Utility function to truncate text
     truncateText(text, maxLength) {
         if (text.length <= maxLength) return text;
         return text.substr(0, maxLength) + '...';
     }
 
-    // Load featured products for homepage
-    async loadFeaturedProducts() {
-        try {
-            const response = await api.getFeaturedProducts(8);
-            
-            if (response.success) {
-                this.renderProducts(response.data.products);
-            }
+    // ============ CARRUSEL DINÁMICO ============
 
-        } catch (error) {
-            console.error('Error loading featured products:', error);
-        }
-    }
-
-    // Filter products by category
-    filterByCategory(categoryId) {
-        console.log('FloresYa: Filtering by category:', categoryId);
-        this.currentFilters.category_id = categoryId;
-        this.currentPage = 1;
-        this.loadProducts();
-        
-        // Update category filter dropdown if it exists
-        const categoryFilter = document.getElementById('categoryFilter');
-        if (categoryFilter) {
-            categoryFilter.value = categoryId;
-        }
-        
-        // Smooth scroll to products section
-        const productsSection = document.getElementById('productos');
-        if (productsSection) {
-            productsSection.scrollIntoView({ behavior: 'smooth' });
-        }
-    }
-
-    // Filter products by occasion
-    filterByOccasion(occasion) {
-        console.log('FloresYa: Filtering by occasion:', occasion);
-        this.currentFilters.occasion = occasion;
-        this.currentPage = 1;
-        this.loadProducts();
-        
-        // Smooth scroll to products section
-        const productsSection = document.getElementById('productos');
-        if (productsSection) {
-            productsSection.scrollIntoView({ behavior: 'smooth' });
-        }
-    }
-
-    // Load dynamic carousel from admin-managed content
     async loadDynamicCarousel() {
-        // Load carousel section settings and images
         await this.loadCarouselSettings();
         await this.loadCarouselImages();
     }
 
-    // Load carousel section settings
     async loadCarouselSettings() {
         try {
             const response = await fetch('/api/settings/homepage/all');
             const data = await response.json();
-            
             if (data.success) {
                 const settings = data.data;
-                
-                // Update carousel section title and subtitle
                 const titleElement = document.getElementById('carouselSectionTitle');
                 const subtitleElement = document.getElementById('carouselSectionSubtitle');
                 
                 if (titleElement && settings.carousel_section_title) {
                     titleElement.textContent = settings.carousel_section_title;
                 }
-                
                 if (subtitleElement && settings.carousel_section_subtitle) {
                     subtitleElement.textContent = settings.carousel_section_subtitle;
                 }
             }
         } catch (error) {
-            console.error('Error loading carousel settings:', error);
+            this.logger.error('APP', 'Error cargando configuración de carrusel', { error: error.message });
         }
     }
 
-    // Load and render carousel images
     async loadCarouselImages() {
         try {
             const response = await fetch('/api/carousel');
             const data = await response.json();
-            
             if (data.success && data.data.images.length > 0) {
                 this.renderCarouselImages(data.data.images);
             } else {
                 this.renderFallbackCarousel();
             }
         } catch (error) {
-            console.error('Error loading carousel images:', error);
+            this.logger.error('APP', 'Error cargando imágenes de carrusel', { error: error.message });
             this.renderFallbackCarousel();
         }
     }
 
-    // Render carousel images
     renderCarouselImages(images) {
         const carousel = document.getElementById('dynamicCarousel');
         if (!carousel) return;
 
-        // Duplicate images to create infinite scroll effect
         const extendedImages = [...images, ...images];
-        
         const carouselHTML = extendedImages.map((image, index) => {
             return `
-                <div class="carousel-item" data-link-url="${image.link_url || ''}">
+                <div class="carousel-item ${index === 0 ? 'active' : ''}" data-link-url="${image.link_url || ''}">
                     <img src="${image.image_url}" 
                          alt="${image.title}" 
                          loading="lazy"
-                         onerror="this.src='/images/placeholder.jpg'">
+                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9Ijk1IiBmaWxsPSIjRkYxNDkzIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iNCIvPgogICAgPHBhdGggZD0iTTEwMCA2MCBDOTAgNzAsIDg1IDg1LCA5MCAxMDAgQzk1IDExNSwgMTEwIDExNSwgMTE1IDEwMCBDMTIwIDg1LCAxMTUgNzAsIDEwNSA2MCBaIiBmaWxsPSIjZmZmIiAvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iNzAiIHI9IjUiIGZpbGw9IiNmZmYiLz4KICAgIDx0ZXh0IHg9IjEwMCIgeT0iMTQwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+CiAgICAgICAgTm8gZGlzcG9uaWJsZQogICAgPC90ZXh0Pgo8L3N2Zz4='">
                     <div class="carousel-overlay">
                         <h5>${image.title}</h5>
                         ${image.description ? `<p>${image.description}</p>` : ''}
@@ -753,7 +659,13 @@ class FloresYaApp {
 
         carousel.innerHTML = carouselHTML;
 
-        // Bind click events to carousel items
+        // Inicializar carrusel de Bootstrap
+        const carouselInstance = new bootstrap.Carousel(carousel, {
+            interval: 5000,
+            ride: 'carousel'
+        });
+
+        // Eventos de click
         carousel.addEventListener('click', (e) => {
             const item = e.target.closest('.carousel-item');
             if (item && item.dataset.linkUrl) {
@@ -762,61 +674,20 @@ class FloresYaApp {
         });
     }
 
-    // Render dynamic carousel (legacy - for products)
-    renderDynamicCarousel(products) {
-        const carousel = document.getElementById('dynamicCarousel');
-        if (!carousel) return;
-
-        // Duplicate products to create infinite scroll effect
-        const extendedProducts = [...products, ...products];
-        
-        const carouselHTML = extendedProducts.map((product, index) => {
-            return `
-                <div class="carousel-item" data-product-id="${product.id}">
-                    <img src="${product.primary_image || product.image_url || '/images/placeholder.jpg'}" 
-                         alt="${product.name}" 
-                         loading="lazy">
-                    <div class="carousel-overlay">
-                        <h5>${product.name}</h5>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        carousel.innerHTML = carouselHTML;
-
-        // Bind click events to carousel items
-        carousel.addEventListener('click', (e) => {
-            const item = e.target.closest('.carousel-item');
-            if (item) {
-                const productId = parseInt(item.dataset.productId);
-                if (productId) {
-                    this.showProductDetails(productId);
-                }
-            }
-        });
-    }
-
-    // Render fallback carousel with placeholder content
     renderFallbackCarousel() {
         const carousel = document.getElementById('dynamicCarousel');
         if (!carousel) return;
 
         const fallbackItems = [
-            { name: 'Rosas Rojas', image: '/images/placeholder.jpg', id: 1 },
-            { name: 'Bouquet Primavera', image: '/images/placeholder.jpg', id: 2 },
-            { name: 'Arreglo Tropical', image: '/images/placeholder.jpg', id: 3 },
-            { name: 'Flores de Cumpleaños', image: '/images/placeholder.jpg', id: 4 },
-            { name: 'Ramo Nupcial', image: '/images/placeholder.jpg', id: 5 },
-            { name: 'Condolencias', image: '/images/placeholder.jpg', id: 6 }
+            { name: 'Rosas Rojas', image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9Ijk1IiBmaWxsPSIjRkYxNDkzIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iNCIvPgogICAgPHBhdGggZD0iTTEwMCA2MCBDOTAgNzAsIDg1IDg1LCA5MCAxMDAgQzk1IDExNSwgMTEwIDExNSwgMTE1IDEwMCBDMTIwIDg1LCAxMTUgNzAsIDEwNSA2MCBaIiBmaWxsPSIjZmZmIiAvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iNzAiIHI9IjUiIGZpbGw9IiNmZmYiLz4KICAgIDx0ZXh0IHg9IjEwMCIgeT0iMTQwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+CiAgICAgICAgTm8gZGlzcG9uaWJsZQogICAgPC90ZXh0Pgo8L3N2Zz4=', id: 1 },
+            { name: 'Bouquet Primavera', image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9Ijk1IiBmaWxsPSIjRkYxNDkzIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iNCIvPgogICAgPHBhdGggZD0iTTEwMCA2MCBDOTAgNzAsIDg1IDg1LCA5MCAxMDAgQzk1IDExNSwgMTEwIDExNSwgMTE1IDEwMCBDMTIwIDg1LCAxMTUgNzAsIDEwNSA2MCBaIiBmaWxsPSIjZmZmIiAvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iNzAiIHI9IjUiIGZpbGw9IiNmZmYiLz4KICAgIDx0ZXh0IHg9IjEwMCIgeT0iMTQwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+CiAgICAgICAgTm8gZGlzcG9uaWJsZQogICAgPC90ZXh0Pgo8L3N2Zz4=', id: 2 },
+            { name: 'Arreglo Tropical', image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9Ijk1IiBmaWxsPSIjRkYxNDkzIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iNCIvPgogICAgPHBhdGggZD0iTTEwMCA2MCBDOTAgNzAsIDg1IDg1LCA5MCAxMDAgQzk1IDExNSwgMTEwIDExNSwgMTE1IDEwMCBDMTIwIDg1LCAxMTUgNzAsIDEwNSA2MCBaIiBmaWxsPSIjZmZmIiAvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iNzAiIHI9IjUiIGZpbGw9IiNmZmYiLz4KICAgIDx0ZXh0IHg9IjEwMCIgeT0iMTQwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuOSI+CiAgICAgICAgTm8gZGlzcG9uaWJsZQogICAgPC90ZXh0Pgo8L3N2Zz4=', id: 3 }
         ];
 
-        // Duplicate for infinite scroll
         const extendedItems = [...fallbackItems, ...fallbackItems];
-
         const carouselHTML = extendedItems.map((item, index) => {
             return `
-                <div class="carousel-item" data-product-id="${item.id}">
+                <div class="carousel-item ${index === 0 ? 'active' : ''}" data-product-id="${item.id}">
                     <img src="${item.image}" 
                          alt="${item.name}" 
                          loading="lazy">
@@ -830,18 +701,18 @@ class FloresYaApp {
         carousel.innerHTML = carouselHTML;
     }
 
-    // Bind menu events for dropdowns
+    // ============ MENÚ Y FORMULARIOS ============
+
     bindMenuEvents() {
-        // Ensure Bootstrap dropdowns work
+        // Inicializar dropdowns de Bootstrap
         const dropdownElements = document.querySelectorAll('[data-bs-toggle="dropdown"]');
         dropdownElements.forEach(element => {
-            // Force Bootstrap dropdown initialization if needed
             if (!bootstrap.Dropdown.getInstance(element)) {
                 new bootstrap.Dropdown(element);
             }
         });
 
-        // Handle footer links for occasions
+        // Footer links
         document.addEventListener('click', (e) => {
             if (e.target.dataset && e.target.dataset.occasion) {
                 e.preventDefault();
@@ -849,37 +720,72 @@ class FloresYaApp {
             }
         });
 
-        // Debug logging for dropdown issues
-        dropdownElements.forEach(element => {
-            element.addEventListener('click', (e) => {
-                console.log('Dropdown clicked:', element.id || element.textContent.trim());
-            });
-        });
-
-        // Bind Flores Ya Novias form
+        // Formulario Flores Ya Novias
         this.bindFloresNoviasForm();
     }
 
-    // Show Flores Ya Novias modal
-    showFloresNovias() {
-        const modal = new bootstrap.Modal(document.getElementById('floresNoviasModal'));
-        modal.show();
+    bindFloresNoviasForm() {
+        const form = document.getElementById('noviasContactForm');
+        if (form) {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!form.checkValidity()) {
+                    e.stopPropagation();
+                    form.classList.add('was-validated');
+                    return;
+                }
+
+                try {
+                    const formData = {
+                        nombre: document.getElementById('noviaName').value,
+                        telefono: document.getElementById('noviaPhone').value,
+                        email: document.getElementById('noviaEmail').value,
+                        fecha_boda: document.getElementById('weddingDate').value,
+                        cantidad_invitados: document.getElementById('guestCount').value,
+                        lugar_celebracion: document.getElementById('weddingVenue').value,
+                        mensaje: document.getElementById('noviasMessage').value,
+                        presupuesto: document.getElementById('budget').value,
+                        tipo_consulta: 'flores_novias'
+                    };
+
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Enviando...';
+                    submitBtn.disabled = true;
+
+                    // Simular éxito
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+
+                    api.showNotification('¡Gracias! Tu consulta ha sido enviada. Te contactaremos pronto para programar tu cita personalizada.', 'success');
+                    form.reset();
+                    form.classList.remove('was-validated');
+
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('floresNoviasModal'));
+                    if (modal) modal.hide();
+
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+
+                } catch (error) {
+                    api.showNotification('Ha ocurrido un error. Por favor intenta nuevamente.', 'danger');
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    submitBtn.innerHTML = '<i class="bi bi-send me-2"></i>Solicitar Consulta Gratuita';
+                    submitBtn.disabled = false;
+                }
+            });
+        }
     }
 
-    // =============================
-    // FLORESYA RAPID PURCHASE FUNCTIONS
-    // =============================
+    // ============ COMPRA RÁPIDA ============
 
     async buyNow(productId, quantity = 1) {
         try {
-            // Show loading state
             const button = document.querySelector(`[onclick*="buyNow(${productId})"]`);
             if (button) {
                 button.disabled = true;
                 button.innerHTML = '<i class="bi bi-hourglass-split"></i> Procesando...';
             }
 
-            // Get product details
             const productResponse = await api.getProductById(productId);
             if (!productResponse.success) {
                 api.showNotification('Error al obtener información del producto', 'danger');
@@ -887,38 +793,28 @@ class FloresYaApp {
             }
 
             const product = productResponse.data;
-
-            // Check stock
             if (product.stock_quantity < quantity) {
                 api.showNotification('Stock insuficiente', 'warning');
                 return;
             }
 
-            // Check if user is logged in
             const user = api.getUser();
             if (!user) {
-                // Show quick login/register modal for guests
                 this.showQuickPurchaseModal(product, quantity);
                 return;
             }
 
-            // Add to cart and redirect to checkout
             const addResponse = await cart.addItem(productId, quantity);
             if (addResponse.success) {
-                // Show success animation
                 this.showFloresYaAnimation();
-                
-                // Small delay for UX, then redirect
                 setTimeout(() => {
                     window.location.href = '/pages/payment.html?floresya=true';
                 }, 1500);
             }
-
         } catch (error) {
             console.error('Error in buyNow:', error);
             api.showNotification('Error al procesar la compra', 'danger');
         } finally {
-            // Reset button state
             const button = document.querySelector(`[onclick*="buyNow(${productId})"]`);
             if (button) {
                 button.disabled = false;
@@ -945,13 +841,11 @@ class FloresYaApp {
                                 <h6 class="mt-3">${product.name}</h6>
                                 <p class="text-primary-custom fw-bold">${api.formatCurrency(product.price * quantity)}</p>
                             </div>
-                            
                             <div class="alert alert-info">
                                 <i class="bi bi-info-circle"></i>
                                 <strong>¡Compra como invitado en 30 segundos!</strong><br>
                                 Solo necesitamos tus datos de envío.
                             </div>
-
                             <form id="quickPurchaseForm">
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
@@ -984,14 +878,10 @@ class FloresYaApp {
             </div>
         `;
 
-        // Remove existing modal
         const existingModal = document.getElementById('quickPurchaseModal');
         if (existingModal) existingModal.remove();
-
-        // Add modal to body
         document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-        // Show modal
         const modal = new bootstrap.Modal(document.getElementById('quickPurchaseModal'));
         modal.show();
     }
@@ -1011,7 +901,6 @@ class FloresYaApp {
                 address: document.getElementById('guestAddress').value
             };
 
-            // Store guest data in session storage
             sessionStorage.setItem('floresya_guest', JSON.stringify(guestData));
             sessionStorage.setItem('floresya_purchase', JSON.stringify({
                 productId, 
@@ -1019,21 +908,15 @@ class FloresYaApp {
                 timestamp: Date.now()
             }));
 
-            // Add to cart as guest
             await cart.addItem(productId, quantity);
-
-            // Show animation
             this.showFloresYaAnimation();
 
-            // Close modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('quickPurchaseModal'));
             modal.hide();
 
-            // Redirect to payment
             setTimeout(() => {
                 window.location.href = '/pages/payment.html?floresya=true&guest=true';
             }, 1500);
-
         } catch (error) {
             console.error('Error processing quick purchase:', error);
             api.showNotification('Error al procesar la compra', 'danger');
@@ -1041,7 +924,6 @@ class FloresYaApp {
     }
 
     showFloresYaAnimation() {
-        // Create and show success animation
         const animationHTML = `
             <div id="floresya-animation" class="position-fixed top-50 start-50 translate-middle" 
                  style="z-index: 9999; text-align: center;">
@@ -1052,22 +934,17 @@ class FloresYaApp {
                 </div>
             </div>
         `;
-
         document.body.insertAdjacentHTML('beforeend', animationHTML);
-
-        // Remove animation after delay
         setTimeout(() => {
             const animation = document.getElementById('floresya-animation');
             if (animation) animation.remove();
         }, 1500);
     }
 
-    // Clear all filters and show all products
     clearAllFilters() {
         this.currentFilters = {};
         this.currentPage = 1;
         
-        // Reset filter dropdowns
         const occasionFilter = document.getElementById('occasionFilter');
         const sortFilter = document.getElementById('sortFilter');
         const searchInput = document.getElementById('searchInput');
@@ -1076,84 +953,32 @@ class FloresYaApp {
         if (sortFilter) sortFilter.value = 'created_at:DESC';
         if (searchInput) searchInput.value = '';
         
-        // Reset navbar dropdown text
         this.updateNavbarDropdownText('');
-        
         this.loadProducts();
     }
 
-    // Bind Flores Ya Novias form events
-    bindFloresNoviasForm() {
-        const form = document.getElementById('noviasContactForm');
-        if (form) {
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                // Validate form
-                if (!form.checkValidity()) {
-                    e.stopPropagation();
-                    form.classList.add('was-validated');
-                    return;
-                }
-
-                try {
-                    // Collect form data
-                    const formData = {
-                        nombre: document.getElementById('noviaName').value,
-                        telefono: document.getElementById('noviaPhone').value,
-                        email: document.getElementById('noviaEmail').value,
-                        fecha_boda: document.getElementById('weddingDate').value,
-                        cantidad_invitados: document.getElementById('guestCount').value,
-                        lugar_celebracion: document.getElementById('weddingVenue').value,
-                        mensaje: document.getElementById('noviasMessage').value,
-                        presupuesto: document.getElementById('budget').value,
-                        tipo_consulta: 'flores_novias'
-                    };
-
-                    // Show loading
-                    const submitBtn = form.querySelector('button[type="submit"]');
-                    const originalText = submitBtn.innerHTML;
-                    submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Enviando...';
-                    submitBtn.disabled = true;
-
-                    // Here you would normally send to your backend
-                    // For now, simulate success
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-
-                    // Show success message
-                    api.showNotification('¡Gracias! Tu consulta ha sido enviada. Te contactaremos pronto para programar tu cita personalizada.', 'success');
-                    
-                    // Reset form
-                    form.reset();
-                    form.classList.remove('was-validated');
-                    
-                    // Hide modal
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('floresNoviasModal'));
-                    if (modal) {
-                        modal.hide();
-                    }
-
-                    // Restore button
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-
-                } catch (error) {
-                    api.showNotification('Ha ocurrido un error. Por favor intenta nuevamente.', 'danger');
-                    
-                    // Restore button
-                    const submitBtn = form.querySelector('button[type="submit"]');
-                    submitBtn.innerHTML = '<i class="bi bi-send me-2"></i>Solicitar Consulta Gratuita';
-                    submitBtn.disabled = false;
-                }
-            });
+    updateNavbarDropdownText(occasionId) {
+        const navbarDropdownToggle = document.getElementById('occasionsDropdownToggle');
+        if (!navbarDropdownToggle) return;
+        
+        if (!occasionId || occasionId === '') {
+            navbarDropdownToggle.textContent = 'Ocasiones';
+            return;
+        }
+        
+        const selectedOccasion = this.occasions.find(occ => occ.id == occasionId);
+        if (selectedOccasion) {
+            navbarDropdownToggle.innerHTML = `<i class="${selectedOccasion.icon || 'bi bi-calendar-event'} me-2"></i>${selectedOccasion.name}`;
+        } else {
+            navbarDropdownToggle.textContent = 'Ocasiones';
         }
     }
 }
 
-// Wait for stylesheets to load before initializing - Optimized to prevent layout forcing
+// Funciones de inicialización
+
 function waitForStylesheets() {
     return new Promise((resolve) => {
-        // Enhanced method to avoid layout forcing
         const safeResolve = () => {
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
@@ -1167,7 +992,6 @@ function waitForStylesheets() {
             return;
         }
         
-        // Check if all stylesheets are loaded without forcing layout
         const links = document.querySelectorAll('link[rel="stylesheet"]');
         let loadedCount = 0;
         
@@ -1184,20 +1008,16 @@ function waitForStylesheets() {
         }
         
         links.forEach(link => {
-            // Check for loaded stylesheets without triggering layout
             try {
-                // Try to access cssRules safely
                 if (link.sheet && link.sheet.cssRules) {
                     checkLoaded();
                 } else if (link.sheet) {
-                    // Stylesheet loaded but cssRules not accessible (cross-origin)
                     checkLoaded();
                 } else {
                     link.addEventListener('load', checkLoaded, { once: true });
-                    link.addEventListener('error', checkLoaded, { once: true }); // Handle load errors
+                    link.addEventListener('error', checkLoaded, { once: true });
                 }
             } catch (e) {
-                // Cross-origin stylesheet - can't access cssRules but it's loaded
                 if (link.sheet) {
                     checkLoaded();
                 } else {
@@ -1207,99 +1027,95 @@ function waitForStylesheets() {
             }
         });
         
-        // Fallback timeout - reduced to prevent long waits
         setTimeout(() => {
             safeResolve();
         }, 600);
     });
 }
 
-// Filter out expected Cloudflare cookie warnings to reduce console noise
+// Filtrar warnings de consola
 const originalConsoleWarn = console.warn;
 console.warn = function(...args) {
-    // Filter out Cloudflare bot management cookie warnings (these are expected)
-    if (args.some(arg => 
-        typeof arg === 'string' && 
-        (arg.includes('__cf_bm') || arg.includes('invalid domain'))
-    )) {
-        return; // Don't log these expected warnings
+    const message = args.join(' ');
+    const ignoredPatterns = [
+        '__cf_bm',
+        'invalid domain',
+        'Cookie.*rejected',
+        'has been rejected',
+        'Layout was forced before',
+        'sectioned h1 element',
+        'font-size or margin properties',
+        'index\\.js:1113'
+    ];
+    
+    for (const pattern of ignoredPatterns) {
+        if (message.match(new RegExp(pattern, 'i'))) {
+            return;
+        }
     }
     originalConsoleWarn.apply(console, args);
 };
 
-// Optimize image loading to reduce cookie-related warnings
+// Optimizar carga de imágenes
 function optimizeImageLoading() {
     const images = document.querySelectorAll('img');
     images.forEach(img => {
-        // Add loading="lazy" for better performance
         if (!img.hasAttribute('loading')) {
             img.setAttribute('loading', 'lazy');
         }
-        
-        // Add error handling for images
         img.addEventListener('error', function(e) {
-            console.log('Image load failed (this is expected for some CDN images):', e.target.src);
-            // Don't replace with fallback for now to maintain design integrity
+            console.log('Image load failed:', e.target.src);
         }, { once: true });
     });
 }
 
-// Initialize app when DOM and stylesheets are loaded
+// Inicializar app
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🌸 FloresYa: DOM loaded, waiting for stylesheets...');
     
-    // Use setTimeout to further reduce layout forcing
+    await new Promise(resolve => {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(resolve);
+        });
+    });
+    
     setTimeout(async () => {
-        // Wait for stylesheets to load
         await waitForStylesheets();
-        
-        // Make page visible after stylesheets are loaded
         document.documentElement.classList.add('stylesheets-loaded');
         console.log('🎨 Stylesheets loaded, initializing app...');
         
-        // Check if Bootstrap is loaded
         if (typeof bootstrap === 'undefined') {
             console.error('❌ Bootstrap not loaded!');
             return;
         }
         console.log('✅ Bootstrap loaded');
         
-        // Initialize main app
         window.floresyaApp = new FloresYaApp();
         
-        // Initialize auth manager
         if (typeof AuthManager !== 'undefined') {
             window.authManager = new AuthManager();
             console.log('✅ Auth Manager initialized');
         }
         
-        // Initialize cart
         if (typeof ShoppingCart !== 'undefined') {
             window.cart = new ShoppingCart();
             console.log('✅ Shopping Cart initialized');
         }
         
         console.log('🎉 FloresYa: All systems initialized!');
-        
-        // Optimize image loading to reduce cookie warnings and improve performance
         optimizeImageLoading();
     }, 10);
 });
 
-// DEV ONLY: Quick login functions for development testing
-// These functions should be removed in production
+// Funciones de desarrollo (DEV ONLY)
 window.fillAdminCredentials = function() {
     const emailField = document.getElementById('loginEmail');
     const passwordField = document.getElementById('loginPassword');
-    
     if (emailField && passwordField) {
         emailField.value = 'admin@floresya.com';
         passwordField.value = 'admin123';
-        
-        // Add visual feedback
         emailField.classList.add('bg-success', 'bg-opacity-10');
         passwordField.classList.add('bg-success', 'bg-opacity-10');
-        
         setTimeout(() => {
             emailField.classList.remove('bg-success', 'bg-opacity-10');
             passwordField.classList.remove('bg-success', 'bg-opacity-10');
@@ -1310,15 +1126,11 @@ window.fillAdminCredentials = function() {
 window.fillClientCredentials = function() {
     const emailField = document.getElementById('loginEmail');
     const passwordField = document.getElementById('loginPassword');
-    
     if (emailField && passwordField) {
         emailField.value = 'cliente@example.com';
         passwordField.value = 'cliente123';
-        
-        // Add visual feedback
         emailField.classList.add('bg-info', 'bg-opacity-10');
         passwordField.classList.add('bg-info', 'bg-opacity-10');
-        
         setTimeout(() => {
             emailField.classList.remove('bg-info', 'bg-opacity-10');
             passwordField.classList.remove('bg-info', 'bg-opacity-10');

@@ -1,3 +1,10 @@
+const {
+    log,          // Función principal
+    logger,       // Alias con métodos .info(), .warn(), etc.
+    requestLogger, // Middleware Express
+    startTimer     // Para medir tiempos de ejecución
+} = require('../utils/logger.js');
+
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { supabase } = require('../services/supabaseClient');

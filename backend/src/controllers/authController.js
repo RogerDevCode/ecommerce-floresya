@@ -1,12 +1,14 @@
+const {
+    log,          // Función principal
+    logger,       // Alias con métodos .info(), .warn(), etc.
+    requestLogger, // Middleware Express
+    startTimer     // Para medir tiempos de ejecución
+} = require('../utils/logger.js');
+
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { executeQuery, useSupabase } = require('../config/database');
-
-// Import Supabase controller if using Supabase
-let supabaseAuthController;
-if (useSupabase) {
-    supabaseAuthController = require('./authControllerSupabase');
-}
+const { databaseService } = require('../services/databaseService');
+const { errorHandlers } = require('../utils/errorHandler');
 
 const generateToken = (userId, role) => {
     return jwt.sign(
@@ -20,12 +22,12 @@ const register = async (req, res) => {
     try {
         const { email, password, first_name, last_name, phone } = req.body;
 
-        const existingUser = await executeQuery(
-            'SELECT id FROM users WHERE email = ?',
-            [email]
-        );
+        // Check if user exists
+        const { data: existingUsers } = await databaseService.query('users', {
+            eq: { email }
+        });
 
-        if (existingUser.length > 0) {
+        if (existingUsers.length > 0) {
             return res.status(409).json({
                 success: false,
                 message: 'El email ya está registrado'
@@ -34,62 +36,58 @@ const register = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 12);
 
-        const result = await executeQuery(
-            'INSERT INTO users (email, password_hash, first_name, last_name, phone) VALUES (?, ?, ?, ?, ?)',
-            [email, hashedPassword, first_name, last_name, phone || null]
-        );
+        const userData = {
+            email,
+            password_hash: hashedPassword,
+            first_name,
+            last_name,
+            phone: phone || null,
+            role: 'customer'
+        };
 
-        const userId = result.id;
-        const token = generateToken(userId, 'customer');
+        const result = await databaseService.insert('users', userData);
+        const user = result[0];
+
+        const token = generateToken(user.id, 'customer');
 
         res.status(201).json({
             success: true,
             message: 'Usuario registrado exitosamente',
             data: {
                 user: {
-                    id: userId,
-                    email,
-                    first_name,
-                    last_name,
-                    phone,
-                    role: 'customer'
+                    id: user.id,
+                    email: user.email,
+                    first_name: user.first_name,
+                    last_name: user.last_name,
+                    phone: user.phone,
+                    role: user.role
                 },
                 token
             }
         });
 
     } catch (error) {
-        console.error('Error en registro:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        errorHandlers.handleAuthError(res, error, 'user_registration');
     }
 };
 
 const login = async (req, res) => {
-    // Use Supabase controller if available
-    if (useSupabase && supabaseAuthController) {
-        return supabaseAuthController.login(req, res);
-    }
-
-    // Fallback to traditional database
     try {
         const { email, password } = req.body;
 
-        const user = await executeQuery(
-            'SELECT id, email, password_hash, first_name, last_name, phone, role, active FROM users WHERE email = ?',
-            [email]
-        );
+        const { data: users } = await databaseService.query('users', {
+            select: 'id, email, password_hash, first_name, last_name, phone, role, active',
+            eq: { email }
+        });
 
-        if (user.length === 0) {
+        if (!users || users.length === 0) {
             return res.status(401).json({
                 success: false,
                 message: 'Credenciales inválidas'
             });
         }
 
-        const userData = user[0];
+        const userData = users[0];
 
         if (!userData.active) {
             return res.status(401).json({
@@ -126,11 +124,7 @@ const login = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error en login:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        errorHandlers.handleAuthError(res, error, 'user_login');
     }
 };
 
@@ -138,12 +132,12 @@ const getProfile = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        const user = await executeQuery(
-            'SELECT id, email, first_name, last_name, phone, role, created_at FROM users WHERE id = ?',
-            [userId]
-        );
+        const { data: users } = await databaseService.query('users', {
+            select: 'id, email, first_name, last_name, phone, role, created_at',
+            eq: { id: userId }
+        });
 
-        if (user.length === 0) {
+        if (!users || users.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'Usuario no encontrado'
@@ -152,15 +146,11 @@ const getProfile = async (req, res) => {
 
         res.json({
             success: true,
-            data: { user: user[0] }
+            data: { user: users[0] }
         });
 
     } catch (error) {
-        console.error('Error obteniendo perfil:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        errorHandlers.handleAuthError(res, error, 'get_user_profile');
     }
 };
 
@@ -169,28 +159,27 @@ const updateProfile = async (req, res) => {
         const userId = req.user.id;
         const { first_name, last_name, phone } = req.body;
 
-        await executeQuery(
-            'UPDATE users SET first_name = ?, last_name = ?, phone = ? WHERE id = ?',
-            [first_name, last_name, phone || null, userId]
-        );
+        const updateData = {
+            first_name,
+            last_name,
+            phone: phone || null
+        };
 
-        const updatedUser = await executeQuery(
-            'SELECT id, email, first_name, last_name, phone, role FROM users WHERE id = ?',
-            [userId]
-        );
+        await databaseService.update('users', updateData, { id: userId });
+
+        const { data: users } = await databaseService.query('users', {
+            select: 'id, email, first_name, last_name, phone, role',
+            eq: { id: userId }
+        });
 
         res.json({
             success: true,
             message: 'Perfil actualizado exitosamente',
-            data: { user: updatedUser[0] }
+            data: { user: users[0] }
         });
 
     } catch (error) {
-        console.error('Error actualizando perfil:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        errorHandlers.handleAuthError(res, error, 'update_user_profile');
     }
 };
 

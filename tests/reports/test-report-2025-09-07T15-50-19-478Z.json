@@ -1,0 +1,173 @@
+{
+  "timestamp": "2025-09-07T15:50:19.478Z",
+  "summary": {
+    "total": 12,
+    "passed": 6,
+    "failed": 2,
+    "skipped": 0,
+    "successRate": "50.0",
+    "duration": 12926
+  },
+  "suites": {
+    "Database Structure": {
+      "passed": 3,
+      "failed": 1,
+      "tests": [
+        {
+          "suite": "Database Structure",
+          "name": "should have product_images table with correct structure",
+          "status": "passed",
+          "startTime": 1757260217519,
+          "error": null,
+          "duration": 967
+        },
+        {
+          "suite": "Database Structure",
+          "name": "should connect to Supabase successfully",
+          "status": "passed",
+          "startTime": 1757260217519,
+          "error": null,
+          "duration": 1158
+        },
+        {
+          "suite": "Database Structure",
+          "name": "should have occasions table with correct structure",
+          "status": "passed",
+          "startTime": 1757260217519,
+          "error": null,
+          "duration": 1159
+        },
+        {
+          "suite": "Database Structure",
+          "name": "should NOT have categories table (eliminated)",
+          "status": "failed",
+          "startTime": 1757260217519,
+          "error": "Expected true to be false",
+          "duration": 1190
+        }
+      ],
+      "startTime": 1757260212149,
+      "endTime": 1757260217520
+    },
+    "Data Integrity": {
+      "passed": 3,
+      "failed": 1,
+      "tests": [
+        {
+          "suite": "Data Integrity",
+          "name": "should not have orphaned images",
+          "status": "failed",
+          "startTime": 1757260218742,
+          "error": "Expected [object Object] to be null",
+          "duration": 282
+        },
+        {
+          "suite": "Data Integrity",
+          "name": "should not have products without images",
+          "status": "passed",
+          "startTime": 1757260218742,
+          "error": null,
+          "duration": 301
+        },
+        {
+          "suite": "Data Integrity",
+          "name": "should have valid product data",
+          "status": "passed",
+          "startTime": 1757260218740,
+          "error": null,
+          "duration": 503
+        },
+        {
+          "suite": "Data Integrity",
+          "name": "should have valid image hashes (SHA256)",
+          "status": "passed",
+          "startTime": 1757260218741,
+          "error": null,
+          "duration": 523
+        }
+      ],
+      "startTime": 1757260217520,
+      "endTime": 1757260218743
+    },
+    "RPC Functions": {
+      "passed": 0,
+      "failed": 0,
+      "tests": [],
+      "startTime": 1757260218743,
+      "endTime": 1757260219127
+    },
+    "Database Performance": {
+      "passed": 0,
+      "failed": 0,
+      "tests": [],
+      "startTime": 1757260219128,
+      "endTime": 1757260219477
+    }
+  },
+  "tests": [
+    {
+      "suite": "Database Structure",
+      "name": "should have product_images table with correct structure",
+      "status": "passed",
+      "startTime": 1757260217519,
+      "error": null,
+      "duration": 967
+    },
+    {
+      "suite": "Database Structure",
+      "name": "should connect to Supabase successfully",
+      "status": "passed",
+      "startTime": 1757260217519,
+      "error": null,
+      "duration": 1158
+    },
+    {
+      "suite": "Database Structure",
+      "name": "should have occasions table with correct structure",
+      "status": "passed",
+      "startTime": 1757260217519,
+      "error": null,
+      "duration": 1159
+    },
+    {
+      "suite": "Database Structure",
+      "name": "should NOT have categories table (eliminated)",
+      "status": "failed",
+      "startTime": 1757260217519,
+      "error": "Expected true to be false",
+      "duration": 1190
+    },
+    {
+      "suite": "Data Integrity",
+      "name": "should not have orphaned images",
+      "status": "failed",
+      "startTime": 1757260218742,
+      "error": "Expected [object Object] to be null",
+      "duration": 282
+    },
+    {
+      "suite": "Data Integrity",
+      "name": "should not have products without images",
+      "status": "passed",
+      "startTime": 1757260218742,
+      "error": null,
+      "duration": 301
+    },
+    {
+      "suite": "Data Integrity",
+      "name": "should have valid product data",
+      "status": "passed",
+      "startTime": 1757260218740,
+      "error": null,
+      "duration": 503
+    },
+    {
+      "suite": "Data Integrity",
+      "name": "should have valid image hashes (SHA256)",
+      "status": "passed",
+      "startTime": 1757260218741,
+      "error": null,
+      "duration": 523
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 const { executeQuery } = require('../config/database');
+const { errorHandlers } = require('../utils/errorHandler');
 const multer = require('multer');
 const path = require('path');
 
@@ -106,11 +107,7 @@ const createPayment = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error creando pago:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        errorHandlers.handlePaymentError(res, error, 'create_payment');
     }
 };
 
@@ -153,11 +150,7 @@ const getPaymentsByOrder = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error obteniendo pagos:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        errorHandlers.handlePaymentError(res, error, 'get_payments_by_order');
     }
 };
 
@@ -231,11 +224,7 @@ const getAllPayments = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error obteniendo todos los pagos:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        errorHandlers.handlePaymentError(res, error, 'get_all_payments');
     }
 };
 
@@ -300,11 +289,7 @@ const verifyPayment = async (req, res) => {
         if (connection) {
             await connection.rollback();
         }
-        console.error('Error verificando pago:', error);
-        res.status(500).json({
-            success: false,
-            message: error.message || 'Error interno del servidor'
-        });
+        errorHandlers.handlePaymentError(res, error, 'verify_payment');
     } finally {
         if (connection) {
             connection.release();

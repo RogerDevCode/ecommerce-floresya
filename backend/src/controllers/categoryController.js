@@ -1,4 +1,10 @@
-const { Category } = require('../models');
+const {
+    log,          // Función principal
+    logger,       // Alias con métodos .info(), .warn(), etc.
+    requestLogger, // Middleware Express
+    startTimer     // Para medir tiempos de ejecución
+} = require('../utils/logger.js');
+
 const { supabase, useSupabase } = require('../config/database');
 
 const getAllCategories = async (req, res) => {
@@ -17,10 +23,7 @@ const getAllCategories = async (req, res) => {
             }
             categories = data || [];
         } else {
-            categories = await Category.findAll({ 
-                where: { active: true },
-                order: [['name', 'ASC']]
-            });
+            throw new Error('Only Supabase is supported in this application');
         }
 
         res.json({ success: true, data: { categories } });

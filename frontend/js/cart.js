@@ -189,7 +189,7 @@ class ShoppingCart {
             // Render cart items with enhanced design
             cartItemsEl.innerHTML = this.items.map(item => `
                 <div class="cart-item d-flex align-items-center p-3 mb-2 bg-white rounded shadow-sm">
-                    <img src="${item.image_url || '/images/placeholder.jpg'}" alt="${item.name}" 
+                    <img src="${item.image_url || '/images/placeholder-product-2.webp'}" alt="${item.name}" 
                          class="cart-item-image rounded me-3" 
                          style="width: 60px; height: 60px; object-fit: cover;">
                     <div class="cart-item-details flex-grow-1">
