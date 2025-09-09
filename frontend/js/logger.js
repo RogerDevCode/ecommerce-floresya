@@ -29,6 +29,7 @@ class FloresYaLogger {
         this.context = {};
         this.isDevMode = window.location.hostname === 'localhost' || localStorage.getItem('floresya_dev_mode') === 'true';
         this.endpoint = '/api/logs/frontend'; // Configurable
+        this.endpointExists = undefined; // ← Cache para endpoint
 
         // Solo activar features pesadas en modo desarrollo
         if (this.isDevMode) {
@@ -266,7 +267,7 @@ class FloresYaLogger {
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                    logger.debug('DOM', 'Nodes added', {
+                    this.debug('DOM', 'Nodes added', { // ← CORREGIDO: this.debug, no logger.debug
                         count: mutation.addedNodes.length,
                         target: mutation.target.tagName
                     });
@@ -282,6 +283,17 @@ class FloresYaLogger {
     showDebugPanel() {
         if (document.getElementById('floresya-debug-panel')) return;
 
+        // ✅ Esperar a que el DOM esté listo
+        if (document.readyState !== 'loading') {
+            this.createDebugPanel();
+        } else {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.createDebugPanel();
+            });
+        }
+    }
+
+    createDebugPanel() {
         const panel = document.createElement('div');
         panel.id = 'floresya-debug-panel';
         panel.style.cssText = `
@@ -426,12 +438,17 @@ class FloresYaLogger {
         // Solo en producción y solo si el endpoint existe
         if (!this.isDevMode && window.location.hostname !== 'localhost') {
             try {
-                // Primero verificar si el endpoint existe
-                const check = await fetch(this.endpoint, { method: 'HEAD' });
-                if (!check.ok) {
-                    console.warn('Endpoint de logs no disponible. Logs no enviados.');
-                    return;
+                // ✅ Verificar endpoint solo una vez, y cachear resultado
+                if (typeof this.endpointExists === 'undefined') {
+                    const check = await fetch(this.endpoint, { method: 'HEAD' });
+                    this.endpointExists = check.ok;
+                    if (!this.endpointExists) {
+                        console.warn('Endpoint de logs no disponible. Logs no enviados.');
+                        return;
+                    }
                 }
+
+                if (!this.endpointExists) return; // ← Usar caché
 
                 const logsToSend = this.logs.filter(log => 
                     log.level === 'ERROR' || log.level === 'WARN' || log.category === 'API'
@@ -452,13 +469,10 @@ class FloresYaLogger {
 
                 if (response.ok) {
                     this.success('SYSTEM', 'Logs enviados al servidor', { count: logsToSend.length });
-                    // Opcional: limpiar logs enviados
-                    // this.logs = this.logs.filter(log => !logsToSend.includes(log));
                 } else {
                     console.warn('No se pudieron enviar los logs al servidor');
                 }
             } catch (error) {
-                // Silencioso en producción — no queremos errores visibles al usuario
                 if (this.isDevMode) {
                     console.error('Error enviando logs:', error);
                 }
@@ -466,7 +480,7 @@ class FloresYaLogger {
         }
     }
 
-    // Enviar logs cada 5 minutos (solo si estamos en producción y el endpoint existe)
+    // Enviar logs cada 5 minutos (solo si estamos en producción)
     startAutoSend(intervalMinutes = 5) {
         if (!this.isDevMode) {
             setInterval(() => {
@@ -491,3 +505,9 @@ if (typeof window.floresyaLogger === 'undefined') {
 
 // Alias para compatibilidad
 const logger = window.floresyaLogger;
+
+// ✅ Exportar para compatibilidad global
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { logger, FloresYaLogger };
+    module.exports.default = logger;
+}

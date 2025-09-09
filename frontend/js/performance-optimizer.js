@@ -51,142 +51,133 @@ class PerformanceOptimizer {
 
   optimizeFirstContentfulPaint() {
     if (window.logger) {
-      window.logger.info('PERFORMANCE', '🚀 Optimizing First Contentful Paint...');
+        window.logger.info('PERFORMANCE', '🚀 Optimizing First Contentful Paint...');
     }
     
     try {
-      // Inline critical CSS if not already present
-      const criticalCSS = `
-        /* Critical above-the-fold styles for FCP */
-        .hero-section { 
-          background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%); 
-          min-height: 300px;
+        // ✅ Solo inyectar si no existe
+        if (!document.querySelector('#critical-css-fcp')) {
+            const criticalCSS = `
+                /* Critical above-the-fold styles for FCP */
+                .hero-section { 
+                    background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%); 
+                    min-height: 300px;
+                }
+                .product-card { 
+                    opacity: 0; 
+                    animation: fadeInUp 0.6s ease forwards; 
+                }
+                @keyframes fadeInUp { 
+                    from { opacity: 0; transform: translateY(20px); } 
+                    to { opacity: 1; transform: translateY(0); } 
+                }
+                .skeleton-loading { 
+                    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); 
+                    background-size: 200% 100%; 
+                    animation: skeleton-pulse 1.5s infinite;
+                }
+                @keyframes skeleton-pulse { 
+                    0% { background-position: -200px 0; } 
+                    100% { background-position: calc(200px + 100%) 0; } 
+                }
+                .glass-morphism {
+                    backdrop-filter: blur(8px);
+                    background: rgba(255, 255, 255, 0.9);
+                }
+            `;
+            
+            const style = document.createElement('style');
+            style.id = 'critical-css-fcp';
+            style.textContent = criticalCSS;
+            document.head.insertBefore(style, document.head.firstChild);
         }
-        .product-card { 
-          opacity: 0; 
-          animation: fadeInUp 0.6s ease forwards; 
+        
+        // Aplicar skeleton loading
+        requestAnimationFrame(() => {
+            this.applySkeletonLoading();
+        });
+        
+        if (window.logger) {
+            window.logger.success('PERFORMANCE', '✅ FCP optimizations applied');
         }
-        @keyframes fadeInUp { 
-          from { opacity: 0; transform: translateY(20px); } 
-          to { opacity: 1; transform: translateY(0); } 
-        }
-        .skeleton-loading { 
-          background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); 
-          background-size: 200% 100%; 
-          animation: skeleton-pulse 1.5s infinite;
-        }
-        @keyframes skeleton-pulse { 
-          0% { background-position: -200px 0; } 
-          100% { background-position: calc(200px + 100%) 0; } 
-        }
-        .glass-morphism {
-          backdrop-filter: blur(8px);
-          background: rgba(255, 255, 255, 0.9);
-        }
-      `;
-      
-      if (!document.querySelector('#critical-css-fcp')) {
-        const style = document.createElement('style');
-        style.id = 'critical-css-fcp';
-        style.textContent = criticalCSS;
-        document.head.insertBefore(style, document.head.firstChild);
-      }
-      
-      // Apply skeleton loading to product cards
-      requestAnimationFrame(() => {
-        this.applySkeletonLoading();
-      });
-      
-      if (window.logger) {
-        window.logger.success('PERFORMANCE', '✅ FCP optimizations applied');
-      }
     } catch (error) {
-      if (window.logger) {
-        window.logger.error('PERFORMANCE', '❌ Error in FCP optimization', { error: error.message });
-      }
+        if (window.logger) {
+            window.logger.error('PERFORMANCE', '❌ Error in FCP optimization', { error: error.message });
+        }
     }
   }
 
   setupAdvancedResourceHints() {
     if (window.logger) {
-      window.logger.info('PERFORMANCE', '🔗 Setting up advanced resource hints...');
+        window.logger.info('PERFORMANCE', '🔗 Setting up advanced resource hints...');
     }
     
     try {
-      // Critical resource preloads for FloresYa
-      const criticalResources = [
-        { href: '/css/styles.css', as: 'style', importance: 'high' },
-        { href: '/js/main.js', as: 'script' },
-        { href: '/js/cart.js', as: 'script' },
-        { href: '/images/placeholder-product-2.webp', as: 'image' },
-        { href: 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css', as: 'style' }
-      ];
+        const criticalResources = [
+            { href: '/css/styles.css', as: 'style' },
+            { href: '/js/main.js', as: 'script' },
+            { href: '/js/cart.js', as: 'script' },
+            { href: '/images/placeholder-product-2.webp', as: 'image' },
+            { href: 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css', as: 'style' }
+        ];
 
-      // DNS prefetch for external domains
-      const dnsPrefetchDomains = [
-        '//cdn.jsdelivr.net',
-        '//cdnjs.cloudflare.com',
-        '//fonts.googleapis.com'
-      ];
+        const dnsPrefetchDomains = [
+            '//cdn.jsdelivr.net',
+            '//cdnjs.cloudflare.com',
+            '//fonts.googleapis.com'
+        ];
 
-      // Add critical resource preloads
-      criticalResources.forEach(resource => {
-        const existingLink = document.querySelector(`link[href="${resource.href}"][rel="preload"]`);
-        if (!existingLink) {
-          const link = document.createElement('link');
-          link.rel = 'preload';
-          link.href = resource.href;
-          link.as = resource.as;
-          if (resource.importance) {
-            link.setAttribute('importance', resource.importance);
-          }
-          document.head.appendChild(link);
+        // ✅ Solo agregar si no existe
+        criticalResources.forEach(resource => {
+            const existingLink = document.querySelector(`link[href="${resource.href}"][rel="preload"]`);
+            if (!existingLink) {
+                const link = document.createElement('link');
+                link.rel = 'preload';
+                link.href = resource.href;
+                link.as = resource.as;
+                document.head.appendChild(link);
+            }
+        });
+
+        dnsPrefetchDomains.forEach(domain => {
+            const existingLink = document.querySelector(`link[href="${domain}"][rel="dns-prefetch"]`);
+            if (!existingLink) {
+                const link = document.createElement('link');
+                link.rel = 'dns-prefetch';
+                link.href = domain;
+                document.head.appendChild(link);
+            }
+        });
+
+        if (window.logger) {
+            window.logger.success('PERFORMANCE', '✅ Advanced resource hints configured');
         }
-      });
-
-      // Add DNS prefetch hints
-      dnsPrefetchDomains.forEach(domain => {
-        const existingLink = document.querySelector(`link[href="${domain}"][rel="dns-prefetch"]`);
-        if (!existingLink) {
-          const link = document.createElement('link');
-          link.rel = 'dns-prefetch';
-          link.href = domain;
-          document.head.appendChild(link);
-        }
-      });
-
-      if (window.logger) {
-        window.logger.success('PERFORMANCE', '✅ Advanced resource hints configured');
-      }
     } catch (error) {
-      if (window.logger) {
-        window.logger.error('PERFORMANCE', '❌ Error setting up advanced resource hints', { error: error.message });
-      }
+        if (window.logger) {
+            window.logger.error('PERFORMANCE', '❌ Error setting up advanced resource hints', { error: error.message });
+        }
     }
   }
 
   applySkeletonLoading() {
-    // Apply skeleton loading to product containers
     const productContainers = document.querySelectorAll('#productsContainer .col-lg-3, #productsContainer .col-md-4, #productsContainer .col-sm-6');
     productContainers.forEach((container, index) => {
-      // Stagger animation delays for smooth loading
-      container.style.animationDelay = `${index * 0.1}s`;
-      
-      // Add skeleton loading to images that haven't loaded yet
-      const img = container.querySelector('img[data-src], img:not([src])');
-      if (img && !img.complete) {
-        img.classList.add('skeleton-loading');
-        img.addEventListener('load', () => {
-          img.classList.remove('skeleton-loading');
-          img.style.opacity = '1';
-        }, { once: true });
-      }
+        container.style.animationDelay = `${index * 0.1}s`;
+        
+        const img = container.querySelector('img[data-src], img:not([src])');
+        // ✅ Solo aplicar skeleton si la imagen NO está cargada
+        if (img && !img.complete) {
+            img.classList.add('skeleton-loading');
+            img.addEventListener('load', () => {
+                img.classList.remove('skeleton-loading');
+                img.style.opacity = '1';
+            }, { once: true });
+        }
     });
 
-    // Apply to other loading elements
     const loadingElements = document.querySelectorAll('.loading-placeholder');
     loadingElements.forEach(el => {
-      el.classList.add('skeleton-loading');
+        el.classList.add('skeleton-loading');
     });
   }
 
@@ -285,7 +276,11 @@ class PerformanceOptimizer {
 
     img.style.transition = 'opacity 0.3s ease-in-out';
     img.style.opacity = '0';
-    img.setAttribute('loading', 'lazy');
+    
+    // ✅ Solo establecer loading="lazy" si no es "eager"
+    if (img.getAttribute('loading') !== 'eager') {
+        img.setAttribute('loading', 'lazy');
+    }
 
     if (this.config.enableWebP && this.supportsWebP()) {
       const webpSrc = this.convertToWebP(img.dataset.src || img.src);
@@ -312,7 +307,7 @@ class PerformanceOptimizer {
 
   async loadImage(img) {
     const startTime = performance.now();
-    const src = img.dataset.webpSrc || img.dataset.src;
+    let src = img.dataset.webpSrc || img.dataset.src;
     const srcset = img.dataset.srcset;
 
     if (!src && !srcset) {
@@ -324,6 +319,15 @@ class PerformanceOptimizer {
 
     try {
       img.classList.add('loading');
+
+      // ✅ Verificar si la versión WebP existe
+      if (img.dataset.webpSrc) {
+        const webpExists = await this.checkImageExists(img.dataset.webpSrc);
+        if (!webpExists) {
+          src = img.dataset.src; // ← Fallback a original
+          img.dataset.webpSrc = ''; // ← Limpiar para no volver a intentar
+        }
+      }
 
       if (this.cache.images.has(src)) {
         this.applyImageSource(img, src, srcset);
@@ -357,6 +361,15 @@ class PerformanceOptimizer {
 
     } catch (error) {
       this.handleImageError(img, error);
+    }
+  }
+
+  async checkImageExists(url) {
+    try {
+        const response = await fetch(url, { method: 'HEAD' });
+        return response.ok;
+    } catch (error) {
+        return false;
     }
   }
 

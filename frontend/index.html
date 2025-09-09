@@ -77,7 +77,7 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="/">
-                <img src="/images/placeholder-product-2.webp" alt="FloresYa Logo" class="logo-img me-2" data-critical="true" loading="eager" style="width: 40px; height: 40px; object-fit: cover;">
+                <img src="/images/logoFloresYa.jpeg" alt="FloresYa Logo" class="logo-img me-2" data-critical="true" loading="eager" style="width: 40px; height: 40px; object-fit: cover;">
                 <span class="brand-text">FloresYa</span>
             </a>
             
@@ -172,7 +172,13 @@
                     <a href="#productos" class="btn btn-light btn-lg">Ver Productos</a>
                 </div>
                 <div class="col-lg-6">
-                    <img data-src="/images/placeholder-product-2.webp" alt="Hermosas flores" class="img-fluid rounded shadow" style="max-height: 220px; object-fit: cover;" data-critical="true" width="300" height="220">
+                    <img data-src="/images/placeholder-product-2.webp" alt="Hermosas flores" class="img-fluid rounded shadow hover-lift" style="max-height: 220px; object-fit: cover;" data-critical="true" width="300" height="220">
+                    <!-- Trust indicator overlay -->
+                    <div class="position-absolute" style="bottom: 10px; right: 10px;">
+                        <span class="badge" style="background: rgba(40, 167, 69, 0.9); color: white;">
+                            <i class="bi bi-shield-check me-1"></i>Garantizado
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -197,15 +203,18 @@
     <main id="main-content">
         <section id="productos" class="py-5" role="main" aria-label="Sección de productos destacados">
             <div class="container">
-                <!-- Social Proof Section -->
-                <div class="social-proof-banner glass-morphism text-center mb-5 p-4">
+                <!-- Enhanced Social Proof Section -->
+                <div class="social-proof-banner glass-morphism text-center mb-5 p-4" data-aos="fade-up">
                     <div class="row align-items-center">
                         <div class="col-md-4">
                             <div class="d-flex align-items-center justify-content-center">
                                 <i class="bi bi-people-fill text-primary-custom me-2" style="font-size: 1.5rem;"></i>
                                 <div>
-                                    <strong class="h5 mb-0">2,500+</strong>
+                                    <strong class="h5 mb-0" data-counter="2500">2,500+</strong>
                                     <small class="d-block text-muted">Clientes felices</small>
+                                    <div style="font-size: 0.7rem; color: #28a745; margin-top: 2px;">
+                                        <i class="bi bi-eye"></i> <span data-visitor-count>47 personas viendo esto ahora</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -215,6 +224,9 @@
                                 <div>
                                     <strong class="h5 mb-0">4.9/5</strong>
                                     <small class="d-block text-muted">Calificación promedio</small>
+                                    <div class="testimonial-rating mt-1">
+                                        <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -224,6 +236,9 @@
                                 <div>
                                     <strong class="h5 mb-0">24h</strong>
                                     <small class="d-block text-muted">Entrega garantizada</small>
+                                    <div class="guarantee-seal" style="width: 40px; height: 40px; margin: 5px auto 0;">
+                                        <i class="bi bi-shield-check" style="color: #28a745;"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -234,7 +249,31 @@
                     <h2 class="fw-bold">Productos Destacados</h2>
                     <p class="text-muted">Nuestras flores más populares y arreglos especiales</p>
                     
-                    <!-- Trust Badge -->
+                    <!-- Advanced Value Proposition -->
+                    <div class="value-highlight mx-auto" style="max-width: 600px; margin-bottom: 20px;">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="price-benefit">
+                                    <i class="bi bi-currency-dollar"></i>
+                                    <strong>Mejor Precio</strong>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="price-benefit">
+                                    <i class="bi bi-flower1"></i>
+                                    <strong>100% Frescas</strong>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="price-benefit">
+                                    <i class="bi bi-heart"></i>
+                                    <strong>Hechas con Amor</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Enhanced Trust Badges with Urgency -->
                     <div class="trust-indicators d-flex justify-content-center align-items-center flex-wrap gap-3 mt-3">
                         <span class="badge trust-badge">
                             <i class="bi bi-shield-check me-1"></i>
@@ -247,6 +286,9 @@
                         <span class="badge trust-badge">
                             <i class="bi bi-flower1 me-1"></i>
                             100% frescas
+                        </span>
+                        <span class="urgency-badge" style="position: static;">
+                            🔥 Oferta limitada hoy
                         </span>
                     </div>
                 </div>
@@ -357,7 +399,90 @@
             </div>
         </div>
     </section>
+    
+    <!-- ✨ Conversion-Optimized Testimonials Section ✨ -->
+    <section class="py-5" style="background: linear-gradient(135deg, rgba(255, 105, 180, 0.05), rgba(255, 105, 180, 0.02));">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h3 class="fw-bold text-primary-custom mb-3">💕 Lo que dicen nuestros clientes</h3>
+                <p class="text-muted">Miles de personas han confiado en nosotros para sus momentos especiales</p>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="testimonial-card">
+                        <div class="testimonial-rating mb-3">
+                            <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+                        </div>
+                        <p class="mb-3">"Las flores llegaron perfectas para el cumpleaños de mi mamá. La calidad es increíble y el servicio excelente. ¡100% recomendado!"</p>
+                        <div class="d-flex align-items-center">
+                            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #FF69B4, #FF1493); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-right: 10px;">M</div>
+                            <div>
+                                <strong>María González</strong>
+                                <small class="d-block text-muted">Caracas, Venezuela</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="testimonial-card">
+                        <div class="testimonial-rating mb-3">
+                            <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+                        </div>
+                        <p class="mb-3">"Pedí un arreglo de emergencia y llegó el mismo día. Mi esposa quedó encantada. FloresYa salvó mi aniversario!"</p>
+                        <div class="d-flex align-items-center">
+                            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #28a745, #20c997); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-right: 10px;">C</div>
+                            <div>
+                                <strong>Carlos Mendoza</strong>
+                                <small class="d-block text-muted">Valencia, Venezuela</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="testimonial-card">
+                        <div class="testimonial-rating mb-3">
+                            <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+                        </div>
+                        <p class="mb-3">"He comprado varias veces y siempre superan mis expectativas. Las flores están siempre frescas y los precios son justos."</p>
+                        <div class="d-flex align-items-center">
+                            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #6f42c1, #e83e8c); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-right: 10px;">A</div>
+                            <div>
+                                <strong>Ana Rodríguez</strong>
+                                <small class="d-block text-muted">Maracaibo, Venezuela</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Final CTA Section -->
+            <div class="text-center mt-5">
+                <div class="price-psychology mx-auto" style="max-width: 500px;">
+                    <h4 class="fw-bold mb-3">🎉 ¡Únete a nuestros clientes felices!</h4>
+                    <p class="mb-4">Más de 2,500 personas han elegido FloresYa para sus momentos especiales</p>
+                    <button class="cta-primary" onclick="document.getElementById('productos').scrollIntoView({behavior: 'smooth'});">
+                        <i class="bi bi-flower1 me-2"></i>Ver Productos Ahora
+                    </button>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="bi bi-shield-check text-success me-1"></i>Compra 100% segura
+                            <span class="mx-2">•</span>
+                            <i class="bi bi-truck text-success me-1"></i>Entrega garantizada
+                            <span class="mx-2">•</span>
+                            <i class="bi bi-arrow-repeat text-success me-1"></i>Satisfacción total
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
     </main>
+
+    <!-- Floating Action Button for Mobile -->
+    <button class="fab d-md-none" onclick="document.getElementById('productos').scrollIntoView({behavior: 'smooth'});" title="Ver productos">
+        <i class="bi bi-flower1"></i>
+    </button>
 
     <!-- Footer -->
     <footer class="bg-dark text-white py-5">
@@ -808,6 +933,92 @@
     <script src="/js/cart.js"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/main.js"></script>
+    
+    <!-- ✨ Advanced Conversion Optimization Scripts ✨ -->
+    <script>
+        // Smart counter animation for social proof
+        function animateCounters() {
+            const counters = document.querySelectorAll('[data-counter]');
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-counter'));
+                let current = 0;
+                const increment = target / 100;
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        counter.textContent = target.toLocaleString() + '+';
+                        clearInterval(timer);
+                    } else {
+                        counter.textContent = Math.floor(current).toLocaleString() + '+';
+                    }
+                }, 20);
+            });
+        }
+        
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                    
+                    // Trigger counter animation if element has counter
+                    if (entry.target.querySelector('[data-counter]')) {
+                        animateCounters();
+                    }
+                }
+            });
+        }, observerOptions);
+        
+        // Observe elements for scroll animations
+        document.addEventListener('DOMContentLoaded', () => {
+            const animatedElements = document.querySelectorAll('.social-proof-banner, .testimonial-card');
+            animatedElements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'all 0.6s ease';
+                observer.observe(el);
+            });
+        });
+        
+        // Smart sticky header behavior
+        let lastScrollY = window.scrollY;
+        
+        window.addEventListener('scroll', () => {
+            const currentScrollY = window.scrollY;
+            const navbar = document.querySelector('.navbar');
+            
+            if (currentScrollY > 100) {
+                navbar.classList.add('sticky-enhanced');
+            } else {
+                navbar.classList.remove('sticky-enhanced');
+            }
+            
+            // Hide/show navbar on scroll
+            if (currentScrollY > lastScrollY && currentScrollY > 300) {
+                navbar.style.transform = 'translateY(-100%)';
+            } else {
+                navbar.style.transform = 'translateY(0)';
+            }
+            
+            lastScrollY = currentScrollY;
+        });
+        
+        // Add CSS for spin animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
     
 </body>
 </html>

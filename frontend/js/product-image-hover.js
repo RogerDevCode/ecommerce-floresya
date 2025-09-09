@@ -2,57 +2,108 @@
  * 🌸 Product Image Hover System - FloresYa
  * Cambio suave de imágenes al pasar el mouse, solo si hay múltiples imágenes.
  * Sin distracciones. Sin errores. Solo belleza funcional.
+ * Logging exhaustivo para confirmar ejecución y errores.
  */
 
 class ProductImageHover {
     constructor() {
         this.activeImages = new Map(); // Track active hover states
         this.debug = window.location.hostname === 'localhost' || localStorage.getItem('floresya_dev_mode') === 'true';
+        
+        // Initialize with logging
+        if (window.logger) {
+            window.logger.info('PRODUCT-IMAGE-HOVER', '✅ ProductImageHover initialized');
+        } else {
+            console.log('%c[✅] ProductImageHover inicializado - FloresYa', 'color: #ff6b9d; font-weight: bold;');
+        }
+        
         this.init();
     }
 
-    log(message, ...args) {
-        if (this.debug) {
-            console.log(`[🖼️ ProductImageHover] ${message}`, ...args);
+    log(message, data = null, level = 'info') {
+        if (!this.debug) return;
+
+        // Use window.logger if available
+        if (window.logger) {
+            window.logger[level]('PRODUCT-IMAGE-HOVER', message, data);
+        } else {
+            const prefix = '[🖼️ ProductImageHover]';
+            const timestamp = new Date().toISOString();
+            const output = `${prefix} [${level.toUpperCase()}] ${timestamp} — ${message}`;
+            
+            switch (level) {
+                case 'error':
+                    console.error(output, data);
+                    break;
+                case 'warn':
+                    console.warn(output, data);
+                    break;
+                default:
+                    console.log(output, data);
+                    break;
+            }
         }
     }
 
     init() {
-        this.log('Inicializado');
+        this.log('🔄 Inicializando ProductImageHover', {}, 'info');
         
         // Bind events when DOM is ready
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => this.bindEvents());
+            document.addEventListener('DOMContentLoaded', () => {
+                this.bindEvents();
+                this.log('✅ Eventos vinculados después de DOMContentLoaded', {}, 'success');
+            });
         } else {
             this.bindEvents();
+            this.log('✅ Eventos vinculados inmediatamente', {}, 'success');
         }
     }
 
     bindEvents() {
+        this.log('🔄 Vinculando eventos de mouse', {}, 'info');
+        
         // Event delegation for dynamic content
         document.addEventListener('mouseenter', this.handleMouseEnter.bind(this), true);
         document.addEventListener('mouseleave', this.handleMouseLeave.bind(this), true);
+        
+        this.log('✅ Eventos de mouse vinculados correctamente', {}, 'success');
     }
 
     handleMouseEnter(e) {
         const imageElement = this.getTargetProductImage(e.target);
-        if (!imageElement) return;
+        if (!imageElement) {
+            return;
+        }
 
         const productId = imageElement.dataset.productId;
-        this.log(`Hover start: ${productId}`);
+        if (!productId) {
+            this.log('⚠️ Imagen sin data-product-id', { src: imageElement.src }, 'warn');
+            return;
+        }
+
+        this.log(`✅ Hover iniciado en producto`, { productId, src: imageElement.src }, 'success');
         this.startImageCycle(imageElement);
     }
 
     handleMouseLeave(e) {
         const imageElement = this.getTargetProductImage(e.target);
-        if (!imageElement) return;
+        if (!imageElement) {
+            return;
+        }
 
         const productId = imageElement.dataset.productId;
-        this.log(`Hover end: ${productId}`);
+        if (!productId) {
+            this.log('⚠️ Imagen sin data-product-id al salir', { src: imageElement.src }, 'warn');
+            return;
+        }
+
+        this.log(`✅ Hover finalizado en producto`, { productId, src: imageElement.src }, 'success');
         this.stopImageCycle(imageElement);
     }
 
     getTargetProductImage(element) {
+        
         // Support for both direct image and container hover
         let target = element;
         while (target && target !== document) {
@@ -61,20 +112,27 @@ class ProductImageHover {
             }
             if (target.classList.contains('product-card') || target.classList.contains('card')) {
                 const img = target.querySelector('img.product-image');
-                return img || null;
+                if (img) {
+                    return img;
+                } else {
+                    return null;
+                }
             }
             target = target.parentElement;
         }
+        
         return null;
     }
 
     startImageCycle(imageElement) {
+        this.log('🔄 Iniciando ciclo de imágenes', { src: imageElement.src }, 'info');
+        
         // Clear any existing cycle for this image
         this.stopImageCycle(imageElement);
 
         const imagesData = imageElement.getAttribute('data-images');
         if (!imagesData) {
-            this.log('No data-images found');
+            this.log('⚠️ No se encontró atributo data-images', {}, 'warn');
             return;
         }
 
@@ -83,17 +141,18 @@ class ProductImageHover {
             images = JSON.parse(imagesData);
             // Filter out empty or invalid URLs
             images = images.filter(url => url && typeof url === 'string' && url.trim().length > 0);
+            this.log('✅ Imágenes parseadas correctamente', { count: images.length, images }, 'success');
         } catch (e) {
-            this.log('Error parsing images data:', e);
+            this.log('❌ Error parsing images data', { error: e.message, data: imagesData }, 'error');
             return;
         }
 
         if (!images || images.length <= 1) {
-            this.log(`Not enough images for cycle: ${images?.length || 0}`);
+            this.log(`⚠️ No hay suficientes imágenes para ciclo: ${images?.length || 0}`, { images }, 'warn');
             return;
         }
 
-        this.log(`Image cycle started (${images.length} images)`);
+        this.log(`✅ Ciclo de imágenes iniciado (${images.length} imágenes)`, { images }, 'success');
 
         const state = {
             images: images,
@@ -115,11 +174,16 @@ class ProductImageHover {
             state.currentIndex = (state.currentIndex + 1) % state.images.length;
             const newImageUrl = state.images[state.currentIndex];
             
-            if (!newImageUrl) return;
+            if (!newImageUrl) {
+                this.log('⚠️ URL de imagen inválida', { currentIndex: state.currentIndex }, 'warn');
+                return;
+            }
 
             // Create a temporary image to preload
             const tempImg = new Image();
             tempImg.onload = () => {
+                this.log('✅ Imagen precargada exitosamente', { url: newImageUrl }, 'success');
+                
                 // Apply smooth fade transition
                 imageElement.style.opacity = '0.7';
                 setTimeout(() => {
@@ -129,11 +193,22 @@ class ProductImageHover {
                     imageElement.removeAttribute('sizes');
                     imageElement.removeAttribute('data-src');
                     imageElement.style.opacity = '1';
+                    
+                    this.log('✅ Imagen cambiada exitosamente', { 
+                        oldIndex: (state.currentIndex - 1 + images.length) % images.length,
+                        newIndex: state.currentIndex,
+                        url: newImageUrl 
+                    }, 'success');
                 }, 150);
             };
             
-            tempImg.onerror = () => {
-                console.warn(`[🖼️ ProductImageHover] Failed to load image: ${newImageUrl}`);
+            tempImg.onerror = (error) => {
+                this.log('❌ Error al cargar imagen', { 
+                    url: newImageUrl, 
+                    error: error.message,
+                    currentIndex: state.currentIndex 
+                }, 'error');
+                
                 // Skip to next image if this one fails
                 state.currentIndex = (state.currentIndex + 1) % state.images.length;
             };
@@ -144,53 +219,76 @@ class ProductImageHover {
 
         // Store state
         this.activeImages.set(imageElement, state);
+        this.log('✅ Estado de ciclo almacenado', { element: imageElement, state }, 'success');
     }
 
     preloadImages(imageUrls) {
+        this.log('🔄 Preloading images', { count: imageUrls.length }, 'info');
+        
         // Preload images in background to avoid flickering
         imageUrls.forEach(url => {
             if (url) {
                 const img = new Image();
+                img.onload = () => {
+                    this.log('✅ Imagen precargada', { url }, 'success');
+                };
+                img.onerror = (error) => {
+                    this.log('❌ Error al precargar imagen', { url, error: error.message }, 'error');
+                };
                 img.src = url;
-                // Optional: add to cache
-                this.log(`Preloading image: ${url}`);
+                this.log(`🔄 Iniciando precarga: ${url}`, {}, 'info');
+            } else {
+                this.log('⚠️ URL de imagen inválida para precarga', { url }, 'warn');
             }
         });
     }
 
     stopImageCycle(imageElement) {
         const state = this.activeImages.get(imageElement);
-        if (!state) return;
+        if (!state) {
+            this.log('⚠️ No hay ciclo activo para esta imagen', { src: imageElement.src }, 'warn');
+            return;
+        }
 
-        this.log('Image cycle stopped');
+        this.log('🔄 Deteniendo ciclo de imágenes', { src: imageElement.src }, 'info');
         
         // Clear interval
         if (state.intervalId) {
             clearInterval(state.intervalId);
+            this.log('✅ Intervalo de ciclo limpiado', {}, 'success');
         }
 
         // Restore original image and attributes
         if (state.originalSrc) {
             imageElement.src = state.originalSrc;
+            this.log('✅ Imagen original restaurada', { src: state.originalSrc }, 'success');
         }
         
         if (state.originalSrcset !== null) {
             imageElement.setAttribute('srcset', state.originalSrcset);
+            this.log('✅ srcset original restaurado', { srcset: state.originalSrcset }, 'success');
         }
         if (state.originalSizes !== null) {
             imageElement.setAttribute('sizes', state.originalSizes);
+            this.log('✅ sizes original restaurado', { sizes: state.originalSizes }, 'success');
         }
         if (state.originalDataSrc !== null) {
             imageElement.setAttribute('data-src', state.originalDataSrc);
+            this.log('✅ data-src original restaurado', { dataSrc: state.originalDataSrc }, 'success');
         }
 
         // Remove from active images
         this.activeImages.delete(imageElement);
+        this.log('✅ Estado de ciclo eliminado', { element: imageElement }, 'success');
     }
 }
 
 // Initialize immediately
 if (typeof window.floresyaProductImageHover === 'undefined') {
     window.floresyaProductImageHover = new ProductImageHover();
-    console.log('%c[✅] ProductImageHover inicializado - FloresYa', 'color: #ff6b9d; font-weight: bold;');
+    
+    // Log initialization with window.logger if available
+    if (window.logger) {
+        window.logger.success('PRODUCT-IMAGE-HOVER', '✅ ProductImageHover global instance created');
+    }
 }

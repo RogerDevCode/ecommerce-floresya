@@ -1,85 +1,40 @@
-E-COMMERCE: OPTIMIZACIÓN AVANZADA DE CONVERSIÓN
-Contexto del Proyecto: Esta plataforma e-commerce busca maximizar conversiones a través de una experiencia de usuario pulida y técnicas avanzadas de marketing psicológico, priorizando una interfaz limpia y efectiva que facilite la compra inmediata.
+***
 
-🎯 OBJETIVO PRINCIPAL
-Transformar la página de detalle del producto en una experiencia excepcional para el cliente que genere confianza, satisfacción y promueva la acción de compra inmediata ("click buy") sin provocar distracciones ni engaños.
+Entorno: Xubuntu 24+, desarrollo con scripts bash, configuraciones, instalación de software y herramientas en este entorno. Proyecto en GitHub, desplegado en Vercel, base de datos Supabase Postgres.
 
-ÁREAS DE ALTA PRIORIDAD
-Refinamiento Visual Profesional
+E-COMMERCE: OPTIMIZACIÓN AVANZADA DE CONVERSIÓN  
+Objetivo: Maximizar conversiones con experiencia de usuario limpia, confiable y sin distracciones o trucos engañosos (no usar pop-ups falsos o mensajes molestos). Interfaz enfocada en producto y acción de compra inmediata.
 
-Mejorar espaciado, tipografía y jerarquías visuales para garantizar elegancia y claridad
+Áreas clave:  
+- Diseño profesional: mejorar espaciado, tipografía, jerarquía visual y responsive (móvil, tablet, desktop), estética coherente con marca.  
+- Optimización de conversión: analítica avanzada, CTAs persuasivas y honestas.  
+- Rendimiento y UX: logging en consola para procesos críticos, carga óptima de recursos, interfaz responsive y compatible.
 
-Optimizar diseño responsive para todos los dispositivos (móviles, tabletas, desktop)
+Arquitectura técnica:  
+- Backend y frontend según proyecto (Node.js, PHP, Django, React, Vue, Vanilla JS)  
+- JavaScript ES5 obligatorio; convertir ES6 a ES5, módulos que exporten/importen sin problemas  
+- Uso de frameworks/librerías modernas para rendimiento/escala  
+- Despliegue en Vercel u otras plataformas
 
-Usar una estética premium coherente con la marca
+Diseño visual:  
+- Efectos modernos básicos, micro-interacciones  
+- Psicología del color según público y marca  
+- Breakpoints: desktop >1200px, tablet 768–1199px, móvil <768px optimizado touch
 
-Optimización de Conversión
+Instrucciones para IA:  
+Analiza y optimiza todas las páginas para mejorar UX, confianza y ventas. Prioriza refinamiento visual, métricas de conversión claras, y rendimiento. Evita trucos o distracciones molestas.  
 
-Analítica avanzada para medir efectividad de mensajes y elementos psicológicos aplicados
+Usa logging detallado con /home/manager/Sync/ecommerce-floresya/backend/src/utils/logger.js para procesos críticos.  
 
-Seguimiento de métricas de engagement, tiempo de permanencia y tasa de conversión
+Garantiza testing continuo tras cada cambio, con un archivo de test por API backend, validando datos de Supabase Postgres rigurosamente.  
 
-Mejorar llamadas a la acción (CTAs) con diseños y textos persuasivos pero honestos
+Prohibido uso de imágenes locales para productos u otras entidades, salvo logos, ayudas visuales y placeholders. Backend debe devolver imagen placeholder local si Supabase responde null.  
 
-Performance y Experiencia de Usuario (UX)
+Solo usar base de datos Supabase Postgres; ningún acceso directo o atajo fuera de la API backend.  
 
-Implementar logging exhaustivo en consola para confirmar ejecución y salud de procesos críticos en desarrollo
+Prohibido guardar imágenes locales salvo temporalmente para subirlas a Supabase, luego eliminar.  
 
-Optimizar carga de recursos (imágenes, CSS, scripts) para mejorar velocidad y First Contentful Paint
+No usar versiones híbridas, locales, SQLite u otras bases; solo Supabase oficial.  
 
-Realizar pruebas cross-browser y en dispositivos variados para asegurar compatibilidad
-
-🛠️ ARQUITECTURA TÉCNICA
-Stack Tecnológico
-Backend y frontend acordes al proyecto específico (Node.js, PHP, Django, React, Vue o Vanilla JS, entre otros), usa javascript ES6 para estabilidad y univers
-
-Utilización de frameworks y librerías modernos para rendimiento y escalabilidad
-
-Métodos de despliegue utilizados (Vercel, Netlify, AWS, etc.)
-
-Archivos o Componentes Clave
-Ruta y descripción breve de archivos front y back relevantes
-
-Módulos de estilos y scripts esenciales a optimizar
-
-Comandos o Scripts de Desarrollo
-Detalles sobre cómo levantar el entorno de prueba, testeo o desarrollo rápido
-
-🎨 DISEÑO VISUAL PREMIUM
-Principios y Técnicas Visuales
-Uso de efectos modernos (glassmorphism, gradients, hardware-accelerated animations)
-
-Micro-interacciones para feedback instantáneo
-
-Psicología del color adecuada al público objetivo (ej. colores que impulsen confianza o compra)
-
-Responsive Breakpoints Sugeridos
-Desktop: +1200px
-
-Tablet: 768px a 1199px
-
-Mobile: <768px (optimizado para touch)
-
-🔥 PROMPT PARA LA IA
-"Soy desarrollador de un e-commerce. Necesito que analices y optimices todas las páginas de la aplicacion, para transformar la experiencia del usuario en una que sea altamente persuasiva y agradable, generando confianza y promoviendo la compra inmediata.
-
-Prioriza: refinamiento visual (tipografía, espaciado, jerarquías), optimización de conversión con métricas claras, y mejora del rendimiento (carga y experiencia UX). Aplica técnicas de marketing psicológico ya implementadas y sugiere mejoras honestas, sin usar trucos ni distracciones molestas.
-
-Asegúrate de incluir logging detallado en consola para procesos críticos durante desarrollo para verificar la correcta ejecución y salud del sistema.
-
-Conoce el contexto técnico y accede a los archivos y scripts indicados para desarrollo y testing. Prioriza resultados que impacten positivamente las ventas reales y la satisfacción del cliente.
-
-Realiza testing continuos una vez modificada alguna funcionalibidad, al guna caracteristica
-
-Queda explicitamente prohibido el uso de imagenes locales para los productos u otras entidades de la base de datos, solo son aceptables imagenes locales para la interface/paginal html y para los placeholders. En el caso especial de los placeholders, si despues de solicitar a supabase una imagen y esta no existe, es null, la api backend, devolvera la imagen placeholder local por defecto, es decir que el frontend siempre recibira una imagen.
-
-queda explicitamente prohibido el uso de otra base de datos que no sea supabase postgres.
-
-queda explicitamente prohibido guardar imagenes en local, a menos que sean las imagenes que seran cargadas a supabase, y una vez cargada sera eliminadas
-
-queda explicitamente prohibido usar trucos u atajos para acceder a la bases de datos, toda interacion, contacto, acceso, debe realizarce a travez de la API Backend, que sera la misma en produccion.
-
-usa intensivamente los logs, usando la ayuda de /home/manager/Sync/ecommerce-floresya/backend/src/utils/logger.js
-
-Exlusivamente prohibido usar versiones hidridas, locales, sqlite, o de otra indole, prohibido usar la aplicacion sin superbase, y sin conexiones a supabase, el proyecto se debe ejecutar exlusivamente con la base de datos supabase, spy categorico con esto.
-"
+Antes de tareas largas (actualizaciones o tests masivos), crea un archivo todo.md con la planificación, marcando avances y pendientes, con resumen inicial para facilitar continuidad entre sesiones y plataformas IA.
+  

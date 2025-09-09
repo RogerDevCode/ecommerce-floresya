@@ -51,10 +51,15 @@ function log(message, data = null, level = 'info') {
  * Alias para compatibilidad con frontend o estilos antiguos
  */
 const logger = {
-    info: (msg, data) => log(msg, data, 'info'),
-    warn: (msg, data) => log(msg, data, 'warn'),
-    error: (msg, data) => log(msg, data, 'error'),
-    success: (msg, data) => log(msg, data, 'success')
+    info: (context, msg, data) => log(`[${context}] ${msg}`, data, 'info'),
+    warn: (context, msg, data) => log(`[${context}] ${msg}`, data, 'warn'),
+    error: (context, msg, data) => log(`[${context}] ${msg}`, data, 'error'),
+    success: (context, msg, data) => log(`[${context}] ${msg}`, data, 'success'),
+    
+    // ✨ Enhanced conversion tracking methods
+    conversion: (event, data) => log(`[CONVERSION] ${event}`, data, 'success'),
+    performance: (metric, data) => log(`[PERFORMANCE] ${metric}`, data, 'info'),
+    userAction: (action, data) => log(`[USER_ACTION] ${action}`, data, 'info')
 };
 
 /**
@@ -81,18 +86,59 @@ function requestLogger(req, res, next) {
  * Uso:
  *   const timer = startTimer('fetchProduct');
  *   // ... código ...
- *   timer.end(); // → [TIMER] fetchProduct completed in 150ms
+ *   timer.end('CONTEXT'); // → [TIMER] fetchProduct completed in 150ms
  */
 function startTimer(label) {
     const start = process.hrtime.bigint();
 
     return {
-        end: function() {
+        end: function(context = 'TIMER') {
             const end = process.hrtime.bigint();
             const duration = Number(end - start) / 1e6; // nanosegundos → milisegundos
-            log(`[TIMER] ${label} completed in ${duration.toFixed(2)}ms`, {}, 'info');
+            logger.info(context, `[TIMER] ${label} completed in ${duration.toFixed(2)}ms`, { duration, label });
+            return duration;
         }
     };
+}
+
+/**
+ * ✨ Enhanced logging for conversion optimization
+ * Track user behavior, performance metrics, and business KPIs
+ */
+function trackConversion(event, data = {}) {
+    const conversionData = {
+        timestamp: new Date().toISOString(),
+        event,
+        ...data,
+        sessionInfo: {
+            userAgent: data.userAgent,
+            ip: data.ip,
+            referrer: data.referrer
+        }
+    };
+    
+    logger.conversion(event, conversionData);
+}
+
+function trackPerformance(metric, value, context = {}) {
+    const performanceData = {
+        metric,
+        value,
+        timestamp: new Date().toISOString(),
+        ...context
+    };
+    
+    logger.performance(metric, performanceData);
+}
+
+function trackUserAction(action, details = {}) {
+    const actionData = {
+        action,
+        timestamp: new Date().toISOString(),
+        ...details
+    };
+    
+    logger.userAction(action, actionData);
 }
 
 // CommonJS exports
@@ -100,5 +146,9 @@ module.exports = {
     log,
     logger,
     requestLogger,
-    startTimer
+    startTimer,
+    // ✨ Enhanced tracking functions
+    trackConversion,
+    trackPerformance,
+    trackUserAction
 };

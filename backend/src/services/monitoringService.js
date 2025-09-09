@@ -1,4 +1,4 @@
-const logger = require('../utils/logger');
+const { logger, startTimer } = require('../utils/logger');
 const { getSupabaseHealth } = require('./supabaseClient');
 const os = require('os');
 const fs = require('fs').promises;
@@ -79,7 +79,7 @@ class MonitoringService {
   }
 
   async collectMetrics() {
-    const timer = logger.startTimer('collect-metrics');
+    const timer = startTimer('collect-metrics');
 
     try {
       await this.collectSystemMetrics();

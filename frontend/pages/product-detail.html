@@ -46,7 +46,7 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="/">
-                <img src="/images/placeholder-product-2.webp" alt="FloresYa Logo" class="logo-img me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px;">
+                <img src="/images/logoFloresYa.jpeg" alt="FloresYa Logo" class="logo-img me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px;">
                 <div>
                     <span class="brand-text fw-bold text-primary-custom">FloresYa</span>
                     <small class="d-block text-muted" style="font-size: 0.75rem;">🌸 Flores que enamoran</small>
@@ -144,20 +144,16 @@
                         <!-- Product Summary -->
                         <p id="product-summary" class="lead text-muted mb-4">Información del producto...</p>
                         
-                        <!-- Price Section with Enhanced Design -->
-                        <div class="price-section mb-4 p-4 rounded-3" style="background: linear-gradient(135deg, rgba(255, 105, 180, 0.1), rgba(255, 20, 147, 0.05));">
+                        <!-- Enhanced Price Section with Psychology -->
+                        <div class="price-psychology mb-4">
                             <div class="row align-items-center">
                                 <div class="col-6">
-                                    <div class="price-usd">
-                                        <span class="h4 fw-bold text-primary-custom mb-0" id="price-usd">$0.00</span>
-                                        <small class="d-block text-muted">Precio en USD</small>
-                                    </div>
+                                    <div class="price-main" data-currency="$" id="price-usd">0.00</div>
+                                    <small class="d-block text-muted">Precio en USD</small>
                                 </div>
                                 <div class="col-6">
-                                    <div class="price-ves">
-                                        <span class="h5 fw-semibold text-success mb-0" id="price-ves">Bs. 0.00</span>
-                                        <small class="d-block text-muted">Precio en Bs.</small>
-                                    </div>
+                                    <div class="h5 fw-semibold text-success mb-0" id="price-ves">Bs. 0.00</div>
+                                    <small class="d-block text-muted">Precio en Bs.</small>
                                 </div>
                             </div>
                             
@@ -211,29 +207,61 @@
                             </div>
                         </div>
                         
-                        <!-- Call-to-Action Buttons -->
+                        <!-- Enhanced Call-to-Action Buttons -->
                         <div class="cta-section mb-4">
-                            <div class="d-grid gap-2">
-                                <!-- Primary CTA: FloresYa Express -->
-                                <button class="btn btn-lg premium-gradient text-white fw-bold pulse-shadow" id="floresya-express-btn" onclick="floresYaBuyNow()">
+                            <div class="d-grid gap-3">
+                                <!-- Primary CTA: Enhanced with Psychology -->
+                                <button class="cta-primary" id="floresya-express-btn" onclick="floresYaBuyNow()">
                                     <i class="bi bi-lightning-fill me-2"></i>
-                                    ¡FloresYa! Express
-                                    <small class="d-block" style="font-size: 0.8rem;">Compra rápida sin registro</small>
+                                    ¡Comprar Ahora!
+                                    <small class="d-block" style="font-size: 0.8rem; opacity: 0.9;">Entrega en 24h - Sin registro</small>
                                 </button>
                                 
-                                <!-- Secondary CTA: Add to Cart -->
-                                <button class="btn btn-outline-primary btn-lg fw-medium" id="add-to-cart-btn">
+                                <!-- Secondary CTA with Social Proof -->
+                                <button class="btn btn-outline-success btn-lg fw-medium" id="add-to-cart-btn">
                                     <i class="bi bi-bag-plus me-2"></i>
                                     Agregar al Carrito
+                                    <small class="d-block" style="font-size: 0.75rem; opacity: 0.8;">Más de 500 personas lo compraron</small>
                                 </button>
+                                
+                                <!-- Trust Indicators Row -->
+                                <div class="text-center mt-2">
+                                    <div class="guarantee-seal d-inline-block me-3">
+                                        <i class="bi bi-shield-check"></i>
+                                    </div>
+                                    <div class="guarantee-seal d-inline-block me-3">
+                                        <i class="bi bi-truck"></i>
+                                    </div>
+                                    <div class="guarantee-seal d-inline-block">
+                                        <i class="bi bi-heart"></i>
+                                    </div>
+                                </div>
                             </div>
                             
-                            <!-- Trust Indicators -->
+                            <!-- Enhanced Trust Indicators with Social Proof -->
                             <div class="trust-indicators mt-3 text-center">
+                                <div class="social-proof-banner p-3 rounded mb-3">
+                                    <div class="row align-items-center text-center">
+                                        <div class="col-4">
+                                            <div class="h6 mb-0 text-success">2,500+</div>
+                                            <small class="text-muted">Clientes felices</small>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="testimonial-rating">
+                                                <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+                                            </div>
+                                            <small class="text-muted">4.9/5 estrellas</small>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="h6 mb-0 text-success">24h</div>
+                                            <small class="text-muted">Entrega rápida</small>
+                                        </div>
+                                    </div>
+                                </div>
                                 <small class="text-muted d-flex align-items-center justify-content-center flex-wrap gap-3">
-                                    <span><i class="bi bi-shield-check text-success me-1"></i>Compra segura</span>
+                                    <span><i class="bi bi-shield-check text-success me-1"></i>Compra 100% segura</span>
                                     <span><i class="bi bi-truck text-success me-1"></i>Entrega garantizada</span>
-                                    <span><i class="bi bi-arrow-repeat text-success me-1"></i>Satisfacción 100%</span>
+                                    <span><i class="bi bi-arrow-repeat text-success me-1"></i>Satisfacción total</span>
                                 </small>
                             </div>
                         </div>
@@ -378,7 +406,7 @@
                 <div class="modal-header premium-gradient text-white">
                     <h5 class="modal-title">
                         <i class="bi bi-lightning-fill me-2"></i>
-                        ¡FloresYa! Express
+                        ¡FloresYa! Express - Compra Rápida
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>

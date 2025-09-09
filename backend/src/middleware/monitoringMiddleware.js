@@ -1,5 +1,5 @@
 const { monitoringService } = require('../services/monitoringService');
-const logger = require('../utils/logger');
+const { logger } = require('../utils/logger');
 
 const createMonitoringMiddleware = (options = {}) => {
   const config = {
@@ -21,13 +21,14 @@ const createMonitoringMiddleware = (options = {}) => {
     req.requestId = requestId;
     req.startTime = startTime;
 
-    logger.setContext({
+    // Context tracking - simplified without setContext
+    req.logContext = {
       requestId,
       method: req.method,
       url: req.url,
       ip: req.ip || req.connection.remoteAddress,
       userAgent: req.get('User-Agent')
-    });
+    };
 
     const originalSend = res.send;
     const originalJson = res.json;
@@ -90,7 +91,8 @@ const createMonitoringMiddleware = (options = {}) => {
       }, error);
     }
 
-    logger.clearContext();
+    // Context cleared - simplified without clearContext
+    req.logContext = null;
   }
 };
 

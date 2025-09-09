@@ -3,7 +3,7 @@ const nodemailer = require('nodemailer');
 let transporter;
 
 const initializeEmailService = () => {
-    transporter = nodemailer.createTransporter({
+    transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: process.env.SMTP_PORT,
         secure: false,

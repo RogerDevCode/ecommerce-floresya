@@ -599,6 +599,72 @@ footer .social-links a:hover {
 
 /* ===== PREMIUM CONVERSION OPTIMIZATION ENHANCEMENTS ===== */
 
+/* ✨ ADVANCED PSYCHOLOGY-BASED DESIGN ELEMENTS ✨ */
+
+/* Scarcity & Urgency Indicators */
+.urgency-badge {
+    background: linear-gradient(45deg, #FF4757, #FF3742);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    animation: urgency-pulse 2s infinite;
+    box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+@keyframes urgency-pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4); }
+    50% { transform: scale(1.05); box-shadow: 0 4px 16px rgba(255, 71, 87, 0.6); }
+}
+
+/* Advanced CTA Psychology */
+.cta-primary {
+    background: linear-gradient(135deg, #FF69B4 0%, #FF1493 50%, #FF69B4 100%);
+    border: none;
+    border-radius: 50px;
+    padding: 16px 32px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 8px 25px rgba(255, 105, 180, 0.4);
+    cursor: pointer;
+    transform: perspective(1000px) rotateX(0deg);
+}
+
+.cta-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cta-primary:hover::before {
+    left: 100%;
+}
+
+.cta-primary:hover {
+    transform: perspective(1000px) rotateX(-5deg) translateY(-4px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(255, 105, 180, 0.6);
+    background: linear-gradient(135deg, #FF1493 0%, #FF69B4 50%, #FF1493 100%);
+}
+
+.cta-primary:active {
+    transform: perspective(1000px) rotateX(0deg) translateY(0) scale(0.98);
+    transition: all 0.1s ease;
+}
+
 /* Advanced Glass Morphism Effects */
 .glass-morphism {
     backdrop-filter: blur(16px) saturate(180%);
@@ -1315,11 +1381,43 @@ footer .social-links a:hover {
     }
 }
 
+/* ✨ ADVANCED CART PSYCHOLOGY & UX ✨ */
+
 /* Cart Offcanvas Enhancements */
+.cart-offcanvas {
+    box-shadow: -10px 0 40px rgba(255, 105, 180, 0.15);
+}
+
 .cart-offcanvas .offcanvas-body {
     display: flex;
     flex-direction: column;
     padding: 0;
+    background: linear-gradient(180deg, rgba(255, 105, 180, 0.02) 0%, white 100%);
+}
+
+/* Cart Progress Indicator */
+.cart-progress {
+    background: linear-gradient(90deg, #FF69B4 0%, #FFD700 100%);
+    height: 4px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.cart-progress::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    animation: cart-progress-shine 2s infinite;
+}
+
+@keyframes cart-progress-shine {
+    0% { left: -100%; }
+    100% { left: 100%; }
 }
 
 .cart-content {
@@ -1439,4 +1537,67 @@ footer .social-links a:hover {
         width: 50px !important;
         height: 50px !important;
     }
+}
+
+/* ✨ ADVANCED MICRO-INTERACTIONS ✨ */
+
+/* Floating Action Buttons */
+.fab {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FF69B4, #FF1493);
+    box-shadow: 0 8px 25px rgba(255, 105, 180, 0.4);
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 1000;
+    cursor: pointer;
+}
+
+.fab:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 12px 35px rgba(255, 105, 180, 0.6);
+}
+
+.fab:active {
+    transform: scale(0.95);
+}
+
+/* Success Checkmark Animation */
+.success-checkmark {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #28a745;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px auto;
+    animation: checkmark-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.success-checkmark::after {
+    content: '✓';
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+    animation: checkmark-draw 0.3s ease 0.3s both;
+}
+
+@keyframes checkmark-pop {
+    0% { transform: scale(0) rotate(45deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes checkmark-draw {
+    0% { opacity: 0; transform: scale(0); }
+    100% { opacity: 1; transform: scale(1); }
 }

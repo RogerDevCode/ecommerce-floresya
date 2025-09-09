@@ -182,38 +182,41 @@ class AccessibilityEnhancer {
     let nextIndex = currentIndex;
     
     if (parent.classList.contains('product-grid')) {
-      const columns = Math.floor(parent.offsetWidth / 300);
-      
-      switch (e.key) {
-        case 'ArrowRight':
-          nextIndex = Math.min(currentIndex + 1, items.length - 1);
-          break;
-        case 'ArrowLeft':
-          nextIndex = Math.max(currentIndex - 1, 0);
-          break;
-        case 'ArrowDown':
-          nextIndex = Math.min(currentIndex + columns, items.length - 1);
-          break;
-        case 'ArrowUp':
-          nextIndex = Math.max(currentIndex - columns, 0);
-          break;
-      }
+        // ✅ Calcular columnas dinámicamente
+        const itemWidth = 300; // Ancho base
+        const containerWidth = parent.offsetWidth;
+        const columns = Math.max(1, Math.floor(containerWidth / itemWidth));
+        
+        switch (e.key) {
+            case 'ArrowRight':
+                nextIndex = Math.min(currentIndex + 1, items.length - 1);
+                break;
+            case 'ArrowLeft':
+                nextIndex = Math.max(currentIndex - 1, 0);
+                break;
+            case 'ArrowDown':
+                nextIndex = Math.min(currentIndex + columns, items.length - 1);
+                break;
+            case 'ArrowUp':
+                nextIndex = Math.max(currentIndex - columns, 0);
+                break;
+        }
     } else {
-      switch (e.key) {
-        case 'ArrowRight':
-        case 'ArrowDown':
-          nextIndex = (currentIndex + 1) % items.length;
-          break;
-        case 'ArrowLeft':
-        case 'ArrowUp':
-          nextIndex = currentIndex === 0 ? items.length - 1 : currentIndex - 1;
-          break;
-      }
+        switch (e.key) {
+            case 'ArrowRight':
+            case 'ArrowDown':
+                nextIndex = (currentIndex + 1) % items.length;
+                break;
+            case 'ArrowLeft':
+            case 'ArrowUp':
+                nextIndex = currentIndex === 0 ? items.length - 1 : currentIndex - 1;
+                break;
+        }
     }
 
     if (nextIndex !== currentIndex) {
-      items[nextIndex].focus();
-      e.preventDefault();
+        items[nextIndex].focus();
+        e.preventDefault();
     }
   }
 
@@ -433,7 +436,8 @@ class AccessibilityEnhancer {
   }
 
   setupFocusTrap() {
-    document.addEventListener('show.bs.modal', (e) => {
+    // ✅ Cambiado a 'shown.bs.modal' para esperar a que el modal esté completamente visible
+    document.addEventListener('shown.bs.modal', (e) => {
       const modal = e.target;
       this.state.currentFocus = document.activeElement;
       
@@ -488,23 +492,23 @@ class AccessibilityEnhancer {
     this.state.announceRegion = document.createElement('div');
     this.state.announceRegion.id = 'screen-reader-announcements';
     this.state.announceRegion.className = 'sr-only';
-    this.state.announceRegion.setAttribute('aria-live', 'polite');
+    this.state.announceRegion.setAttribute('aria-live', 'polite'); // ← polite por defecto
     this.state.announceRegion.setAttribute('aria-atomic', 'true');
     document.body.appendChild(this.state.announceRegion);
   }
 
-  announceToScreenReader(message, priority = 'polite') {
+  announceToScreenReader(message, priority = 'polite') { // ← polite por defecto
     if (!this.state.announceRegion || !this.config.announceChanges) return;
 
     this.state.announceRegion.setAttribute('aria-live', priority);
     this.state.announceRegion.textContent = message;
 
     setTimeout(() => {
-      this.state.announceRegion.textContent = '';
+        this.state.announceRegion.textContent = '';
     }, 1000);
 
     if (window.logger) {
-      window.logger.debug('ACCESSIBILITY', 'Screen reader announcement', { message, priority });
+        window.logger.debug('ACCESSIBILITY', 'Screen reader announcement', { message, priority });
     }
   }
 
@@ -549,21 +553,34 @@ class AccessibilityEnhancer {
     const skipLinks = document.createElement('div');
     skipLinks.className = 'skip-links';
     skipLinks.innerHTML = `
-      <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
-      <a href="#navigation" class="skip-link">Saltar a la navegación</a>
-      <a href="#search" class="skip-link">Saltar a la búsqueda</a>
+        <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+        <a href="#navigation" class="skip-link">Saltar a la navegación</a>
+        <a href="#search" class="skip-link">Saltar a la búsqueda</a>
     `;
     
     document.body.insertBefore(skipLinks, document.body.firstChild);
 
-    const mainContent = document.querySelector('main, #main, .main-content');
-    if (mainContent && !mainContent.id) {
-      mainContent.id = 'main-content';
+    // ✅ Asegurar que los elementos objetivo existan
+    let mainContent = document.querySelector('main, #main, .main-content');
+    if (!mainContent) {
+        mainContent = document.querySelector('#main-content');
+        if (!mainContent) {
+            mainContent = document.createElement('main');
+            mainContent.id = 'main-content';
+            document.body.appendChild(mainContent);
+        }
+    } else if (!mainContent.id) {
+        mainContent.id = 'main-content';
     }
 
-    const navigation = document.querySelector('nav');
+    let navigation = document.querySelector('nav');
     if (navigation && !navigation.id) {
-      navigation.id = 'navigation';
+        navigation.id = 'navigation';
+    }
+
+    let search = document.querySelector('#search, [type="search"], .search-input');
+    if (search && !search.id) {
+        search.id = 'search';
     }
   }
 
@@ -885,19 +902,22 @@ class AccessibilityEnhancer {
   showKeyboardHelp() {
     const help = document.getElementById('keyboard-shortcuts-info');
     if (help) {
-      help.classList.remove('sr-only');
-      help.classList.add('keyboard-shortcuts-panel');
-      help.focus();
-      
-      const closeButton = document.createElement('button');
-      closeButton.textContent = 'Cerrar';
-      closeButton.className = 'btn btn-primary mt-3';
-      closeButton.onclick = () => {
-        help.classList.add('sr-only');
-        help.classList.remove('keyboard-shortcuts-panel');
-        closeButton.remove();
-      };
-      help.appendChild(closeButton);
+        help.classList.remove('sr-only');
+        help.classList.add('keyboard-shortcuts-panel');
+        help.focus();
+        
+        // ✅ Crear y agregar botón "Cerrar" correctamente
+        let closeButton = help.querySelector('.close-help-btn');
+        if (!closeButton) {
+            closeButton = document.createElement('button');
+            closeButton.textContent = 'Cerrar';
+            closeButton.className = 'btn btn-primary mt-3 close-help-btn';
+            closeButton.onclick = () => {
+                help.classList.add('sr-only');
+                help.classList.remove('keyboard-shortcuts-panel');
+            };
+            help.appendChild(closeButton); // ← Insertar dentro del panel
+        }
     }
   }
 

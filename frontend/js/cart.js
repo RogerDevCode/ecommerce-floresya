@@ -4,56 +4,113 @@ class ShoppingCart {
         this.shippingFeeUSD = 7.00; // Tarifa de envío fija en USD
         this.exchangeRateBCV = null; // Tasa de cambio Bs/USD
         this.listeners = [];
+        
+        // Initialize with logging
+        if (window.logger) {
+            window.logger.info('CART', '✅ ShoppingCart initialized');
+        } else {
+            console.log('[🛒 CART] ShoppingCart initialized');
+        }
+        
         this.init();
     }
 
+    log(message, data = null, level = 'info') {
+        // Use window.logger if available
+        if (window.logger) {
+            window.logger[level]('CART', message, data);
+        } else {
+            const prefix = '[🛒 CART]';
+            const timestamp = new Date().toISOString();
+            const output = `${prefix} [${level.toUpperCase()}] ${timestamp} — ${message}`;
+            
+            switch (level) {
+                case 'error':
+                    console.error(output, data);
+                    break;
+                case 'warn':
+                    console.warn(output, data);
+                    break;
+                default:
+                    console.log(output, data);
+                    break;
+            }
+        }
+    }
+
     async init() {
-        await this.fetchExchangeRate();
-        this.updateCartDisplay();
-        this.bindEvents();
+        this.log('🔄 Initializing ShoppingCart', {}, 'info');
+        
+        try {
+            await this.fetchExchangeRate();
+            this.updateCartDisplay();
+            this.bindEvents();
+            this.log('✅ ShoppingCart initialized successfully', {}, 'success');
+        } catch (error) {
+            this.log('❌ Error initializing ShoppingCart', { error: error.message }, 'error');
+        }
     }
 
     async fetchExchangeRate() {
+        this.log('🔄 Fetching exchange rate', {}, 'info');
+        
         try {
             // Asumimos que la tasa se guarda con la key 'exchange_rate_bcv'
             const response = await api.getSetting('exchange_rate_bcv');
             if (response.success && response.data.setting_value) {
                 this.exchangeRateBCV = parseFloat(response.data.setting_value);
-                console.log(`Tasa de cambio cargada: ${this.exchangeRateBCV}`);
+                this.log('✅ Exchange rate loaded successfully', { rate: this.exchangeRateBCV }, 'success');
             } else {
                 // Fallback si no se encuentra la tasa
                 this.exchangeRateBCV = 36.5; // Tasa de fallback
-                console.warn('No se pudo cargar la tasa de cambio. Usando fallback.');
+                this.log('⚠️ Exchange rate not found, using fallback', { rate: this.exchangeRateBCV }, 'warn');
             }
         } catch (error) {
             this.exchangeRateBCV = 36.5; // Tasa de fallback
-            console.error('Error fetching exchange rate, using fallback:', error);
+            this.log('❌ Error fetching exchange rate, using fallback', { error: error.message }, 'error');
         }
     }
 
     loadCartFromStorage() {
+        this.log('🔄 Loading cart from storage', {}, 'info');
+        
         try {
             const saved = localStorage.getItem('floresya_cart');
-            return saved ? JSON.parse(saved) : [];
+            const items = saved ? JSON.parse(saved) : [];
+            this.log('✅ Cart loaded from storage', { itemCount: items.length }, 'success');
+            return items;
         } catch (error) {
-            console.error('Error loading cart from storage:', error);
+            this.log('❌ Error loading cart from storage', { error: error.message }, 'error');
             return [];
         }
     }
 
     saveCartToStorage() {
-        localStorage.setItem('floresya_cart', JSON.stringify(this.items));
+        this.log('🔄 Saving cart to storage', { itemCount: this.items.length }, 'info');
+        
+        try {
+            localStorage.setItem('floresya_cart', JSON.stringify(this.items));
+            this.log('✅ Cart saved to storage', { itemCount: this.items.length }, 'success');
+        } catch (error) {
+            this.log('❌ Error saving cart to storage', { error: error.message }, 'error');
+        }
     }
 
     onChange(callback) {
+        this.log('🔄 Adding change listener', {}, 'info');
         this.listeners.push(callback);
+        this.log('✅ Change listener added', { listenerCount: this.listeners.length }, 'success');
     }
 
     notifyListeners() {
+        this.log('🔄 Notifying listeners', { listenerCount: this.listeners.length }, 'info');
         this.listeners.forEach(callback => callback(this.items));
+        this.log('✅ Listeners notified', {}, 'success');
     }
 
     async addItem(productId, quantity = 1) {
+        this.log('🔄 Adding item to cart', { productId, quantity }, 'info');
+        
         try {
             const response = await api.getProductById(productId);
             if (!response.success) throw new Error('Producto no encontrado');
@@ -63,6 +120,11 @@ class ShoppingCart {
 
             if (existingItem) {
                 existingItem.quantity += quantity;
+                this.log('✅ Item quantity updated', { 
+                    productId, 
+                    name: product.name, 
+                    quantity: existingItem.quantity 
+                }, 'success');
             } else {
                 this.items.push({ 
                     product_id: productId, 
@@ -71,64 +133,106 @@ class ShoppingCart {
                     quantity, 
                     image_url: product.primary_image || product.image_url 
                 });
+                this.log('✅ New item added to cart', { 
+                    productId, 
+                    name: product.name, 
+                    quantity 
+                }, 'success');
             }
 
             this.saveCartToStorage();
             this.updateCartDisplay();
             this.notifyListeners();
             api.showNotification(`${product.name} agregado al carrito`, 'success');
+            this.log('✅ Item added to cart successfully', { 
+                productId, 
+                name: product.name, 
+                quantity 
+            }, 'success');
         } catch (error) {
+            this.log('❌ Error adding item to cart', { error: error.message, productId }, 'error');
             api.handleError(error);
         }
     }
 
     removeItem(productId) {
+        this.log('🔄 Removing item from cart', { productId }, 'info');
+        
+        const originalLength = this.items.length;
         this.items = this.items.filter(item => item.product_id !== productId);
+        const removed = originalLength - this.items.length;
+        
         this.saveCartToStorage();
         this.updateCartDisplay();
         this.notifyListeners();
+        
+        if (removed > 0) {
+            this.log('✅ Item removed from cart', { productId, removed }, 'success');
+        } else {
+            this.log('⚠️ Item not found in cart', { productId }, 'warn');
+        }
     }
 
     updateQuantity(productId, newQuantity) {
+        this.log('🔄 Updating item quantity', { productId, newQuantity }, 'info');
+        
         const item = this.items.find(item => item.product_id === productId);
         if (item) {
             if (newQuantity > 0) {
                 item.quantity = newQuantity;
+                this.log('✅ Item quantity updated', { productId, newQuantity }, 'success');
             } else {
+                this.log('🔄 Removing item due to zero quantity', { productId }, 'info');
                 this.removeItem(productId);
+                return;
             }
             this.saveCartToStorage();
             this.updateCartDisplay();
             this.notifyListeners();
+        } else {
+            this.log('⚠️ Item not found for quantity update', { productId }, 'warn');
         }
     }
 
     getSubtotal() {
-        return this.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+        const subtotal = this.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+        this.log('📊 Calculating subtotal', { subtotal, itemCount: this.items.length }, 'info');
+        return subtotal;
     }
 
     getFinalTotalUSD() {
         const subtotal = this.getSubtotal();
-        return subtotal > 0 ? subtotal + this.shippingFeeUSD : 0;
+        const totalUSD = subtotal > 0 ? subtotal + this.shippingFeeUSD : 0;
+        this.log('📊 Calculating final total USD', { subtotal, shippingFee: this.shippingFeeUSD, totalUSD }, 'info');
+        return totalUSD;
     }
 
     getFinalTotalBCV() {
         const totalUSD = this.getFinalTotalUSD();
-        return this.exchangeRateBCV ? totalUSD * this.exchangeRateBCV : 0;
+        const totalBCV = this.exchangeRateBCV ? totalUSD * this.exchangeRateBCV : 0;
+        this.log('📊 Calculating final total BCV', { totalUSD, exchangeRate: this.exchangeRateBCV, totalBCV }, 'info');
+        return totalBCV;
     }
 
     getItemCount() {
-        return this.items.reduce((count, item) => count + item.quantity, 0);
+        const count = this.items.reduce((count, item) => count + item.quantity, 0);
+        this.log('📊 Getting item count', { count }, 'info');
+        return count;
     }
 
     clear() {
+        this.log('🔄 Clearing cart', { itemCount: this.items.length }, 'info');
+        
         this.items = [];
         this.saveCartToStorage();
         this.updateCartDisplay();
         this.notifyListeners();
+        this.log('✅ Cart cleared successfully', {}, 'success');
     }
 
     updateCartDisplay() {
+        this.log('🔄 Updating cart display', { itemCount: this.getItemCount() }, 'info');
+        
         const cartCount = document.getElementById('cartCount');
         const cartPulse = document.getElementById('cartPulse');
         const cartIcon = document.querySelector('.cart-icon');
@@ -159,9 +263,12 @@ class ShoppingCart {
         
         this.updateCartOffcanvas();
         this.updateGuestBanner();
+        this.log('✅ Cart display updated successfully', {}, 'success');
     }
 
     updateCartOffcanvas() {
+        this.log('🔄 Updating cart offcanvas', { itemCount: this.items.length }, 'info');
+        
         const cartItemsEl = document.getElementById('cartItems');
         const emptyCartEl = document.getElementById('emptyCart');
         const cartSummaryEl = document.getElementById('cartSummary');
@@ -170,7 +277,10 @@ class ShoppingCart {
         const cartSubtotalEl = document.getElementById('cartSubtotal');
         const cartTotalEl = document.getElementById('cartTotal');
 
-        if (!cartItemsEl) return;
+        if (!cartItemsEl) {
+            this.log('⚠️ Cart items element not found', {}, 'warn');
+            return;
+        }
 
         if (this.items.length === 0) {
             // Show empty state
@@ -179,6 +289,7 @@ class ShoppingCart {
             cartActionsEl?.style.setProperty('display', 'none');
             quickActionsEl?.style.setProperty('display', 'none');
             cartItemsEl.innerHTML = '';
+            this.log('✅ Cart offcanvas updated - empty state', {}, 'success');
         } else {
             // Hide empty state, show cart content
             emptyCartEl?.style.setProperty('display', 'none');
@@ -226,53 +337,74 @@ class ShoppingCart {
 
             if (cartSubtotalEl) cartSubtotalEl.textContent = api.formatCurrency(subtotal);
             if (cartTotalEl) cartTotalEl.textContent = api.formatCurrency(totalUSD);
+            this.log('✅ Cart offcanvas updated - items displayed', { itemCount: this.items.length }, 'success');
         }
     }
 
     updateGuestBanner() {
+        this.log('🔄 Updating guest banner', {}, 'info');
+        
         const guestBanner = document.getElementById('guestBanner');
         const user = api?.getUser();
         
         if (guestBanner) {
             if (!user && this.items.length > 0) {
                 guestBanner.style.display = 'block';
+                this.log('✅ Guest banner shown', {}, 'success');
             } else {
                 guestBanner.style.display = 'none';
+                this.log('✅ Guest banner hidden', {}, 'success');
             }
         }
     }
 
     bindEvents() {
+        this.log('🔄 Binding cart events', {}, 'info');
+        
         // Cart toggle (already handled by Bootstrap data attributes in HTML)
         
         // FloresYa Express Checkout
         document.getElementById('floresyaCheckoutBtn')?.addEventListener('click', () => {
             if (this.items.length > 0) {
+                this.log('✅ FloresYa Express checkout initiated', {}, 'success');
                 this.handleFloresYaCheckout();
+            } else {
+                this.log('⚠️ FloresYa Express checkout attempted with empty cart', {}, 'warn');
             }
         });
 
         // Regular Checkout
         document.getElementById('regularCheckoutBtn')?.addEventListener('click', () => {
             if (this.items.length > 0) {
+                this.log('✅ Regular checkout initiated', {}, 'success');
                 window.location.href = '/pages/payment.html';
+            } else {
+                this.log('⚠️ Regular checkout attempted with empty cart', {}, 'warn');
             }
         });
+        
+        this.log('✅ Cart events bound successfully', {}, 'success');
     }
 
     async handleFloresYaCheckout() {
+        this.log('🔄 Handling FloresYa checkout', {}, 'info');
+        
         const user = api?.getUser();
         
         if (!user) {
             // Guest user - show quick checkout modal
+            this.log('✅ Guest user detected, showing FloresYa modal', {}, 'success');
             this.showGuestFloresYaModal();
         } else {
             // Logged in user - direct to payment
+            this.log('✅ Logged in user detected, redirecting to payment', {}, 'success');
             window.location.href = '/pages/payment.html?floresya=true';
         }
     }
 
     showGuestFloresYaModal() {
+        this.log('🔄 Showing guest FloresYa modal', {}, 'info');
+        
         const totalItems = this.getItemCount();
         const totalPrice = this.getFinalTotalUSD();
         
@@ -334,24 +466,35 @@ class ShoppingCart {
 
         // Remove existing modal
         const existingModal = document.getElementById('cartFloresYaModal');
-        if (existingModal) existingModal.remove();
+        if (existingModal) {
+            existingModal.remove();
+            this.log('✅ Existing FloresYa modal removed', {}, 'success');
+        }
 
         // Add modal to body
         document.body.insertAdjacentHTML('beforeend', modalHTML);
+        this.log('✅ FloresYa modal added to DOM', {}, 'success');
 
         // Show modal
         const modal = new bootstrap.Modal(document.getElementById('cartFloresYaModal'));
         modal.show();
+        this.log('✅ FloresYa modal shown', {}, 'success');
 
         // Close cart offcanvas
         const cartOffcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('cartOffcanvas'));
-        if (cartOffcanvas) cartOffcanvas.hide();
+        if (cartOffcanvas) {
+            cartOffcanvas.hide();
+            this.log('✅ Cart offcanvas hidden', {}, 'success');
+        }
     }
 
     processCartFloresYa() {
+        this.log('🔄 Processing FloresYa checkout', {}, 'info');
+        
         const form = document.getElementById('cartGuestForm');
         if (!form.checkValidity()) {
             form.reportValidity();
+            this.log('⚠️ FloresYa checkout form invalid', {}, 'warn');
             return;
         }
 
@@ -364,6 +507,7 @@ class ShoppingCart {
 
         // Store guest data
         sessionStorage.setItem('floresya_guest', JSON.stringify(guestData));
+        this.log('✅ Guest data stored in sessionStorage', { guestData }, 'success');
 
         // Show success animation
         this.showFloresYaAnimation();
@@ -371,14 +515,18 @@ class ShoppingCart {
         // Close modal
         const modal = bootstrap.Modal.getInstance(document.getElementById('cartFloresYaModal'));
         modal.hide();
+        this.log('✅ FloresYa modal hidden', {}, 'success');
 
         // Redirect to payment
         setTimeout(() => {
             window.location.href = '/pages/payment.html?floresya=true&guest=true';
+            this.log('✅ Redirecting to payment page', {}, 'success');
         }, 1500);
     }
 
     showFloresYaAnimation() {
+        this.log('🔄 Showing FloresYa animation', {}, 'info');
+        
         const animationHTML = `
             <div id="cart-floresya-animation" class="position-fixed top-50 start-50 translate-middle" 
                  style="z-index: 9999; text-align: center;">
@@ -391,33 +539,49 @@ class ShoppingCart {
         `;
 
         document.body.insertAdjacentHTML('beforeend', animationHTML);
+        this.log('✅ FloresYa animation added to DOM', {}, 'success');
 
         setTimeout(() => {
             const animation = document.getElementById('cart-floresya-animation');
-            if (animation) animation.remove();
+            if (animation) {
+                animation.remove();
+                this.log('✅ FloresYa animation removed', {}, 'success');
+            }
         }, 1500);
     }
 
     // Additional cart utility functions
     clearCart() {
+        this.log('🔄 Clearing cart - user confirmation requested', {}, 'info');
+        
         if (confirm('¿Estás seguro de que quieres vaciar el carrito?')) {
             this.items = [];
             this.saveCartToStorage();
             this.updateCartDisplay();
             this.notifyListeners();
             api.showNotification('Carrito vaciado', 'info');
+            this.log('✅ Cart cleared by user confirmation', {}, 'success');
+        } else {
+            this.log('ℹ️ Cart clear canceled by user', {}, 'info');
         }
     }
 
     saveForLater() {
+        this.log('🔄 Saving cart for later', { itemCount: this.items.length }, 'info');
+        
         if (this.items.length > 0) {
             const savedItems = JSON.stringify(this.items);
             localStorage.setItem('floresya_saved_cart', savedItems);
             api.showNotification('Carrito guardado para más tarde', 'success');
+            this.log('✅ Cart saved for later', { itemCount: this.items.length }, 'success');
+        } else {
+            this.log('⚠️ Attempt to save empty cart for later', {}, 'warn');
         }
     }
 
     loadSavedCart() {
+        this.log('🔄 Loading saved cart', {}, 'info');
+        
         try {
             const saved = localStorage.getItem('floresya_saved_cart');
             if (saved) {
@@ -426,13 +590,25 @@ class ShoppingCart {
                 this.updateCartDisplay();
                 localStorage.removeItem('floresya_saved_cart');
                 api.showNotification('Carrito guardado cargado', 'success');
+                this.log('✅ Saved cart loaded successfully', { itemCount: this.items.length }, 'success');
+            } else {
+                this.log('ℹ️ No saved cart found', {}, 'info');
             }
         } catch (error) {
-            console.error('Error loading saved cart:', error);
+            this.log('❌ Error loading saved cart', { error: error.message }, 'error');
         }
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (window.logger) {
+        window.logger.info('CART', '🔄 Initializing ShoppingCart on DOMContentLoaded');
+    }
     window.cart = new ShoppingCart();
+    
+    if (window.logger) {
+        window.logger.success('CART', '✅ Global cart instance created');
+    } else {
+        console.log('[🛒 CART] Global cart instance created');
+    }
 });

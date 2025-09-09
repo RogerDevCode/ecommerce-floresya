@@ -23,6 +23,85 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // TODO pasa por la API REST y el cliente de Supabase
 
 /**
+ * @route GET /api/products
+ * @desc Obtiene todos los productos con paginación
+ * @access Public
+ */
+router.get('/', async (req, res) => {
+    const { page = 1, limit = 100, search, occasion, category } = req.query;
+    const timer = startTimer('get-all-products');
+    
+    log('🔍 [API] Obteniendo productos', { page, limit, search, occasion, category }, 'info');
+    
+    try {
+        let query = supabase.from('products').select('*');
+        
+        // Aplicar filtros si se proporcionan
+        if (search) {
+            query = query.ilike('name', `%${search}%`);
+        }
+        
+        if (occasion) {
+            query = query.eq('occasion_id', occasion);
+        }
+        
+        if (category) {
+            query = query.eq('category_id', category);
+        }
+        
+        // Paginación
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+        query = query.range(from, to);
+        
+        const { data: products, error: dbError, count } = await query;
+        
+        if (dbError) {
+            timer.end();
+            log('❌ [API] Error obteniendo productos', { error: dbError.message }, 'error');
+            return res.status(500).json({
+                success: false,
+                message: 'Error obteniendo productos'
+            });
+        }
+        
+        // Procesar URLs de imágenes para cada producto
+        const processedProducts = products.map(product => {
+            return {
+                ...product,
+                image_url: product.image_url || '/images/placeholder-product.webp'
+            };
+        });
+        
+        timer.end();
+        log('✅ [API] Productos obtenidos exitosamente', { 
+            count: products.length, 
+            page, 
+            limit 
+        }, 'info');
+        
+        res.json({
+            success: true,
+            data: processedProducts,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total: count || products.length,
+                hasMore: products.length === parseInt(limit)
+            }
+        });
+        
+    } catch (error) {
+        timer.end();
+        log('❌ [API] Error inesperado obteniendo productos', { error: error.message }, 'error');
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+});
+
+/**
  * @route GET /api/products/:id
  * @desc Obtiene un producto por ID. Si no tiene imagen en Supabase, devuelve placeholder local.
  * @access Public
@@ -56,35 +135,13 @@ router.get('/:id', async (req, res) => {
             });
         }
 
-        // 2. Construir URL de imagen desde Supabase Storage (si existe)
-        let imageUrl = null;
-        if (product.image_path) { // Asumiendo que guardas la ruta relativa en la DB, ej: "products/flore-0042.webp"
-            const { data: publicUrlData } = supabase
-                .storage
-                .from('products') // Nombre de tu bucket
-                .getPublicUrl(product.image_path);
-
-            imageUrl = publicUrlData?.publicUrl || null;
-
-            // Verificar si la URL es accesible (opcional, para evitar broken images)
-            if (imageUrl) {
-                try {
-                    const headResponse = await fetch(imageUrl, { method: 'HEAD' });
-                    if (!headResponse.ok) {
-                        log('⚠️ [API] URL de imagen no accesible, usando placeholder', { url: imageUrl }, 'warn');
-                        imageUrl = null;
-                    }
-                } catch (fetchError) {
-                    log('⚠️ [API] Error al verificar imagen, usando placeholder', { url: imageUrl, error: fetchError.message }, 'warn');
-                    imageUrl = null;
-                }
-            }
-        }
+        // 2. Usar la URL de imagen almacenada en la base de datos
+        let imageUrl = product.image_url;
 
         // 3. ✅ Fallback a placeholder local si no hay imagen válida
         if (!imageUrl) {
             imageUrl = '/images/placeholder-product-2.webp';
-            log('🖼️ [API] Usando placeholder local', { productId: id, reason: 'no image in Supabase or broken URL' }, 'info');
+            log('🖼️ [API] Usando placeholder local', { productId: id, reason: 'no image_url in database' }, 'info');
         }
 
         // 4. Preparar respuesta

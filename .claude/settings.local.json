@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(NODE_ENV=development DEBUG=* node backend/src/server.js)"
+      "Bash(pkill:*)",
+      "Bash(node:*)",
+      "Bash(time curl:*)"
     ],
     "deny": [],
     "ask": []
