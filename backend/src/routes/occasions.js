@@ -1,7 +1,6 @@
-const express = require('express');
-const router = express.Router();
-const { authenticateToken, requireRole } = require('../middleware/auth');
-const {
+import express from 'express';
+import { authenticateToken, requireRole } from '../middleware/bked_auth_middleware.js';
+import {
     getAllOccasions,
     getOccasionById,
     getProductsByOccasion,
@@ -11,7 +10,9 @@ const {
     addProductToOccasion,
     removeProductFromOccasion,
     getProductOccasions
-} = require('../controllers/occasionController');
+} from '../controllers/occasionController.js';
+
+const router = express.Router();
 
 // Public routes
 router.get('/', getAllOccasions);
@@ -30,4 +31,4 @@ router.delete('/:id', authenticateToken, requireRole(['admin']), deleteOccasion)
 router.post('/:id/products/:productId', authenticateToken, requireRole(['admin']), addProductToOccasion);
 router.delete('/:id/products/:productId', authenticateToken, requireRole(['admin']), removeProductFromOccasion);
 
-module.exports = router;
+export default router;

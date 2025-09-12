@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ProductImageHover</title>
+    <style>
+        .product-image {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            transition: opacity 0.3s ease;
+        }
+        .card {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin: 20px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test ProductImageHover</h1>
+    
+    <!-- Test product with multiple images -->
+    <div class="card product-card">
+        <img src="https://via.placeholder.com/200x200/FF1493/FFFFFF?text=Image+1" 
+             data-product-id="1"
+             data-images='["https://via.placeholder.com/200x200/FF1493/FFFFFF?text=Image+1", "https://via.placeholder.com/200x200/FF69B4/FFFFFF?text=Image+2", "https://via.placeholder.com/200x200/FFB6C1/FFFFFF?text=Image+3"]'
+             class="product-image"
+             alt="Test Product">
+        <p>Hover over the image to see cycling</p>
+    </div>
+
+    <!-- Test product with single image (no cycling) -->
+    <div class="card product-card">
+        <img src="https://via.placeholder.com/200x200/32CD32/FFFFFF?text=Single+Image" 
+             data-product-id="2"
+             data-images='["https://via.placeholder.com/200x200/32CD32/FFFFFF?text=Single+Image"]'
+             class="product-image"
+             alt="Single Image Product">
+        <p>Single image - no cycling</p>
+    </div>
+
+    <script src="frontend/js/product-image-hover.js"></script>
+</body>
+</html>

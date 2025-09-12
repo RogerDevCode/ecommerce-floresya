@@ -1,0 +1,83 @@
+
+> floresya-ecommerce@1.0.0 test:controllers
+> vitest --run tests/unit/categoryController tests/unit/productController tests/unit/orderController
+
+
+ RUN  v3.2.4 /home/manager/Sync/ecommerce-floresya
+
+ ❯ tests/unit/categoryController.test.js (13 tests | 7 failed) 98ms
+   × Category Controller - Supabase Tests > GET /categories > should return all active categories 30ms
+     → expected [ { id: 1, …(6) } ] to have property "categories"
+   ✓ Category Controller - Supabase Tests > GET /categories > should filter categories by active status 6ms
+   ✓ Category Controller - Supabase Tests > GET /categories > should include products when requested 4ms
+   ✓ Category Controller - Supabase Tests > GET /categories > should handle database errors gracefully 4ms
+   × Category Controller - Supabase Tests > GET /categories/:id > should return a category by ID 5ms
+     → expected 200 "OK", got 404 "Not Found"
+   ✓ Category Controller - Supabase Tests > GET /categories/:id > should return 404 for non-existent category 4ms
+   × Category Controller - Supabase Tests > POST /categories > should create a new category with valid data 14ms
+     → expected 201 "Created", got 500 "Internal Server Error"
+   × Category Controller - Supabase Tests > POST /categories > should return error for missing required fields 7ms
+     → expected { success: false, …(1) } to have property "message" with value 'Name is required'
+   × Category Controller - Supabase Tests > PUT /categories/:id > should update an existing category 5ms
+     → expected 200 "OK", got 404 "Not Found"
+   ✓ Category Controller - Supabase Tests > PUT /categories/:id > should return 404 for non-existent category 5ms
+   × Category Controller - Supabase Tests > DELETE /categories/:id > should delete an existing category without products 4ms
+     → expected 200 "OK", got 404 "Not Found"
+   × Category Controller - Supabase Tests > DELETE /categories/:id > should not delete category with products 4ms
+     → expected 400 "Bad Request", got 404 "Not Found"
+   ✓ Category Controller - Supabase Tests > DELETE /categories/:id > should return 404 for non-existent category 4ms
+ ❯ tests/unit/productController.test.js (18 tests | 2 failed) 110ms
+   ✓ Product Controller - Prisma-like API Tests > GET /products > should return all active products with pagination 27ms
+   ✓ Product Controller - Prisma-like API Tests > GET /products > should filter by featured products 6ms
+   ✓ Product Controller - Prisma-like API Tests > GET /products > should handle search functionality 4ms
+   ✓ Product Controller - Prisma-like API Tests > GET /products > should handle database errors gracefully 3ms
+   ✓ Product Controller - Prisma-like API Tests > GET /products/:id > should return a product by ID with images 3ms
+   ✓ Product Controller - Prisma-like API Tests > GET /products/:id > should return 404 for non-existent product 3ms
+   ✓ Product Controller - Prisma-like API Tests > GET /products/:id > should handle database errors gracefully 3ms
+   ✓ Product Controller - Prisma-like API Tests > POST /products > should create a new product with valid data 10ms
+   ✓ Product Controller - Prisma-like API Tests > POST /products > should return error for missing required fields 4ms
+   × Product Controller - Prisma-like API Tests > POST /products > should process uploaded images 9ms
+     → expected 201 "Created", got 400 "Bad Request"
+   ✓ Product Controller - Prisma-like API Tests > PUT /products/:id > should update an existing product 6ms
+   ✓ Product Controller - Prisma-like API Tests > PUT /products/:id > should return 404 for non-existent product 4ms
+   ✓ Product Controller - Prisma-like API Tests > PUT /products/:id > should handle partial updates 4ms
+   ✓ Product Controller - Prisma-like API Tests > DELETE /products/:id > should delete an existing product 4ms
+   × Product Controller - Prisma-like API Tests > DELETE /products/:id > should delete associated images before deleting product 4ms
+     → databaseService is not defined
+   ✓ Product Controller - Prisma-like API Tests > DELETE /products/:id > should return 404 for non-existent product 3ms
+   ✓ Product Controller - Prisma-like API Tests > Error Handling > should handle database errors gracefully 4ms
+   ✓ Product Controller - Prisma-like API Tests > Error Handling > should not expose error details in production 4ms
+ ❯ tests/unit/orderController.test.js (16 tests | 11 failed) 105ms
+   × Order Controller - Supabase Tests > GET /orders > should return all orders with pagination 32ms
+     → expected 200 "OK", got 500 "Internal Server Error"
+   × Order Controller - Supabase Tests > GET /orders > should filter orders by status 6ms
+     → expected 200 "OK", got 500 "Internal Server Error"
+   × Order Controller - Supabase Tests > GET /orders > should filter orders by customer email 5ms
+     → expected 200 "OK", got 500 "Internal Server Error"
+   ✓ Order Controller - Supabase Tests > GET /orders > should handle database errors gracefully 6ms
+   × Order Controller - Supabase Tests > GET /orders/:id > should return an order by ID with full details 5ms
+     → expected 200 "OK", got 500 "Internal Server Error"
+   × Order Controller - Supabase Tests > GET /orders/:id > should return 404 for non-existent order 7ms
+     → expected 404 "Not Found", got 500 "Internal Server Error"
+   × Order Controller - Supabase Tests > POST /orders > should create a new order with valid data 11ms
+     → expected 201 "Created", got 500 "Internal Server Error"
+   ✓ Order Controller - Supabase Tests > POST /orders > should return error for missing required fields 3ms
+   × Order Controller - Supabase Tests > POST /orders > should validate product availability 4ms
+     → expected 400 "Bad Request", got 500 "Internal Server Error"
+   × Order Controller - Supabase Tests > POST /orders > should validate stock availability 3ms
+     → expected 400 "Bad Request", got 500 "Internal Server Error"
+   × Order Controller - Supabase Tests > PUT /orders/:id/status > should update order status successfully 4ms
+     → expected 200 "OK", got 500 "Internal Server Error"
+   ✓ Order Controller - Supabase Tests > PUT /orders/:id/status > should validate status values 3ms
+   × Order Controller - Supabase Tests > PUT /orders/:id/status > should return 404 for non-existent order 3ms
+     → expected 404 "Not Found", got 500 "Internal Server Error"
+   ✓ Order Controller - Supabase Tests > PUT /orders/:id/status > should handle database errors during update 3ms
+   × Order Controller - Supabase Tests > GET /orders/stats/summary > should return order statistics 5ms
+     → expected 200 "OK", got 500 "Internal Server Error"
+   ✓ Order Controller - Supabase Tests > GET /orders/stats/summary > should handle database errors in stats 6ms
+
+ Test Files  4 failed (4)
+      Tests  20 failed | 27 passed (47)
+   Start at  17:18:08
+   Duration  601ms (transform 244ms, setup 66ms, collect 746ms, tests 314ms, environment 1ms, prepare 311ms)
+

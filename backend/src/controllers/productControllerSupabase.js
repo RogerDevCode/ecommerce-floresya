@@ -1,9 +1,9 @@
-const {
+import {
     log,          // Función principal
     logger,       // Alias con métodos .info(), .warn(), etc.
     requestLogger, // Middleware Express
     startTimer     // Para medir tiempos de ejecución
-} = require('../utils/logger.js');
+} from '../utils/bked_logger.js';
 
 /**
  * 🏪 PRODUCT CONTROLLER - NUEVO SISTEMA EXCLUSIVO
@@ -14,12 +14,12 @@ const {
  * - databaseService estándar
  */
 
-const { databaseService } = require('../services/databaseService');
-const { uploadMultiple, handleUploadError } = require('../middleware/upload');
-const imageProcessing = require('../services/imageProcessing');
-const imageHashService = require('../services/imageHashService');
-const path = require('path');
-const fs = require('fs');
+import { databaseService } from '../services/databaseService.js';
+import { uploadMultiple, handleUploadError } from '../middleware/upload.js';
+import imageProcessing from '../services/imageProcessing.js';
+import imageHashService from '../services/imageHashService.js';
+import path from 'path';
+import fs from 'fs';
 
 /**
  * 📋 GET ALL PRODUCTS
@@ -447,7 +447,7 @@ const getProductStats = async (req, res) => {
 };
 
 // Exportar todas las funciones
-module.exports = {
+export {
     getAllProducts,
     getProductById,
     createProduct,

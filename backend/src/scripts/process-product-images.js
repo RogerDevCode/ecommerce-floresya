@@ -186,7 +186,7 @@ class ImageProcessor {
             const imageRecords = Object.entries(imageUrls).map(([size, url]) => ({
                 product_id: productId,
                 image_url: url,
-                size: size,
+                size,
                 is_primary: size === 'large',
                 created_at: new Date().toISOString()
             }));
@@ -268,7 +268,7 @@ class ImageProcessor {
     }
 
     showSummary() {
-        console.log('\n' + '='.repeat(60));
+        console.log(`\n${'='.repeat(60)}`);
         console.log('📊 RESUMEN DEL PROCESAMIENTO - FLORESYA (CLOUD-ONLY)');
         console.log('='.repeat(60));
         console.log(`✅ Imágenes procesadas en memoria: ${this.stats.processed}/${this.stats.totalFiles}`);

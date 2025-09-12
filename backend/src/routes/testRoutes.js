@@ -1,15 +1,16 @@
-const express = require('express');
-const router = express.Router();
-const { 
-    testCategories, 
+import express from 'express';
+import { 
+    testOccasions, 
     testProducts, 
     testConnection, 
     testHello 
-} = require('../controllers/testController');
+} from '../controllers/testController.js';
+
+const router = express.Router();
 
 // Test routes for debugging and verification
 router.get('/connection', testConnection);
-router.get('/categories', testCategories);
+router.get('/occasions', testOccasions);
 router.get('/products', testProducts);
 router.get('/hello', testHello);
 
@@ -20,7 +21,7 @@ router.get('/health', (req, res) => {
         message: 'Test endpoints are working',
         endpoints: [
             '/api/test/connection - Database connection test',
-            '/api/test/categories - Detailed categories info',
+            '/api/test/occasions - Detailed occasions info',
             '/api/test/products - Detailed products info', 
             '/api/test/filtered-products - Test product filtering',
             '/api/test/health - This endpoint'
@@ -29,4 +30,4 @@ router.get('/health', (req, res) => {
     });
 });
 
-module.exports = router;
+export default router;

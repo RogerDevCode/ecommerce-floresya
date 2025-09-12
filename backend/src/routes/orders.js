@@ -1,23 +1,23 @@
-const express = require('express');
+import express from 'express';
+import { authenticateToken, requireRole, optionalAuth } from '../middleware/bked_auth_middleware.js';
+import { orderValidation } from '../middleware/validation.js';
+import * as orderController from '../controllers/orderController.js';
+
 const router = express.Router();
-const { authenticateToken, requireRole, optionalAuth } = require('../middleware/auth');
-const { orderValidation } = require('../middleware/validation');
-const {
-    createOrder,
-    getOrder,
-    getUserOrders,
-    getAllOrders,
-    updateOrderStatus
-} = require('../controllers/orderController');
 
-router.post('/', optionalAuth, orderValidation, createOrder);
+// POST create order
+router.post('/', optionalAuth, orderValidation, orderController.createOrder);
 
-router.get('/my-orders', authenticateToken, getUserOrders);
+// GET all orders (admin)
+router.get('/admin/all', authenticateToken, requireRole(['admin']), orderController.getAllOrders);
 
-router.get('/admin/all', authenticateToken, requireRole(['admin']), getAllOrders);
+// GET order stats (admin)
+router.get('/stats/summary', authenticateToken, requireRole(['admin']), orderController.getOrderStats);
 
-router.get('/:id', optionalAuth, getOrder);
+// GET order by ID
+router.get('/:id', optionalAuth, orderController.getOrderById);
 
-router.patch('/:id/status', authenticateToken, requireRole(['admin']), updateOrderStatus);
+// PATCH update order status (admin)
+router.patch('/:id/status', authenticateToken, requireRole(['admin']), orderController.updateOrderStatus);
 
-module.exports = router;
+export default router;

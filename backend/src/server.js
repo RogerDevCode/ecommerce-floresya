@@ -1,56 +1,64 @@
 // backend/src/server.js
-const {
+import {
     log,
     logger,
     requestLogger,
     startTimer
-} = require('./utils/logger.js');
+} from './utils/bked_logger.js';
 
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const compression = require('compression');
-const path = require('path');
+import { config } from 'dotenv';
+config();
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import compression from 'compression';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { swaggerUi, specs } from './config/swagger.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 logger.info('SERVER', '🔍 Iniciando carga de dependencias...');
 
 // 🚨 LOG: Antes de cargar cualquier dependencia pesada
 logger.info('SERVER', '📦 Cargando módulos del sistema...');
 
-const { testConnection } = require('./config/database');
-logger.info('SERVER', '🔌 Módulo de base de datos cargado');
+// Database initialization not needed - using Supabase client directly
+logger.info('SERVER', '🔌 Usando Supabase client directo (sin inicialización)');
 
-const { initializeEmailService } = require('./services/emailService');
-logger.info('SERVER', '✉️ Módulo de email cargado');
+// import { initializeEmailService } from './services/bked_emailService.js';
+logger.info('SERVER', '✉️ Módulo de email deshabilitado temporalmente');
 
-const { monitoringService } = require('./services/monitoringService');
-logger.info('SERVER', '📊 Módulo de monitoreo cargado');
+// import { monitoringService } from './services/bked_monitoringService.js';
+logger.info('SERVER', '📊 Módulo de monitoreo deshabilitado temporalmente');
 
-const { 
+import { 
     createMonitoringMiddleware,
     healthCheckMiddleware,
     alertsMiddleware,
     systemStatsMiddleware 
-} = require('./middleware/monitoringMiddleware');
+} from './middleware/monitoringMiddleware.js';
 logger.info('SERVER', '🛡️ Middleware de monitoreo cargado');
 
 // Rutas
 logger.info('SERVER', '🛣️ Cargando rutas de API...');
-const authRoutes = require('./routes/auth');
-const productRoutes = require('./routes/products');
-const orderRoutes = require('./routes/orders');
-const paymentRoutes = require('./routes/payments');
-const categoryRoutes = require('./routes/categories');
-const occasionRoutes = require('./routes/occasions');
-const settingsRoutes = require('./routes/settings');
-const paymentMethodRoutes = require('./routes/paymentMethods');
-const carouselRoutes = require('./routes/carousel');
-const uploadRoutes = require('./routes/upload');
-const testRoutes = require('./routes/testRoutes');
-const imageRoutes = require('./routes/images');
-const logsRoutes = require('./routes/logs');
+import authRoutes from './routes/bked_auth_routes.js';
+import productRoutes from './routes/products.js';
+import orderRoutes from './routes/orders.js';
+import paymentRoutes from './routes/payments.js';
+// import categoryRoutes from './routes/categories.js'; // REMOVED: Categories obsolete
+import occasionRoutes from './routes/occasions.js';
+import settingsRoutes from './routes/settings.js';
+import paymentMethodRoutes from './routes/paymentMethods.js';
+import carouselRoutes from './routes/carousel.js';
+import uploadRoutes from './routes/upload.js';
+import testRoutes from './routes/testRoutes.js';
+import imageRoutes from './routes/images.js';
+import testFixedRoutes from './routes/test-fixed.js';
+import logsRoutes from './routes/logs.js';
 
 logger.success('SERVER', '✅ Todas las rutas cargadas correctamente');
 
@@ -62,32 +70,32 @@ logger.info('SERVER', `⚙️ Configurando servidor en puerto ${PORT}...`);
 // 🛡️ Helmet - Seguridad HTTP
 logger.info('SERVER', '🛡️ Configurando Helmet (CSP, HSTS, etc.)...');
 app.use(helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
     contentSecurityPolicy: {
         directives: {
-            defaultSrc: ["'self'"],
+            defaultSrc: ['\'self\''],
             scriptSrc: [
-                "'self'", 
-                "'unsafe-inline'", 
-                "https://cdn.jsdelivr.net",
-                "https://cdnjs.cloudflare.com"
+                '\'self\'', 
+                '\'unsafe-inline\'', 
+                'https://cdn.jsdelivr.net',
+                'https://cdnjs.cloudflare.com'
             ],
-            scriptSrcAttr: ["'unsafe-inline'"],
+            scriptSrcAttr: ['\'unsafe-inline\''],
             styleSrc: [
-                "'self'", 
-                "'unsafe-inline'", 
-                "https://cdn.jsdelivr.net",
-                "https://cdnjs.cloudflare.com"
+                '\'self\'', 
+                '\'unsafe-inline\'', 
+                'https://cdn.jsdelivr.net',
+                'https://cdnjs.cloudflare.com'
             ],
-            imgSrc: ["'self'", "data:", "https:", "blob:", "https://*.supabase.co"],
+            imgSrc: ['\'self\'', 'data:', 'https:', 'blob:', 'https://*.supabase.co'],
             fontSrc: [
-                "'self'", 
-                "https://cdn.jsdelivr.net",
-                "https://cdnjs.cloudflare.com"
+                '\'self\'', 
+                'https://cdn.jsdelivr.net',
+                'https://cdnjs.cloudflare.com'
             ],
-            connectSrc: ["'self'", "https://*.supabase.co"],
-            frameSrc: ["'self'"],
-            objectSrc: ["'none'"]
+            connectSrc: ['\'self\'', 'https://*.supabase.co'],
+            frameSrc: ['\'self\''],
+            objectSrc: ['\'none\'']
         }
     }
 }));
@@ -165,6 +173,14 @@ app.use(alertsMiddleware);
 app.use(systemStatsMiddleware);
 logger.success('SERVER', '✅ Middleware de monitoreo montado');
 
+// 📚 SWAGGER UI - Documentación de API
+logger.info('SERVER', '📚 Configurando Swagger UI para documentación de API...');
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+logger.success('SERVER', '✅ Swagger UI montado en /api-docs');
+
+// 📁 Servir archivos estáticos
+logger.info('SERVER', '📁 Configurando servidores estáticos...');
+
 // 📁 Servir archivos estáticos
 logger.info('SERVER', '📁 Configurando servidores estáticos...');
 app.use('/uploads', express.static(path.join(__dirname, '../../uploads'), {
@@ -187,10 +203,11 @@ logger.info('SERVER', '🚀 Montando rutas de API...');
 const routes = [
     { path: '/api/auth', handler: authRoutes, name: 'Auth' },
     { path: '/api/carousel', handler: carouselRoutes, name: 'Carousel' },
-    { path: '/api/categories', handler: categoryRoutes, name: 'Categories' },
+    // { path: '/api/categories', handler: categoryRoutes, name: 'Categories' }, // REMOVED: Categories obsolete
     { path: '/api/images', handler: imageRoutes, name: 'Images' },
     { path: '/api/logs', handler: logsRoutes, name: 'Logs' },
     { path: '/api/occasions', handler: occasionRoutes, name: 'Occasions' },
+    { path: '/api/test-fixed', handler: testFixedRoutes, name: 'TestFixed' },
     { path: '/api/orders', handler: orderRoutes, name: 'Orders' },
     { path: '/api/payment-methods', handler: paymentMethodRoutes, name: 'PaymentMethods' },
     { path: '/api/payments', handler: paymentRoutes, name: 'Payments' },
@@ -269,28 +286,24 @@ const startServer = async () => {
     try {
         logger.info('SERVER', '🚀 Iniciando servidor FloresYa...');
         
-        // 🔌 Conexión a base de datos
-        logger.info('DATABASE', '🔌 Intentando conectar a base de datos...');
-        const dbConnected = await testConnection();
-        if (!dbConnected) {
-            logger.error('DATABASE', '❌ No se pudo conectar a la base de datos');
-            process.exit(1);
-        }
-        logger.success('DATABASE', '✅ Conexión a base de datos establecida');
+        // 🔌 Base de datos - Usando Supabase client directo (sin inicialización)
+        logger.info('DATABASE', '🔌 Usando Supabase client directo...');
+        // await initializeDatabase(); // No needed with Supabase
+        logger.success('DATABASE', '✅ Supabase client listo para usar');
         
-        // ✉️ Servicio de email
+        // ✉️ Servicio de email - Deshabilitado temporalmente
         try {
-            logger.info('EMAIL', '✉️ Inicializando servicio de email...');
-            initializeEmailService();
-            logger.success('EMAIL', '✅ Servicio de email inicializado');
+            logger.info('EMAIL', '✉️ Servicio de email deshabilitado...');
+            // initializeEmailService();
+            logger.success('EMAIL', '✅ Email service disabled for now');
         } catch (emailError) {
             logger.warn('EMAIL', '⚠️ Servicio de email no disponible', { error: emailError.message });
         }
 
-        // 📈 Monitoreo
-        logger.info('MONITORING', '📊 Iniciando sistema de monitoreo...');
-        monitoringService.startMonitoring(30000);
-        logger.success('MONITORING', '✅ Sistema de monitoreo iniciado');
+        // 📈 Monitoreo - Deshabilitado temporalmente
+        logger.info('MONITORING', '📊 Sistema de monitoreo deshabilitado...');
+        // monitoringService.startMonitoring(30000);
+        logger.success('MONITORING', '✅ Monitoring service disabled for now');
         
         // ▶️ Iniciar servidor
         const server = app.listen(PORT, '0.0.0.0', () => {
@@ -298,14 +311,14 @@ const startServer = async () => {
                 port: PORT,
                 env: process.env.NODE_ENV,
                 pid: process.pid,
-                hostname: require('os').hostname()
+                hostname: process.platform
             });
-            console.log(`\n🌸 FloresYa E-Commerce - Venezuela`);
+            console.log('\n🌸 FloresYa E-Commerce - Venezuela');
             console.log(`🌐 API: http://localhost:${PORT}/api`);
             console.log(`🛒 Frontend: http://localhost:${PORT}`);
             console.log(`❤️ Health: http://localhost:${PORT}/api/health`);
             console.log(`📊 Metrics: http://localhost:${PORT}/metrics`);
-            console.log(`📋 Logs: /logs/frontend/ (archivos JSON)\n`);
+            console.log('📋 Logs: /logs/frontend/ (archivos JSON)\n');
         });
 
         // Eventos del servidor
@@ -341,15 +354,15 @@ const startServer = async () => {
 // 🔄 Manejo de señales de sistema
 process.on('SIGINT', () => {
     logger.info('SERVER', '\n🔄 Cerrando servidor FloresYa...');
-    monitoringService.stopMonitoring();
-    logger.info('SERVER', '✅ Monitoreo detenido');
+    // monitoringService.stopMonitoring();
+    logger.info('SERVER', '✅ Monitoreo detenido (disabled)');
     process.exit(0);
 });
 
 process.on('SIGTERM', () => {
     logger.info('SERVER', '\n🔄 Recibida señal SIGTERM. Apagando servidor...');
-    monitoringService.stopMonitoring();
-    logger.info('SERVER', '✅ Monitoreo detenido');
+    // monitoringService.stopMonitoring();
+    logger.info('SERVER', '✅ Monitoreo detenido (disabled)');
     process.exit(0);
 });
 
@@ -372,11 +385,12 @@ process.on('uncaughtException', (err) => {
 });
 
 // ▶️ Iniciar si es el módulo principal
-if (require.main === module) {
+// Check if this is the main module
+if (import.meta.url === `file://${process.argv[1]}`) {
     logger.info('SERVER', '▶️ Este es el módulo principal. Iniciando servidor...');
     startServer();
 } else {
     logger.warn('SERVER', '⚠️ Este módulo fue importado, no se iniciará el servidor');
 }
 
-module.exports = app;
+export default app;

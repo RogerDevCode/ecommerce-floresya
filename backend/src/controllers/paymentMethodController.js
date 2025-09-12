@@ -1,23 +1,19 @@
-const { supabase, useSupabase } = require('../config/database');
+import { databaseService } from '../services/databaseService.js';
 
 const getAllPaymentMethods = async (req, res) => {
     try {
-        let paymentMethods;
-
-        if (useSupabase) {
-            const { data, error } = await supabase
-                .from('payment_methods')
-                .select('*')
-                .eq('active', true)
-                .order('name', { ascending: true });
-            
-            if (error) {
-                throw error;
-            }
-            paymentMethods = data || [];
-        } else {
-            throw new Error('Only Supabase is supported in this application');
+        const client = databaseService.getClient();
+        const { data, error } = await client
+            .from('payment_methods')
+            .select('*')
+            .eq('active', true)
+            .order('name', { ascending: true });
+        
+        if (error) {
+            throw error;
         }
+        
+        const paymentMethods = data || [];
 
         res.json({ success: true, data: { payment_methods: paymentMethods } });
     } catch (error) {
@@ -26,4 +22,4 @@ const getAllPaymentMethods = async (req, res) => {
     }
 };
 
-module.exports = { getAllPaymentMethods };
+export { getAllPaymentMethods };

@@ -1,6 +1,11 @@
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, '../../../frontend/images/products');
@@ -30,12 +35,12 @@ const fileFilter = (req, file, cb) => {
 
 // Configure multer
 const upload = multer({
-    storage: storage,
+    storage,
     limits: {
         fileSize: 5 * 1024 * 1024, // 5MB max file size
         files: 10 // Maximum 10 files per upload
     },
-    fileFilter: fileFilter
+    fileFilter
 });
 
 // Middleware for single file upload
@@ -77,7 +82,7 @@ const handleUploadError = (error, req, res, next) => {
     next(error);
 };
 
-module.exports = {
+export {
     uploadSingle,
     uploadMultiple,
     handleUploadError

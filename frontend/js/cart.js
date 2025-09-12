@@ -414,7 +414,7 @@ class ShoppingCart {
                     <div class="modal-content">
                         <div class="modal-header bg-gradient-primary text-white">
                             <h5 class="modal-title">
-                                <i class="bi bi-lightning-fill"></i> ¡FloresYa! Express
+                                <i class="bi bi-cart-check"></i> FloresYa Express
                             </h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                         </div>
@@ -456,7 +456,7 @@ class ShoppingCart {
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                             <button type="button" class="btn btn-primary-custom btn-lg" onclick="cart.processCartFloresYa()">
-                                <i class="bi bi-lightning-fill"></i> ¡FloresYa!
+                                <i class="bi bi-cart-check"></i> FloresYa
                             </button>
                         </div>
                     </div>
@@ -531,8 +531,8 @@ class ShoppingCart {
             <div id="cart-floresya-animation" class="position-fixed top-50 start-50 translate-middle" 
                  style="z-index: 9999; text-align: center;">
                 <div class="bg-primary-custom text-white p-4 rounded-3 shadow-lg">
-                    <i class="bi bi-lightning-fill display-1 mb-3 floresya-pulse"></i>
-                    <h4 class="fw-bold">¡FloresYa!</h4>
+                    <i class="bi bi-cart-check display-1 mb-3 floresya-pulse"></i>
+                    <h4 class="fw-bold">FloresYa</h4>
                     <p class="mb-0">Procesando tu pedido...</p>
                 </div>
             </div>

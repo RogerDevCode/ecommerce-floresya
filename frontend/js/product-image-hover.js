@@ -108,11 +108,19 @@ class ProductImageHover {
         let target = element;
         while (target && target !== document) {
             if (target.tagName === 'IMG' && target.classList.contains('product-image')) {
+                // Skip carousel images
+                if (target.hasAttribute('data-carousel') || target.classList.contains('carousel-image')) {
+                    return null;
+                }
                 return target;
             }
             if (target.classList.contains('product-card') || target.classList.contains('card')) {
                 const img = target.querySelector('img.product-image');
                 if (img) {
+                    // Skip carousel images
+                    if (img.hasAttribute('data-carousel') || img.classList.contains('carousel-image')) {
+                        return null;
+                    }
                     return img;
                 } else {
                     return null;
@@ -169,7 +177,7 @@ class ProductImageHover {
         // Preload next images (except the first one, which is already loaded)
         this.preloadImages(images.slice(1));
 
-        // Start cycling through images every 2.5 seconds (more elegant, less distracting)
+        // Start cycling through images every 1.2 seconds (industry standard for product hovers)
         state.intervalId = setInterval(() => {
             state.currentIndex = (state.currentIndex + 1) % state.images.length;
             const newImageUrl = state.images[state.currentIndex];
@@ -184,8 +192,9 @@ class ProductImageHover {
             tempImg.onload = () => {
                 this.log('✅ Imagen precargada exitosamente', { url: newImageUrl }, 'success');
                 
-                // Apply smooth fade transition
-                imageElement.style.opacity = '0.7';
+                // Apply smooth fade transition (optimized for better UX)
+                imageElement.style.opacity = '0.8';
+                imageElement.style.transition = 'opacity 0.2s ease-in-out';
                 setTimeout(() => {
                     // Direct assignment (bypass responsive system for hover)
                     imageElement.src = newImageUrl;
@@ -199,7 +208,7 @@ class ProductImageHover {
                         newIndex: state.currentIndex,
                         url: newImageUrl 
                     }, 'success');
-                }, 150);
+                }, 120);
             };
             
             tempImg.onerror = (error) => {
@@ -215,7 +224,7 @@ class ProductImageHover {
             
             tempImg.src = newImageUrl;
             
-        }, 2500); // 2.5 seconds - more elegant than 2 seconds
+        }, 1200); // 1.2 seconds - industry standard for smooth product hover experience
 
         // Store state
         this.activeImages.set(imageElement, state);

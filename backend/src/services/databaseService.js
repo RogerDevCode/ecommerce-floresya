@@ -4,8 +4,9 @@
  * Usado por: API, Testing, Scripts de migración
  */
 
-require('dotenv').config();
-const { createClient } = require('@supabase/supabase-js');
+import { config } from 'dotenv';
+config();
+import { createClient } from '@supabase/supabase-js';
 
 class DatabaseService {
     constructor() {
@@ -73,42 +74,59 @@ class DatabaseService {
         return this.supabase;
     }
 
-    // Query genérico para testing y operaciones comunes
+    // Query genérico usando el nuevo QueryBuilder moderno
     async query(tableName, options = {}) {
-        const client = this.getClient();
-        let query = client.from(tableName);
-
-        if (options.select) {
-            query = query.select(options.select);
-        } else {
-            query = query.select('*');
-        }
-
-        if (options.eq) {
-            Object.entries(options.eq).forEach(([key, value]) => {
-                query = query.eq(key, value);
-            });
-        }
-
-        if (options.limit) {
-            query = query.limit(options.limit);
-        }
-
-        if (options.order) {
-            query = query.order(options.order.column, { ascending: options.order.ascending || false });
-        }
-
-        if (options.count) {
-            query = query.select('*', { count: 'exact', head: options.count === 'head' });
-        }
-
-        const { data, error, count } = await query;
-
-        if (error) {
+        try {
+            const { createQueryBuilder } = await import('./queryBuilder.js');
+            const client = this.getClient();
+            const qb = createQueryBuilder(client, tableName);
+            
+            // Aplicar select
+            if (options.select) {
+                qb.select(options.select);
+            }
+            
+            // Aplicar filtros eq
+            if (options.eq) {
+                Object.entries(options.eq).forEach(([key, value]) => {
+                    qb.eq(key, value);
+                });
+            }
+            
+            // Aplicar limit
+            if (options.limit) {
+                qb.limit(options.limit);
+            }
+            
+            // Aplicar orden
+            if (options.order) {
+                qb.orderBy(options.order.column, { ascending: options.order.ascending !== false });
+            }
+            
+            // Ejecutar query
+            const result = await qb.execute();
+            
+            if (!result.success) {
+                throw new Error(`Database query error: ${result.error?.message || 'Unknown error'}`);
+            }
+            
+            return { data: result.data, count: result.count };
+            
+        } catch (error) {
             throw new Error(`Database query error: ${error.message}`);
         }
+    }
 
-        return { data, count };
+    // Método para obtener el QueryBuilder directamente
+    async getQueryBuilder(tableName) {
+        const { createQueryBuilder } = await import('./queryBuilder.js');
+        return createQueryBuilder(this.getClient(), tableName);
+    }
+
+    // Método para obtener la API tipo Prisma
+    async getPrismaAPI() {
+        const { createPrismaLikeAPI } = await import('./queryBuilder.js');
+        return createPrismaLikeAPI(this.getClient());
     }
 
     // Contar registros en una tabla
@@ -235,7 +253,7 @@ class DatabaseService {
             const { data: orphanImages } = await this.getClient()
                 .from('product_images')
                 .select('id, product_id')
-                .not('product_id', 'in', `(SELECT id FROM products WHERE active = true)`);
+                .not('product_id', 'in', '(SELECT id FROM products WHERE active = true)');
 
             if (orphanImages && orphanImages.length > 0) {
                 issues.push({
@@ -273,9 +291,12 @@ class DatabaseService {
 // Singleton instance
 const databaseService = new DatabaseService();
 
-module.exports = {
+export {
     DatabaseService,
     databaseService,
     // Export directo del cliente para compatibilidad
-    supabase: databaseService.getClient()
+    databaseService as supabase
 };
+
+// Export default for convenience
+export default databaseService;

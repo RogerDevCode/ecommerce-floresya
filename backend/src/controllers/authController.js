@@ -1,14 +1,14 @@
-const {
+import {
     log,          // Función principal
     logger,       // Alias con métodos .info(), .warn(), etc.
     requestLogger, // Middleware Express
     startTimer     // Para medir tiempos de ejecución
-} = require('../utils/logger.js');
+} from '../utils/bked_logger.js';
 
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { databaseService } = require('../services/databaseService');
-const { errorHandlers } = require('../utils/errorHandler');
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { databaseService } from '../services/databaseService.js';
+import { errorHandlers } from '../utils/bked_errorHandler.js';
 
 const generateToken = (userId, role) => {
     return jwt.sign(
@@ -183,7 +183,7 @@ const updateProfile = async (req, res) => {
     }
 };
 
-module.exports = {
+export {
     register,
     login,
     getProfile,

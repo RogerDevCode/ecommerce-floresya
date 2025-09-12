@@ -1,9 +1,15 @@
-const express = require('express');
+import express from 'express';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { authenticateToken, requireRole } from '../middleware/bked_auth_middleware.js';
+import { uploadSingle, uploadMultiple, handleUploadError } from '../middleware/upload.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const router = express.Router();
-const path = require('path');
-const fs = require('fs');
-const { authenticateToken, requireRole } = require('../middleware/auth');
-const { uploadSingle, uploadMultiple, handleUploadError } = require('../middleware/upload');
 
 // Upload single image
 router.post('/single', authenticateToken, requireRole(['admin']), (req, res, next) => {
@@ -147,4 +153,4 @@ router.get('/list', authenticateToken, requireRole(['admin']), (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

@@ -270,6 +270,216 @@ h1 {
     margin: 0 -15px;
 }
 
+/* Bootstrap Carousel Styles (Enhanced) */
+#heroCarousel {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 15px 40px rgba(255, 105, 180, 0.2);
+    min-height: 400px; /* Prevent layout shift */
+    background: var(--light-pink); /* Fallback background */
+}
+
+/* Carousel Loading State */
+.carousel-loading {
+    min-height: 400px;
+    background: linear-gradient(45deg, var(--light-pink), #fff);
+    border-radius: 15px;
+}
+
+/* Carousel Items */
+#heroCarousel .carousel-inner {
+    height: 400px; /* Fixed height to prevent shifts */
+}
+
+#heroCarousel .carousel-item {
+    height: 400px;
+    transition: transform 0.6s ease-in-out;
+}
+
+#heroCarousel .carousel-item img {
+    border-radius: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    object-position: center;
+    will-change: transform; /* Optimize for animations */
+}
+
+#heroCarousel .carousel-item:hover img {
+    transform: scale(1.02);
+}
+
+/* Fade Effect */
+#heroCarousel.carousel-fade .carousel-item {
+    opacity: 0;
+    transition-property: opacity;
+    transform: none;
+}
+
+#heroCarousel.carousel-fade .carousel-item.active,
+#heroCarousel.carousel-fade .carousel-item-next.carousel-item-start,
+#heroCarousel.carousel-fade .carousel-item-prev.carousel-item-end {
+    z-index: 1;
+    opacity: 1;
+}
+
+#heroCarousel.carousel-fade .carousel-item-next,
+#heroCarousel.carousel-fade .carousel-item-prev,
+#heroCarousel.carousel-fade .carousel-item.active.carousel-item-start,
+#heroCarousel.carousel-fade .carousel-item.active.carousel-item-end {
+    opacity: 0;
+}
+
+/* Captions */
+#heroCarousel .carousel-caption {
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+    border-radius: 0 0 15px 15px;
+    bottom: 0;
+    padding: 30px;
+    left: 0;
+    right: 0;
+    text-align: center;
+}
+
+#heroCarousel .carousel-caption h5 {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+    line-height: 1.3;
+}
+
+#heroCarousel .carousel-caption .btn {
+    text-shadow: none;
+    font-weight: 600;
+    border: 2px solid white;
+    transition: all 0.3s ease;
+}
+
+#heroCarousel .carousel-caption .btn:hover {
+    background: white;
+    color: var(--primary-pink);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+}
+
+/* Controls */
+#heroCarousel .carousel-control-prev,
+#heroCarousel .carousel-control-next {
+    background: rgba(255, 105, 180, 0.2);
+    border-radius: 50%;
+    width: 55px;
+    height: 55px;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0 15px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+#heroCarousel .carousel-control-prev:hover,
+#heroCarousel .carousel-control-next:hover {
+    background: rgba(255, 105, 180, 0.4);
+    transform: translateY(-50%) scale(1.1);
+}
+
+#heroCarousel .carousel-control-prev-icon,
+#heroCarousel .carousel-control-next-icon {
+    background-color: white;
+    border-radius: 50%;
+    padding: 3px;
+    width: 25px;
+    height: 25px;
+    background-size: 60%;
+}
+
+/* Indicators */
+#heroCarousel .carousel-indicators {
+    bottom: 25px;
+    margin: 0;
+}
+
+#heroCarousel .carousel-indicators button {
+    background-color: rgba(255, 255, 255, 0.5);
+    border: 2px solid white;
+    opacity: 0.7;
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+    margin: 0 5px;
+    transition: all 0.3s ease;
+}
+
+#heroCarousel .carousel-indicators button.active {
+    opacity: 1;
+    background-color: white;
+    transform: scale(1.3);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Fallback Carousel */
+.carousel-fallback {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 15px 40px rgba(255, 105, 180, 0.3);
+    min-height: 400px;
+}
+
+.carousel-fallback .btn {
+    transition: all 0.3s ease;
+    border: 2px solid white;
+    font-weight: 600;
+}
+
+.carousel-fallback .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #heroCarousel {
+        border-radius: 10px;
+    }
+    
+    #heroCarousel .carousel-inner,
+    #heroCarousel .carousel-item,
+    #heroCarousel .carousel-item img,
+    .carousel-loading {
+        height: 300px;
+    }
+    
+    #heroCarousel .carousel-caption {
+        padding: 20px 15px;
+    }
+    
+    #heroCarousel .carousel-caption h5 {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+    
+    #heroCarousel .carousel-control-prev,
+    #heroCarousel .carousel-control-next {
+        width: 45px;
+        height: 45px;
+        margin: 0 10px;
+    }
+    
+    #heroCarousel .carousel-control-prev-icon,
+    #heroCarousel .carousel-control-next-icon {
+        width: 20px;
+        height: 20px;
+    }
+    
+    #heroCarousel .carousel-indicators button {
+        width: 12px;
+        height: 12px;
+    }
+}
+
+/* Old Carousel Styles (Keep for legacy) */
 .image-carousel {
     display: flex;
     animation: scroll 30s linear infinite;
@@ -601,24 +811,7 @@ footer .social-links a:hover {
 
 /* ✨ ADVANCED PSYCHOLOGY-BASED DESIGN ELEMENTS ✨ */
 
-/* Scarcity & Urgency Indicators */
-.urgency-badge {
-    background: linear-gradient(45deg, #FF4757, #FF3742);
-    color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    animation: urgency-pulse 2s infinite;
-    box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-@keyframes urgency-pulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4); }
-    50% { transform: scale(1.05); box-shadow: 0 4px 16px rgba(255, 71, 87, 0.6); }
-}
+/* Stock & availability indicators */
 
 /* Advanced CTA Psychology */
 .cta-primary {
@@ -1600,4 +1793,147 @@ footer .social-links a:hover {
 @keyframes checkmark-draw {
     0% { opacity: 0; transform: scale(0); }
     100% { opacity: 1; transform: scale(1); }
+}
+
+/* ===== CAROUSEL OPTIMIZATIONS ===== */
+
+/* Basic carousel container styling - Optimized */
+.dynamic-carousel {
+    margin: 1.5rem 0;
+    min-height: 320px; /* Reserve space to prevent layout shift */
+}
+
+.carousel-container {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(255, 105, 180, 0.1);
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.image-carousel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+/* Carousel image optimizations - Industry Standard Heights */
+.carousel-image {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+/* Carousel controls styling */
+.carousel-control-prev,
+.carousel-control-next {
+    width: 50px;
+    height: 50px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    background: rgba(255, 105, 180, 0.8);
+    border: 2px solid white;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+}
+
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+    opacity: 1;
+    background: rgba(255, 105, 180, 0.95);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-control-prev {
+    left: 20px;
+}
+
+.carousel-control-next {
+    right: 20px;
+}
+
+/* Carousel indicators styling */
+.carousel-indicators {
+    bottom: 20px;
+}
+
+.carousel-indicators button {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    border: 2px solid white;
+    margin: 0 5px;
+    transition: all 0.3s ease;
+}
+
+.carousel-indicators button.active {
+    background: var(--primary-pink);
+    transform: scale(1.2);
+}
+
+/* Carousel caption improvements */
+.carousel-caption {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 20px;
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+}
+
+.carousel-caption h5 {
+    font-weight: 600;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.text-shadow {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Centrado perfecto del carrusel Bootstrap */
+.carousel {
+    margin: 0 auto;
+    max-width: 100%;
+}
+
+.carousel .carousel-inner {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.carousel .carousel-item img {
+    border-radius: 10px;
+}
+
+/* Responsive carousel adjustments - Mobile First */
+@media (max-width: 768px) {
+    .carousel-image {
+        height: 220px;
+    }
+    
+    .carousel-control-prev,
+    .carousel-control-next {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .carousel-control-prev {
+        left: 10px;
+    }
+    
+    .carousel-control-next {
+        right: 10px;
+    }
+    
+    .carousel-caption {
+        padding: 15px;
+        bottom: 10px;
+    }
+    
+    .carousel-caption h5 {
+        font-size: 1rem;
+    }
 }

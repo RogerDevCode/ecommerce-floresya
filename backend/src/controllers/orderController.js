@@ -1,472 +1,478 @@
-const { executeQuery } = require('../config/database');
-const { sendOrderConfirmationEmail, sendOrderStatusUpdateEmail } = require('../services/emailService');
-const { errorHandlers } = require('../utils/errorHandler');
+import {
+    log,
+    logger,
+    requestLogger,
+    startTimer
+} from '../utils/bked_logger.js';
 
-const generateOrderNumber = () => {
-    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `FL-${date}-${random}`;
-};
+import { databaseService } from '../services/databaseService.js';
+import { createPrismaLikeAPI } from '../services/queryBuilder.js';
 
-const safeParse = (data) => {
-    if (!data) return null;
-    if (typeof data === 'object') return data;
-    if (typeof data === 'string') {
-        try {
-            return JSON.parse(data);
-        } catch (e) {
-            return data;
-        }
-    }
-    return data;
-};
+// Initialize Prisma-like API
+const db = createPrismaLikeAPI(databaseService.getClient());
 
-const createOrder = async (req, res) => {
-    let connection;
+/**
+ * 📋 GET ALL ORDERS
+ * Obtener todas las órdenes con paginación y filtros
+ */
+const getAllOrders = async (req, res) => {
+    const timer = startTimer('getAllOrders');
+    
     try {
-        const { items, shipping_address, billing_address, notes, delivery_date, guest_email } = req.body;
-        const userId = req.user ? req.user.id : null;
+        const {
+            page = 1,
+            limit = 20,
+            status,
+            customer_email,
+            payment_method_id,
+            sortBy = 'created_at',
+            sortOrder = 'desc'
+        } = req.query;
 
-        connection = await require('../config/database').getConnection();
-        await connection.beginTransaction();
+        const offset = (parseInt(page) - 1) * parseInt(limit);
+        
+        logger.info(req.method, req.originalUrl, {
+            query: req.query,
+            userRole: req.user?.role
+        });
 
+        const client = databaseService.getClient();
+        let query = client
+            .from('orders')
+            .select(`
+                id, customer_name, customer_email, customer_phone,
+                delivery_address, total_amount, status, notes,
+                created_at, updated_at,
+                payment_method:payment_methods(id, name, type),
+                order_items:order_items(
+                    id, quantity, unit_price,
+                    product:products(id, name, price)
+                )
+            `);
+
+        // Apply filters
+        if (status) {
+            query = query.eq('status', status);
+        }
+
+        if (customer_email) {
+            query = query.ilike('customer_email', `%${customer_email}%`);
+        }
+
+        if (payment_method_id) {
+            query = query.eq('payment_method_id', parseInt(payment_method_id));
+        }
+
+        // Apply sorting and pagination
+        query = query
+            .order(sortBy, { ascending: sortOrder === 'asc' })
+            .range(offset, offset + parseInt(limit) - 1);
+
+        const { data: orders, error } = await query;
+
+        if (error) {
+            throw new Error(`Database query error: ${error.message}`);
+        }
+
+        // Get total count
+        const totalCount = await databaseService.count('orders');
+        const totalPages = Math.ceil(totalCount / parseInt(limit));
+
+        timer.end();
+        
+        res.json({
+            success: true,
+            data: orders || [],
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total: totalCount,
+                pages: totalPages
+            }
+        });
+
+    } catch (error) {
+        timer.end();
+        logger.error('Error in getAllOrders:', error);
+        
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching orders',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
+    }
+};
+
+/**
+ * 📄 GET ORDER BY ID
+ * Obtener una orden específica con todos sus detalles
+ */
+const getOrderById = async (req, res) => {
+    const timer = startTimer('getOrderById');
+    
+    try {
+        const { id } = req.params;
+        
+        logger.info(req.method, req.originalUrl, {
+            orderId: id,
+            userRole: req.user?.role
+        });
+
+        const client = databaseService.getClient();
+        const { data: order } = await client
+            .from('orders')
+            .select(`
+                id, customer_name, customer_email, customer_phone,
+                delivery_address, total_amount, status, notes,
+                created_at, updated_at,
+                payment_method:payment_methods(id, name, type, instructions),
+                order_items:order_items(
+                    id, quantity, unit_price,
+                    product:products(
+                        id, name, description, price,
+                        images:product_images(url_thumb, is_primary)
+                    )
+                )
+            `)
+            .eq('id', parseInt(id))
+            .single();
+
+        if (!order) {
+            timer.end();
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found'
+            });
+        }
+
+        timer.end();
+        
+        res.json({
+            success: true,
+            data: order
+        });
+
+    } catch (error) {
+        timer.end();
+        logger.error('Error in getOrderById:', error);
+        
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching order',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
+    }
+};
+
+/**
+ * ➕ CREATE ORDER
+ * Crear una nueva orden con items
+ */
+const createOrder = async (req, res) => {
+    const timer = startTimer('createOrder');
+    
+    try {
+        logger.info(req.method, req.originalUrl, {
+            body: req.body,
+            userRole: req.user?.role
+        });
+
+        const {
+            customer_name,
+            customer_email,
+            customer_phone,
+            delivery_address,
+            payment_method_id,
+            notes,
+            items // Array of { product_id, quantity }
+        } = req.body;
+
+        // Validate required fields
+        if (!customer_name || !customer_email || !items || items.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Customer name, email, and order items are required'
+            });
+        }
+
+        // Validate and calculate total
         let totalAmount = 0;
         const orderItems = [];
 
         for (const item of items) {
-            const product = await connection.execute(
-                'SELECT id, name, price, stock_quantity FROM products WHERE id = ? AND active = true',
-                [item.product_id]
-            );
-
-            if (product[0].length === 0) {
-                throw new Error(`Producto con ID ${item.product_id} no encontrado`);
+            if (!item.product_id || !item.quantity) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Each item must have product_id and quantity'
+                });
             }
 
-            const productData = product[0][0];
+            // Get product details
+            const product = await databaseService.query('products', {
+                select: 'id, name, price, stock_quantity, active',
+                eq: { id: parseInt(item.product_id) }
+            });
+
+            if (!product.data || product.data.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: `Product with ID ${item.product_id} not found`
+                });
+            }
+
+            const productData = product.data[0];
+
+            if (!productData.active) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Product ${productData.name} is not available`
+                });
+            }
 
             if (productData.stock_quantity < item.quantity) {
-                throw new Error(`Stock insuficiente para ${productData.name}`);
+                return res.status(400).json({
+                    success: false,
+                    message: `Insufficient stock for product ${productData.name}. Available: ${productData.stock_quantity}`
+                });
             }
 
-            const itemTotal = productData.price * item.quantity;
+            const itemTotal = parseFloat(productData.price) * parseInt(item.quantity);
             totalAmount += itemTotal;
 
             orderItems.push({
-                product_id: item.product_id,
-                quantity: item.quantity,
-                unit_price: productData.price,
-                total_price: itemTotal,
-                product_snapshot: {
-                    name: productData.name,
-                    price: productData.price
-                }
+                product_id: parseInt(item.product_id),
+                quantity: parseInt(item.quantity),
+                unit_price: parseFloat(productData.price)
             });
         }
 
-        const orderNumber = generateOrderNumber();
+        // Create order
+        const orderData = {
+            customer_name,
+            customer_email,
+            customer_phone: customer_phone || null,
+            delivery_address: delivery_address || null,
+            total_amount: totalAmount,
+            payment_method_id: payment_method_id ? parseInt(payment_method_id) : null,
+            status: 'pending',
+            notes: notes || null
+        };
 
-        const orderResult = await connection.execute(`
-            INSERT INTO orders (
-                order_number, user_id, guest_email, status, total_amount, 
-                shipping_address, billing_address, notes, delivery_date
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [
-            orderNumber,
-            userId,
-            guest_email || null,
-            'pending',
-            totalAmount,
-            JSON.stringify(shipping_address),
-            billing_address ? JSON.stringify(billing_address) : null,
-            notes || null,
-            delivery_date || null
-        ]);
+        const createdOrder = await databaseService.insert('orders', orderData);
+        const orderId = createdOrder[0].id;
 
-        const orderId = orderResult[0].insertId;
+        // Create order items
+        const orderItemsWithOrderId = orderItems.map(item => ({
+            ...item,
+            order_id: orderId
+        }));
 
-        for (const item of orderItems) {
-            await connection.execute(`
-                INSERT INTO order_items (
-                    order_id, product_id, quantity, unit_price, total_price, product_snapshot
-                ) VALUES (?, ?, ?, ?, ?, ?)
-            `, [
-                orderId,
-                item.product_id,
-                item.quantity,
-                item.unit_price,
-                item.total_price,
-                JSON.stringify(item.product_snapshot)
-            ]);
+        await databaseService.insert('order_items', orderItemsWithOrderId);
 
-            await connection.execute(
-                'UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?',
-                [item.quantity, item.product_id]
+        // Update product stock
+        for (const item of items) {
+            const currentStock = await databaseService.query('products', {
+                select: 'stock_quantity',
+                eq: { id: parseInt(item.product_id) }
+            });
+
+            const newStock = currentStock.data[0].stock_quantity - parseInt(item.quantity);
+            
+            await databaseService.update('products', 
+                { stock_quantity: newStock }, 
+                { id: parseInt(item.product_id) }
             );
         }
 
-        await connection.execute(`
-            INSERT INTO order_status_history (order_id, new_status, notes, changed_by)
-            VALUES (?, ?, ?, ?)
-        `, [orderId, 'pending', 'Orden creada', userId]);
+        // Get complete order data
+        const completeOrder = await getCompleteOrderData(orderId);
 
-        if (userId) {
-            await connection.execute(
-                'DELETE FROM cart_items WHERE user_id = ?',
-                [userId]
-            );
-        }
-
-        await connection.commit();
-
-        try {
-            const emailRecipient = userId ? req.user.email : guest_email;
-            if (emailRecipient) {
-                await sendOrderConfirmationEmail(emailRecipient, {
-                    orderNumber,
-                    items: orderItems,
-                    totalAmount,
-                    shipping_address
-                });
-            }
-        } catch (emailError) {
-            console.error('Error enviando email de confirmación:', emailError);
-        }
-
+        timer.end();
+        
         res.status(201).json({
             success: true,
-            message: 'Orden creada exitosamente',
-            data: {
-                order: {
-                    id: orderId,
-                    order_number: orderNumber,
-                    total_amount: totalAmount,
-                    status: 'pending'
-                }
-            }
+            data: completeOrder,
+            message: 'Order created successfully'
         });
 
     } catch (error) {
-        if (connection) {
-            await connection.rollback();
-        }
-        errorHandlers.handleOrderError(res, error, 'create_order');
-    } finally {
-        if (connection) {
-            connection.release();
-        }
-    }
-};
-
-const getOrder = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const userId = req.user ? req.user.id : null;
-
-        let whereClause = 'WHERE o.id = ?';
-        let params = [id];
-
-        if (req.user && req.user.role !== 'admin') {
-            whereClause += ' AND o.user_id = ?';
-            params.push(userId);
-        }
-
-        const order = await executeQuery(`
-            SELECT 
-                o.*,
-                u.first_name as user_first_name,
-                u.last_name as user_last_name,
-                u.email as user_email
-            FROM orders o
-            LEFT JOIN users u ON o.user_id = u.id
-            ${whereClause}
-        `, params);
-
-        if (order.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'Orden no encontrada'
-            });
-        }
-
-        const orderData = order[0];
-
-        const orderItems = await executeQuery(`
-            SELECT 
-                oi.*,
-                p.name as product_name,
-                p.image_url as product_image
-            FROM order_items oi
-            LEFT JOIN products p ON oi.product_id = p.id
-            WHERE oi.order_id = ?
-        `, [id]);
-
-        const statusHistory = await executeQuery(`
-            SELECT 
-                osh.*,
-                u.first_name,
-                u.last_name
-            FROM order_status_history osh
-            LEFT JOIN users u ON osh.changed_by = u.id
-            WHERE osh.order_id = ?
-            ORDER BY osh.created_at ASC
-        `, [id]);
-
-        res.json({
-            success: true,
-            data: {
-                order: {
-                    ...orderData,
-                    shipping_address: safeParse(orderData.shipping_address),
-                    billing_address: safeParse(orderData.billing_address),
-                    items: orderItems.map(item => ({
-                        ...item,
-                        product_snapshot: safeParse(item.product_snapshot)
-                    })),
-                    status_history: statusHistory
-                }
-            }
-        });
-
-    } catch (error) {
-        console.error('Error obteniendo orden:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
-    }
-};
-
-const getUserOrders = async (req, res) => {
-    try {
-        console.log('🔍 getUserOrders - Starting request');
-        const { page = 1, limit = 10, status } = req.query;
+        timer.end();
+        logger.error('Error in createOrder:', error);
         
-        if (!req.user || !req.user.id) {
-            console.error('❌ getUserOrders - No user or user ID in request');
-            return res.status(401).json({
-                success: false,
-                message: 'Usuario no autenticado'
-            });
-        }
-        
-        const userId = req.user.id;
-        const offset = (page - 1) * limit;
-        console.log('📊 getUserOrders - User ID:', userId, 'Page:', page, 'Limit:', limit);
-
-        let whereClause = 'WHERE o.user_id = ?';
-        let params = [userId];
-
-        if (status) {
-            whereClause += ' AND o.status = ?';
-            params.push(status);
-        }
-
-        const orders = await executeQuery(`
-            SELECT 
-                o.*,
-                0 as items_count
-            FROM orders o
-            ${whereClause}
-            ORDER BY o.created_at DESC
-            LIMIT ? OFFSET ?
-        `, [...params, parseInt(limit), parseInt(offset)]);
-
-        const countResult = await executeQuery(`
-            SELECT COUNT(*) as total
-            FROM orders o
-            ${whereClause}
-        `, params);
-
-        const total = countResult[0].total;
-
-        res.json({
-            success: true,
-            data: {
-                orders: orders.map(order => ({
-                    ...order,
-                    shipping_address: safeParse(order.shipping_address),
-                    billing_address: safeParse(order.billing_address)
-                })),
-                pagination: {
-                    page: parseInt(page),
-                    limit: parseInt(limit),
-                    total,
-                    pages: Math.ceil(total / limit)
-                }
-            }
-        });
-
-    } catch (error) {
-        console.error('Error obteniendo órdenes del usuario:', error);
         res.status(500).json({
             success: false,
-            message: 'Error interno del servidor'
+            message: 'Error creating order',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
         });
     }
 };
 
-const getAllOrders = async (req, res) => {
-    try {
-        const { page = 1, limit = 20, status, search } = req.query;
-        const offset = (page - 1) * limit;
-
-        let whereClause = 'WHERE 1=1';
-        let params = [];
-
-        if (status) {
-            whereClause += ' AND o.status = ?';
-            params.push(status);
-        }
-
-        if (search) {
-            whereClause += ' AND (o.order_number LIKE ? OR u.first_name LIKE ? OR u.last_name LIKE ? OR o.guest_email LIKE ?)';
-            const searchTerm = `%${search}%`;
-            params.push(searchTerm, searchTerm, searchTerm, searchTerm);
-        }
-
-        const orders = await executeQuery(`
-            SELECT 
-                o.*,
-                u.first_name as user_first_name,
-                u.last_name as user_last_name,
-                u.email as user_email,
-                COUNT(oi.id) as items_count
-            FROM orders o
-            LEFT JOIN users u ON o.user_id = u.id
-            LEFT JOIN order_items oi ON o.id = oi.order_id
-            ${whereClause}
-            GROUP BY o.id
-            ORDER BY o.created_at DESC
-            LIMIT ? OFFSET ?
-        `, [...params, parseInt(limit), parseInt(offset)]);
-
-        const countResult = await executeQuery(`
-            SELECT COUNT(DISTINCT o.id) as total
-            FROM orders o
-            LEFT JOIN users u ON o.user_id = u.id
-            ${whereClause}
-        `, params);
-
-        const total = countResult[0].total;
-
-        res.json({
-            success: true,
-            data: {
-                orders: orders.map(order => ({
-                    ...order,
-                    shipping_address: safeParse(order.shipping_address),
-                    billing_address: safeParse(order.billing_address)
-                })),
-                pagination: {
-                    page: parseInt(page),
-                    limit: parseInt(limit),
-                    total,
-                    pages: Math.ceil(total / limit)
-                }
-            }
-        });
-
-    } catch (error) {
-        console.error('Error obteniendo todas las órdenes:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
-    }
-};
-
+/**
+ * ✏️ UPDATE ORDER STATUS
+ * Actualizar el estado de una orden
+ */
 const updateOrderStatus = async (req, res) => {
-    let connection;
+    const timer = startTimer('updateOrderStatus');
+    
     try {
         const { id } = req.params;
         const { status, notes } = req.body;
-        const userId = req.user.id;
+        
+        logger.info(req.method, req.originalUrl, {
+            orderId: id,
+            status,
+            userRole: req.user?.role
+        });
 
-        const validStatuses = ['pending', 'verified', 'preparing', 'shipped', 'delivered', 'cancelled'];
+        // Validate status
+        const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
         if (!validStatuses.includes(status)) {
             return res.status(400).json({
                 success: false,
-                message: 'Estado de orden inválido'
+                message: `Invalid status. Valid statuses: ${validStatuses.join(', ')}`
             });
         }
 
-        connection = await require('../config/database').getConnection();
-        await connection.beginTransaction();
+        // Check if order exists
+        const existingOrder = await databaseService.query('orders', {
+            select: 'id, status',
+            eq: { id: parseInt(id) }
+        });
 
-        const order = await connection.execute(
-            'SELECT id, status FROM orders WHERE id = ?',
-            [id]
-        );
-
-        if (order[0].length === 0) {
-            throw new Error('Orden no encontrada');
+        if (!existingOrder.data || existingOrder.data.length === 0) {
+            timer.end();
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found'
+            });
         }
 
-        const currentOrder = order[0][0];
+        const updateData = {
+            status,
+            updated_at: new Date().toISOString()
+        };
 
-        await connection.execute(
-            'UPDATE orders SET status = ? WHERE id = ?',
-            [status, id]
-        );
-
-        await connection.execute(`
-            INSERT INTO order_status_history (order_id, old_status, new_status, notes, changed_by)
-            VALUES (?, ?, ?, ?, ?)
-        `, [id, currentOrder.status, status, notes || null, userId]);
-
-        await connection.commit();
-
-        // Send status update email
-        try {
-            const orderWithDetails = await connection.execute(`
-                SELECT o.order_number, u.email, o.guest_email 
-                FROM orders o 
-                LEFT JOIN users u ON o.user_id = u.id 
-                WHERE o.id = ?
-            `, [id]);
-            
-            if (orderWithDetails[0].length > 0) {
-                const orderData = orderWithDetails[0][0];
-                const emailRecipient = orderData.email || orderData.guest_email;
-                
-                if (emailRecipient) {
-                    await sendOrderStatusUpdateEmail(emailRecipient, {
-                        orderNumber: orderData.order_number,
-                        newStatus: status,
-                        notes: notes
-                    });
-                }
-            }
-        } catch (emailError) {
-            console.error('Error enviando email de actualización:', emailError);
+        if (notes !== undefined) {
+            updateData.notes = notes;
         }
 
+        await databaseService.update('orders', updateData, { id: parseInt(id) });
+
+        // Get updated order
+        const updatedOrder = await getCompleteOrderData(parseInt(id));
+
+        timer.end();
+        
         res.json({
             success: true,
-            message: 'Estado de orden actualizado exitosamente'
+            data: updatedOrder,
+            message: 'Order status updated successfully'
         });
 
     } catch (error) {
-        if (connection) {
-            await connection.rollback();
-        }
-        console.error('Error actualizando estado de orden:', error);
+        timer.end();
+        logger.error('Error in updateOrderStatus:', error);
+        
         res.status(500).json({
             success: false,
-            message: error.message || 'Error interno del servidor'
+            message: 'Error updating order status',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
         });
-    } finally {
-        if (connection) {
-            connection.release();
-        }
     }
 };
 
-module.exports = {
-    createOrder,
-    getOrder,
-    getUserOrders,
+/**
+ * 📊 GET ORDER STATS
+ * Obtener estadísticas de órdenes
+ */
+const getOrderStats = async (req, res) => {
+    const timer = startTimer('getOrderStats');
+    
+    try {
+        logger.info(req.method, req.originalUrl, {
+            userRole: req.user?.role
+        });
+
+        const client = databaseService.getClient();
+
+        // Get order counts by status
+        const { data: statusCounts } = await client
+            .from('orders')
+            .select('status')
+            .not('status', 'is', null);
+
+        const statusStats = statusCounts?.reduce((acc, order) => {
+            acc[order.status] = (acc[order.status] || 0) + 1;
+            return acc;
+        }, {}) || {};
+
+        // Get revenue stats
+        const { data: revenueData } = await client
+            .from('orders')
+            .select('total_amount, status, created_at')
+            .in('status', ['delivered', 'confirmed']);
+
+        const totalRevenue = revenueData?.reduce((sum, order) => sum + parseFloat(order.total_amount), 0) || 0;
+
+        // Get recent orders count (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        const recentOrdersCount = await databaseService.count('orders', {
+            created_at: { gte: thirtyDaysAgo.toISOString() }
+        });
+
+        timer.end();
+        
+        res.json({
+            success: true,
+            data: {
+                status_counts: statusStats,
+                total_revenue: totalRevenue,
+                recent_orders_count: recentOrdersCount,
+                total_orders: statusCounts?.length || 0
+            }
+        });
+
+    } catch (error) {
+        timer.end();
+        logger.error('Error in getOrderStats:', error);
+        
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching order statistics',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
+    }
+};
+
+/**
+ * Helper function to get complete order data
+ */
+const getCompleteOrderData = async (orderId) => {
+    const client = databaseService.getClient();
+    const { data: order } = await client
+        .from('orders')
+        .select(`
+            id, customer_name, customer_email, customer_phone,
+            delivery_address, total_amount, status, notes,
+            created_at, updated_at,
+            payment_method:payment_methods(id, name, type),
+            order_items:order_items(
+                id, quantity, unit_price,
+                product:products(id, name, price)
+            )
+        `)
+        .eq('id', orderId)
+        .single();
+
+    return order;
+};
+
+export {
     getAllOrders,
-    updateOrderStatus
+    getOrderById,
+    createOrder,
+    updateOrderStatus,
+    getOrderStats
 };

@@ -4,6 +4,10 @@
  * Funciona con o sin Supabase configurado
  */
 
+// Load environment variables
+import dotenv from 'dotenv';
+dotenv.config();
+
 console.log('🌸 FloresYa Database Initialization - DEVELOPMENT MODE...\n');
 
 async function checkEnvironment() {
@@ -20,16 +24,21 @@ async function checkEnvironment() {
     console.log('✅ Supabase credentials found');
     
     try {
-        const { testConnection } = require('../config/database');
-        const connected = await testConnection();
-        if (!connected) {
-            console.log('⚠️  Could not connect to Supabase');
-            console.log('🔄 Falling back to MOCK DATA mode');
-            console.log('✅ Development database ready (using mock data)\n');
-            return false;
+        const { databaseService } = await import('../services/databaseService.js');
+        const client = databaseService.getClient();
+        
+        // Test connection by querying a simple table
+        const { data, error } = await client
+            .from('occasions')
+            .select('count')
+            .limit(1);
+            
+        if (error) {
+            throw error;
         }
+        
         console.log('✅ Connected to Supabase database');
-        console.log('✅ Production database ready\n');
+        console.log('✅ Real data mode active\n');
         return true;
     } catch (error) {
         console.log('⚠️  Database connection failed:', error.message);
@@ -45,7 +54,7 @@ async function main() {
     if (hasDatabase) {
         // Si hay Supabase, usar la inicialización completa
         try {
-            const originalInit = require('./init-db');
+            const originalInit = await import('./init-db.js');
             // Ejecutar inicialización original si existe
         } catch (error) {
             console.log('✅ Skipping full initialization - mock mode active\n');

@@ -164,51 +164,24 @@ class ProductDetail {
         try {
             this.logger.info('IMAGES', '🖼️ Iniciando configuración de imágenes...', {
                 hasPrimaryImage: !!this.product.primary_image,
-                hasImageUrl: !!this.product.image_url,
-                hasAdditionalImages: !!this.product.additional_images
+                hasImages: !!this.product.images,
+                imagesCount: this.product.images ? this.product.images.length : 0
             });
 
             this.images = [];
 
-            // Add main image (prioritize primary_image)
-            if (this.product.primary_image) {
-                this.images.push(this.product.primary_image);
-                this.logger.info('IMAGES', '✅ Usando primary_image como imagen principal');
-            } else if (this.product.image_url) {
-                this.images.push(this.product.image_url);
-                this.logger.info('IMAGES', '✅ Usando image_url como imagen principal (fallback)');
+            // Procesar imágenes de Supabase (igual que main.js)
+            if (this.product.images && Array.isArray(this.product.images) && this.product.images.length > 0) {
+                const sortedImages = this.product.images
+                    .sort((a, b) => a.display_order - b.display_order)
+                    .map(img => img.url_large)
+                    .filter(url => url && url !== '');
+                this.images = sortedImages;
+                this.logger.info('IMAGES', '✅ Procesadas imágenes de Supabase', { 
+                    count: sortedImages.length 
+                });
             } else {
-                this.logger.warn('IMAGES', '⚠️ No se encontró imagen principal');
-            }
-
-            // Add additional images
-            if (this.product.additional_images) {
-                this.logger.info('IMAGES', '🔄 Procesando imágenes adicionales...');
-                try {
-                    const additionalImages = typeof this.product.additional_images === 'string' 
-                        ? JSON.parse(this.product.additional_images) 
-                        : this.product.additional_images;
-                    
-                    this.logger.info('IMAGES', '📋 Imágenes adicionales parseadas', {
-                        count: Array.isArray(additionalImages) ? additionalImages.length : 0,
-                        type: typeof additionalImages
-                    });
-
-                    if (Array.isArray(additionalImages)) {
-                        this.images.push(...additionalImages);
-                        this.logger.info('IMAGES', `➕ Añadidas ${additionalImages.length} imágenes adicionales`);
-                    } else {
-                        this.logger.warn('IMAGES', '⚠️ additional_images no es un array', {
-                            type: typeof additionalImages
-                        });
-                    }
-                } catch (error) {
-                    this.logger.error('IMAGES', '❌ Error al parsear additional_images', {
-                        error: error.message
-                    });
-                }
-            } else {
-                this.logger.info('IMAGES', 'ℹ️ No hay imágenes adicionales disponibles');
+                this.logger.warn('IMAGES', '⚠️ No se encontraron imágenes en product.images');
             }
 
             // Fallback image if no images available
@@ -528,7 +501,7 @@ class ProductDetail {
                 addToCartBtn.disabled = true;
                 buyNowBtn.disabled = true;
                 addToCartBtn.innerHTML = '<i class="bi bi-x-circle me-2"></i>Agotado';
-                buyNowBtn.innerHTML = '<i class="bi bi-x-circle me-2"></i>¡FloresYa! - No Disponible';
+                buyNowBtn.innerHTML = '<i class="bi bi-x-circle me-2"></i>FloresYa - No Disponible';
                 this.logger.warn('RENDER-INFO', '⚠️ Producto agotado');
             }
 
@@ -713,6 +686,11 @@ class ProductDetail {
         const relatedRenderTimer = this.logger.startTimer ? this.logger.startTimer('ProductDetail.renderRelatedProducts') : null;
         
         try {
+            // Manejar casos null/undefined
+            if (!products || !Array.isArray(products)) {
+                products = [];
+            }
+            
             this.logger.info('RENDER-RELATED', '🖼️ Renderizando productos relacionados...', {
                 count: products.length
             });
@@ -728,27 +706,58 @@ class ProductDetail {
                 return;
             }
 
-            const productsHTML = products.map(product => `
-                <div class="col-md-4 mb-3">
-                    <div class="card h-100">
-                        <img src="${product.primary_image || product.image_url}" 
-                             class="card-img-top" 
-                             alt="${product.name}" 
-                             style="height: 200px; object-fit: cover;">
-                        <div class="card-body d-flex flex-column">
-                            <h6 class="card-title">${product.name}</h6>
-                            <p class="card-text text-muted small">${product.description?.substring(0, 80) || ''}...</p>
-                            <div class="mt-auto">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <strong class="text-primary">$${parseFloat(product.price).toFixed(2)}</strong>
-                                    <a href="/pages/product-detail.html?id=${product.id}" 
-                                       class="btn btn-sm btn-outline-primary">Ver</a>
+            const productsHTML = products.map(product => {
+                // Procesar imágenes igual que main.js
+                let productImages = [];
+                let primaryImage = '/images/placeholder-product-2.webp';
+
+                // Intentar obtener imagen desde image_url primero (fallback)
+                if (product.image_url && product.image_url.includes('http')) {
+                    primaryImage = product.image_url;
+                    productImages = [product.image_url];
+                } 
+                // Luego intentar desde primary_image (otro fallback)
+                else if (product.primary_image && product.primary_image.includes('http')) {
+                    primaryImage = product.primary_image;
+                    productImages = [product.primary_image];
+                }
+                // Finalmente usar el array de images si existe
+                else if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+                    productImages = product.images
+                        .sort((a, b) => a.display_order - b.display_order)
+                        .map(img => img.url_large)
+                        .filter(url => url && url !== '');
+                    primaryImage = productImages.length > 0 ? productImages[0] : '/images/placeholder-product-2.webp';
+                } else {
+                    productImages = ['/images/placeholder-product-2.webp'];
+                }
+                
+                const dataImages = JSON.stringify(productImages);
+                
+                return `
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <img src="${primaryImage}" 
+                                 class="card-img-top product-image" 
+                                 alt="${product.name}"
+                                 data-product-id="${product.id}"
+                                 data-images='${dataImages}'
+                                 style="height: 200px; object-fit: cover;">
+                            <div class="card-body d-flex flex-column">
+                                <h6 class="card-title">${product.name}</h6>
+                                <p class="card-text text-muted small">${product.description?.substring(0, 80) || ''}...</p>
+                                <div class="mt-auto">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong class="text-primary">$${parseFloat(product.price).toFixed(2)}</strong>
+                                        <a href="/pages/product-detail.html?id=${product.id}" 
+                                           class="btn btn-sm btn-outline-primary">Ver</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
 
             container.innerHTML = productsHTML;
             this.logger.success('RENDER-RELATED', '✅ Productos relacionados renderizados', {
@@ -1247,7 +1256,7 @@ function showFloresYaGuestModal(product, quantity) {
                     <div class="modal-content">
                         <div class="modal-header bg-gradient-primary text-white">
                             <h5 class="modal-title">
-                                <i class="bi bi-lightning-fill"></i> ¡FloresYa! Express
+                                <i class="bi bi-cart-check"></i> FloresYa Express
                             </h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                         </div>
@@ -1263,8 +1272,8 @@ function showFloresYaGuestModal(product, quantity) {
                             </div>
                             <div class="alert alert-info">
                                 <i class="bi bi-rocket-takeoff"></i>
-                                <strong>¡Compra súper rápida!</strong><br>
-                                Solo llena los datos y compra en 30 segundos.
+                                <strong>Compra express</strong><br>
+                                Solo llena los datos básicos para proceder.
                             </div>
                             <form id="floresyaGuestForm">
                                 <div class="row">
@@ -1291,7 +1300,7 @@ function showFloresYaGuestModal(product, quantity) {
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                             <button type="button" class="btn btn-primary-custom btn-lg" onclick="processFloresYaGuest(${quantity})">
-                                <i class="bi bi-lightning-fill"></i> ¡FloresYa!
+                                <i class="bi bi-cart-check"></i> FloresYa
                             </button>
                         </div>
                     </div>
@@ -1409,8 +1418,8 @@ function showFloresYaAnimation() {
             <div id="floresya-detail-animation" class="position-fixed top-50 start-50 translate-middle" 
                  style="z-index: 9999; text-align: center;">
                 <div class="bg-primary-custom text-white p-4 rounded-3 shadow-lg">
-                    <i class="bi bi-lightning-fill display-1 mb-3 floresya-pulse"></i>
-                    <h4 class="fw-bold">¡FloresYa!</h4>
+                    <i class="bi bi-cart-check display-1 mb-3 floresya-pulse"></i>
+                    <h4 class="fw-bold">FloresYa</h4>
                     <p class="mb-0">Procesando compra express...</p>
                 </div>
             </div>

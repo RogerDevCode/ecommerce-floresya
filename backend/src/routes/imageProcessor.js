@@ -1,11 +1,12 @@
-const express = require('express');
-const router = express.Router();
-const fs = require('fs');
-const path = require('path');
-const { 
+import express from 'express';
+import fs from 'fs';
+import path from 'path';
+import { 
     processImageGroupAndCreateProduct,
     OCCASIONS_MAP 
-} = require('../services/imageUploadService');
+} from '../services/imageUploadService.js';
+
+const router = express.Router();
 
 /**
  * POST /api/images/process-bulk
@@ -49,15 +50,15 @@ router.post('/process-bulk', async (req, res) => {
                 
                 if (!groupedImages[title]) {
                     groupedImages[title] = {
-                        title: title,
-                        occasionId: occasionId,
+                        title,
+                        occasionId,
                         occasion: OCCASIONS_MAP[occasionId] || 'other',
                         images: []
                     };
                 }
                 
                 groupedImages[title].images.push({
-                    filename: filename,
+                    filename,
                     sequential: parseInt(sequential),
                     path: path.join(imgDir, filename)
                 });
@@ -92,7 +93,7 @@ router.post('/process-bulk', async (req, res) => {
                 if (product) {
                     successCount++;
                     results.push({
-                        title: title,
+                        title,
                         success: true,
                         product: {
                             id: product.id,
@@ -103,7 +104,7 @@ router.post('/process-bulk', async (req, res) => {
                     });
                 } else {
                     results.push({
-                        title: title,
+                        title,
                         success: false,
                         error: 'No se pudo crear el producto'
                     });
@@ -111,14 +112,14 @@ router.post('/process-bulk', async (req, res) => {
             } catch (error) {
                 console.error(`   💥 Error procesando ${title}:`, error.message);
                 results.push({
-                    title: title,
+                    title,
                     success: false,
                     error: error.message
                 });
             }
         }
         
-        console.log(`\\n🎉 Procesamiento completado!`);
+        console.log('\\n🎉 Procesamiento completado!');
         console.log(`✅ ${successCount}/${productNames.length} productos creados exitosamente`);
         
         res.json({
@@ -127,8 +128,8 @@ router.post('/process-bulk', async (req, res) => {
             data: {
                 totalFiles: files.length,
                 totalGroups: productNames.length,
-                successCount: successCount,
-                results: results
+                successCount,
+                results
             }
         });
         
@@ -148,8 +149,8 @@ router.post('/process-bulk', async (req, res) => {
  */
 router.post('/upload-single', async (req, res) => {
     try {
-        const multer = require('multer');
-        const { processImageBuffer } = require('../services/imageUploadService');
+        const multer = (await import('multer')).default;
+        const { processImageBuffer } = await import('../services/imageUploadService.js');
         
         // Configurar multer para memoria
         const upload = multer({ 
@@ -222,7 +223,7 @@ router.get('/status', (req, res) => {
             return res.json({
                 success: true,
                 data: {
-                    directory: directory,
+                    directory,
                     exists: false,
                     totalFiles: 0,
                     pngFiles: 0,
@@ -250,12 +251,12 @@ router.get('/status', (req, res) => {
         res.json({
             success: true,
             data: {
-                directory: directory,
+                directory,
                 exists: true,
                 totalFiles: allFiles.length,
                 pngFiles: pngFiles.length,
                 groups: Object.keys(groups).map(title => ({
-                    title: title,
+                    title,
                     imageCount: groups[title]
                 }))
             }
@@ -270,4 +271,4 @@ router.get('/status', (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

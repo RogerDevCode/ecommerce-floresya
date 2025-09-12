@@ -1,24 +1,29 @@
-const { executeQuery } = require('../config/database');
-const { errorHandlers } = require('../utils/errorHandler');
-const multer = require('multer');
-const path = require('path');
+import { executeQuery } from '../config/database.js';
+import { errorHandlers } from '../utils/bked_errorHandler.js';
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
+    destination (req, file, cb) {
         cb(null, path.join(__dirname, '../../../uploads/payments'));
     },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, 'payment-' + uniqueSuffix + path.extname(file.originalname));
+    filename (req, file, cb) {
+        const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
+        cb(null, `payment-${uniqueSuffix}${path.extname(file.originalname)}`);
     }
 });
 
 const upload = multer({
-    storage: storage,
+    storage,
     limits: {
         fileSize: 5 * 1024 * 1024 // 5MB limit
     },
-    fileFilter: function (req, file, cb) {
+    fileFilter (req, file, cb) {
         if (file.mimetype.startsWith('image/')) {
             cb(null, true);
         } else {
@@ -117,7 +122,7 @@ const getPaymentsByOrder = async (req, res) => {
         const userId = req.user ? req.user.id : null;
 
         let whereClause = 'WHERE p.order_id = ?';
-        let params = [order_id];
+        const params = [order_id];
 
         if (req.user && req.user.role !== 'admin') {
             whereClause += ' AND o.user_id = ?';
@@ -160,7 +165,7 @@ const getAllPayments = async (req, res) => {
         const offset = (page - 1) * limit;
 
         let whereClause = 'WHERE 1=1';
-        let params = [];
+        const params = [];
 
         if (status) {
             whereClause += ' AND p.status = ?';
@@ -243,7 +248,8 @@ const verifyPayment = async (req, res) => {
             });
         }
 
-        connection = await require('../config/database').getConnection();
+        const { getConnection } = await import('../config/database.js');
+        connection = await getConnection();
         await connection.beginTransaction();
 
         const payment = await connection.execute(
@@ -299,7 +305,7 @@ const verifyPayment = async (req, res) => {
 
 const uploadPaymentProof = upload.single('proof');
 
-module.exports = {
+export {
     createPayment,
     getPaymentsByOrder,
     getAllPayments,

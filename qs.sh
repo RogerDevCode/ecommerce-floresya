@@ -77,7 +77,7 @@ start_dev() {
     echo "${GREEN}🚀 Iniciando servidor en modo DESARROLLO...${RESET}"
     echo "${BLUE}🌐 http://localhost:3000${RESET}"
     echo ""
-    npm run demo
+    npm run dev
 }
 
 # Función para iniciar servidor en modo producción

@@ -1,0 +1,347 @@
+/**
+ * 🌸 FloresYa Carousel Styles - Optimized for Perfect Display
+ * Soluciona problemas de centrado, transiciones y visualización
+ */
+
+/* ===== CONTENEDOR PRINCIPAL ===== */
+.carousel-container {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(255, 105, 180, 0.15);
+  background: #fff;
+}
+
+.image-carousel {
+  display: block;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ===== CARRUSEL BOOTSTRAP OPTIMIZADO ===== */
+.carousel {
+  margin: 0 auto;
+  max-width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.carousel-inner {
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  height: 400px; /* Altura fija para evitar saltos */
+}
+
+.carousel-item {
+  position: relative;
+  display: none;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s ease-in-out;
+  backface-visibility: hidden;
+}
+
+.carousel-item.active,
+.carousel-item-next,
+.carousel-item-prev {
+  display: block;
+}
+
+.carousel-item-next:not(.carousel-item-start),
+.active.carousel-item-end {
+  transform: translateX(100%);
+}
+
+.carousel-item-prev:not(.carousel-item-end),
+.active.carousel-item-start {
+  transform: translateX(-100%);
+}
+
+/* ===== IMÁGENES OPTIMIZADAS ===== */
+.carousel-image {
+  width: 100%;
+  height: 400px;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  border-radius: 10px;
+  transition: opacity 0.3s ease;
+}
+
+.carousel-image:not(:loaded) {
+  opacity: 0;
+}
+
+.carousel-image:loaded {
+  opacity: 1;
+}
+
+/* ===== CONTROLES ESTILIZADOS ===== */
+.carousel-control-prev,
+.carousel-control-next {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(255, 105, 180, 0.3);
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.carousel-container:hover .carousel-control-prev,
+.carousel-container:hover .carousel-control-next {
+  opacity: 0.8;
+}
+
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 1);
+  border-color: var(--primary-pink, #FF69B4);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-control-prev {
+  left: 20px;
+}
+
+.carousel-control-next {
+  right: 20px;
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  filter: invert(25%) sepia(89%) saturate(2158%) hue-rotate(300deg) brightness(92%) contrast(91%);
+  width: 24px;
+  height: 24px;
+}
+
+/* ===== INDICADORES MEJORADOS ===== */
+.carousel-indicators {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.carousel-indicators button {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin: 0;
+  background-color: rgba(255, 255, 255, 0.5);
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.carousel-indicators button.active {
+  background-color: #fff;
+  border-color: var(--primary-pink, #FF69B4);
+  transform: scale(1.2);
+}
+
+.carousel-indicators button:hover {
+  background-color: rgba(255, 255, 255, 0.8);
+  transform: scale(1.1);
+}
+
+/* ===== CAPTIONS ESTILIZADOS ===== */
+.carousel-caption {
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  padding: 20px;
+  border-radius: 8px;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  backdrop-filter: blur(5px);
+}
+
+.carousel-caption h5 {
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.carousel-caption p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* ===== FALLBACK STYLES ===== */
+.carousel-fallback {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-radius: 12px;
+  border: 2px dashed rgba(255, 105, 180, 0.3);
+  text-align: center;
+  padding: 2rem;
+}
+
+.carousel-fallback i {
+  font-size: 3rem;
+  color: var(--primary-pink, #FF69B4);
+  margin-bottom: 1rem;
+}
+
+.carousel-fallback p {
+  color: #6c757d;
+  margin-bottom: 1.5rem;
+}
+
+/* ===== LOADING STATES ===== */
+.carousel-loading {
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border-radius: 12px;
+}
+
+.carousel-loading .spinner-border {
+  color: var(--primary-pink, #FF69B4);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .carousel-inner {
+    height: 300px;
+  }
+  
+  .carousel-image {
+    height: 300px;
+  }
+  
+  .carousel-control-prev,
+  .carousel-control-next {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .carousel-control-prev {
+    left: 10px;
+  }
+  
+  .carousel-control-next {
+    right: 10px;
+  }
+  
+  .carousel-caption {
+    bottom: 20px;
+    padding: 15px;
+    width: 90%;
+  }
+  
+  .carousel-caption h5 {
+    font-size: 1.1rem;
+  }
+  
+  .carousel-caption p {
+    font-size: 0.9rem;
+    display: none; /* Ocultar descripción en móviles */
+  }
+}
+
+@media (max-width: 576px) {
+  .carousel-inner {
+    height: 250px;
+  }
+  
+  .carousel-image {
+    height: 250px;
+  }
+  
+  .carousel-indicators {
+    margin-bottom: 10px;
+  }
+  
+  .carousel-indicators button {
+    width: 10px;
+    height: 10px;
+  }
+  
+  .carousel-control-prev,
+  .carousel-control-next {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .carousel-control-prev {
+    left: 5px;
+  }
+  
+  .carousel-control-next {
+    right: 5px;
+  }
+}
+
+/* ===== ANIMACIONES PERSONALIZADAS ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.carousel-item.active .carousel-caption {
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+/* ===== ACCESIBILIDAD ===== */
+.carousel-control-prev:focus,
+.carousel-control-next:focus,
+.carousel-indicators button:focus {
+  outline: 2px solid var(--primary-pink, #FF69B4);
+  outline-offset: 2px;
+}
+
+/* ===== PERFORMANCE OPTIMIZATIONS ===== */
+.carousel-item img {
+  will-change: transform;
+}
+
+.carousel-inner {
+  contain: layout style paint;
+}
+
+/* ===== FIX PARA PROBLEMAS COMUNES ===== */
+.carousel-item {
+  transform: translate3d(0, 0, 0); /* Force hardware acceleration */
+}
+
+.carousel-container * {
+  box-sizing: border-box;
+}
+
+/* No permitir selección de texto en controles */
+.carousel-control-prev,
+.carousel-control-next,
+.carousel-indicators button {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}

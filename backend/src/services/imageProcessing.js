@@ -1,6 +1,11 @@
-const sharp = require('sharp');
-const path = require('path');
-const fs = require('fs');
+import sharp from 'sharp';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 class ImageProcessingService {
     constructor() {
@@ -61,7 +66,7 @@ class ImageProcessingService {
                     .toFile(filepath);
 
                 processedSizes[sizeName] = {
-                    filename: filename,
+                    filename,
                     url: `/images/products/${filename}`,
                     width: config.width,
                     height: config.height,
@@ -71,9 +76,9 @@ class ImageProcessingService {
 
             return {
                 success: true,
-                baseFilename: baseFilename,
+                baseFilename,
                 sizes: processedSizes,
-                originalName: originalName
+                originalName
             };
 
         } catch (error) {
@@ -222,4 +227,4 @@ class ImageProcessingService {
     }
 }
 
-module.exports = new ImageProcessingService();
+export default new ImageProcessingService();

@@ -1,24 +1,15 @@
-const { supabase, useSupabase } = require('../config/database');
+import { databaseService } from '../services/databaseService.js';
 
 const getSetting = async (req, res) => {
     try {
         const { key } = req.params;
-        let setting;
-
-        if (useSupabase) {
-            const { data, error } = await supabase
-                .from('settings')
-                .select('*')
-                .eq('setting_key', key)
-                .single();
-            
-            if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
-                throw error;
-            }
-            setting = data;
-        } else {
-            throw new Error('Only Supabase is supported in this application');
-        }
+        
+        const result = await databaseService.query('settings', {
+            select: '*',
+            eq: { key }
+        });
+        
+        const setting = result.data?.[0] || null;
 
         if (!setting) {
             return res.status(404).json({ success: false, message: 'Setting not found' });
@@ -36,65 +27,56 @@ const updateSetting = async (req, res) => {
         const { key } = req.params;
         const { value } = req.body;
 
-        if (useSupabase) {
-            // Try to update first
-            const { data: updateResult, error: updateError } = await supabase
-                .from('settings')
-                .update({ setting_value: value })
-                .eq('setting_key', key)
-                .select();
-            
-            if (updateError && updateError.code !== 'PGRST116') {
-                throw updateError;
-            }
-            
-            // If no rows were updated, insert new
-            if (!updateResult || updateResult.length === 0) {
-                const { data: insertResult, error: insertError } = await supabase
-                    .from('settings')
-                    .insert({ setting_key: key, setting_value: value })
-                    .select()
-                    .single();
-                
-                if (insertError) {
-                    throw insertError;
-                }
-                
-                return res.json({ success: true, message: `Setting ${key} updated successfully.`, data: insertResult });
-            }
-            
-            res.json({ success: true, message: `Setting ${key} updated successfully.`, data: updateResult[0] });
-        } else {
-            throw new Error('Only Supabase is supported in this application');
+        const client = databaseService.getClient();
+        
+        const { data: updateResult, error: updateError } = await client
+            .from('settings')
+            .update({ value })
+            .eq('key', key)
+            .select();
+        
+        if (updateError && updateError.code !== 'PGRST116') {
+            throw updateError;
         }
+        
+        if (!updateResult || updateResult.length === 0) {
+            const { data: insertResult, error: insertError } = await client
+                .from('settings')
+                .insert({ key, value })
+                .select()
+                .single();
+            
+            if (insertError) {
+                throw insertError;
+            }
+            
+            return res.json({ success: true, message: `Setting ${key} updated successfully.`, data: insertResult });
+        }
+        
+        res.json({ success: true, message: `Setting ${key} updated successfully.`, data: updateResult[0] });
     } catch (error) {
         console.error(`Error updating setting ${req.params.key}:`, error);
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
 
-// Get homepage settings
 const getHomepageSettings = async (req, res) => {
     try {
-        let settings;
-
-        if (useSupabase) {
-            const { data, error } = await supabase
-                .from('settings')
-                .select('*')
-                .like('setting_key', 'homepage_%');
-            
-            if (error) {
-                throw error;
-            }
-            settings = data || [];
-        } else {
-            throw new Error('Only Supabase is supported in this application');
+        const client = databaseService.getClient();
+        const { data, error } = await client
+            .from('settings')
+            .select('*')
+            .like('key', 'homepage_%');
+        
+        if (error) {
+            throw error;
         }
+        
+        const settings = data || [];
 
         const homepageSettings = {};
         settings.forEach(setting => {
-            homepageSettings[setting.setting_key] = setting.setting_value;
+            homepageSettings[setting.key] = setting.value;
         });
 
         res.json({ 
@@ -107,35 +89,30 @@ const getHomepageSettings = async (req, res) => {
     }
 };
 
-// Update homepage settings (batch)
 const updateHomepageSettings = async (req, res) => {
     try {
         const settings = req.body;
 
-        if (useSupabase) {
-            for (const [key, value] of Object.entries(settings)) {
-                if (key.startsWith('homepage_')) {
-                    // Try to update first
-                    const { data: updateResult, error: updateError } = await supabase
+        const client = databaseService.getClient();
+        
+        for (const [key, value] of Object.entries(settings)) {
+            if (key.startsWith('homepage_')) {
+                const { data: updateResult, error: updateError } = await client
+                    .from('settings')
+                    .update({ value })
+                    .eq('key', key)
+                    .select();
+                
+                if (!updateResult || updateResult.length === 0) {
+                    const { error: insertError } = await client
                         .from('settings')
-                        .update({ setting_value: value })
-                        .eq('setting_key', key)
-                        .select();
+                        .insert({ key, value });
                     
-                    // If no rows were updated, insert new
-                    if (!updateResult || updateResult.length === 0) {
-                        const { error: insertError } = await supabase
-                            .from('settings')
-                            .insert({ setting_key: key, setting_value: value });
-                        
-                        if (insertError) {
-                            throw insertError;
-                        }
+                    if (insertError) {
+                        throw insertError;
                     }
                 }
             }
-        } else {
-            throw new Error('Only Supabase is supported in this application');
         }
 
         res.json({ 
@@ -148,9 +125,57 @@ const updateHomepageSettings = async (req, res) => {
     }
 };
 
-module.exports = {
+// ✅ NUEVO: Obtiene la tasa de cambio BCV desde settings
+const getExchangeRateBCV = async (req, res) => {
+    try {
+        const result = await databaseService.query('settings', {
+            select: 'key, value, description, type, is_public',
+            eq: { key: 'exchange_rate_usd_ves' } // ✅ Corregido: key correcta según tu tabla
+        });
+
+        const rate = result.data?.[0];
+
+        if (!rate) {
+            return res.status(404).json({
+                success: false,
+                message: 'Exchange rate BCV not configured'
+            });
+        }
+
+        const parsedValue = parseFloat(rate.value);
+        if (isNaN(parsedValue)) {
+            return res.status(500).json({
+                success: false,
+                message: 'Invalid exchange rate value in database'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: {
+                key: rate.key,
+                value: parsedValue,
+                description: rate.description || 'Tasa de cambio BCV',
+                type: rate.type || 'number',
+                is_public: rate.is_public || true,
+                last_updated: rate.updated_at
+            }
+        });
+
+    } catch (error) {
+        console.error('Error fetching exchange rate BCV:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+};
+
+
+export {
     getSetting,
     updateSetting,
     getHomepageSettings,
     updateHomepageSettings,
+    getExchangeRateBCV
 };

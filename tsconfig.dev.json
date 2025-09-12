@@ -1,0 +1,55 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Configuración optimizada para DESARROLLO
+    "sourceMap": true,                    // ✅ Source maps para debugging
+    "removeComments": false,              // ✅ Mantener comentarios para development
+    "noEmitOnError": false,               // ✅ Permitir JS aún con errores TS
+    "allowJs": true,                      // ✅ Máxima flexibilidad durante migración
+    "checkJs": false,                     // ✅ No bloquear por JS durante desarrollo
+    
+    // Verificaciones relajadas para desarrollo rápido
+    "strict": false,                      // 🔄 Relajado para desarrollo ágil
+    "noImplicitAny": false,               // 🔄 Permitir any durante desarrollo
+    "strictNullChecks": false,            // 🔄 Menos estricto durante desarrollo
+    
+    // Performance optimizado para desarrollo
+    "incremental": true,                  // ✅ Compilación incremental (más rápida)
+    "tsBuildInfoFile": "./dist/.tsbuildinfo-dev", // Cache separado dev
+    
+    // Debugging mejorado
+    "inlineSourceMap": false,             // ✅ Source maps externos (mejores para debugger)
+    "inlineSources": false,              // ✅ Fuentes externas (mejor para debugger)
+    
+    // Reportes útiles durante desarrollo
+    "pretty": true,                       // ✅ Errores formateados bonitos
+    "listFiles": false,                   // ❌ No listar archivos compilados
+    "listEmittedFiles": false            // ❌ No listar archivos emitidos
+  },
+  
+  "include": [
+    "backend/src/**/*.ts",
+    "backend/src/**/*.js",      // ✅ Incluir JS durante migración
+    "frontend/**/*.ts",
+    "frontend/**/*.js",         // ✅ Frontend JS también
+    "shared/**/*.ts",
+    "types/**/*.ts"
+  ],
+  
+  // Herramientas de desarrollo
+  "ts-node": {
+    "esm": true,
+    "swc": false,               // ✅ Usar tsc para mejor debugging
+    "transpileOnly": true,      // ✅ Transpilación rápida sin type checking
+    "moduleTypes": {
+      "**/*.ts": "esm"
+    }
+  },
+  
+  "watchOptions": {
+    "watchFile": "useFsEvents",          // ✅ Mejor rendimiento en cambios de archivos
+    "watchDirectory": "useFsEvents",     // ✅ Mejor rendimiento en directorios
+    "fallbackPolling": "dynamicPriority", // ✅ Fallback inteligente
+    "synchronousWatchDirectory": true    // ✅ Watch síncrono para consistencia
+  }
+}

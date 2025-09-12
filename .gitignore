@@ -13,3 +13,4 @@ build/
 coverage/
 *.sqlite
 *.sqlite3
+/generated/prisma

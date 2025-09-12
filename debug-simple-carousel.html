@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>🐛 DEBUG: Carrusel Ultra Simple</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .debug-section {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>🐛 DEBUG: Carrusel Ultra Simple FloresYa</h1>
+        
+        <!-- 1. CARRUSEL ESTÁTICO (DEBE FUNCIONAR) -->
+        <div class="debug-section">
+            <h2>✅ 1. Carrusel Estático con Imágenes Medium</h2>
+            <div id="staticCarousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <img src="https://dcbavpdlkcjdtjdkntde.supabase.co/storage/v1/object/public/product-images/medium/product_2_main_d0bb9dc59de08d1c05aa39f03c1bcf58fb9aeae3aa31d0c5573c59f9e60eb9e7_medium.webp" 
+                             class="d-block w-100" alt="Imagen 1" style="height: 280px; object-fit: cover;">
+                    </div>
+                    <div class="carousel-item">
+                        <img src="https://dcbavpdlkcjdtjdkntde.supabase.co/storage/v1/object/public/product-images/medium/product_8_1_6238e9ccfd62b9ca990e693179e2110f385efb043ed2dcf6a39f74ce18d5d851_medium.webp" 
+                             class="d-block w-100" alt="Imagen 2" style="height: 280px; object-fit: cover;">
+                    </div>
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#staticCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#staticCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
+            <p><strong>Estado:</strong> <span id="staticStatus">Verificando...</span></p>
+        </div>
+
+        <!-- 2. CARRUSEL DINÁMICO (COMO EN MAIN.JS) -->
+        <div class="debug-section">
+            <h2>🔧 2. Carrusel Dinámico (Como en main.js)</h2>
+            <div id="dynamicCarousel" style="min-height: 300px;">
+                <p class="text-center text-muted">Carrusel se generará aquí...</p>
+            </div>
+            <button class="btn btn-primary" onclick="loadMainJsCarousel()">🚀 Cargar como main.js</button>
+            <p><strong>Estado:</strong> <span id="dynamicStatus">Esperando...</span></p>
+        </div>
+
+        <!-- 3. LOGS DETALLADOS -->
+        <div class="debug-section">
+            <h2>📋 3. Logs Detallados</h2>
+            <div id="debugLogs" style="background: #000; color: #0f0; padding: 15px; border-radius: 5px; height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px;">
+                <div>Iniciando debug...</div>
+            </div>
+        </div>
+
+        <!-- 4. INFORMACIÓN TÉCNICA -->
+        <div class="debug-section">
+            <h2>🔍 4. Información Técnica</h2>
+            <ul>
+                <li><strong>Bootstrap CSS:</strong> <span id="bootstrapCssStatus">Verificando...</span></li>
+                <li><strong>Bootstrap JS:</strong> <span id="bootstrapJsStatus">Verificando...</span></li>
+                <li><strong>Viewport:</strong> <span id="viewportInfo">Obteniendo...</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Función de logging mejorada
+        function debugLog(message, type = 'info') {
+            const now = new Date().toLocaleTimeString();
+            const logDiv = document.getElementById('debugLogs');
+            const color = type === 'error' ? '#f00' : type === 'success' ? '#0f0' : '#0ff';
+            logDiv.innerHTML += `<div style="color: ${color};">[${now}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(`[DEBUG] ${message}`);
+        }
+
+        // Función para cargar carrusel exactamente como main.js
+        async function loadMainJsCarousel() {
+            debugLog('🚀 Iniciando carga de carrusel dinámico como main.js', 'info');
+            
+            const container = document.getElementById('dynamicCarousel');
+            document.getElementById('dynamicStatus').textContent = 'Cargando...';
+            
+            try {
+                // 1. Obtener datos del API
+                debugLog('📡 Llamando API /api/carousel...', 'info');
+                const response = await fetch('/api/carousel');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error('API error: ' + data.message);
+                }
+
+                const images = data.data.images;
+                debugLog(`✅ Recibidas ${images.length} imágenes del API`, 'success');
+
+                // 2. Generar HTML exacto como main.js
+                debugLog('🎨 Generando HTML del carrusel...', 'info');
+                let carouselHTML = `<div id="carouselExample" class="carousel slide" data-bs-ride="carousel">
+  <div class="carousel-inner">`;
+
+                images.forEach((image, index) => {
+                    let optimizedImageUrl = image.image_url;
+                    if (optimizedImageUrl.includes('/large/')) {
+                        optimizedImageUrl = optimizedImageUrl.replace('/large/', '/medium/');
+                        optimizedImageUrl = optimizedImageUrl.replace('_large.webp', '_medium.webp');
+                    }
+                    
+                    carouselHTML += `
+    <div class="carousel-item${index === 0 ? ' active' : ''}">
+      <img src="${optimizedImageUrl}" class="d-block w-100" alt="${image.alt_text || image.title}" style="height: 280px; object-fit: cover;">
+    </div>`;
+                });
+
+                carouselHTML += `
+  </div>
+  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Previous</span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Next</span>
+  </button>
+</div>`;
+
+                // 3. Insertar HTML
+                debugLog('📝 Insertando HTML en contenedor...', 'info');
+                container.innerHTML = carouselHTML;
+
+                // 4. Verificar DOM
+                const activeSlides = container.querySelectorAll('.carousel-item.active').length;
+                const totalSlides = container.querySelectorAll('.carousel-item').length;
+                debugLog(`✅ HTML insertado: ${activeSlides} activa, ${totalSlides} total`, 'success');
+
+                // 5. Inicialización como main.js
+                debugLog('🔧 Inicializando carrusel...', 'info');
+                setTimeout(() => {
+                    const carouselElement = document.getElementById('carouselExample');
+                    if (!carouselElement) {
+                        debugLog('❌ Elemento carrusel no encontrado', 'error');
+                        document.getElementById('dynamicStatus').textContent = 'ERROR: Elemento no encontrado';
+                        return;
+                    }
+                    
+                    debugLog('✅ Elemento carrusel encontrado en DOM', 'success');
+                    
+                    // Verificar Bootstrap instance
+                    let carouselInstance = bootstrap.Carousel.getInstance(carouselElement);
+                    
+                    if (!carouselInstance) {
+                        debugLog('🔧 Inicializando manualmente...', 'info');
+                        try {
+                            carouselInstance = new bootstrap.Carousel(carouselElement, {
+                                interval: 4000,
+                                ride: 'carousel',
+                                wrap: true
+                            });
+                            debugLog('✅ Carrusel inicializado manualmente', 'success');
+                            document.getElementById('dynamicStatus').textContent = '✅ Funcionando (Manual)';
+                        } catch (error) {
+                            debugLog(`❌ Error manual: ${error.message}`, 'error');
+                            document.getElementById('dynamicStatus').textContent = '❌ Error de inicialización';
+                        }
+                    } else {
+                        debugLog('✅ Bootstrap inicializó automáticamente', 'success');
+                        document.getElementById('dynamicStatus').textContent = '✅ Funcionando (Auto)';
+                    }
+                    
+                    debugLog('🎉 CARRUSEL DINÁMICO COMPLETADO', 'success');
+                }, 200);
+
+            } catch (error) {
+                debugLog(`❌ ERROR FATAL: ${error.message}`, 'error');
+                document.getElementById('dynamicStatus').textContent = '❌ Error Fatal';
+            }
+        }
+
+        // Verificaciones iniciales
+        document.addEventListener('DOMContentLoaded', function() {
+            debugLog('✅ DOM cargado, iniciando verificaciones...', 'success');
+            
+            // Verificar CSS
+            const styles = getComputedStyle(document.querySelector('.carousel'));
+            const cssOk = styles.position === 'relative';
+            document.getElementById('bootstrapCssStatus').textContent = cssOk ? '✅ CSS OK' : '❌ CSS Error';
+            debugLog(`CSS Bootstrap: ${cssOk ? 'OK' : 'ERROR'}`, cssOk ? 'success' : 'error');
+            
+            // Verificar JS
+            const jsOk = typeof bootstrap !== 'undefined';
+            document.getElementById('bootstrapJsStatus').textContent = jsOk ? '✅ JS OK' : '❌ JS Error';
+            debugLog(`JS Bootstrap: ${jsOk ? 'OK' : 'ERROR'}`, jsOk ? 'success' : 'error');
+            
+            // Viewport
+            document.getElementById('viewportInfo').textContent = `${window.innerWidth}x${window.innerHeight}`;
+            
+            // Verificar carrusel estático
+            setTimeout(() => {
+                const staticEl = document.getElementById('staticCarousel');
+                const staticInstance = bootstrap.Carousel.getInstance(staticEl);
+                const status = staticInstance ? '✅ Funcionando' : '❌ No inicializado';
+                document.getElementById('staticStatus').textContent = status;
+                debugLog(`Carrusel estático: ${status}`, staticInstance ? 'success' : 'error');
+            }, 1000);
+            
+            debugLog('🔍 Verificaciones completadas', 'info');
+        });
+    </script>
+</body>
+</html>

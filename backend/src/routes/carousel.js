@@ -1,7 +1,6 @@
-const express = require('express');
-const router = express.Router();
-const { authenticateToken, requireRole } = require('../middleware/auth');
-const {
+import express from 'express';
+import { authenticateToken, requireRole } from '../middleware/bked_auth_middleware.js';
+import {
     getAllCarouselImages,
     getAllCarouselImagesAdmin,
     getCarouselImageById,
@@ -9,7 +8,9 @@ const {
     updateCarouselImage,
     deleteCarouselImage,
     updateCarouselOrder
-} = require('../controllers/carouselController');
+} from '../controllers/carouselController.js';
+
+const router = express.Router();
 
 // Public routes
 router.get('/', getAllCarouselImages);
@@ -22,4 +23,4 @@ router.put('/:id', updateCarouselImage);
 router.delete('/:id', deleteCarouselImage);
 router.put('/order/update', updateCarouselOrder);
 
-module.exports = router;
+export default router;

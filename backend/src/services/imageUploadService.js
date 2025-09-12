@@ -1,8 +1,9 @@
-const { createClient } = require('@supabase/supabase-js');
-const sharp = require('sharp');
-const fs = require('fs');
-const path = require('path');
-require('dotenv').config();
+import { createClient } from '@supabase/supabase-js';
+import sharp from 'sharp';
+import fs from 'fs';
+import path from 'path';
+import { config } from 'dotenv';
+config();
 
 // Cliente Supabase con SERVICE_ROLE para bypasear RLS
 const supabaseAdmin = createClient(
@@ -11,7 +12,7 @@ const supabaseAdmin = createClient(
 );
 
 // Cliente regular para operaciones de base de datos
-const { supabase } = require('../config/database');
+import { supabase } from '../config/database.js';
 
 // Mapeo de ocasiones
 const OCCASIONS_MAP = {
@@ -69,7 +70,7 @@ async function uploadImageToSupabase(imagePath, filename) {
             });
             
         if (error) {
-            console.error(`   ❌ Error Supabase Storage:`, error);
+            console.error('   ❌ Error Supabase Storage:', error);
             return null;
         }
         
@@ -113,7 +114,7 @@ async function processImageBuffer(buffer, originalName) {
             });
             
         if (error) {
-            console.error(`   ❌ Error Supabase Storage:`, error);
+            console.error('   ❌ Error Supabase Storage:', error);
             return null;
         }
         
@@ -123,7 +124,7 @@ async function processImageBuffer(buffer, originalName) {
         return publicUrl;
         
     } catch (error) {
-        console.error(`   💥 Error procesando buffer:`, error.message);
+        console.error('   💥 Error procesando buffer:', error.message);
         return null;
     }
 }
@@ -160,9 +161,6 @@ async function createProduct(productData) {
                 description: productData.description,
                 price: productData.price,
                 stock_quantity: productData.stock_quantity || Math.floor(Math.random() * 20) + 10,
-                image_url: productData.image_url,
-                primary_image: productData.primary_image || productData.image_url,
-                additional_images: productData.additional_images,
                 active: true,
                 featured: productData.featured || Math.random() > 0.5,
                 show_on_homepage: productData.show_on_homepage || Math.random() > 0.7,
@@ -174,7 +172,7 @@ async function createProduct(productData) {
             .select();
             
         if (error) {
-            console.error(`   ❌ Error BD:`, error);
+            console.error('   ❌ Error BD:', error);
             return null;
         }
         
@@ -191,17 +189,17 @@ async function createProduct(productData) {
                     });
                     
                 if (!relationError) {
-                    console.log(`   🔗 Relación ocasión creada`);
+                    console.log('   🔗 Relación ocasión creada');
                 }
             } catch (e) {
-                console.log(`   ℹ️ Relación ocasión omitida`);
+                console.log('   ℹ️ Relación ocasión omitida');
             }
         }
         
         return data[0];
         
     } catch (error) {
-        console.error(`   💥 Error creando producto:`, error.message);
+        console.error('   💥 Error creando producto:', error.message);
         return null;
     }
 }
@@ -240,7 +238,7 @@ async function processImageGroupAndCreateProduct(title, images, occasionId) {
                 
                 if (url) {
                     uploadedUrls.push(url);
-                    console.log(`   ✅ Subida exitosa`);
+                    console.log('   ✅ Subida exitosa');
                 }
                 
                 // Limpiar archivo temporal
@@ -292,7 +290,7 @@ async function processImageGroupAndCreateProduct(title, images, occasionId) {
     }
 }
 
-module.exports = {
+export {
     convertToWebP,
     uploadImageToSupabase,
     processImageBuffer,

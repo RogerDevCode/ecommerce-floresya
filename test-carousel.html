@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Carousel - FloresYa</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Test Carrusel FloresYa</h1>
+        <div class="carousel-container">
+            <div class="image-carousel" id="dynamicCarousel">
+                <!-- Dynamic images will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Simple logger for testing
+        const logger = {
+            info: (tag, message, data) => console.log(`[INFO] [${tag}] ${message}`, data),
+            success: (tag, message, data) => console.log(`[SUCCESS] [${tag}] ${message}`, data),
+            error: (tag, message, data) => console.error(`[ERROR] [${tag}] ${message}`, data),
+            warn: (tag, message, data) => console.warn(`[WARN] [${tag}] ${message}`, data)
+        };
+
+        // Test carousel loading
+        async function loadCarousel() {
+            logger.info('CAROUSEL', '🎠 Cargando imágenes del carrusel');
+
+            try {
+                const response = await fetch('/api/carousel');
+                const data = await response.json();
+                
+                console.log('Carousel API response:', data);
+                
+                if (data.success && data.data.images) {
+                    renderCarousel(data.data.images);
+                    logger.success('CAROUSEL', '✅ Carrusel cargado correctamente', {
+                        count: data.data.images.length
+                    });
+                } else {
+                    logger.warn('CAROUSEL', '⚠️ No se encontraron imágenes del carrusel');
+                }
+            } catch (error) {
+                logger.error('CAROUSEL', '❌ Error cargando carrusel', {
+                    error: error.message
+                });
+            }
+        }
+
+        function renderCarousel(images) {
+            const container = document.getElementById('dynamicCarousel');
+            if (!container || !images || images.length === 0) {
+                logger.warn('CAROUSEL', '⚠️ Contenedor del carrusel no encontrado o sin imágenes');
+                return;
+            }
+
+            // Crear el HTML del carrusel con Bootstrap Carousel
+            const carouselHTML = `
+                <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-indicators">
+                        ${images.map((_, index) => `
+                            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="${index}" 
+                                    ${index === 0 ? 'class="active" aria-current="true"' : ''} 
+                                    aria-label="Slide ${index + 1}"></button>
+                        `).join('')}
+                    </div>
+                    <div class="carousel-inner">
+                        ${images.map((image, index) => `
+                            <div class="carousel-item ${index === 0 ? 'active' : ''}">
+                                <img src="${image.image_url}" 
+                                     class="d-block w-100 carousel-image" 
+                                     alt="${image.alt_text || image.title}"
+                                     style="height: 400px; object-fit: cover;">
+                                <div class="carousel-caption d-none d-md-block">
+                                    <h5>${image.title}</h5>
+                                    ${image.link_url ? `<a href="${image.link_url}" class="btn btn-primary btn-lg">Ver Más</a>` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                </div>
+            `;
+
+            container.innerHTML = carouselHTML;
+            
+            logger.success('CAROUSEL', '✅ Carrusel renderizado', {
+                images: images.length
+            });
+        }
+
+        // Load carousel when DOM is ready
+        document.addEventListener('DOMContentLoaded', loadCarousel);
+    </script>
+</body>
+</html>

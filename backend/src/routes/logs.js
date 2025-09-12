@@ -1,8 +1,14 @@
 // /home/manager/Sync/ecommerce-floresya/backend/src/routes/logs.js
-const express = require('express');
+import express from 'express';
+import { promises as fs } from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const router = express.Router();
-const fs = require('fs').promises;
-const path = require('path');
 
 // Directorio donde se guardarán los logs del frontend
 const LOGS_DIR = path.join(__dirname, '../../../logs/frontend');
@@ -84,4 +90,4 @@ router.post('/frontend', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

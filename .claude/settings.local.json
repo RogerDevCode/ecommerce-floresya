@@ -1,9 +1,23 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pkill:*)",
+      "Bash(python3:*)",
+      "Bash(PORT=3001 node backend/src/server.js)",
+      "Bash(npm run dev:*)",
       "Bash(node:*)",
-      "Bash(time curl:*)"
+      "Bash(NODE_ENV=development node backend/scripts/upload-products-with-images.js)",
+      "Bash(NODE_ENV=development node check-uploaded-data.js)",
+      "Bash(npm test)",
+      "Bash(npm run test:frontend:*)",
+      "Bash(npm start)",
+      "Bash(curl:*)",
+      "Bash(kill:*)",
+      "Bash(lsof:*)",
+      "Bash(netstat:*)",
+      "Bash(ss:*)",
+      "Bash(NODE_ENV=development node backend/src/server.js)",
+      "Bash(NODE_ENV=development node fix-carousel-images.js)",
+      "Bash(xargs curl:*)"
     ],
     "deny": [],
     "ask": []

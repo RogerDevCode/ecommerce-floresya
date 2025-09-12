@@ -1,5 +1,5 @@
-const { databaseService } = require('../services/databaseService');
-const { errorHandlers } = require('../utils/errorHandler');
+import { databaseService } from '../services/databaseService.js';
+import { errorHandlers } from '../utils/bked_errorHandler.js';
 
 // Temporary mock data for development until migration is applied
 const mockOccasions = [
@@ -42,14 +42,15 @@ const getAllOccasions = async (req, res) => {
             });
         }
 
-        const { data } = await databaseService.query('occasions', {
-            eq: { active: true },
-            order: { column: 'sort_order', ascending: true }
+        const result = await databaseService.query('occasions', {
+            select: '*',
+            eq: { is_active: true },
+            order: { column: 'display_order', ascending: true }
         });
 
         res.json({
             success: true,
-            data: data
+            data: result.data
         });
     } catch (error) {
         errorHandlers.handleGenericError(res, error, 'get_all_occasions');
@@ -77,11 +78,12 @@ const getOccasionById = async (req, res) => {
             });
         }
 
-        const { data } = await databaseService.query('occasions', {
-            eq: { id }
+        const result = await databaseService.query('occasions', {
+            select: '*',
+            eq: { id: parseInt(id) }
         });
 
-        if (!data || data.length === 0) {
+        if (!result.data || result.data.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'Ocasión no encontrada'
@@ -90,7 +92,7 @@ const getOccasionById = async (req, res) => {
 
         res.json({
             success: true,
-            data: data[0]
+            data: result.data[0]
         });
     } catch (error) {
         errorHandlers.handleGenericError(res, error, 'get_occasion_by_id');
@@ -119,11 +121,12 @@ const getProductsByOccasion = async (req, res) => {
                 });
             }
 
-            // Get actual products from products table - NEW SYSTEM (no image_url legacy)
-            const { data: products, error } = await supabase
+            // Get actual products from products table
+            const client = databaseService.getClient();
+            const { data, error } = await client
                 .from('products')
                 .select(`
-                    id, name, description, price, active,
+                    id, name, description, price_usd as price, active,
                     images:product_images(
                         id, url_large, is_primary, display_order
                     )
@@ -136,13 +139,14 @@ const getProductsByOccasion = async (req, res) => {
 
             return res.json({
                 success: true,
-                data: products,
+                data,
                 message: 'Using mock relations - migration pending'
             });
         }
 
         // Use SQL function when available
-        const { data, error } = await supabase
+        const client = databaseService.getClient();
+        const { data, error } = await client
             .rpc('get_products_by_occasion', {
                 p_occasion_id: parseInt(id),
                 p_limit: parseInt(limit)
@@ -152,7 +156,7 @@ const getProductsByOccasion = async (req, res) => {
 
         res.json({
             success: true,
-            data: data
+            data
         });
     } catch (error) {
         errorHandlers.handleGenericError(res, error, 'get_products_by_occasion');
@@ -183,7 +187,8 @@ const getProductOccasions = async (req, res) => {
         }
 
         // Use SQL function when available
-        const { data, error } = await supabase
+        const client = databaseService.getClient();
+        const { data, error } = await client
             .rpc('get_product_occasions', {
                 p_product_id: parseInt(productId)
             });
@@ -192,7 +197,7 @@ const getProductOccasions = async (req, res) => {
 
         res.json({
             success: true,
-            data: data
+            data
         });
     } catch (error) {
         errorHandlers.handleGenericError(res, error, 'get_product_occasions');
@@ -220,14 +225,17 @@ const createOccasion = async (req, res) => {
             });
         }
 
-        const { data, error } = await supabase
+        const client = databaseService.getClient();
+        const { data, error } = await client
             .from('occasions')
             .insert({
                 name,
                 description,
+                type: 'general', // Add required field from schema
                 icon: icon || 'bi-star',
                 color: color || '#28a745',
-                sort_order: sort_order || 0
+                display_order: sort_order || 0, // Map to schema column
+                is_active: true
             })
             .select()
             .single();
@@ -236,7 +244,7 @@ const createOccasion = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            data: data,
+            data,
             message: 'Ocasión creada exitosamente'
         });
     } catch (error) {
@@ -264,14 +272,15 @@ const updateOccasion = async (req, res) => {
         if (description !== undefined) updates.description = description;
         if (icon !== undefined) updates.icon = icon;
         if (color !== undefined) updates.color = color;
-        if (sort_order !== undefined) updates.sort_order = sort_order;
-        if (active !== undefined) updates.active = active;
+        if (sort_order !== undefined) updates.display_order = sort_order; // Map to schema column
+        if (active !== undefined) updates.is_active = active; // Map to schema column
         updates.updated_at = new Date().toISOString();
 
-        const { data, error } = await supabase
+        const client = databaseService.getClient();
+        const { data, error } = await client
             .from('occasions')
             .update(updates)
-            .eq('id', id)
+            .eq('id', parseInt(id))
             .select()
             .single();
 
@@ -287,7 +296,7 @@ const updateOccasion = async (req, res) => {
 
         res.json({
             success: true,
-            data: data,
+            data,
             message: 'Ocasión actualizada exitosamente'
         });
     } catch (error) {
@@ -309,10 +318,11 @@ const deleteOccasion = async (req, res) => {
             });
         }
 
-        const { error } = await supabase
+        const client = databaseService.getClient();
+        const { error } = await client
             .from('occasions')
             .delete()
-            .eq('id', id);
+            .eq('id', parseInt(id));
 
         if (error) throw error;
 
@@ -339,7 +349,8 @@ const addProductToOccasion = async (req, res) => {
             });
         }
 
-        const { data, error } = await supabase
+        const client = databaseService.getClient();
+        const { data, error } = await client
             .from('product_occasions')
             .insert({
                 product_id: parseInt(productId),
@@ -360,7 +371,7 @@ const addProductToOccasion = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            data: data,
+            data,
             message: 'Producto asociado a ocasión exitosamente'
         });
     } catch (error) {
@@ -382,7 +393,8 @@ const removeProductFromOccasion = async (req, res) => {
             });
         }
 
-        const { error } = await supabase
+        const client = databaseService.getClient();
+        const { error } = await client
             .from('product_occasions')
             .delete()
             .eq('product_id', parseInt(productId))
@@ -399,7 +411,7 @@ const removeProductFromOccasion = async (req, res) => {
     }
 };
 
-module.exports = {
+export {
     getAllOccasions,
     getOccasionById,
     getProductsByOccasion,

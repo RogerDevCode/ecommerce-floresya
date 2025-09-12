@@ -1686,12 +1686,15 @@ class AdminApp {
                 // Load existing images
                 existingImages.length = 0; // Clear array
                 
-                // Add main image
-                if (product.image_url) {
-                    existingImages.push({
-                        url: product.image_url,
-                        filename: product.image_url.split('/').pop()
-                    });
+                // Add main image from product_images array
+                if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+                    const primaryImage = product.images.find(img => img.is_primary) || product.images[0];
+                    if (primaryImage) {
+                        existingImages.push({
+                            url: primaryImage.url_large,
+                            filename: primaryImage.original_filename || primaryImage.url_large.split('/').pop()
+                        });
+                    }
                 }
                 
                 // Add additional images
@@ -2325,10 +2328,12 @@ class AdminApp {
                 if (select) {
                     select.innerHTML = '<option value="">Seleccione un producto...</option>' +
                         response.data.products
-                            .filter(p => p.image_url && p.active) // Only products with images
-                            .map(p => 
-                                `<option value="${p.id}" data-image="${p.image_url}" data-name="${p.name}" data-price="${p.price}">
-                                    ${p.name} - $${p.price} USD
+                            .filter(p => p.active && p.images && Array.isArray(p.images) && p.images.length > 0) // Only products with images
+                            .map(p => {
+                                const primaryImage = p.images.find(img => img.is_primary) || p.images[0];
+                                const imageUrl = primaryImage?.url_large || '/images/placeholder-product-2.webp';
+                                return `<option value="${p.id}" data-image="${imageUrl}" data-name="${p.name}" data-price="${p.price_usd || p.price}">
+                                    ${p.name} - $${p.price_usd || p.price} USD
                                 </option>`
                             ).join('');
                         
@@ -2463,8 +2468,10 @@ class AdminApp {
                 return;
             }
             
-            // Select products with images
-            const productsWithImages = response.data.products.filter(p => p.image_url && p.active);
+            // Select products with images (using new product_images structure)
+            const productsWithImages = response.data.products.filter(p => {
+                return p.active && p.images && Array.isArray(p.images) && p.images.length > 0;
+            });
             
             if (productsWithImages.length < 3) {
                 api.showNotification('Se necesitan al menos 3 productos activos con imágenes', 'warning');
@@ -2490,6 +2497,11 @@ class AdminApp {
             // Add new random images
             for (let i = 0; i < randomProducts.length; i++) {
                 const product = randomProducts[i];
+                
+                // Get primary image from product_images array
+                const primaryImage = product.images?.find(img => img.is_primary) || product.images?.[0];
+                const imageUrl = primaryImage?.url_large || '/images/placeholder-product-2.webp';
+                
                 await fetch('/api/carousel', {
                     method: 'POST',
                     headers: { 
@@ -2498,8 +2510,8 @@ class AdminApp {
                     },
                     body: JSON.stringify({
                         title: product.name,
-                        description: `Hermoso arreglo floral - $${product.price} USD`,
-                        image_url: product.image_url,
+                        description: `Hermoso arreglo floral - $${product.price_usd || product.price} USD`,
+                        image_url: imageUrl,
                         link_url: `/pages/product-detail.html?id=${product.id}`,
                         display_order: i + 1,
                         active: true

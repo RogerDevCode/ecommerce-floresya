@@ -1,5 +1,5 @@
-const crypto = require('crypto');
-const { supabase } = require('../config/database');
+import crypto from 'crypto';
+import { supabase } from '../config/database.js';
 
 class ImageHashService {
     /**
@@ -252,4 +252,4 @@ class ImageHashService {
     }
 }
 
-module.exports = new ImageHashService();
+export default new ImageHashService();

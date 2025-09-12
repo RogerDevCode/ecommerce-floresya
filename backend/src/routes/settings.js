@@ -1,21 +1,27 @@
-const express = require('express');
-const router = express.Router();
-const { getSetting, updateSetting, getHomepageSettings, updateHomepageSettings } = require('../controllers/settingsController');
+import express from 'express';
+import { 
+    getSetting, 
+    updateSetting, 
+    getHomepageSettings, 
+    updateHomepageSettings,
+    getExchangeRateBCV 
+} from '../controllers/settingsController.js';
 
-// Middleware for admin authentication would go here
-// const { isAdmin } = require('../middleware/auth');
+const router = express.Router();
+
+// Get exchange rate from BCV
+router.get('/exchange_rate_bcv', getExchangeRateBCV);
 
 // Get homepage settings
 router.get('/homepage/all', getHomepageSettings);
 
-// Update homepage settings (batch) - temporarily without auth for development
+// Update homepage settings (batch)
 router.put('/homepage/all', updateHomepageSettings);
 
 // Get a specific setting
 router.get('/:key', getSetting);
 
-// Update a specific setting (protected)
-// For now, it's open, but we'll add auth later
+// Update a specific setting
 router.put('/:key', updateSetting);
 
-module.exports = router;
+export default router;

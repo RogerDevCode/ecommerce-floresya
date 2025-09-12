@@ -1,14 +1,15 @@
-const express = require('express');
-const router = express.Router();
-const { authenticateToken, requireRole, optionalAuth } = require('../middleware/auth');
-const { paymentValidation } = require('../middleware/validation');
-const {
+import express from 'express';
+import { authenticateToken, requireRole, optionalAuth } from '../middleware/bked_auth_middleware.js';
+import { paymentValidation } from '../middleware/validation.js';
+import {
     createPayment,
     getPaymentsByOrder,
     getAllPayments,
     verifyPayment,
     uploadPaymentProof
-} = require('../controllers/paymentController');
+} from '../controllers/paymentController.js';
+
+const router = express.Router();
 
 router.post('/', optionalAuth, uploadPaymentProof, paymentValidation, createPayment);
 
@@ -18,4 +19,4 @@ router.get('/admin/all', authenticateToken, requireRole(['admin']), getAllPaymen
 
 router.patch('/:id/verify', authenticateToken, requireRole(['admin']), verifyPayment);
 
-module.exports = router;
+export default router;

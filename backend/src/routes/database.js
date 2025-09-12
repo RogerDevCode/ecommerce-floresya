@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import { supabase, useSupabase } from '../config/database.js';
+
 const router = express.Router();
-const { supabase, useSupabase } = require('../config/database');
 
 // Database browser endpoint
 router.get('/browse/:table', async (req, res) => {
@@ -11,7 +12,7 @@ router.get('/browse/:table', async (req, res) => {
 
         // Validate table name (security)
         const allowedTables = [
-            'products', 'categories', 'users', 'orders', 'order_items', 
+            'products', 'occasions', 'users', 'orders', 'order_items', 
             'payments', 'payment_methods', 'settings', 'carousel_images'
         ];
 
@@ -61,7 +62,7 @@ router.get('/browse/:table', async (req, res) => {
 
         } else {
             // Use Sequelize (fallback)
-            const { sequelize } = require('../config/database');
+            const { sequelize } = await import('../config/database.js');
             
             // Get data
             const [rows] = await sequelize.query(
@@ -108,7 +109,7 @@ router.get('/tables', async (req, res) => {
     try {
         const tables = [
             { name: 'products', description: 'Productos' },
-            { name: 'categories', description: 'Categorías' },
+            { name: 'occasions', description: 'Ocasiones' },
             { name: 'users', description: 'Usuarios' },
             { name: 'orders', description: 'Pedidos' },
             { name: 'order_items', description: 'Items de Pedidos' },
@@ -132,4 +133,4 @@ router.get('/tables', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

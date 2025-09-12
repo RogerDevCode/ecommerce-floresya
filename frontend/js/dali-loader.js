@@ -484,8 +484,8 @@ class DaliFlowerLoader {
             }, 'info');
             
             if (this.totalImages === 0) {
-                this.log('⚠️ No se encontraron imágenes de Supabase, ocultando loader después del tiempo mínimo', {}, 'warn');
-                // No Supabase images to load, hide immediately after minimum time
+                this.log('ℹ️ Carga dinámica detectada, usando tiempo estándar de visualización', {}, 'info');
+                // No static Supabase images to load, hide after minimum time (normal for dynamic loading)
                 setTimeout(() => this.hide(), this.minimumShowTime);
                 return;
             }
