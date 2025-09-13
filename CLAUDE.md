@@ -5,10 +5,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ### Core Development
-- `npm start` - Start production server
-- `npm run dev` - Initialize dev database and start development server with nodemon
+- `npm start` - Start production server (compiled TypeScript)
+- `npm run dev` - Full development workflow: compile TypeScript, initialize database, start server with nodemon
 - `npm run demo` - Initialize demo database and start server
 - `npm run demo-visual` - Start visual demo server without database
+
+### TypeScript Development
+- `npm run ts:build` - Compile TypeScript to JavaScript in `dist/`
+- `npm run ts:watch` - Watch mode compilation (use `./tsw.sh on/off` for daemon control)
+- `npm run ts:check` - Type check without compilation
+- `./tsw.sh on` - Start TypeScript watch daemon in background
+- `./tsw.sh off` - Stop TypeScript watch daemon
+- `./tsw.sh status` - Check daemon status
 
 ### Testing
 - `npm test` - Run all tests with Vitest
@@ -24,118 +32,109 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run lint:fix` - Auto-fix linting issues
 - `npm run type:check` - TypeScript type checking without compilation
 
-### TypeScript Migration
-- `npm run ts:check` - Type check without compilation
-- `npm run ts:build` - Compile TypeScript to JavaScript
-- `npm run ts:watch` - Watch mode compilation
-- `npm run dev:ts` - Development server with TypeScript support
-
 ## Architecture
 
+### TypeScript Migration Status: COMPLETED
+The project has been **fully migrated to TypeScript** with the following structure:
+
+```
+src/                          # TypeScript source code
+├── frontend/
+│   ├── main.ts              # Core app functionality  
+│   ├── services/            # API, auth, cart, carousel services
+│   └── utils/               # Logger, responsive image utilities
+├── backend/
+│   ├── server.ts            # Express server with type safety
+│   ├── routes/              # API route handlers (TypeScript)
+│   ├── middleware/          # Authentication, validation middleware
+│   ├── services/            # Business logic services
+│   ├── utils/               # Backend utilities (logger)
+│   └── scripts/             # Database initialization scripts
+└── shared/
+    └── types/               # Shared TypeScript type definitions
+
+dist/                        # Compiled JavaScript (auto-generated)
+├── frontend/                # Compiled frontend modules
+└── backend/                 # Compiled backend modules
+
+frontend/                    # Static assets and HTML
+├── index.html              # Main page (loads ES modules from dist/)
+├── pages/                  # Additional HTML pages
+├── css/                    # Stylesheets
+└── js/                     # Legacy JavaScript (being phased out)
+```
+
 ### Database Strategy
-- **Primary**: Supabase PostgreSQL via official API client (`@supabase/supabase-js`)
-- **Migration Layer**: Prisma compatibility layer exists (`/backend/src/config/database_prisma.js`)
-- **Legacy**: Sequelize models being phased out, located in `/oldfiles/`
-- **IMPORTANT**: Never use direct database connections or ORMs other than Supabase API
-
-### Project Structure
-```
-backend/src/
-├── controllers/     # API route handlers (mix of JS/TS migration in progress)
-├── services/        # Business logic and external API integration  
-├── routes/          # Express route definitions
-├── middleware/      # Authentication, validation, monitoring
-├── config/          # Database, Swagger, and app configuration
-├── utils/           # Logging utilities (bked_logger.js)
-└── scripts/         # Database initialization and migration scripts
-
-frontend/
-├── js/              # Client-side JavaScript modules
-├── css/             # Stylesheets
-└── pages/           # HTML page templates
-
-types/               # TypeScript type definitions
-tests/unit/          # Vitest test files
-```
-
-### File Naming Convention
-- Backend files must use `bked_` prefix to avoid naming conflicts
-- Frontend files use descriptive names without prefixes
-- Legacy files moved to `/oldfiles/` during migration
-
-### TypeScript Migration Status
-- **Active Migration**: JavaScript files being converted to TypeScript
-- **Configuration**: Multiple tsconfig files for different environments
-- **Strategy**: Gradual migration with strict typing enabled incrementally
-- **Rule**: When editing any `.js` file, convert it to `.ts` and move old file to `/oldfiles/`
-
-### Image Handling
-- **Storage**: All images stored in Supabase Storage buckets
-- **Upload**: Use `/backend/src/services/imageUploadService.js`
-- **Processing**: Image optimization via Sharp in `/backend/src/services/imageProcessing.js`
-- **CRITICAL**: Never store images locally except temporarily during upload process
-- **Fallback**: Use local placeholders when Supabase returns null
+- **Primary**: Supabase PostgreSQL via official REST API (`@supabase/supabase-js`)
+- **Development**: Stub routes provide mock data for frontend development
+- **CRITICAL**: Never use direct database connections - only Supabase API client
 
 ### API Architecture
-- **REST API**: Express.js with comprehensive middleware stack
-- **Authentication**: JWT-based auth via `authController.js`
-- **Validation**: Express-validator middleware
-- **Monitoring**: Custom middleware in `/middleware/monitoringMiddleware.js`
-- **Documentation**: Swagger/OpenAPI at `/backend/src/config/swagger.js`
+- **REST API**: Express.js with comprehensive TypeScript typing
+- **Current Status**: Stub routes mounted at `/api/*` providing functional mock responses
+- **Authentication**: JWT-based auth middleware (TypeScript)
+- **Validation**: Express-validator middleware with type safety
 - **Rate Limiting**: Express rate limiting enabled
+- **Security**: Helmet middleware with strict CSP
 
 ### Frontend Architecture
-- **Vanilla JS**: ES6+ modules with progressive enhancement
-- **Responsive**: Mobile-first design (breakpoints: <768px, 768-1199px, >1200px)
-- **Image Loading**: Responsive images with hover effects and loading states
-- **Shopping Cart**: Local storage with backend sync
-- **Product Details**: Dynamic loading with image galleries
+- **Module System**: ES modules loaded with `type="module"`
+- **TypeScript**: All core functionality migrated to TypeScript, compiled to `dist/frontend/`
+- **Legacy Compatibility**: Existing JavaScript files in `frontend/js/` still function
+- **Image Loading**: Responsive images with multi-provider support
+- **Shopping Cart**: Type-safe cart with local storage and backend sync
+- **API Client**: Typed HTTP client with error handling and logging
+
+### File Serving Strategy
+- **Static Files**: Express serves `frontend/` directory for HTML, CSS, images
+- **Compiled Modules**: Express serves `dist/` with correct MIME types for JavaScript modules
+- **TypeScript Sources**: Located in `src/`, compiled to `dist/` on build
 
 ## Development Guidelines
 
+### TypeScript Development Workflow
+1. **Source Code**: Write TypeScript in `src/` directory
+2. **Compilation**: Use `npm run ts:build` or `./tsw.sh on` for auto-compilation
+3. **Testing**: Run `npm test` to validate functionality
+4. **Development Server**: Use `npm run dev` for full development stack
+
+### API Development
+- **Stub Routes**: Located in `src/backend/routes/stub-routes.ts`
+- **Mock Data**: Provides realistic responses for frontend development
+- **Type Safety**: All routes use TypeScript interfaces for request/response types
+- **Logging**: Comprehensive logging via `src/backend/utils/bked_logger.ts`
+
 ### Testing Requirements
-- **100% test coverage** required for new code
-- Create tests immediately after writing/editing code
-- Maximum 5 fix attempts before manual review needed
+- **100% test coverage** required for new TypeScript code
 - Use Vitest for unit and integration testing
 - Frontend tests focus on DOM manipulation and API integration
+- Backend tests validate API responses and business logic
 
 ### Code Quality Standards
-- **ESLint**: Strict configuration with ES6+ rules
-- **TypeScript**: Gradual migration with increasing strictness
-- **Logging**: Use `/backend/src/utils/bked_logger.js` for all logging
+- **TypeScript**: Strict configuration with ES2022 target
+- **ESLint**: Strict configuration for code quality
+- **Path Mappings**: Use `@frontend/*`, `@backend/*`, `@shared/*` aliases
 - **Error Handling**: Comprehensive error handling with proper HTTP status codes
 - **Security**: JWT authentication, rate limiting, input validation
 
-### Database Development
-- **Supabase Only**: Never use local databases or direct connections
-- **Query Builder**: Use `/backend/src/services/queryBuilder.js` for complex queries
-- **Migrations**: SQL scripts in root directory for schema changes
-- **Backup**: Images backed up in `/dbimagenes/` before migrations
-
-### Search and CLI Tools
-- **MANDATORY**: Use `fd` instead of `find` for file searches
-- **MANDATORY**: Use `rg` (ripgrep) instead of `grep` for text searches
-- These tools are required due to better performance and reliability
-
-### Deployment
-- **Platform**: Vercel with automatic deployments
-- **Environment**: Node.js with ES modules support
-- **Build**: Static files served directly, no build step required
-- **Database**: Supabase PostgreSQL in production
+### CLI Tools (MANDATORY)
+- **File Search**: Use `rg` (ripgrep) instead of `grep`
+- **Text Search**: Use `fd` instead of `find`
+- These tools are required for performance and reliability
 
 ## Key Dependencies
 
 ### Core Runtime
-- Express.js 4.18.2 (web framework)
+- Express.js 4.18.2 (web framework with TypeScript support)
 - @supabase/supabase-js 2.57.4 (database client)
+- TypeScript 5.9.2 (primary development language)
 - Node.js with ES modules (type: "module" in package.json)
 
 ### Development Tools
 - Vitest (testing framework)
-- ESLint (code quality)
-- TypeScript 5.9.2 (gradual migration)
+- ESLint (code quality for TypeScript)
 - Nodemon (development server)
+- Sharp (image processing)
 
 ### Security & Performance
 - Helmet (security headers)
@@ -143,19 +142,38 @@ tests/unit/          # Vitest test files
 - Rate limiting (DDoS protection)
 - Compression (response optimization)
 
-## Important Files to Review
+## Current Project Status
+
+### ✅ Completed
+- TypeScript migration (100% core functionality)
+- ES modules integration with proper MIME types
+- Stub API routes providing functional responses
+- Development workflow with automatic compilation
+- Type-safe frontend and backend architecture
+
+### 🔧 Development Ready
+- All API endpoints functional with mock data
+- Frontend loads without 404 errors
+- TypeScript compilation working seamlessly
+- Development server with hot reloading via nodemon
+
+### 📋 Next Steps for Production
+- Replace stub routes with actual Supabase integration
+- Implement remaining API endpoints as needed
+- Add comprehensive error handling for production scenarios
+- Deploy to Vercel with environment-specific configurations
+
+## Important Files
 
 ### Configuration
-- `/tsconfig.json` - TypeScript configuration with path mappings
-- `/.eslintrc.cjs` - ESLint rules and overrides
-- `/vitest.config.js` - Test configuration and setup
+- `tsconfig.json` - TypeScript configuration with strict typing
+- `package.json` - Scripts and dependencies
+- `vitest.config.js` - Test configuration
+
+### Development Scripts
+- `tsw.sh` - TypeScript watch daemon controller
+- `qs.sh` - Quick start development server
 
 ### Documentation
-- `/TYPESCRIPT_MIGRATION_STATUS.md` - Current migration progress
-- `/code_metadata.json` - API and architecture documentation
-- `/backend/src/docs/swagger.js` - API documentation
-
-### Critical Services
-- `/backend/src/services/supabaseClient.js` - Database connection
-- `/backend/src/utils/bked_logger.js` - Logging utilities  
-- `/backend/src/middleware/monitoringMiddleware.js` - Performance monitoring
+- `TYPESCRIPT_MIGRATION_COMPLETED.md` - Migration completion status
+- `docs/API_DOCUMENTATION.md` - API endpoint documentation

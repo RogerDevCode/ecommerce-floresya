@@ -181,13 +181,24 @@ logger.success('SERVER', '✅ Swagger UI montado en /api-docs');
 // 📁 Servir archivos estáticos
 logger.info('SERVER', '📁 Configurando servidores estáticos...');
 
-// 📁 Servir archivos estáticos
-logger.info('SERVER', '📁 Configurando servidores estáticos...');
+// Servir archivos compilados de dist/ con MIME types correctos
+app.use('/dist', express.static(path.join(__dirname, '../../dist'), {
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
+            logger.info('STATIC', '🟨 Sirviendo JavaScript compilado', { path: filePath });
+        } else if (filePath.endsWith('.js.map')) {
+            res.setHeader('Content-Type', 'application/json');
+        }
+    }
+}));
+
 app.use('/uploads', express.static(path.join(__dirname, '../../uploads'), {
     setHeaders: (res, path) => {
         logger.info('STATIC', '🖼️ Sirviendo archivo estático', { path });
     }
 }));
+
 app.use(express.static(path.join(__dirname, '../../frontend'), {
     setHeaders: (res, path) => {
         if (path.endsWith('.html')) {

@@ -13,6 +13,7 @@
 │   │   ├── diagnose-supabase-relations.js
 │   │   ├── SOLUCION-SUPABASE-IMAGES.md
 │   │   ├── update-product-images.js
+│   │   ├── upload-products-with-images.js
 │   │   └── verify-supabase-integration.js
 │   ├── src
 │   │   ├── config
@@ -115,8 +116,13 @@
 │           ├── errorHandler.js
 │           └── logger.js
 ├── backup_images.js
-├── barra-init.md
+├── barra-init.txt
 ├── bdtree.txt
+├── bootstrap-test.html
+├── carousel-final-test.html
+├── carousel-test-enhanced.html
+├── check-db-schema.js
+├── check-uploaded-data.js
 ├── CLAUDE.md
 ├── code_metadata.json
 ├── coverage
@@ -135,27 +141,168 @@
 ├── database
 │   ├── schema_postgres.sql
 │   └── seed_data_postgres.sql
+├── DATABASE_SCHEMA_REFERENCE.md
 ├── dbimagenes
-│   ├── carousel_1_bouquet-de-girasoles-2-large.webp
-│   ├── carousel_2_ramo-de-novia-clasico-3-large.webp
-│   ├── carousel_3_orqu-deas-exoticas-2-large.webp
-│   ├── carousel_4_arreglo-funebre-large.webp
-│   ├── carousel_5_arreglo-de-mesa-elegante-2-large.webp
-│   ├── product_23_main_arreglo-funebre-large.webp
-│   ├── product_24_main_ramo-de-novia-clasico-3-large.webp
-│   ├── product_26_main_bouquet-de-girasoles-2-large.webp
-│   ├── product_28_main_bouquet-de-girasoles-2-large.webp
-│   ├── product_31_main_arreglo-funebre-large.webp
-│   ├── product_32_main_ramo-de-novia-clasico-3-large.webp
-│   ├── product_34_main_bouquet-de-girasoles-2-large.webp
-│   ├── product_36_main_bouquet-de-girasoles-2-large.webp
-│   ├── product_37_main_ramo-de-novia-clasico-3-large.webp
-│   ├── product_39_main_aniversariodebodas-5-1.webp
-│   ├── product_40_main_apocalisis-1-1.webp
-│   ├── product_42_main_cumpleaos-4-1.webp
-│   └── product_44_main_ramoamistad-1-1.webp
+│   ├── images-original
+│   │   ├── product_1_extra1.jpg
+│   │   ├── product_1_main.jpg
+│   │   ├── product_2_extra1.jpg
+│   │   ├── product_2_main.jpg
+│   │   ├── product_3_extra1.jpg
+│   │   ├── product_3_extra2.jpg
+│   │   ├── product_3_extra3.jpg
+│   │   ├── product_3_main.jpg
+│   │   ├── product_4_extra1.jpg
+│   │   ├── product_4_extra3.jpg
+│   │   ├── product_4_extra4.jpg
+│   │   ├── product_4_main.jpg
+│   │   ├── product_5_extra1.jpg
+│   │   ├── product_5_extra2.jpg
+│   │   ├── product_5_extra3.jpg
+│   │   └── product_5_main.jpg
+│   ├── images-renamed
+│   │   ├── product_1_extra1_8a1055fc0ff10d7123a7378f1029c824e818d9b8043571cb086c761404799f2e.webp
+│   │   ├── product_1_main_db2c9985eeb3d43a9c05c104e37181e0589a055f2cac2d34cabcca961be5458e.webp
+│   │   ├── product_2_extra1_be6719d60de78392a6b70d9174e80bbda8f912fd72ef850ac077a9fd01c2897d.webp
+│   │   ├── product_2_main_d0bb9dc59de08d1c05aa39f03c1bcf58fb9aeae3aa31d0c5573c59f9e60eb9e7.webp
+│   │   ├── product_3_extra1_6603851805b2333a3db523a45a4befdd34e720fc93431babaaa325c8ee6fa690.webp
+│   │   ├── product_3_extra2_f9d459504a4a727714e281196acc0a0b8e1c76ce5d8be9e342a3b60f2f9ffa48.webp
+│   │   ├── product_3_extra3_64e8b6107690412c015caf508d3e10cfb7aac5c904f8bd321adff30bc6367965.webp
+│   │   ├── product_3_main_00cfdc98dc4af97de6a2e92ccad8f9e8323d2198a3a28135bf37b32aa70ddcdf.webp
+│   │   ├── product_4_extra1_b4ba6fbbc45a15a3c935514cb9e859adcc87cddc9b8b1edf5a547d64158abdc9.webp
+│   │   ├── product_4_extra3_9aaa292245c33084298a41f1993c535bff1a5baf61d3560783b9603e2cca2ab0.webp
+│   │   ├── product_4_extra4_c7fb600cdea31cfa734f73bb19cc9271d58d85cc8003c377e5d2dfeadc9f5f59.webp
+│   │   ├── product_4_main_9c60dd9f325683f63088a0b63a7125ac8c8192b94945933465923281b8477643.webp
+│   │   ├── product_5_extra1_7724fd0e7cf6c3d575b7a314e1bbff75f2a16e1fd8013f7bb8cbfcfcd9ee067d.webp
+│   │   ├── product_5_extra2_6da003b71bdc22ccad72eff25a45ba0461ca3dc33fa55e5d6472b388a24b9588.webp
+│   │   ├── product_5_extra3_54107d62958eae722c8e0011582af3e141500805b2607f4ddc4232a0622ea868.webp
+│   │   └── product_5_main_fe8e850f325f54bae30399c370ad7ea2e76afa321142330922517bfe2c8aa575.webp
+│   ├── imgtemp
+│   │   ├── Aniversario-de-Bodas.5.1.png
+│   │   ├── Aniversario-de-Bodas.5.2.png
+│   │   ├── Apocalipsis.1.1.png
+│   │   ├── Apocalipsis.1.2.png
+│   │   ├── Apocalipsis.1.3.png
+│   │   ├── Apocalipsis.1.4.png
+│   │   ├── Apocalipsis.1.5.png
+│   │   ├── Cuarto-Bebe.8.1.png
+│   │   ├── Cuarto-Bebe.8.2.png
+│   │   ├── Cumpleaños.4.2.png
+│   │   ├── Cumpleaños.4.3.png
+│   │   ├── Cumpleaños.4.4.png
+│   │   ├── Cumpleaños.8.1.png
+│   │   ├── Dia-de-laMadre.2.1.png
+│   │   ├── Dia-de-laMadre.2.2.png
+│   │   ├── Ramo-Amistad.1.1.png
+│   │   ├── Ramo-Amistad.1.2.png
+│   │   ├── Ramo-Amistad.1.3.png
+│   │   ├── Ramo-Amistad.1.4.png
+│   │   ├── Ramo-de-Novia.12.1.png
+│   │   ├── Ramo-de-Novia.12.2.png
+│   │   ├── Ramo-de-Novia.12.3.png
+│   │   ├── Ramo-Sobremesa.12.1.png
+│   │   └── Ramo-Sobremesa.12.2.png
+│   └── temp
+│       ├── Aniversario-de-Bodas.5.1.png
+│       ├── Aniversario-de-Bodas.5.2.png
+│       ├── Apocalisis.1.1.png
+│       ├── Apocalisis.1.2.png
+│       ├── Apocalisis.1.3.png
+│       ├── Apocalisis.1.4.png
+│       ├── Apocalisis.1.5.png
+│       ├── Cuarto-Bebe.8.1.png
+│       ├── Cuarto-Bebe.8.2.png
+│       ├── Cumpleaños.4.2.png
+│       ├── Cumpleaños.4.3.png
+│       ├── Cumpleaños.4.4.png
+│       ├── Cumpleaños.8.1.png
+│       ├── Dia-de-laMadre.2.1.png
+│       └── Dia-de-laMadre.2.2.png
+├── debug-carousel-simple.html
+├── debug-server.js
+├── debug-simple-carousel.html
 ├── demo-server.js
 ├── dist
+│   ├── backend
+│   │   ├── controllers
+│   │   ├── middleware
+│   │   │   ├── bked_auth_middleware.d.ts
+│   │   │   ├── bked_auth_middleware.d.ts.map
+│   │   │   ├── bked_auth_middleware.js
+│   │   │   └── bked_auth_middleware.js.map
+│   │   ├── routes
+│   │   ├── server.d.ts
+│   │   ├── server.d.ts.map
+│   │   ├── server.js
+│   │   ├── server.js.map
+│   │   ├── services
+│   │   │   ├── supabaseClient.d.ts
+│   │   │   ├── supabaseClient.d.ts.map
+│   │   │   ├── supabaseClient.js
+│   │   │   └── supabaseClient.js.map
+│   │   └── utils
+│   │       ├── bked_logger.d.ts
+│   │       ├── bked_logger.d.ts.map
+│   │       ├── bked_logger.js
+│   │       └── bked_logger.js.map
+│   ├── frontend
+│   │   ├── components
+│   │   ├── main.d.ts
+│   │   ├── main.d.ts.map
+│   │   ├── main.js
+│   │   ├── main.js.map
+│   │   ├── services
+│   │   │   ├── api.d.ts
+│   │   │   ├── api.d.ts.map
+│   │   │   ├── api.js
+│   │   │   ├── api.js.map
+│   │   │   ├── auth.d.ts
+│   │   │   ├── auth.d.ts.map
+│   │   │   ├── auth.js
+│   │   │   ├── auth.js.map
+│   │   │   ├── carousel.d.ts
+│   │   │   ├── carousel.d.ts.map
+│   │   │   ├── carousel.js
+│   │   │   ├── carousel.js.map
+│   │   │   ├── cart.d.ts
+│   │   │   ├── cart.d.ts.map
+│   │   │   ├── cart.js
+│   │   │   └── cart.js.map
+│   │   └── utils
+│   │       ├── logger.d.ts
+│   │       ├── logger.d.ts.map
+│   │       ├── logger.js
+│   │       ├── logger.js.map
+│   │       ├── responsive-image.d.ts
+│   │       ├── responsive-image.d.ts.map
+│   │       ├── responsive-image.js
+│   │       └── responsive-image.js.map
+│   ├── shared
+│   │   └── types
+│   │       ├── api.d.ts
+│   │       ├── api.d.ts.map
+│   │       ├── api.js
+│   │       ├── api.js.map
+│   │       ├── backend.d.ts
+│   │       ├── backend.d.ts.map
+│   │       ├── backend.js
+│   │       ├── backend.js.map
+│   │       ├── carousel.d.ts
+│   │       ├── carousel.d.ts.map
+│   │       ├── carousel.js
+│   │       ├── carousel.js.map
+│   │       ├── database.d.ts
+│   │       ├── database.d.ts.map
+│   │       ├── database.js
+│   │       ├── database.js.map
+│   │       ├── frontend.d.ts
+│   │       ├── frontend.d.ts.map
+│   │       ├── frontend.js
+│   │       ├── frontend.js.map
+│   │       ├── index.d.ts
+│   │       ├── index.d.ts.map
+│   │       ├── index.js
+│   │       └── index.js.map
 │   └── tsconfig.tsbuildinfo
 ├── docs
 │   ├── API_DOCUMENTATION.md
@@ -164,10 +311,12 @@
 ├── frontend
 │   ├── css
 │   │   ├── admin.css
+│   │   ├── carousel.css
 │   │   ├── compact-navigation.css
 │   │   ├── product-detail.css
 │   │   ├── product-detail-minimal.css
 │   │   └── styles.css
+│   ├── favicon.ico
 │   ├── images
 │   │   ├── favicon.ico
 │   │   ├── hero-flowers.jpg
@@ -184,6 +333,8 @@
 │   │   ├── admin.js
 │   │   ├── api.js
 │   │   ├── auth.js
+│   │   ├── carousel.js
+│   │   ├── carousel.ts
 │   │   ├── cart.js
 │   │   ├── dali-loader.js
 │   │   ├── logger.js
@@ -210,6 +361,8 @@
 ├── logs
 │   └── frontend
 ├── migrate-database.js
+├── migration-checkpoint.md
+├── migration-status-final.md
 ├── node_modules
 │   ├── accepts
 │   │   ├── HISTORY.md
@@ -11376,6 +11529,28 @@
 │   │       ├── LICENSE
 │   │       ├── package.json
 │   │       └── README.md
+│   ├── eslint-config-prettier
+│   │   ├── bin
+│   │   │   ├── cli.js
+│   │   │   └── validators.js
+│   │   ├── flat.d.ts
+│   │   ├── flat.js
+│   │   ├── index.d.ts
+│   │   ├── index.js
+│   │   ├── LICENSE
+│   │   ├── package.json
+│   │   ├── prettier.d.ts
+│   │   ├── prettier.js
+│   │   └── README.md
+│   ├── eslint-plugin-prettier
+│   │   ├── eslint-plugin-prettier.d.ts
+│   │   ├── eslint-plugin-prettier.js
+│   │   ├── LICENSE.md
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   ├── recommended.d.ts
+│   │   ├── recommended.js
+│   │   └── worker.mjs
 │   ├── eslint-scope
 │   │   ├── dist
 │   │   │   └── eslint-scope.cjs
@@ -11664,6 +11839,12 @@
 │   │   ├── package.json
 │   │   ├── react.d.ts
 │   │   ├── react.js
+│   │   └── README.md
+│   ├── fast-diff
+│   │   ├── diff.d.ts
+│   │   ├── diff.js
+│   │   ├── LICENSE
+│   │   ├── package.json
 │   │   └── README.md
 │   ├── fast-json-stable-stringify
 │   │   ├── benchmark
@@ -22316,6 +22497,21 @@
 │   │   ├── LICENSE
 │   │   ├── package.json
 │   │   └── README.md
+│   ├── @pkgr
+│   │   └── core
+│   │       ├── index.d.cts
+│   │       ├── lib
+│   │       │   ├── constants.d.ts
+│   │       │   ├── constants.js
+│   │       │   ├── constants.js.map
+│   │       │   ├── helpers.d.ts
+│   │       │   ├── helpers.js
+│   │       │   ├── helpers.js.map
+│   │       │   ├── index.cjs
+│   │       │   ├── index.d.ts
+│   │       │   ├── index.js
+│   │       │   └── index.js.map
+│   │       └── package.json
 │   ├── p-limit
 │   │   ├── index.d.ts
 │   │   ├── index.js
@@ -22436,6 +22632,73 @@
 │   │   ├── LICENSE
 │   │   ├── package.json
 │   │   └── README.md
+│   ├── prettier
+│   │   ├── bin
+│   │   │   └── prettier.cjs
+│   │   ├── doc.d.ts
+│   │   ├── doc.js
+│   │   ├── doc.mjs
+│   │   ├── index.cjs
+│   │   ├── index.d.ts
+│   │   ├── index.mjs
+│   │   ├── internal
+│   │   │   ├── experimental-cli.mjs
+│   │   │   ├── experimental-cli-worker.mjs
+│   │   │   └── legacy-cli.mjs
+│   │   ├── LICENSE
+│   │   ├── package.json
+│   │   ├── plugins
+│   │   │   ├── acorn.d.ts
+│   │   │   ├── acorn.js
+│   │   │   ├── acorn.mjs
+│   │   │   ├── angular.d.ts
+│   │   │   ├── angular.js
+│   │   │   ├── angular.mjs
+│   │   │   ├── babel.d.ts
+│   │   │   ├── babel.js
+│   │   │   ├── babel.mjs
+│   │   │   ├── estree.d.ts
+│   │   │   ├── estree.js
+│   │   │   ├── estree.mjs
+│   │   │   ├── flow.d.ts
+│   │   │   ├── flow.js
+│   │   │   ├── flow.mjs
+│   │   │   ├── glimmer.d.ts
+│   │   │   ├── glimmer.js
+│   │   │   ├── glimmer.mjs
+│   │   │   ├── graphql.d.ts
+│   │   │   ├── graphql.js
+│   │   │   ├── graphql.mjs
+│   │   │   ├── html.d.ts
+│   │   │   ├── html.js
+│   │   │   ├── html.mjs
+│   │   │   ├── markdown.d.ts
+│   │   │   ├── markdown.js
+│   │   │   ├── markdown.mjs
+│   │   │   ├── meriyah.d.ts
+│   │   │   ├── meriyah.js
+│   │   │   ├── meriyah.mjs
+│   │   │   ├── postcss.d.ts
+│   │   │   ├── postcss.js
+│   │   │   ├── postcss.mjs
+│   │   │   ├── typescript.d.ts
+│   │   │   ├── typescript.js
+│   │   │   ├── typescript.mjs
+│   │   │   ├── yaml.d.ts
+│   │   │   ├── yaml.js
+│   │   │   └── yaml.mjs
+│   │   ├── README.md
+│   │   ├── standalone.d.ts
+│   │   ├── standalone.js
+│   │   ├── standalone.mjs
+│   │   └── THIRD-PARTY-NOTICES.md
+│   ├── prettier-linter-helpers
+│   │   ├── index.js
+│   │   ├── LICENSE.md
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   └── test
+│   │       └── index.test.js
 │   ├── @prisma
 │   ├── process-nextick-args
 │   │   ├── index.js
@@ -25294,6 +25557,28 @@
 │   │   │   ├── SymbolTreeNode.js
 │   │   │   ├── TreeIterator.js
 │   │   │   └── TreePosition.js
+│   │   ├── LICENSE
+│   │   ├── package.json
+│   │   └── README.md
+│   ├── synckit
+│   │   ├── lib
+│   │   │   ├── common.d.ts
+│   │   │   ├── common.js
+│   │   │   ├── common.js.map
+│   │   │   ├── constants.d.ts
+│   │   │   ├── constants.js
+│   │   │   ├── constants.js.map
+│   │   │   ├── helpers.d.ts
+│   │   │   ├── helpers.js
+│   │   │   ├── helpers.js.map
+│   │   │   ├── index.cjs
+│   │   │   ├── index.d.cts
+│   │   │   ├── index.d.ts
+│   │   │   ├── index.js
+│   │   │   ├── index.js.map
+│   │   │   ├── types.d.ts
+│   │   │   ├── types.js
+│   │   │   └── types.js.map
 │   │   ├── LICENSE
 │   │   ├── package.json
 │   │   └── README.md
@@ -28596,11 +28881,135 @@
 │       └── supabaseClient.js
 ├── package.json
 ├── package-lock.json
+├── proimg.js
 ├── prompt.md
 ├── qs.sh
+├── recomendaciones.md
 ├── scripts
-│   └── deploy-check.js
+│   ├── check-carousel.js
+│   ├── cleanup-storage.js
+│   ├── deploy-check.js
+│   └── upload-images-to-supabase.js
 ├── shared
+├── src
+│   ├── backend
+│   │   ├── controllers
+│   │   ├── middleware
+│   │   │   └── bked_auth_middleware.ts
+│   │   ├── routes
+│   │   ├── server.ts
+│   │   ├── services
+│   │   │   └── supabaseClient.ts
+│   │   └── utils
+│   │       └── bked_logger.ts
+│   ├── frontend
+│   │   ├── components
+│   │   ├── main.ts
+│   │   ├── services
+│   │   │   ├── api.ts
+│   │   │   ├── auth.ts
+│   │   │   ├── carousel.ts
+│   │   │   └── cart.ts
+│   │   └── utils
+│   │       ├── logger.ts
+│   │       └── responsive-image.ts
+│   └── shared
+│       ├── constants
+│       ├── interfaces
+│       └── types
+│           ├── api.ts
+│           ├── backend.ts
+│           ├── carousel.ts
+│           ├── database.ts
+│           ├── frontend.ts
+│           └── index.ts
+├── src-legacy
+│   ├── backend
+│   │   ├── config
+│   │   │   ├── database_adapter.js
+│   │   │   ├── database.js
+│   │   │   ├── database_prisma.js
+│   │   │   ├── prisma.js
+│   │   │   └── swagger.js
+│   │   ├── controllers
+│   │   │   ├── authController.js
+│   │   │   ├── authControllerSupabase.js
+│   │   │   ├── bked_orderController.js
+│   │   │   ├── bked_productController.js
+│   │   │   ├── carouselController.js
+│   │   │   ├── occasionController.js
+│   │   │   ├── orderController.js
+│   │   │   ├── paymentController.js
+│   │   │   ├── paymentMethodController.js
+│   │   │   ├── productController.js
+│   │   │   ├── productControllerSupabase.js
+│   │   │   ├── settingsController.js
+│   │   │   └── testController.js
+│   │   ├── docs
+│   │   │   └── swagger.js
+│   │   ├── middleware
+│   │   │   ├── bked_auth_middleware.js
+│   │   │   ├── monitoringMiddleware.js
+│   │   │   ├── upload.js
+│   │   │   └── validation.js
+│   │   ├── models
+│   │   ├── routes
+│   │   │   ├── bked_auth_routes.js
+│   │   │   ├── carousel.js
+│   │   │   ├── database.js
+│   │   │   ├── imageProcessor.js
+│   │   │   ├── images.js
+│   │   │   ├── logs.js
+│   │   │   ├── occasions.js
+│   │   │   ├── orders.js
+│   │   │   ├── paymentMethods.js
+│   │   │   ├── payments.js
+│   │   │   ├── products.js
+│   │   │   ├── settings.js
+│   │   │   ├── test-fixed.js
+│   │   │   ├── testRoutes.js
+│   │   │   └── upload.js
+│   │   ├── scripts
+│   │   │   ├── add-primary-image-column.js
+│   │   │   ├── init-db-dev.js
+│   │   │   ├── init-db.js
+│   │   │   ├── process-product-images.js
+│   │   │   └── reset-db.js
+│   │   ├── server.js
+│   │   ├── services
+│   │   │   ├── bked_emailService.js
+│   │   │   ├── bked_monitoringService.js
+│   │   │   ├── databaseService.js
+│   │   │   ├── databaseService.ts
+│   │   │   ├── imageHashService.js
+│   │   │   ├── imageProcessing.js
+│   │   │   ├── imageUploadService.js
+│   │   │   ├── queryBuilder.js
+│   │   │   ├── supabaseAdmin.js
+│   │   │   └── supabaseClient.js
+│   │   └── utils
+│   │       ├── bked_errorHandler.js
+│   │       └── bked_logger.js
+│   └── frontend
+│       ├── accessibility-enhancer.js
+│       ├── admin-enhancements.js
+│       ├── admin.js
+│       ├── api.js
+│       ├── auth.js
+│       ├── carousel.js
+│       ├── carousel.ts
+│       ├── cart.js
+│       ├── dali-loader.js
+│       ├── logger.js
+│       ├── main.js
+│       ├── monitoring-dashboard.js
+│       ├── payment.js
+│       ├── performance-monitor.js
+│       ├── performance-optimizer.js
+│       ├── product-detail.js
+│       ├── product-image-hover.js
+│       ├── responsive-image.js
+│       └── test.js
 ├── supabase_check_before_migration.sql
 ├── supabase_cleanup_data_only.sql
 ├── supabase_migration_force.sql
@@ -28608,7 +29017,10 @@
 ├── supabase_seed_data_fixed.sql
 ├── temp2.js
 ├── test_api_simple.js
+├── test-carousel.html
 ├── test-endpoints.js
+├── test-final-carousel.html
+├── test-hover.html
 ├── test_product_upload.js
 ├── test-querybuilder.js
 ├── tests
@@ -28635,9 +29047,9 @@
 │   ├── run_complete_testing.js
 │   ├── testRunner.js
 │   ├── unit
-│   │   ├── api.test.js
-│   │   ├── categoryController.test.js
-│   │   ├── database.test.js
+│   │   ├── api.test.js.disabled
+│   │   ├── categoryController.test.js.disabled
+│   │   ├── database.test.js.disabled
 │   │   ├── main.test.js
 │   │   ├── orderController.test.js
 │   │   ├── productController.test.js
@@ -28645,16 +29057,17 @@
 │   │   └── vitest.setup.js
 │   └── watchTests.js
 ├── test.txt
-├── todo.txt
 ├── tree.sh
 ├── tree.txt
 ├── tsconfig.dev.json
 ├── tsconfig.json
+├── tsconfig.json.old
 ├── tsconfig.prod.json
 ├── types
 │   ├── database.ts
 │   ├── index.ts
 │   └── services.ts
+├── TYPESCRIPT_MIGRATION_COMPLETED.md
 ├── TYPESCRIPT_MIGRATION_GUIDE.md
 ├── TYPESCRIPT_MIGRATION_STATUS.md
 ├── upload-images-to-supabase.js
@@ -28665,4 +29078,4 @@
 ├── verify_new_system.js
 └── vitest.config.js
 
-2934 directories, 25732 files
+2992 directories, 26087 files

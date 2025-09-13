@@ -17,7 +17,19 @@
       "Bash(ss:*)",
       "Bash(NODE_ENV=development node backend/src/server.js)",
       "Bash(NODE_ENV=development node fix-carousel-images.js)",
-      "Bash(xargs curl:*)"
+      "Bash(xargs curl:*)",
+      "Bash(npm run lint)",
+      "Bash(grep:*)",
+      "Bash(npm run ts:build:*)",
+      "Bash(npm run ts:check:*)",
+      "Bash(timeout 10s npm start)",
+      "Bash(timeout 5s npm run ts:watch)",
+      "Bash(chmod:*)",
+      "Bash(timeout 10s npm run dev)",
+      "Bash(pkill:*)",
+      "Bash(timeout:*)",
+      "Bash(fd:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []
