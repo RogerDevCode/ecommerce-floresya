@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procesar Pago - FloresYa</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/styles.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-success" href="/">
+                <i class="bi bi-flower1 me-2"></i>FloresYa
+            </a>
+        </div>
+    </nav>
+
+    <!-- Payment Container -->
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Order Info -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary-custom text-white">
+                        <h5 class="mb-0"><i class="bi bi-receipt me-2"></i>Información del Pedido</h5>
+                    </div>
+                    <div class="card-body" id="orderInfo">
+                        <!-- Order details will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Customer Information -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary-custom text-white">
+                        <h5 class="mb-0"><i class="bi bi-person-fill me-2"></i>Información del Cliente</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="customerForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-primary-custom">Datos del Remitente</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="senderName" class="form-label">Nombre</label>
+                                            <input type="text" class="form-control" id="senderName" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="senderLastName" class="form-label">Apellido</label>
+                                            <input type="text" class="form-control" id="senderLastName" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="senderPhone" class="form-label">Teléfono</label>
+                                        <input type="tel" class="form-control" id="senderPhone" placeholder="+58414-1234567" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-primary-custom">Datos del Destinatario</h6>
+                                    <div class="mb-3">
+                                        <label for="recipientName" class="form-label">Nombre del Destinatario</label>
+                                        <input type="text" class="form-control" id="recipientName" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="recipientPhone" class="form-label">Teléfono del Destinatario</label>
+                                        <input type="tel" class="form-control" id="recipientPhone" placeholder="+58414-1234567" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="deliveryAddress" class="form-label">Dirección de Entrega</label>
+                                <textarea class="form-control" id="deliveryAddress" rows="3" required placeholder="Dirección completa con referencias..."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="personalMessage" class="form-label">Mensaje Personal (Opcional)</label>
+                                <textarea class="form-control" id="personalMessage" rows="3" placeholder="Mensaje que acompañará las flores..."></textarea>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Currency Calculator -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary-custom text-white">
+                        <h5 class="mb-0"><i class="bi bi-calculator me-2"></i>Calculadora USD - Bs. (BCV)</h5>
+                        <small>Total del pedido + $7.00 envío</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-4">
+                                <label for="bcvRate" class="form-label">Tasa BCV (Bs/$)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">Bs</span>
+                                    <input type="number" class="form-control" id="bcvRate" step="0.01" placeholder="36.50" required>
+                                </div>
+                                <small class="text-muted">Ingrese la tasa del BCV</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Total USD</label>
+                                <div class="price-display bg-light p-3 rounded text-center">
+                                    <div class="fs-5 fw-bold text-primary-custom" id="totalUSD">$0.00</div>
+                                    <small class="text-muted">Subtotal + Envío</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Total Bolívares</label>
+                                <div class="price-display bg-primary-custom text-white p-3 rounded text-center">
+                                    <div class="fs-4 fw-bold" id="totalBs">Bs 0.00</div>
+                                    <small>Total a pagar</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3 p-3 bg-light rounded">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Desglose del pedido:</strong>
+                                    <div id="orderBreakdown"></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Subtotal:</span>
+                                        <span id="subtotalUSD">$0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Envío:</span>
+                                        <span>$7.00</span>
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between fw-bold">
+                                        <span>Total USD:</span>
+                                        <span id="finalTotalUSD">$0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Methods -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-credit-card me-2"></i>Métodos de Pago Disponibles</h5>
+                        <small class="text-muted">Selecciona tu método de pago preferido</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="paymentMethodsContainer">
+                            <!-- Payment methods will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="paymentModalTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="paymentModalBody">
+                    <!-- Payment form will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">¡Pago Registrado!</h5>
+                </div>
+                <div class="modal-body text-center">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3">Pago Enviado Exitosamente</h4>
+                    <p>Tu pago ha sido registrado y está siendo verificado. Te notificaremos por email una vez que sea confirmado.</p>
+                    <p><strong>Número de Orden:</strong> <span id="successOrderNumber"></span></p>
+                </div>
+                <div class="modal-footer">
+                    <a href="/" class="btn btn-success">Volver al Inicio</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-overlay" id="loadingSpinner">
+        <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script type="module" src="/js/api.js"></script>
+    <script src="/js/payment.js"></script>
+</body>
+</html>

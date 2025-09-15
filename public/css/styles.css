@@ -1,0 +1,2019 @@
+/* FloresYa - Custom Styles with Corporate Colors */
+
+/* Prevent FOUC (Flash of Unstyled Content) */
+html {
+    visibility: hidden;
+}
+
+html.stylesheets-loaded {
+    visibility: visible;
+}
+
+:root {
+    --primary-pink: #FF69B4;
+    --primary-white: #FFFFFF;
+    --secondary-pink: #FF1493;
+    --light-pink: #FFB6C1;
+    --dark-pink: #E1408B;
+    --text-dark: #2c2c2c;
+    --text-muted: #666666;
+    --success-green: #28a745;
+    --warning-yellow: #ffc107;
+    --danger-red: #dc3545;
+}
+
+/* Global Styles */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    color: var(--text-dark);
+    background-color: var(--primary-white);
+}
+
+/* Fix h1 sectioned element warning - Specific targeting */
+h1 {
+    font-size: 2.5rem !important;
+    margin: 0.67em 0 !important;
+    line-height: 1.2 !important;
+}
+
+/* Hero section h1 specific styles */
+.hero-section h1 {
+    font-size: 2.5rem !important;
+    margin: 0.5em 0 !important;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    font-weight: 800 !important;
+}
+
+/* Responsive h1 adjustments */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2rem !important;
+    }
+    
+    .hero-section h1 {
+        font-size: 1.75rem !important;
+    }
+}
+
+/* Empty state styles */
+.empty-state {
+    padding: 3rem 1rem;
+    text-align: center;
+    background-color: rgba(255, 105, 180, 0.05);
+    border-radius: 15px;
+    border: 2px dashed rgba(255, 105, 180, 0.2);
+    transition: all 0.3s ease;
+}
+
+.empty-state:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 105, 180, 0.1);
+}
+
+.empty-state img {
+    filter: grayscale(20%);
+    transition: filter 0.3s ease;
+}
+
+.empty-state:hover img {
+    filter: grayscale(0%);
+}
+
+.text-primary-custom {
+    color: var(--primary-pink) !important;
+}
+
+.bg-primary-custom {
+    background-color: var(--primary-pink) !important;
+}
+
+/* Navigation Styles */
+.navbar {
+    box-shadow: 0 2px 10px rgba(255, 105, 180, 0.1);
+    transition: all 0.3s ease;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: var(--primary-pink) !important;
+    font-size: 1.5rem;
+}
+
+.logo-img, .admin-logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary-pink);
+}
+
+.brand-text {
+    background: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+}
+
+.nav-link {
+    color: var(--text-dark) !important;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: var(--primary-pink) !important;
+}
+
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 8px 30px rgba(255, 105, 180, 0.15);
+    border-radius: 12px;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(255, 105, 180, 0.1);
+    color: var(--primary-pink);
+}
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, var(--primary-pink) 0%, var(--secondary-pink) 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: float 20s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+    50% { transform: translate(-50%, -50%) rotate(180deg); }
+}
+
+.hero-section h1 {
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    font-weight: 800;
+}
+
+.hero-section .btn-light {
+    background: var(--primary-white);
+    color: var(--primary-pink);
+    border: none;
+    font-weight: 600;
+    padding: 12px 30px;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
+}
+
+.hero-section .btn-light:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 105, 180, 0.4);
+    color: var(--secondary-pink);
+}
+
+/* FloresYa Button Styles */
+.btn-floresya {
+    background: linear-gradient(135deg, var(--primary-pink) 0%, var(--secondary-pink) 100%);
+    color: white !important;
+    border: none;
+    border-radius: 25px;
+    padding: 12px 24px;
+    font-weight: 700;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-floresya:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s;
+}
+
+.btn-floresya:hover:before {
+    left: 100%;
+}
+
+.btn-floresya:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(255, 105, 180, 0.5);
+    background: linear-gradient(135deg, var(--secondary-pink) 0%, var(--primary-pink) 100%);
+    color: white !important;
+}
+
+.btn-floresya:active {
+    transform: translateY(0);
+}
+
+.btn-floresya i {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* Special Sections */
+.special-sections {
+    background: linear-gradient(180deg, #f8f9fa 0%, var(--primary-white) 100%);
+}
+
+.special-link {
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.special-link:hover {
+    transform: translateY(-5px);
+}
+
+.special-card {
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    background: var(--primary-white) !important;
+}
+
+.special-card:hover {
+    border-color: var(--primary-pink);
+    box-shadow: 0 10px 30px rgba(255, 105, 180, 0.2) !important;
+}
+
+/* Dynamic Carousel */
+.dynamic-carousel {
+    background: linear-gradient(180deg, var(--primary-white) 0%, #f8f9fa 100%);
+    padding: 60px 0;
+}
+
+.carousel-container {
+    overflow: hidden;
+    position: relative;
+    margin: 0 -15px;
+}
+
+/* Bootstrap Carousel Styles (Enhanced) */
+#heroCarousel {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 15px 40px rgba(255, 105, 180, 0.2);
+    min-height: 400px; /* Prevent layout shift */
+    background: var(--light-pink); /* Fallback background */
+}
+
+/* Carousel Loading State */
+.carousel-loading {
+    min-height: 400px;
+    background: linear-gradient(45deg, var(--light-pink), #fff);
+    border-radius: 15px;
+}
+
+/* Carousel Items */
+#heroCarousel .carousel-inner {
+    height: 400px; /* Fixed height to prevent shifts */
+}
+
+#heroCarousel .carousel-item {
+    height: 400px;
+    transition: transform 0.6s ease-in-out;
+}
+
+#heroCarousel .carousel-item img {
+    border-radius: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    object-position: center;
+    will-change: transform; /* Optimize for animations */
+}
+
+#heroCarousel .carousel-item:hover img {
+    transform: scale(1.02);
+}
+
+/* Fade Effect */
+#heroCarousel.carousel-fade .carousel-item {
+    opacity: 0;
+    transition-property: opacity;
+    transform: none;
+}
+
+#heroCarousel.carousel-fade .carousel-item.active,
+#heroCarousel.carousel-fade .carousel-item-next.carousel-item-start,
+#heroCarousel.carousel-fade .carousel-item-prev.carousel-item-end {
+    z-index: 1;
+    opacity: 1;
+}
+
+#heroCarousel.carousel-fade .carousel-item-next,
+#heroCarousel.carousel-fade .carousel-item-prev,
+#heroCarousel.carousel-fade .carousel-item.active.carousel-item-start,
+#heroCarousel.carousel-fade .carousel-item.active.carousel-item-end {
+    opacity: 0;
+}
+
+/* Captions */
+#heroCarousel .carousel-caption {
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+    border-radius: 0 0 15px 15px;
+    bottom: 0;
+    padding: 30px;
+    left: 0;
+    right: 0;
+    text-align: center;
+}
+
+#heroCarousel .carousel-caption h5 {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+    line-height: 1.3;
+}
+
+#heroCarousel .carousel-caption .btn {
+    text-shadow: none;
+    font-weight: 600;
+    border: 2px solid white;
+    transition: all 0.3s ease;
+}
+
+#heroCarousel .carousel-caption .btn:hover {
+    background: white;
+    color: var(--primary-pink);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+}
+
+/* Controls */
+#heroCarousel .carousel-control-prev,
+#heroCarousel .carousel-control-next {
+    background: rgba(255, 105, 180, 0.2);
+    border-radius: 50%;
+    width: 55px;
+    height: 55px;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0 15px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+#heroCarousel .carousel-control-prev:hover,
+#heroCarousel .carousel-control-next:hover {
+    background: rgba(255, 105, 180, 0.4);
+    transform: translateY(-50%) scale(1.1);
+}
+
+#heroCarousel .carousel-control-prev-icon,
+#heroCarousel .carousel-control-next-icon {
+    background-color: white;
+    border-radius: 50%;
+    padding: 3px;
+    width: 25px;
+    height: 25px;
+    background-size: 60%;
+}
+
+/* Indicators */
+#heroCarousel .carousel-indicators {
+    bottom: 25px;
+    margin: 0;
+}
+
+#heroCarousel .carousel-indicators button {
+    background-color: rgba(255, 255, 255, 0.5);
+    border: 2px solid white;
+    opacity: 0.7;
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+    margin: 0 5px;
+    transition: all 0.3s ease;
+}
+
+#heroCarousel .carousel-indicators button.active {
+    opacity: 1;
+    background-color: white;
+    transform: scale(1.3);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Fallback Carousel */
+.carousel-fallback {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 15px 40px rgba(255, 105, 180, 0.3);
+    min-height: 400px;
+}
+
+.carousel-fallback .btn {
+    transition: all 0.3s ease;
+    border: 2px solid white;
+    font-weight: 600;
+}
+
+.carousel-fallback .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #heroCarousel {
+        border-radius: 10px;
+    }
+    
+    #heroCarousel .carousel-inner,
+    #heroCarousel .carousel-item,
+    #heroCarousel .carousel-item img,
+    .carousel-loading {
+        height: 300px;
+    }
+    
+    #heroCarousel .carousel-caption {
+        padding: 20px 15px;
+    }
+    
+    #heroCarousel .carousel-caption h5 {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+    
+    #heroCarousel .carousel-control-prev,
+    #heroCarousel .carousel-control-next {
+        width: 45px;
+        height: 45px;
+        margin: 0 10px;
+    }
+    
+    #heroCarousel .carousel-control-prev-icon,
+    #heroCarousel .carousel-control-next-icon {
+        width: 20px;
+        height: 20px;
+    }
+    
+    #heroCarousel .carousel-indicators button {
+        width: 12px;
+        height: 12px;
+    }
+}
+
+/* Old Carousel Styles (Keep for legacy) */
+.image-carousel {
+    display: flex;
+    animation: scroll 30s linear infinite;
+    gap: 20px;
+}
+
+.carousel-item {
+    flex: 0 0 300px;
+    position: relative;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(255, 105, 180, 0.15);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.carousel-item:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(255, 105, 180, 0.25);
+}
+
+.carousel-item img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.carousel-item:hover img {
+    transform: scale(1.1);
+}
+
+.carousel-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(255, 105, 180, 0.9));
+    color: white;
+    padding: 20px;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+}
+
+.carousel-item:hover .carousel-overlay {
+    transform: translateY(0);
+}
+
+@keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+/* Product Cards - Industry Standard 8px Grid System */
+.product-card {
+    border: none;
+    border-radius: 12px; /* 8px grid: 12 = 1.5 × 8 */
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(255, 105, 180, 0.08); /* Subtle shadow */
+    background: white;
+    height: 400px; /* Fixed height using golden ratio principles */
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+}
+
+.product-card:hover {
+    transform: translateY(-4px); /* Reduced movement for subtlety */
+    box-shadow: 0 8px 24px rgba(255, 105, 180, 0.12);
+}
+
+.product-image {
+    height: 240px; /* Golden ratio: 240:160 = 1.5:1 (close to golden ratio) */
+    width: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 0.3s ease;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.product-card:hover .product-image {
+    transform: scale(1.03); /* Reduced scale for elegance */
+}
+
+/* Loading shimmer animation for progressive loading */
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.product-image.loaded {
+    animation: none;
+    background: transparent;
+}
+
+/* Smooth fade-in for progressive loading */
+.product-image {
+    opacity: 1;
+    transition: opacity 0.4s ease-in-out;
+}
+
+.product-image.loading {
+    opacity: 0.7;
+}
+
+.product-image.loaded {
+    opacity: 1;
+}
+
+/* Card body optimization */
+.product-card .card-body {
+    padding: 16px; /* 8px grid: 16 = 2 × 8 */
+    height: 160px; /* Remaining space: 400 - 240 = 160px */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.product-card .card-title {
+    font-size: 1rem;
+    line-height: 1.4;
+    margin-bottom: 8px; /* 8px grid */
+    height: 44px; /* 8px grid: 44 = 5.5 × 8, allows for 2 lines */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.product-card .card-text {
+    font-size: 0.875rem;
+    line-height: 1.4;
+    margin-bottom: 8px; /* 8px grid */
+    height: 48px; /* 8px grid: 48 = 6 × 8, allows for 3 lines */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.product-card .btn {
+    padding: 8px 16px; /* 8px grid */
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Progressive loading states */
+.product-card.loading {
+    pointer-events: none;
+}
+
+.product-card.loading .card-body {
+    opacity: 0.6;
+}
+
+.badge-featured {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: var(--primary-pink);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    z-index: 2;
+}
+
+.badge-occasion {
+    background: linear-gradient(135deg, var(--light-pink), var(--primary-pink));
+    color: white;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.product-price {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-pink);
+}
+
+/* Buttons */
+.btn-success {
+    background: linear-gradient(135deg, var(--success-green), #20c997);
+    border: none;
+    border-radius: 25px;
+    font-weight: 600;
+    padding: 10px 25px;
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #218838, #1abc9c);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+}
+
+.btn-primary-custom {
+    background: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink));
+    border: none;
+    border-radius: 25px;
+    color: white;
+    font-weight: 600;
+    padding: 10px 25px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary-custom:hover {
+    background: linear-gradient(135deg, var(--secondary-pink), var(--dark-pink));
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 105, 180, 0.4);
+}
+
+/* Features Section */
+.feature-item {
+    text-align: center;
+    padding: 30px 20px;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+    background: rgba(255, 105, 180, 0.05);
+    transform: translateY(-5px);
+}
+
+.feature-item i {
+    color: var(--primary-pink) !important;
+}
+
+/* Form Styles */
+.form-control {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 12px 16px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary-pink);
+    box-shadow: 0 0 0 0.2rem rgba(255, 105, 180, 0.25);
+}
+
+.form-select {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 12px 16px;
+}
+
+.form-select:focus {
+    border-color: var(--primary-pink);
+    box-shadow: 0 0 0 0.2rem rgba(255, 105, 180, 0.25);
+}
+
+/* Cart Styles */
+.cart-item {
+    border-bottom: 1px solid rgba(255, 105, 180, 0.1);
+    padding: 15px 0;
+}
+
+.cart-item:last-child {
+    border-bottom: none;
+}
+
+.cart-total {
+    background: rgba(255, 105, 180, 0.05);
+    border-radius: 10px;
+    padding: 20px;
+    color: var(--primary-pink);
+    font-weight: 600;
+}
+
+/* Modal Styles */
+.modal-content {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 20px 60px rgba(255, 105, 180, 0.15);
+}
+
+.modal-header {
+    border-bottom: 1px solid rgba(255, 105, 180, 0.1);
+    background: linear-gradient(135deg, rgba(255, 105, 180, 0.05), transparent);
+}
+
+.modal-title {
+    color: var(--primary-pink);
+    font-weight: 700;
+}
+
+/* Loading Spinner */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.spinner-border-custom {
+    border-color: var(--light-pink);
+    border-top-color: var(--primary-pink);
+}
+
+/* Footer */
+footer {
+    background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%);
+    color: white;
+}
+
+footer h5, footer h6 {
+    color: var(--primary-pink);
+}
+
+footer .social-links a {
+    transition: color 0.3s ease;
+}
+
+footer .social-links a:hover {
+    color: var(--primary-pink) !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .carousel-item {
+        flex: 0 0 250px;
+    }
+    
+    .hero-section {
+        padding: 40px 0;
+    }
+    
+    .hero-section h1 {
+        font-size: 2rem;
+    }
+    
+    .special-card {
+        margin-bottom: 20px;
+    }
+    
+    .product-image {
+        height: 200px;
+    }
+}
+
+@media (max-width: 576px) {
+    .carousel-item {
+        flex: 0 0 200px;
+    }
+    
+    .hero-section {
+        padding: 30px 0;
+    }
+    
+    .hero-section h1 {
+        font-size: 1.75rem;
+    }
+    
+    .dynamic-carousel {
+        padding: 40px 0;
+    }
+}
+
+/* Currency Converter Styles */
+.currency-converter {
+    background: rgba(255, 105, 180, 0.05);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px 0;
+    border: 2px solid rgba(255, 105, 180, 0.1);
+}
+
+.currency-display {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.currency-usd {
+    color: var(--success-green);
+}
+
+.currency-bsf {
+    color: var(--primary-pink);
+}
+
+.exchange-rate {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Flores Ya Novias Special Section */
+.flores-novias-section {
+    background: linear-gradient(135deg, #fff5f5 0%, rgba(255, 105, 180, 0.1) 100%);
+    padding: 30px 0;
+}
+
+/* ===== PREMIUM CONVERSION OPTIMIZATION ENHANCEMENTS ===== */
+
+/* ✨ ADVANCED PSYCHOLOGY-BASED DESIGN ELEMENTS ✨ */
+
+/* Stock & availability indicators */
+
+/* Advanced CTA Psychology */
+.cta-primary {
+    background: linear-gradient(135deg, #FF69B4 0%, #FF1493 50%, #FF69B4 100%);
+    border: none;
+    border-radius: 50px;
+    padding: 16px 32px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 8px 25px rgba(255, 105, 180, 0.4);
+    cursor: pointer;
+    transform: perspective(1000px) rotateX(0deg);
+}
+
+.cta-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cta-primary:hover::before {
+    left: 100%;
+}
+
+.cta-primary:hover {
+    transform: perspective(1000px) rotateX(-5deg) translateY(-4px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(255, 105, 180, 0.6);
+    background: linear-gradient(135deg, #FF1493 0%, #FF69B4 50%, #FF1493 100%);
+}
+
+.cta-primary:active {
+    transform: perspective(1000px) rotateX(0deg) translateY(0) scale(0.98);
+    transition: all 0.1s ease;
+}
+
+/* Advanced Glass Morphism Effects */
+.glass-morphism {
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(255, 105, 180, 0.1);
+}
+
+/* Premium Gradient with Shimmer Effect */
+.premium-gradient {
+    background: linear-gradient(135deg, #FF69B4 0%, #FF1493 50%, #FF69B4 100%);
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease infinite;
+    position: relative;
+    overflow: hidden;
+}
+
+@keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.premium-gradient::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-gradient:hover::before {
+    left: 100%;
+}
+
+/* Advanced Micro-interactions */
+.hover-lift {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform-origin: center;
+}
+
+.hover-lift:hover {
+    transform: translateY(-12px) scale(1.02);
+    box-shadow: 0 25px 50px rgba(255, 105, 180, 0.2);
+}
+
+/* Pulse Animation for CTAs */
+.pulse-shadow {
+    position: relative;
+    overflow: hidden;
+}
+
+.pulse-shadow::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 105, 180, 0.3);
+    transform: translate(-50%, -50%);
+    animation: pulse-expand 2s infinite ease-out;
+    pointer-events: none;
+}
+
+@keyframes pulse-expand {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+    }
+    100% {
+        width: 300px;
+        height: 300px;
+        opacity: 0;
+    }
+}
+
+/* Enhanced Button Styles with Conversion Psychology */
+.btn-primary-custom {
+    background: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink));
+    border: none;
+    box-shadow: 0 6px 20px rgba(255, 105, 180, 0.4);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.btn-primary-custom:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(255, 105, 180, 0.6);
+    background: linear-gradient(135deg, var(--secondary-pink), var(--primary-pink));
+}
+
+.btn-primary-custom:active {
+    transform: translateY(-1px);
+    transition: transform 0.1s;
+}
+
+.btn-primary-custom::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+}
+
+.btn-primary-custom:hover::before {
+    transform: translateX(100%);
+}
+
+/* Enhanced Cart Icon with Advanced Animations */
+.cart-icon-wrapper {
+    position: relative;
+}
+
+.cart-icon {
+    font-size: 1.5rem;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+}
+
+.cart-icon:hover {
+    transform: scale(1.2) rotate(-10deg);
+    color: var(--primary-pink) !important;
+}
+
+.cart-badge {
+    font-size: 0.75rem;
+    min-width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: cart-bounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    background: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink));
+    border: 2px solid white;
+    box-shadow: 0 4px 12px rgba(255, 105, 180, 0.3);
+}
+
+@keyframes cart-bounce {
+    0% { transform: scale(0) rotate(180deg); opacity: 0; }
+    50% { transform: scale(1.4) rotate(90deg); opacity: 0.8; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.cart-pulse {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 50%;
+    background: rgba(255, 105, 180, 0.3);
+    animation: cart-pulse 2s infinite ease-in-out;
+    pointer-events: none;
+}
+
+@keyframes cart-pulse {
+    0% {
+        transform: scale(0.8);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+/* Trust Indicators and Social Proof */
+.trust-badge {
+    background: rgba(40, 167, 69, 0.1);
+    border-radius: 25px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+.trust-badge:hover {
+    background: rgba(40, 167, 69, 0.2);
+    transform: scale(1.05);
+}
+
+/* Product Card Enhancements */
+.product-card {
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background: white;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.product-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(255, 105, 180, 0.15);
+}
+
+.product-card .card-img-top {
+    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform-origin: center;
+}
+
+.product-card:hover .card-img-top {
+    transform: scale(1.1);
+}
+
+/* Price Display Enhancement */
+.price-highlight {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
+    border-radius: 12px;
+    padding: 12px;
+    border-left: 4px solid var(--success-green);
+    position: relative;
+    overflow: hidden;
+}
+
+.price-highlight::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.8s;
+}
+
+.price-highlight:hover::before {
+    transform: translateX(100%);
+}
+
+/* Loading States */
+.skeleton-loading {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-pulse 1.5s infinite;
+}
+
+@keyframes skeleton-pulse {
+    0% { background-position: -200px 0; }
+    100% { background-position: calc(200px + 100%) 0; }
+}
+
+/* Advanced Mobile Optimizations */
+@media (max-width: 768px) {
+    .hover-lift:hover {
+        transform: translateY(-4px) scale(1.01);
+    }
+    
+    .btn-primary-custom {
+        font-size: 1rem;
+        padding: 14px 28px;
+    }
+    
+    .cart-icon {
+        font-size: 1.3rem;
+    }
+    
+    .glass-morphism {
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+}
+
+/* Accessibility Enhancements */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Focus States for Better Accessibility */
+.btn:focus,
+.form-control:focus,
+.nav-link:focus {
+    outline: 3px solid rgba(255, 105, 180, 0.5);
+    outline-offset: 2px;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    .text-primary-custom {
+        color: #000 !important;
+    }
+    
+    .btn-primary-custom {
+        background: #000 !important;
+        color: #fff !important;
+        border: 2px solid #000 !important;
+    }
+}
+
+.novias-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 15px 40px rgba(255, 105, 180, 0.15);
+    text-align: center;
+    transition: transform 0.3s ease;
+    height: 100%;
+}
+
+.novias-card:hover {
+    transform: translateY(-5px);
+}
+
+.novias-icon {
+    font-size: 3rem;
+    color: var(--primary-pink);
+    margin-bottom: 15px;
+}
+
+.novias-contact-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 15px 40px rgba(255, 105, 180, 0.15);
+    height: 100%;
+}
+
+.feature-highlight {
+    text-align: center;
+    padding: 15px 10px;
+    border-radius: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.feature-highlight:hover {
+    background: rgba(255, 105, 180, 0.05);
+}
+
+.feature-highlight i {
+    font-size: 2rem;
+    display: block;
+}
+
+.feature-highlight h6 {
+    margin-top: 10px;
+    margin-bottom: 5px;
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+/* Form validation styles */
+.was-validated .form-control:valid {
+    border-color: var(--primary-pink);
+}
+
+.was-validated .form-select:valid {
+    border-color: var(--primary-pink);
+}
+
+.form-control.is-valid:focus {
+    border-color: var(--primary-pink);
+    box-shadow: 0 0 0 0.2rem rgba(255, 105, 180, 0.25);
+}
+
+.form-select.is-valid:focus {
+    border-color: var(--primary-pink);
+    box-shadow: 0 0 0 0.2rem rgba(255, 105, 180, 0.25);
+}
+
+/* Modal customizations for novias */
+#floresNoviasModal .modal-content {
+    border: none;
+    border-radius: 20px;
+}
+
+#floresNoviasModal .modal-header {
+    border-radius: 20px 20px 0 0;
+}
+
+#floresNoviasModal .modal-body {
+    padding: 0;
+}
+
+/* Animation Classes */
+.fade-in {
+    animation: fadeIn 0.6s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-in-left {
+    animation: slideInLeft 0.6s ease-out;
+}
+
+@keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-50px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.slide-in-right {
+    animation: slideInRight 0.6s ease-out;
+}
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(50px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: var(--light-pink);
+    margin-bottom: 20px;
+}
+
+/* Utility Classes */
+.text-pink {
+    color: var(--primary-pink) !important;
+}
+
+.bg-pink {
+    background-color: var(--primary-pink) !important;
+}
+
+.border-pink {
+    border-color: var(--primary-pink) !important;
+}
+
+.shadow-pink {
+    box-shadow: 0 8px 25px rgba(255, 105, 180, 0.15) !important;
+}
+
+/* Pagination Styles */
+.pagination .page-link {
+    border: 2px solid rgba(255, 105, 180, 0.1);
+    color: var(--primary-pink);
+    margin: 0 3px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.pagination .page-link:hover {
+    background-color: var(--primary-pink);
+    border-color: var(--primary-pink);
+    color: white;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-pink);
+    border-color: var(--primary-pink);
+}
+
+/* Enhanced Special Sections Styles */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink)) !important;
+}
+
+.text-white-75 {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.hover-lift {
+    transition: all 0.3s ease;
+    transform: translateY(0);
+}
+
+.hover-lift:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px rgba(255, 105, 180, 0.25) !important;
+}
+
+.btn-outline-primary-custom {
+    border-color: var(--primary-pink);
+    color: var(--primary-pink);
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary-custom:hover {
+    background-color: var(--primary-pink);
+    border-color: var(--primary-pink);
+    color: white;
+}
+
+/* Hero Section Optimizations */
+.hero-section {
+    min-height: 60vh; /* Reduced from default */
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        min-height: 50vh;
+    }
+    
+    .hero-section .display-5 {
+        font-size: 2rem;
+    }
+    
+    .special-sections .special-card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* FloresYa Button Styles */
+.btn-floresya {
+    background: linear-gradient(45deg, var(--primary-pink), #FFD700) !important;
+    border: none;
+    color: white !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 15px rgba(255, 105, 180, 0.4);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-floresya:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 105, 180, 0.5);
+    background: linear-gradient(45deg, var(--secondary-pink), #FFD700) !important;
+    color: white !important;
+}
+
+.btn-floresya:active {
+    transform: translateY(0);
+}
+
+.btn-floresya::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transform: rotate(45deg);
+    transition: all 0.5s;
+    opacity: 0;
+}
+
+.btn-floresya:hover::before {
+    animation: shine 0.8s ease-in-out;
+}
+
+@keyframes shine {
+    0% {
+        left: -50%;
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        left: 150%;
+        opacity: 0;
+    }
+}
+
+/* FloresYa Animation Pulse */
+.floresya-pulse {
+    animation: floresyaPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes floresyaPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+/* Enhanced Product Cards */
+.product-card {
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(255, 105, 180, 0.15);
+}
+
+.product-card .btn-floresya {
+    font-size: 0.9rem;
+    padding: 8px 16px;
+}
+
+.product-card .btn-outline-success {
+    font-size: 0.85rem;
+}
+
+/* Quick Purchase Modal Enhancements */
+.modal-header.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink)) !important;
+}
+
+.btn-close-white {
+    filter: brightness(0) invert(1);
+}
+
+/* Marketing & Gamification Elements */
+.badge-featured {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(45deg, #FF6B35, #F7931E);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Urgency indicators */
+.stock-low {
+    background: linear-gradient(45deg, #FF4136, #FF851B);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from { box-shadow: 0 0 5px rgba(255, 65, 54, 0.5); }
+    to { box-shadow: 0 0 20px rgba(255, 65, 54, 0.8); }
+}
+
+/* Enhanced Cart Styles */
+.cart-icon-wrapper {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.cart-icon {
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+    color: var(--text-dark);
+}
+
+.cart-icon.cart-has-items {
+    color: var(--primary-pink);
+    animation: cartBounce 0.5s ease;
+}
+
+.cart-badge {
+    font-size: 0.75rem;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cart-pulse {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--primary-pink);
+    opacity: 0;
+    transform: scale(0);
+}
+
+.cart-pulse.pulse-active {
+    animation: cartPulse 0.8s ease-out;
+}
+
+@keyframes cartBounce {
+    0%, 20%, 60%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-3px);
+    }
+    80% {
+        transform: translateY(-1px);
+    }
+}
+
+@keyframes cartPulse {
+    0% {
+        transform: scale(0);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* ✨ ADVANCED CART PSYCHOLOGY & UX ✨ */
+
+/* Cart Offcanvas Enhancements */
+.cart-offcanvas {
+    box-shadow: -10px 0 40px rgba(255, 105, 180, 0.15);
+}
+
+.cart-offcanvas .offcanvas-body {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    background: linear-gradient(180deg, rgba(255, 105, 180, 0.02) 0%, white 100%);
+}
+
+/* Cart Progress Indicator */
+.cart-progress {
+    background: linear-gradient(90deg, #FF69B4 0%, #FFD700 100%);
+    height: 4px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.cart-progress::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    animation: cart-progress-shine 2s infinite;
+}
+
+@keyframes cart-progress-shine {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+.cart-content {
+    flex: 1;
+    overflow-y: auto;
+    max-height: calc(100vh - 200px);
+}
+
+.cart-footer {
+    margin-top: auto;
+    border-top: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.cart-item {
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.cart-item:hover {
+    border-color: rgba(255, 105, 180, 0.2);
+    transform: translateX(5px);
+}
+
+.cart-item-image {
+    border: 2px solid rgba(255, 105, 180, 0.1);
+}
+
+.quantity-controls button {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quantity-controls button:hover {
+    background-color: var(--primary-pink);
+    border-color: var(--primary-pink);
+    color: white;
+}
+
+/* Empty cart state */
+#emptyCart {
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Trust indicators */
+.text-muted i {
+    margin-right: 0.25rem;
+}
+
+/* 
+----------------------------
+*/
+
+/* Hero Section - Mobile First */
+.hero-section .display-5 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.hero-section .lead {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .hero-section .display-5 {
+        font-size: 1.8rem;
+    }
+    .hero-section .lead {
+        font-size: 1rem;
+    }
+    .hero-section .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+    }
+    .hero-section img {
+        max-height: 180px;
+        margin-top: 1rem;
+    }
+}
+
+/* Cart item animations */
+.cart-item {
+    animation: slideInLeft 0.3s ease;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Responsive cart design */
+@media (max-width: 768px) {
+    .cart-offcanvas {
+        width: 100vw !important;
+    }
+    
+    .cart-item {
+        padding: 1rem !important;
+    }
+    
+    .cart-item-image {
+        width: 50px !important;
+        height: 50px !important;
+    }
+}
+
+/* ✨ ADVANCED MICRO-INTERACTIONS ✨ */
+
+/* Floating Action Buttons */
+.fab {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FF69B4, #FF1493);
+    box-shadow: 0 8px 25px rgba(255, 105, 180, 0.4);
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 1000;
+    cursor: pointer;
+}
+
+.fab:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 12px 35px rgba(255, 105, 180, 0.6);
+}
+
+.fab:active {
+    transform: scale(0.95);
+}
+
+/* Success Checkmark Animation */
+.success-checkmark {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #28a745;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px auto;
+    animation: checkmark-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.success-checkmark::after {
+    content: '✓';
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+    animation: checkmark-draw 0.3s ease 0.3s both;
+}
+
+@keyframes checkmark-pop {
+    0% { transform: scale(0) rotate(45deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes checkmark-draw {
+    0% { opacity: 0; transform: scale(0); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+/* ===== CAROUSEL OPTIMIZATIONS ===== */
+
+/* Basic carousel container styling - Optimized */
+.dynamic-carousel {
+    margin: 1.5rem 0;
+    min-height: 320px; /* Reserve space to prevent layout shift */
+}
+
+.carousel-container {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(255, 105, 180, 0.1);
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.image-carousel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+/* Carousel image optimizations - Industry Standard Heights */
+.carousel-image {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+/* Carousel controls styling */
+.carousel-control-prev,
+.carousel-control-next {
+    width: 50px;
+    height: 50px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    background: rgba(255, 105, 180, 0.8);
+    border: 2px solid white;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+}
+
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+    opacity: 1;
+    background: rgba(255, 105, 180, 0.95);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-control-prev {
+    left: 20px;
+}
+
+.carousel-control-next {
+    right: 20px;
+}
+
+/* Carousel indicators styling */
+.carousel-indicators {
+    bottom: 20px;
+}
+
+.carousel-indicators button {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    border: 2px solid white;
+    margin: 0 5px;
+    transition: all 0.3s ease;
+}
+
+.carousel-indicators button.active {
+    background: var(--primary-pink);
+    transform: scale(1.2);
+}
+
+/* Carousel caption improvements */
+.carousel-caption {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 20px;
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+}
+
+.carousel-caption h5 {
+    font-weight: 600;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.text-shadow {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Centrado perfecto del carrusel Bootstrap */
+.carousel {
+    margin: 0 auto;
+    max-width: 100%;
+}
+
+.carousel .carousel-inner {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.carousel .carousel-item img {
+    border-radius: 10px;
+}
+
+/* Responsive carousel adjustments - Mobile First */
+@media (max-width: 768px) {
+    .carousel-image {
+        height: 220px;
+    }
+    
+    .carousel-control-prev,
+    .carousel-control-next {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .carousel-control-prev {
+        left: 10px;
+    }
+    
+    .carousel-control-next {
+        right: 10px;
+    }
+    
+    .carousel-caption {
+        padding: 15px;
+        bottom: 10px;
+    }
+    
+    .carousel-caption h5 {
+        font-size: 1rem;
+    }
+}

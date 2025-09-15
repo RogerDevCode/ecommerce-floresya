@@ -1,50 +1,41 @@
-# Node modules and dependencies
-node_modules
-*.log
-.DS_Store
-.vscode
-.idea
+# Ignore source code and development files, Vercel will use the build output
 
-# Environment files (security)
-.env
-.env.local
-.env.production
-.env.staging
+# Source code
+src/
+*.ts
 
-# Build artifacts
-dist
-build
-coverage
+# Dependencies (Vercel installs them based on package-lock.json)
+node_modules/
 
-# Database files (SQLite - not needed in serverless)
-*.sqlite
-*.sqlite3
-database/floresya.db
-database/*.sql
-
-# Development scripts (not needed in production)
-backend/src/scripts/
-imgtemp/
-
-# Documentation (exclude most, keep essential)
-*.md
-!VERCEL_CONFIG_GUIDE.md
-!VERCEL_DEPLOYMENT.md
-
-# Development tools
-gitpush.sh
-temp.txt
-promptFloresYa.txt
-
-# Testing files (not needed in production)
-**/test*.html
-debug*.html
-simple-test.html
-manual-testing-checklist.html
-
-# Git files
-.git
+# Git
+.git/
 .gitignore
 
-# Old server file (using serverless now)
-backend/src/server.js
+# Environment files (use Vercel's environment variables)
+.env
+.env.*
+!/.env.production.example
+!/.env.example
+
+# Tests and configuration
+tests/
+*.config.js
+*.config.ts
+vitest.*.ts
+.eslintrc.json
+.prettierrc
+
+# Documentation and temporary files
+*.md
+*.log
+*.lock
+.DS_Store
+.vscode/
+.idea/
+coverage/
+
+# Crucially, DO NOT ignore the dist/ folder, as Vercel needs it.
+# Also, do not ignore package.json and package-lock.json
+
+# Ignore the old project version
+old_ecommerce-floresya/

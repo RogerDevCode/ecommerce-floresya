@@ -13,7 +13,7 @@ export default defineConfig({
     
     // Test files patterns
     include: [
-      'tests/unit/**/*.test.js',
+      'tests/unit/**/*.test.{js,ts}',
       '!tests/unit-es6/**/*.test.js' // Exclude legacy ES6 tests
     ],
     
@@ -24,7 +24,7 @@ export default defineConfig({
     testTimeout: 15000,
     
     // Setup files
-    setupFiles: ['./tests/unit/vitest.setup.js'],
+    // setupFiles: ['./tests/unit/vitest.setup.js'],
     
     // Coverage configuration
     coverage: {

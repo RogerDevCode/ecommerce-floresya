@@ -6,12 +6,7 @@
     "lib": ["ES2022", "DOM"],
     "outDir": "./dist",
     "rootDir": "./src",
-    "baseUrl": "./src",
-    "paths": {
-      "@frontend/*": ["./frontend/*"],
-      "@backend/*": ["./backend/*"],
-      "@shared/*": ["./shared/*"]
-    },
+    
     "allowJs": false,
     "checkJs": false,
     "declaration": true,
@@ -21,34 +16,35 @@
     "tsBuildInfoFile": "./dist/.tsbuildinfo",
     "strict": true,
     "noImplicitAny": true,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "strictFunctionTypes": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": false,
+    "noUncheckedIndexedAccess": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
+    "skipLibCheck": false,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "types": ["node"],
-    "moduleDetection": "force"
+    "moduleDetection": "force",
+    "paths": {
+      "@shared-types/*": ["./src/types/globals.ts"],
+      "@database-types/*": ["./src/config/supabase.ts"],
+      "@frontend-types/*": ["./src/frontend/types/index.ts"]
+    }
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "src/frontend/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "src-legacy",
-    "frontend",
-    "backend",
-    "oldfiles",
+    "old_ecommerce-floresya",
     "tests/**/*.test.js",
-    "tests/**/*.test.ts",
-    "*.config.js",
-    "*.config.ts"
+    "*.config.js"
   ],
   "ts-node": {
     "esm": true,

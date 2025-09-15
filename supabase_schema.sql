@@ -1,25 +1,35 @@
--- WARNING: This schema is for context only and is not meant to be run.
--- Table order and constraints may not be valid for execution.
+-- 🌸 FloresYa E-commerce Database Schema
+-- Complete and executable Supabase PostgreSQL schema
 
-CREATE TABLE public.carousel_images (
-  id integer NOT NULL DEFAULT nextval('carousel_images_id_seq'::regclass),
-  title character varying,
-  image_url text NOT NULL,
-  link_url text,
-  alt_text character varying,
-  display_order integer DEFAULT 0,
-  is_active boolean DEFAULT true,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT carousel_images_pkey PRIMARY KEY (id)
-);
+-- Create custom enum types
+CREATE TYPE occasion_type AS ENUM ('general', 'birthday', 'anniversary', 'wedding', 'sympathy', 'congratulations');
+CREATE TYPE order_status AS ENUM ('pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled');
+CREATE TYPE payment_status AS ENUM ('pending', 'confirmed', 'failed', 'refunded');
+CREATE TYPE payment_method_type AS ENUM ('bank_transfer', 'mobile_payment', 'cash', 'card');
+CREATE TYPE user_role AS ENUM ('admin', 'user');
+CREATE TYPE image_size AS ENUM ('thumb', 'small', 'medium', 'large');
+
+-- Create sequences for auto-incrementing IDs
+CREATE SEQUENCE occasions_id_seq;
+CREATE SEQUENCE order_items_id_seq;
+CREATE SEQUENCE order_status_history_id_seq;
+CREATE SEQUENCE orders_id_seq;
+CREATE SEQUENCE payment_methods_id_seq;
+CREATE SEQUENCE payments_id_seq;
+CREATE SEQUENCE product_images_id_seq;
+CREATE SEQUENCE product_occasions_id_seq;
+CREATE SEQUENCE products_id_seq;
+CREATE SEQUENCE settings_id_seq;
+CREATE SEQUENCE users_id_seq;
+
 CREATE TABLE public.occasions (
   id integer NOT NULL DEFAULT nextval('occasions_id_seq'::regclass),
   name character varying NOT NULL UNIQUE,
-  type USER-DEFINED DEFAULT 'general'::occasion_type,
+  type occasion_type DEFAULT 'general',
   description text,
   is_active boolean DEFAULT true,
   display_order integer DEFAULT 0,
+  slug character varying NOT NULL UNIQUE,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT occasions_pkey PRIMARY KEY (id)
@@ -32,24 +42,26 @@ CREATE TABLE public.order_items (
   product_summary text,
   unit_price_usd numeric NOT NULL CHECK (unit_price_usd >= 0::numeric),
   unit_price_ves numeric,
-  quantity integer NOT NULL DEFAULT 1 CHECK (quantity > 0),
+  quantity integer NOT NULL CHECK (quantity > 0),
   subtotal_usd numeric NOT NULL CHECK (subtotal_usd >= 0::numeric),
   subtotal_ves numeric,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT order_items_pkey PRIMARY KEY (id),
-  CONSTRAINT order_items_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id),
-  CONSTRAINT order_items_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
+  CONSTRAINT order_items_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id),
+  CONSTRAINT order_items_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id)
 );
 CREATE TABLE public.order_status_history (
   id integer NOT NULL DEFAULT nextval('order_status_history_id_seq'::regclass),
   order_id integer NOT NULL,
-  old_status character varying,
-  new_status character varying NOT NULL,
+  old_status order_status,
+  new_status order_status NOT NULL,
   notes text,
   changed_by integer,
   created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT order_status_history_pkey PRIMARY KEY (id)
+  CONSTRAINT order_status_history_pkey PRIMARY KEY (id),
+  CONSTRAINT order_status_history_changed_by_fkey FOREIGN KEY (changed_by) REFERENCES public.users(id),
+  CONSTRAINT order_status_history_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id)
 );
 CREATE TABLE public.orders (
   id integer NOT NULL DEFAULT nextval('orders_id_seq'::regclass),
@@ -64,7 +76,7 @@ CREATE TABLE public.orders (
   delivery_date date,
   delivery_time_slot character varying,
   delivery_notes text,
-  status USER-DEFINED DEFAULT 'pending'::order_status,
+  status order_status DEFAULT 'pending',
   total_amount_usd numeric NOT NULL CHECK (total_amount_usd >= 0::numeric),
   total_amount_ves numeric,
   currency_rate numeric,
@@ -78,7 +90,7 @@ CREATE TABLE public.orders (
 CREATE TABLE public.payment_methods (
   id integer NOT NULL DEFAULT nextval('payment_methods_id_seq'::regclass),
   name character varying NOT NULL,
-  type USER-DEFINED NOT NULL,
+  type payment_method_type NOT NULL,
   description text,
   account_info jsonb,
   is_active boolean DEFAULT true,
@@ -95,7 +107,7 @@ CREATE TABLE public.payments (
   amount_usd numeric NOT NULL CHECK (amount_usd >= 0::numeric),
   amount_ves numeric,
   currency_rate numeric,
-  status USER-DEFINED DEFAULT 'pending'::payment_status,
+  status payment_status DEFAULT 'pending',
   payment_method_name character varying NOT NULL,
   transaction_id character varying,
   reference_number character varying,
@@ -107,29 +119,23 @@ CREATE TABLE public.payments (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT payments_pkey PRIMARY KEY (id),
-  CONSTRAINT payments_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id),
+  CONSTRAINT payments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
   CONSTRAINT payments_payment_method_id_fkey FOREIGN KEY (payment_method_id) REFERENCES public.payment_methods(id),
-  CONSTRAINT payments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+  CONSTRAINT payments_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id)
 );
 CREATE TABLE public.product_images (
-  id bigint NOT NULL DEFAULT nextval('product_images_id_seq'::regclass),
-  product_id bigint,
-  file_hash character varying NOT NULL UNIQUE,
-  original_filename text NOT NULL,
-  original_size integer NOT NULL,
-  mime_type character varying NOT NULL,
-  url_large text NOT NULL,
-  url_medium text,
-  url_small text,
-  url_thumb text,
-  width integer,
-  height integer,
-  processed_at timestamp with time zone DEFAULT now(),
-  display_order integer DEFAULT 1,
-  is_primary boolean DEFAULT false,
+  id integer NOT NULL DEFAULT nextval('product_images_id_seq'::regclass),
+  product_id integer NOT NULL,
+  image_index integer NOT NULL CHECK (image_index > 0),
+  size image_size NOT NULL,
+  url text NOT NULL,
+  file_hash character varying NOT NULL,
+  mime_type character varying NOT NULL DEFAULT 'image/webp'::character varying,
+  is_primary boolean NOT NULL DEFAULT false,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT product_images_pkey PRIMARY KEY (id)
+  CONSTRAINT product_images_pkey PRIMARY KEY (id),
+  CONSTRAINT product_images_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
 );
 CREATE TABLE public.product_occasions (
   id integer NOT NULL DEFAULT nextval('product_occasions_id_seq'::regclass),
@@ -138,8 +144,8 @@ CREATE TABLE public.product_occasions (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT product_occasions_pkey PRIMARY KEY (id),
-  CONSTRAINT product_occasions_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id),
-  CONSTRAINT product_occasions_occasion_id_fkey FOREIGN KEY (occasion_id) REFERENCES public.occasions(id)
+  CONSTRAINT product_occasions_occasion_id_fkey FOREIGN KEY (occasion_id) REFERENCES public.occasions(id),
+  CONSTRAINT product_occasions_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
 );
 CREATE TABLE public.products (
   id integer NOT NULL DEFAULT nextval('products_id_seq'::regclass),
@@ -149,15 +155,17 @@ CREATE TABLE public.products (
   price_usd numeric NOT NULL CHECK (price_usd >= 0::numeric),
   price_ves numeric,
   stock integer DEFAULT 0 CHECK (stock >= 0),
-  occasion character varying,
   sku character varying UNIQUE,
-  image_url text,
-  additional_images ARRAY,
   active boolean DEFAULT true,
   featured boolean DEFAULT false,
+  carousel_order integer CHECK (carousel_order IS NULL OR carousel_order > 0),
+  occasion_id integer,
+  category character varying(100),
+  care_instructions text,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT products_pkey PRIMARY KEY (id)
+  CONSTRAINT products_pkey PRIMARY KEY (id),
+  CONSTRAINT products_occasion_id_fkey FOREIGN KEY (occasion_id) REFERENCES public.occasions(id)
 );
 CREATE TABLE public.settings (
   id integer NOT NULL DEFAULT nextval('settings_id_seq'::regclass),
@@ -173,10 +181,10 @@ CREATE TABLE public.settings (
 CREATE TABLE public.users (
   id integer NOT NULL DEFAULT nextval('users_id_seq'::regclass),
   email character varying NOT NULL UNIQUE,
-  password_hash character varying,
+  password_hash text,
   full_name character varying,
   phone character varying,
-  role USER-DEFINED DEFAULT 'user'::user_role,
+  role user_role DEFAULT 'user',
   is_active boolean DEFAULT true,
   email_verified boolean DEFAULT false,
   created_at timestamp with time zone DEFAULT now(),

@@ -1,289 +1,53 @@
 {
-  "lastUpdated": "2025-01-09T12:00:00Z",
-  "architecture": "supabase-native",
-  "database": "supabase-postgresql",
-  "controllers": {
-    "productController.js": {
-      "type": "supabase-native",
-      "exports": ["getAllProducts", "getProductById", "createProduct", "updateProduct", "deleteProduct"],
-      "dependencies": ["databaseService", "queryBuilder", "imageProcessing", "imageHashService"],
-      "apiMethods": {
-        "getAllProducts": {
-          "method": "GET",
-          "path": "/api/products",
-          "queryParams": ["page", "limit", "active", "featured", "occasion", "search", "sortBy", "sortOrder"],
-          "returns": {
-            "success": "boolean",
-            "data": "Product[]",
-            "pagination": "PaginationObject"
-          }
-        },
-        "getProductById": {
-          "method": "GET", 
-          "path": "/api/products/:id",
-          "returns": {
-            "success": "boolean",
-            "data": "ProductWithImages"
-          }
-        },
-        "createProduct": {
-          "method": "POST",
-          "path": "/api/products",
-          "body": "ProductCreateData",
-          "files": "multer files[]",
-          "returns": {
-            "success": "boolean",
-            "data": "ProductWithImages"
-          }
-        },
-        "updateProduct": {
-          "method": "PUT",
-          "path": "/api/products/:id", 
-          "body": "ProductUpdateData",
-          "files": "multer files[]",
-          "returns": {
-            "success": "boolean",
-            "data": "ProductWithImages"
-          }
-        },
-        "deleteProduct": {
-          "method": "DELETE",
-          "path": "/api/products/:id",
-          "returns": {
-            "success": "boolean",
-            "message": "string"
-          }
-        }
-      }
+  "project": "FloresYa E-commerce",
+  "version": "2.0.0",
+  "description": "TypeScript-based e-commerce platform for flower sales",
+  "architecture": {
+    "backend": {
+      "framework": "Express.js",
+      "language": "TypeScript",
+      "database": "Supabase PostgreSQL",
+      "api": "REST API"
     },
-    "categoryController.js": {
-      "type": "supabase-native",
-      "exports": ["getAllCategories", "getCategoryById", "createCategory", "updateCategory", "deleteCategory", "getCategoryStats"],
-      "dependencies": ["databaseService", "queryBuilder"],
-      "apiMethods": {
-        "getAllCategories": {
-          "method": "GET",
-          "path": "/api/categories",
-          "queryParams": ["active", "includeProducts", "includeProductCount"],
-          "returns": {
-            "success": "boolean",
-            "data": "Category[]"
-          }
-        },
-        "getCategoryById": {
-          "method": "GET",
-          "path": "/api/categories/:id",
-          "queryParams": ["includeProducts"],
-          "returns": {
-            "success": "boolean", 
-            "data": "CategoryWithProducts"
-          }
-        },
-        "createCategory": {
-          "method": "POST",
-          "path": "/api/categories",
-          "body": "CategoryCreateData",
-          "returns": {
-            "success": "boolean",
-            "data": "Category"
-          }
-        },
-        "updateCategory": {
-          "method": "PUT",
-          "path": "/api/categories/:id",
-          "body": "CategoryUpdateData", 
-          "returns": {
-            "success": "boolean",
-            "data": "Category"
-          }
-        },
-        "deleteCategory": {
-          "method": "DELETE",
-          "path": "/api/categories/:id",
-          "queryParams": ["force"],
-          "returns": {
-            "success": "boolean",
-            "message": "string"
-          }
-        },
-        "getCategoryStats": {
-          "method": "GET",
-          "path": "/api/categories/stats/summary",
-          "returns": {
-            "success": "boolean",
-            "data": "CategoryStatsObject"
-          }
-        }
-      }
-    },
-    "orderController.js": {
-      "type": "supabase-native",
-      "exports": ["getAllOrders", "getOrderById", "createOrder", "updateOrderStatus", "getOrderStats"],
-      "dependencies": ["databaseService", "queryBuilder"],
-      "apiMethods": {
-        "getAllOrders": {
-          "method": "GET",
-          "path": "/api/orders/admin/all",
-          "queryParams": ["page", "limit", "status", "customer_email", "payment_method_id", "sortBy", "sortOrder"],
-          "returns": {
-            "success": "boolean",
-            "data": "OrderWithRelations[]",
-            "pagination": "PaginationObject"
-          }
-        },
-        "getOrderById": {
-          "method": "GET",
-          "path": "/api/orders/:id",
-          "returns": {
-            "success": "boolean",
-            "data": "OrderWithFullDetails"
-          }
-        },
-        "createOrder": {
-          "method": "POST",
-          "path": "/api/orders", 
-          "body": "OrderCreateData",
-          "returns": {
-            "success": "boolean",
-            "data": "OrderWithDetails"
-          }
-        },
-        "updateOrderStatus": {
-          "method": "PATCH",
-          "path": "/api/orders/:id/status",
-          "body": "OrderStatusUpdate",
-          "returns": {
-            "success": "boolean",
-            "data": "OrderWithDetails"
-          }
-        },
-        "getOrderStats": {
-          "method": "GET",
-          "path": "/api/orders/stats/summary",
-          "returns": {
-            "success": "boolean",
-            "data": "OrderStatsObject"
-          }
-        }
-      }
+    "frontend": {
+      "language": "TypeScript",
+      "runtime": "Browser",
+      "build": "TypeScript Compiler",
+      "output": "./dist/frontend"
     }
   },
-  "services": {
-    "databaseService.js": {
-      "type": "supabase-singleton",
-      "exports": ["databaseService", "DatabaseService"],
-      "methods": {
-        "getClient": "returns SupabaseClient",
-        "testConnection": "returns Promise<boolean>",
-        "query": "returns Promise<{data, count}>",
-        "count": "returns Promise<number>",
-        "insert": "returns Promise<Array>",
-        "update": "returns Promise<Array>",
-        "delete": "returns Promise<boolean>",
-        "rpc": "returns Promise<any>",
-        "getStats": "returns Promise<Object>",
-        "verifyDataIntegrity": "returns Promise<Array<IntegrityIssue>>"
-      }
-    },
-    "queryBuilder.js": {
-      "type": "prisma-like-wrapper",
-      "exports": ["createQueryBuilder", "createPrismaLikeAPI", "QueryBuilder"],
-      "purpose": "Provides Prisma-like syntax over Supabase queries",
-      "methods": {
-        "createPrismaLikeAPI": "returns PrismaLikeAPI with product/category/productImage methods",
-        "createQueryBuilder": "returns QueryBuilder instance"
-      }
-    },
-    "imageProcessing.js": {
-      "type": "image-utility",
-      "exports": ["default"],
-      "methods": {
-        "processProductImage": "returns Promise<{large, medium, small, thumb, dimensions}>"
-      }
-    },
-    "imageHashService.js": {
-      "type": "hash-utility",
-      "exports": ["default"],
-      "methods": {
-        "generateFileHash": "returns Promise<string> SHA256"
-      }
-    }
+  "key_features": [
+    "Product catalog with images",
+    "Shopping cart functionality",
+    "Order management",
+    "User authentication",
+    "Admin panel",
+    "Payment processing",
+    "Occasion-based filtering",
+    "Responsive design"
+  ],
+  "code_structure": {
+    "controllers": "API route handlers with validation",
+    "services": "Business logic layer",
+    "models": "Database types and interfaces",
+    "frontend": "Client-side application",
+    "config": "Configuration and database connections",
+    "types": "Shared type definitions",
+    "utils": "Utility functions"
   },
-  "middleware": {
-    "upload.js": {
-      "exports": ["uploadMultiple", "handleUploadError"],
-      "type": "multer-wrapper"
-    },
-    "validation.js": {
-      "exports": ["orderValidation"],
-      "type": "express-validator"
-    },
-    "bked_auth_middleware.js": {
-      "exports": ["authenticateToken", "requireRole", "optionalAuth"],
-      "type": "jwt-middleware"
-    }
+  "build_info": {
+    "typescript_version": "5.9.2",
+    "target": "ES2022",
+    "module": "ESNext",
+    "output_dir": "./dist",
+    "watch_mode": "Supported via tsw.sh"
   },
-  "utils": {
-    "bked_logger.js": {
-      "exports": ["log", "logger", "requestLogger", "startTimer"],
-      "type": "structured-logging"
-    }
+  "quality_checks": {
+    "eslint": "Strict configuration with no 'any' types",
+    "typescript": "Strict mode enabled",
+    "testing": "Vitest framework configured",
+    "linting": "ESLint with TypeScript support"
   },
-  "frontend": {
-    "main.js": {
-      "type": "vanilla-spa",
-      "className": "FloresYaApp",
-      "methods": ["init", "loadProducts", "renderProductCard", "handleSearch", "initCart"],
-      "optimizations": ["lazy-loading", "responsive-images", "conversion-features"]
-    }
-  },
-  "dataTypes": {
-    "Product": {
-      "id": "number",
-      "name": "string",
-      "description": "string",
-      "price": "decimal",
-      "stock_quantity": "number",
-      "featured": "boolean",
-      "active": "boolean",
-      "occasion": "OccasionType",
-      "images": "ProductImage[]"
-    },
-    "ProductImage": {
-      "id": "number", 
-      "product_id": "number",
-      "file_hash": "string",
-      "url_large": "string",
-      "url_medium": "string", 
-      "url_small": "string",
-      "url_thumb": "string",
-      "is_primary": "boolean",
-      "display_order": "number"
-    },
-    "Category": {
-      "id": "number",
-      "name": "string",
-      "description": "string",
-      "image_url": "string",
-      "active": "boolean"
-    },
-    "Order": {
-      "id": "number",
-      "customer_name": "string",
-      "customer_email": "string",
-      "total_amount": "decimal",
-      "status": "string",
-      "payment_method_id": "number",
-      "order_items": "OrderItem[]"
-    },
-    "OccasionType": ["amor", "birthday", "anniversary", "graduation", "friendship", "condolencia", "mother", "yellow_flower", "wedding", "valentine", "funeral", "other"],
-    "PaymentMethodType": ["pago_movil", "bank_transfer", "zelle", "binance_pay", "cash"]
-  },
-  "migration": {
-    "status": "completed",
-    "from": "prisma-orm",
-    "to": "supabase-native",
-    "date": "2025-01-09",
-    "prismaFilesLocation": "oldfiles/controllers/"
-  }
+  "last_updated": "2025-09-15",
+  "status": "Development - Core functionality implemented"
 }

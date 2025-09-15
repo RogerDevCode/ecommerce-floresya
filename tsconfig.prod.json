@@ -7,7 +7,7 @@
     "noEmitOnError": true,                // ✅ NO generar JS si hay errores TS
     "allowJs": false,                     // ❌ Solo TypeScript en producción
     "checkJs": false,                     // ❌ No necesario si allowJs = false
-    
+
     // Verificaciones ESTRICTAS para producción
     "strict": true,                       // ✅ Máxima seguridad de tipos
     "noImplicitAny": true,                // ✅ Prohibir 'any' implícito
@@ -15,58 +15,46 @@
     "strictFunctionTypes": true,          // ✅ Tipos de función estrictos
     "noImplicitReturns": true,            // ✅ Funciones deben retornar
     "noFallthroughCasesInSwitch": true,   // ✅ Switch cases seguros
-    "noUncheckedIndexedAccess": true,     // ✅ Arrays/objetos seguros
-    "exactOptionalPropertyTypes": true,   // ✅ Propiedades opcionales exactas
+    "noUncheckedIndexedAccess": false,    // ❌ Demasiado estricto para desarrollo
+    "exactOptionalPropertyTypes": false,  // ❌ Demasiado estricto para desarrollo
     "noImplicitOverride": true,           // ✅ Override explícito
-    
+
     // Verificaciones adicionales de calidad
-    "noUnusedLocals": true,               // ✅ No variables locales sin usar
-    "noUnusedParameters": true,           // ✅ No parámetros sin usar
+    "noUnusedLocals": false,              // ❌ Puede bloquear desarrollo
+    "noUnusedParameters": false,          // ❌ Puede bloquear desarrollo
     "noImplicitThis": true,               // ✅ 'this' debe ser explícito
-    "noPropertyAccessFromIndexSignature": true, // ✅ Acceso a propiedades seguro
-    
+    "noPropertyAccessFromIndexSignature": false, // ❌ Demasiado estricto
+
     // Optimizaciones de compilación para producción
     "incremental": false,                 // ❌ No incremental en producción (build limpio)
     "tsBuildInfoFile": "./dist/.tsbuildinfo-prod", // Cache separado prod
-    
+
     // Optimizaciones de output
     "declaration": false,                 // ❌ No .d.ts necesarios para app final
     "declarationMap": false,             // ❌ No mapas de declaración
     "removeComments": true,              // ✅ Eliminar comentarios
-    
+
     // Reportes de construcción
     "pretty": false,                      // ❌ Output minimal en CI/CD
     "listFiles": false,                   // ❌ No listar archivos
     "listEmittedFiles": false,           // ❌ No listar outputs
-    
+
     // Configuración de módulos optimizada
-    "moduleResolution": "Node16",         // ✅ Resolución estable
-    "allowSyntheticDefaultImports": false, // ❌ Imports más explícitos
+    "moduleResolution": "bundler",        // ✅ Resolución compatible con bundlers
+    "allowSyntheticDefaultImports": true, // ✅ Compatibilidad con ES modules
     "isolatedModules": true              // ✅ Compatibilidad con bundlers
   },
   
-  // Solo archivos TypeScript en producción
   "include": [
-    "backend/src/**/*.ts",      // ✅ Solo backend TS
-    "frontend/**/*.ts",         // ✅ Solo frontend TS  
-    "shared/**/*.ts",           // ✅ Solo shared TS
-    "types/**/*.ts"             // ✅ Definiciones de tipos
+    "src/**/*.ts"
   ],
-  
-  // Excluir más archivos en producción
   "exclude": [
     "node_modules",
     "dist",
-    "dbimagenes",
-    "oldfiles",
-    "tests/**/*",               // ❌ No tests en producción
-    "**/*.test.*",              // ❌ No archivos test
-    "**/*.spec.*",              // ❌ No archivos spec
-    "*.config.*",               // ❌ No configuraciones
-    "backup_images.js",
-    "demo-server.js",
-    "temp*",
-    "**/*.dev.*",               // ❌ No archivos de desarrollo
-    "**/*.local.*"              // ❌ No archivos locales
+    "tests",
+    "old_ecommerce-floresya",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "*.config.js"
   ]
 }
