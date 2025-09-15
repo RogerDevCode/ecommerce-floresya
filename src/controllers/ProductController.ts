@@ -51,16 +51,37 @@ export class ProductController {
         return;
       }
 
+      // Parse sort parameter (frontend sends "price:ASC" format)
+      let sort_by: 'name' | 'price_usd' | 'created_at' | 'carousel_order' = 'created_at';
+      let sort_direction: 'asc' | 'desc' = 'desc';
+
+      if (req.query.sort && typeof req.query.sort === 'string') {
+        const [sortField, sortDir] = req.query.sort.split(':');
+        if (sortField && sortDir) {
+          // Map frontend sort fields to backend fields
+          const fieldMap: { [key: string]: 'name' | 'price_usd' | 'created_at' | 'carousel_order' } = {
+            'name': 'name',
+            'price': 'price_usd',
+            'created_at': 'created_at',
+            'carousel_order': 'carousel_order'
+          };
+
+          sort_by = fieldMap[sortField] || 'created_at';
+          sort_direction = sortDir.toLowerCase() === 'asc' ? 'asc' : 'desc';
+        }
+      }
+
       const query: ProductQuery = {
         page: parseInt(req.query.page as string) || 1,
         limit: Math.min(parseInt(req.query.limit as string) || 20, 100), // Max 100 items
         search: req.query.search as string || undefined,
         occasion_id: req.query.occasion_id ? parseInt(req.query.occasion_id as string) : undefined,
+        occasion: req.query.occasion as string || undefined, // Support slug-based filtering
         category: req.query.category as string || undefined,
         featured: req.query.featured === 'true' ? true : req.query.featured === 'false' ? false : undefined,
         has_carousel_order: req.query.has_carousel_order === 'true' ? true : req.query.has_carousel_order === 'false' ? false : undefined,
-        sort_by: (req.query.sort_by as 'name' | 'price_usd' | 'created_at' | 'carousel_order') || 'created_at',
-        sort_direction: (req.query.sort_direction as 'asc' | 'desc') || 'desc'
+        sort_by,
+        sort_direction
       };
 
       const result = await productService.getProducts(query);

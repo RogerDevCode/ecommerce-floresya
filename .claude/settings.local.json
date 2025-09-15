@@ -14,7 +14,14 @@
       "Bash(node:*)",
       "Bash(netstat:*)",
       "Bash(ss:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:dev.to)",
+      "Bash(npm run dev:build:*)",
+      "Bash(xargs kill:*)",
+      "Bash(tsc)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

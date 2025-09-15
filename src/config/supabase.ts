@@ -185,6 +185,7 @@ export interface Setting {
 export interface ProductWithImages extends Product {
   images: ProductImage[];
   primary_image?: ProductImage;
+  medium_images?: string[]; // Para efecto hover en cards de productos
 }
 
 export interface ProductWithOccasions extends Product {
@@ -214,6 +215,7 @@ export interface CarouselProduct {
   price_usd: number;
   carousel_order: number;
   primary_thumb_url: string;
+  images?: Array<{url: string, size: ImageSize}>; // Para efecto hover
 }
 
 // Raw response types for Supabase joined queries

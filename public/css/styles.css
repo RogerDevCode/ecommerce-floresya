@@ -541,7 +541,7 @@ h1 {
     transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
     box-shadow: 0 2px 8px rgba(255, 105, 180, 0.08); /* Subtle shadow */
     background: white;
-    height: 400px; /* Fixed height using golden ratio principles */
+    height: 440px; /* Updated for 300px image: 300 + 140 = 440px */
     display: flex;
     flex-direction: column;
     cursor: pointer;
@@ -553,14 +553,15 @@ h1 {
 }
 
 .product-image {
-    height: 240px; /* Golden ratio: 240:160 = 1.5:1 (close to golden ratio) */
-    width: 100%;
-    object-fit: cover;
+    height: 300px; /* Exact 300px height */
+    width: 300px; /* Exact 300px width for perfect square */
+    object-fit: cover; /* Maintains aspect ratio while filling the space */
     object-position: center;
-    transition: transform 0.3s ease;
+    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Smoother, more natural easing */
     background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
+    flex-shrink: 0; /* Prevents shrinking */
 }
 
 .product-card:hover .product-image {
@@ -595,10 +596,23 @@ h1 {
 /* Card body optimization */
 .product-card .card-body {
     padding: 16px; /* 8px grid: 16 = 2 × 8 */
-    height: 160px; /* Remaining space: 400 - 240 = 160px */
+    height: 140px; /* Adjusted for 300px image: 440 - 300 = 140px */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+}
+
+/* Image container for exact 300x300px sizing */
+.card-img-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 300px; /* Exact width */
+    height: 300px; /* Exact height */
+    margin: 0 auto; /* Center horizontally */
+    overflow: hidden;
+    background: #f8f9fa; /* Fallback background */
+    border-radius: 8px; /* Optional: rounded corners */
 }
 
 .product-card .card-title {
@@ -702,7 +716,7 @@ h1 {
 /* Features Section */
 .feature-item {
     text-align: center;
-    padding: 30px 20px;
+    padding: 20px 15px;
     border-radius: 15px;
     transition: all 0.3s ease;
 }
@@ -1151,8 +1165,19 @@ footer .social-links a:hover {
 }
 
 .product-card .card-img-top {
-    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    width: 300px !important; /* Exact width */
+    height: 300px !important; /* Exact height */
+    transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     transform-origin: center;
+}
+
+/* Smooth transition classes for image changes */
+.product-card .card-img-top.fade-out {
+    opacity: 0;
+}
+
+.product-card .card-img-top.fade-in {
+    opacity: 1;
 }
 
 .product-card:hover .card-img-top {

@@ -36,6 +36,8 @@ async function testCarouselAPI() {
         console.log('     Carousel Order:', sampleProduct.carousel_order);
         console.log('     Primary Thumb URL:', sampleProduct.primary_thumb_url);
         console.log('     Has thumb image:', !!sampleProduct.primary_thumb_url);
+        console.log('     Images array:', sampleProduct.images);
+        console.log('     Small images count:', sampleProduct.images?.length || 0);
       }
     } else {
       console.log('❌ Carousel endpoint: FAILED');

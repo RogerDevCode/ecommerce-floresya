@@ -45,31 +45,62 @@ export class ProductService {
         };
       }
 
-      // Get primary thumb images for these products
+      // Get primary thumb images AND all small images for these products
       const productIds = productsData.map(p => p.id);
-      const { data: imagesData, error: imagesError } = await supabaseService
+
+      // Get primary thumb for carousel display
+      const { data: thumbData, error: thumbError } = await supabaseService
         .from('product_images')
         .select('product_id, url')
         .in('product_id', productIds)
         .eq('is_primary', true)
         .eq('size', 'thumb');
 
-      if (imagesError) {
-        throw new Error(`Failed to fetch product images: ${imagesError.message}`);
+      if (thumbError) {
+        throw new Error(`Failed to fetch thumb images: ${thumbError.message}`);
       }
 
-      // Create a map of product_id -> thumb_url
-      const imageMap = new Map<number, string>();
-      (imagesData || []).forEach(img => {
-        imageMap.set(img.product_id, img.url);
+      // Get all small images for hover effect
+      const { data: smallImagesData, error: smallImagesError } = await supabaseService
+        .from('product_images')
+        .select('product_id, url, image_index')
+        .in('product_id', productIds)
+        .eq('size', 'small')
+        .order('image_index', { ascending: true });
+
+      if (smallImagesError) {
+        throw new Error(`Failed to fetch small images: ${smallImagesError.message}`);
+      }
+
+      // Create maps for primary thumbs and small images
+      const thumbMap = new Map<number, string>();
+      (thumbData || []).forEach(img => {
+        thumbMap.set(img.product_id, img.url);
       });
 
-      // Build carousel products with simplified image structure
+      const smallImagesMap = new Map<number, Array<{url: string, image_index: number}>>();
+      (smallImagesData || []).forEach(img => {
+        if (!smallImagesMap.has(img.product_id)) {
+          smallImagesMap.set(img.product_id, []);
+        }
+        smallImagesMap.get(img.product_id)!.push({
+          url: img.url,
+          image_index: img.image_index
+        });
+      });
+
+      // Build carousel products with images for hover effect
       const carouselProducts: CarouselProduct[] = productsData.map((product) => {
-        const thumbUrl = imageMap.get(product.id);
+        const thumbUrl = thumbMap.get(product.id);
+        const smallImages = smallImagesMap.get(product.id) || [];
 
         // Use actual image URL if available, fallback to placeholder
         const finalThumbUrl = thumbUrl || '/images/placeholder-product.webp';
+
+        // Sort small images by image_index and extract URLs
+        const sortedSmallImages = smallImages
+          .sort((a, b) => a.image_index - b.image_index)
+          .map(img => ({ url: img.url, size: 'small' as ImageSize }));
 
         return {
           id: product.id,
@@ -77,7 +108,8 @@ export class ProductService {
           summary: product.summary || undefined,
           price_usd: product.price_usd,
           carousel_order: product.carousel_order as number,
-          primary_thumb_url: finalThumbUrl
+          primary_thumb_url: finalThumbUrl,
+          images: sortedSmallImages // Agregar imágenes small para hover
         };
       });
 
@@ -101,6 +133,7 @@ export class ProductService {
         limit = 20,
         search,
         occasion_id,
+        occasion,
         category,
         featured,
         active = true,
@@ -132,8 +165,54 @@ export class ProductService {
         queryBuilder = queryBuilder.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
       }
 
+      // Filter by occasion using N:N relationship through product_occasions
       if (occasion_id) {
-        queryBuilder = queryBuilder.eq('occasion_id', occasion_id);
+        // Get product IDs for this occasion
+        const { data: productIds, error: productIdsError } = await supabaseService
+          .from('product_occasions')
+          .select('product_id')
+          .eq('occasion_id', occasion_id);
+
+        if (productIdsError) {
+          throw new Error(`Error filtering by occasion: ${productIdsError.message}`);
+        }
+
+        if (productIds && productIds.length > 0) {
+          const ids = productIds.map(row => row.product_id);
+          queryBuilder = queryBuilder.in('id', ids);
+        } else {
+          // No products for this occasion - return empty result
+          queryBuilder = queryBuilder.eq('id', -1); // Non-existent ID
+        }
+      } else if (occasion) {
+        // Filter by occasion slug - resolve slug to ID first
+        const { data: occasionData, error: occasionError } = await supabaseService
+          .from('occasions')
+          .select('id')
+          .eq('slug', occasion)
+          .single();
+
+        if (occasionError || !occasionData) {
+          throw new Error(`Invalid occasion slug: ${occasion}`);
+        }
+
+        // Get product IDs for this occasion
+        const { data: productIds, error: productIdsError } = await supabaseService
+          .from('product_occasions')
+          .select('product_id')
+          .eq('occasion_id', occasionData.id);
+
+        if (productIdsError) {
+          throw new Error(`Error filtering by occasion: ${productIdsError.message}`);
+        }
+
+        if (productIds && productIds.length > 0) {
+          const ids = productIds.map(row => row.product_id);
+          queryBuilder = queryBuilder.in('id', ids);
+        } else {
+          // No products for this occasion - return empty result
+          queryBuilder = queryBuilder.eq('id', -1); // Non-existent ID
+        }
       }
 
       if (category) {
@@ -162,14 +241,40 @@ export class ProductService {
         throw new Error(`Failed to fetch products: ${error.message}`);
       }
 
+      // Get product IDs to fetch medium images for hover effect
+      const productIds = (data as RawProductWithImages[] || []).map(p => p.id);
+
+      // Get all medium images for hover effect
+      const { data: mediumImagesData, error: mediumImagesError } = await supabaseService
+        .from('product_images')
+        .select('product_id, url, image_index')
+        .in('product_id', productIds)
+        .eq('size', 'medium')
+        .order('image_index', { ascending: true });
+
+      if (mediumImagesError) {
+        console.error('Error fetching medium images:', mediumImagesError);
+      }
+
+      // Group medium images by product_id
+      const mediumImagesByProduct = (mediumImagesData || []).reduce((acc, img) => {
+        if (!acc[img.product_id]) {
+          acc[img.product_id] = [];
+        }
+        acc[img.product_id]?.push(img.url);
+        return acc;
+      }, {} as Record<number, string[]>);
+
       const productsWithImages: ProductWithImages[] = (data as RawProductWithImages[] || []).map((product) => {
         const sortedImages = (product.product_images || []).sort((a: ProductImage, b: ProductImage) => a.image_index - b.image_index);
+        const mediumImages = mediumImagesByProduct[product.id] || [];
 
         return {
           ...product,
           images: sortedImages,
-          primary_image: sortedImages.find((img) => img.is_primary)
-        };
+          primary_image: sortedImages.find((img) => img.is_primary),
+          medium_images: mediumImages // Agregar imágenes medium para hover
+        } as ProductWithImages & { medium_images: string[] };
       });
 
       const totalPages = Math.ceil((count || 0) / limit);

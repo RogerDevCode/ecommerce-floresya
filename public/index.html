@@ -32,6 +32,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/carousel.css">
+    <link rel="stylesheet" href="/css/product-transitions.css">
     
     <!-- Preload critical resources -->
     <link rel="preload" href="/images/logoFloresYa.jpeg" as="image" importance="high">
@@ -84,14 +85,6 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="#productos">Productos</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="occasionsDropdownToggle">
-                            Ocasiones
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="occasionsDropdownToggle" id="occasionsDropdownMenu">
-                            <!-- Occasions will be loaded dynamically -->
-                        </ul>
                     </li>
                 </ul>
                 
@@ -154,10 +147,8 @@
                 <h3 class="fw-bold text-primary-custom" id="carouselSectionTitle">Nuestras Creaciones Destacadas</h3>
                 <p class="text-muted small" id="carouselSectionSubtitle">Descubre nuestros arreglos más populares</p>
             </div>
-            <div class="carousel-container">
-                <div class="image-carousel" id="dynamicCarousel">
-                    <!-- Dynamic images will be loaded here -->
-                </div>
+            <div class="image-carousel" id="dynamicCarousel">
+                <!-- Dynamic images will be loaded here -->
             </div>
         </div>
     </section>
@@ -211,7 +202,7 @@
     </section>
 
     <!-- Features Section -->
-    <section class="py-5 bg-light">
+    <section class="py-4 bg-light">
         <div class="container">
             <div class="row text-center">
                 <div class="col-md-3 mb-4">
@@ -247,7 +238,7 @@
     </section>
 
     <!-- Special Sections Navigation - Call to Action -->
-    <section class="special-sections py-5 bg-gradient-primary">
+    <section class="special-sections py-4 bg-gradient-primary">
         <div class="container">
             <div class="text-center mb-4">
                 <h3 class="fw-bold text-white">¿Buscas algo especial?</h3>
@@ -256,7 +247,7 @@
             <div class="row text-center">
                 <div class="col-md-6 mb-3">
                     <a href="#" class="special-link text-decoration-none" onclick="floresyaApp.showFloresNovias()">
-                        <div class="special-card p-4 bg-white rounded shadow-lg h-100 d-flex align-items-center justify-content-center hover-lift">
+                        <div class="special-card p-3 bg-white rounded shadow-lg h-100 d-flex align-items-center justify-content-center hover-lift">
                             <div>
                                 <i class="bi bi-suit-heart-fill text-primary-custom mb-3" style="font-size: 3rem;"></i>
                                 <h4 class="text-primary-custom fw-bold mb-2">Flores Ya Novias</h4>
@@ -267,7 +258,7 @@
                     </a>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <div class="special-card p-4 bg-white rounded shadow-lg h-100 d-flex align-items-center justify-content-center hover-lift">
+                    <div class="special-card p-3 bg-white rounded shadow-lg h-100 d-flex align-items-center justify-content-center hover-lift">
                         <div>
                             <i class="bi bi-lightning-fill text-warning mb-3" style="font-size: 3rem;"></i>
                             <h4 class="text-warning fw-bold mb-2">Entrega Express</h4>
