@@ -1,8 +1,9 @@
 # Ignore source code and development files, Vercel will use the build output
 
-# Source code
-src/
-*.ts
+# Don't ignore source code as serverless function needs it
+# src/
+# Don't ignore TypeScript files as they are needed for Vercel serverless functions
+# *.ts
 
 # Dependencies (Vercel installs them based on package-lock.json)
 node_modules/

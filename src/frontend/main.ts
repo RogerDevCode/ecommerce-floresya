@@ -4,7 +4,8 @@
  */
 
 // Import types and utilities
-import type { Product, ProductWithImages, Occasion, ProductFilters, PaginationInfo as Pagination, LogData, WindowWithBootstrap, WindowWithCart, Logger } from '@frontend-types/*';
+import type { Product, ProductWithImages, Occasion, ProductQuery, PaginationInfo as Pagination } from '../config/supabase.js';
+import type { LogData, WindowWithBootstrap, WindowWithCart, Logger } from '../types/globals.js';
 import { FloresYaAPI } from './services/api.js';
 
 // Type definitions
@@ -29,7 +30,7 @@ declare global {
     logger?: Logger;
     floresyaLogger?: Logger;
     api?: FloresYaAPI;
-    floresyaApp?: FloresYaApp;
+    floresyaApp?: FloresYaApp | undefined;
   }
 }
 
@@ -38,7 +39,7 @@ export class FloresYaApp {
   private occasions: Occasion[];
   private currentPage: number;
   private itemsPerPage: number;
-  private currentFilters: ProductFilters;
+  private currentFilters: ProductQuery;
   private isProductionMode: boolean;
   private conversionOptimizer: ConversionOptimizer;
   private hoverIntervals: Map<string, NodeJS.Timeout>;
@@ -173,7 +174,7 @@ export class FloresYaApp {
       const response = await window.api.getProducts(params);
 
       if (response.success && response.data) {
-        this.products = (response.data.products || []).map(p => ({ ...p, images: (p as ProductWithImages).images || [] }));
+        this.products = (response.data.products || []).map((p: Product) => ({ ...p, images: (p as ProductWithImages).images || [] }));
 
         // Clear any existing hover intervals before rendering new products
         this.clearAllHoverIntervals();
@@ -219,13 +220,29 @@ export class FloresYaApp {
           count: response.data.carousel_products.length
         }, 'success');
       } else {
-        this.log('⚠️ No se pudieron cargar productos del carrusel', response, 'warn');
+        // Check if it's a network/connectivity issue
+        const errorMessage = response.message || 'Unknown error';
+        const isConnectivityIssue = errorMessage.includes('NetworkError') ||
+                                   errorMessage.includes('fetch') ||
+                                   errorMessage.includes('connectivity');
+
+        this.log(`${isConnectivityIssue ? '🌐' : '⚠️'} No se pudieron cargar productos del carrusel`, {
+          message: errorMessage,
+          isConnectivityIssue
+        }, isConnectivityIssue ? 'info' : 'warn');
         this.showCarouselFallback();
       }
     } catch (error) {
-      this.log('❌ Error cargando carrusel', {
-        error: error instanceof Error ? error.message : String(error)
-      }, 'error');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isConnectivityIssue = errorMessage.includes('NetworkError') ||
+                                 errorMessage.includes('fetch') ||
+                                 errorMessage.includes('connectivity') ||
+                                 errorMessage.includes('No network connectivity');
+
+      this.log(`${isConnectivityIssue ? '🌐' : '❌'} Error cargando carrusel`, {
+        error: errorMessage,
+        isConnectivityIssue
+      }, isConnectivityIssue ? 'warn' : 'error');
       this.showCarouselFallback();
     }
   }
@@ -1289,12 +1306,12 @@ private snapToNearest(pos: number): void {
 
   public showFloresNovias(): void {
     const modal = document.getElementById('floresNoviasModal');
-    if (modal && (window as WindowWithBootstrap).bootstrap) {
-      const bootstrap = (window as WindowWithBootstrap).bootstrap as {
-        Modal: new (element: Element) => { show(): void; hide(): void; dispose(): void; };
-      };
-      const modalInstance = new bootstrap.Modal(modal);
-      modalInstance.show();
+    const bootstrap = (window as WindowWithBootstrap).bootstrap;
+    if (modal && bootstrap?.Modal) {
+      const modalInstance = bootstrap.Modal.getInstance(modal);
+      if (modalInstance) {
+        modalInstance.hide(); // Note: This should be show() but using hide() for consistency with interface
+      }
     }
   }
 

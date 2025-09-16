@@ -7,33 +7,26 @@
     <meta name="keywords" content="flores, floristería, ramos, arreglos florales, plantas, Venezuela, entrega domicilio">
     <title>FloresYa - Tu Floristería en Línea</title>
     
-    <!-- Critical CSS inline to prevent FOUC and layout shifts -->
-<!-- 
+    <!-- Critical CSS inline to prevent FOUC -->
     <style>
-        html { visibility: hidden; }
-        html.stylesheets-loaded { visibility: visible; }
+        /* Hide content initially to prevent FOUC */
+        html { visibility: hidden; opacity: 0; }
+        html.loaded { visibility: visible; opacity: 1; transition: opacity 0.3s ease; }
+
+        /* Critical styles for immediate rendering */
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        .navbar { background: linear-gradient(135deg, #e91e63 0%, #f06292 100%) !important; }
+        .hero-section { background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 50%, #fce4ec 100%); min-height: 300px; }
         h1 { font-size: 2.5rem !important; margin: 0.67em 0 !important; line-height: 1.2 !important; font-weight: bold; }
         .hero-section h1 { font-size: 2.5rem !important; margin: 0.5em 0 !important; font-weight: 800 !important; }
         @media (max-width: 768px) { h1 { font-size: 2rem !important; } }
     </style>
- -->
 
-    <style>
-        html { visibility: hidden; opacity: 0; transition: opacity 0.3s ease; }
-        html.stylesheets-loaded { visibility: visible; opacity: 1; }
-        h1 { font-size: 2.5rem !important; margin: 0.67em 0 !important; line-height: 1.2 !important; font-weight: bold; }
-        .hero-section h1 { font-size: 2.5rem !important; margin: 0.5em 0 !important; font-weight: 800 !important; }
-        @media (max-width: 768px) { h1 { font-size: 2rem !important; } }
-    </style>
-
-
-    
-    <!-- Bootstrap CSS - DIRECTO (NO preload para evitar problemas de timing) -->
+    <!-- Load CSS synchronously to prevent FOUC -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/carousel.css">
     <link rel="stylesheet" href="/css/product-transitions.css">
-    
     <!-- Preload critical resources -->
     <link rel="preload" href="/images/logoFloresYa.jpeg" as="image" importance="high">
     <link rel="modulepreload" href="/dist/frontend/utils/logger.js">
@@ -57,13 +50,39 @@
     <meta property="og:url" content="https://floresya.com">
     <meta property="og:image" content="/images/og-image.jpg">
 
-<!-- Añadir script inline justo antes de cerrar </head> -->
+<!-- Simplified FOUC prevention -->
 <script>
-    // Añadir clase cuando el DOM esté listo
-    document.addEventListener("DOMContentLoaded", function() {
-        document.documentElement.classList.add('stylesheets-loaded');
-        console.log("[✅] Estilos críticos aplicados - FloresYa");
-    });
+    (function() {
+        'use strict';
+
+        // Simple FOUC prevention - show content when DOM is ready
+        function showContent() {
+            if (!document.documentElement.classList.contains('loaded')) {
+                document.documentElement.classList.add('loaded');
+                console.log('[✅] Content visible - FOUC prevented');
+            }
+        }
+
+        // Show content when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('[🏗️] DOM ready - showing content');
+                showContent();
+            });
+        } else {
+            // DOM already loaded
+            showContent();
+        }
+
+        // Fallback timer (in case something goes wrong)
+        setTimeout(function() {
+            if (!document.documentElement.classList.contains('loaded')) {
+                document.documentElement.classList.add('loaded');
+                console.log('[⏰] Fallback: Content shown after timeout');
+            }
+        }, 2000);
+
+    })();
 </script>
 
 
@@ -85,6 +104,11 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="#productos">Productos</a>
+                    </li>
+                    <li class="nav-item" id="logoutNavItem" style="display: none;">
+                        <a class="nav-link text-danger" href="#" id="mainLogoutBtn" title="Cerrar sesión">
+                            <i class="bi bi-box-arrow-right me-1"></i>Cerrar Sesión
+                        </a>
                     </li>
                 </ul>
                 
@@ -109,6 +133,11 @@
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="#" id="logoutBtn">Cerrar Sesión</a></li>
                         </ul>
+                    </li>
+                    <li class="nav-item" id="adminPanelLink" style="display: none;">
+                        <a class="nav-link" href="/pages/admin.html">
+                            <i class="bi bi-shield-check me-1"></i>Panel Admin
+                        </a>
                     </li>
                     <li class="nav-item" id="loginBtn">
                         <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Iniciar Sesión</a>
@@ -263,7 +292,7 @@
                             <i class="bi bi-lightning-fill text-warning mb-3" style="font-size: 3rem;"></i>
                             <h4 class="text-warning fw-bold mb-2">Entrega Express</h4>
                             <p class="text-muted mb-3">¿Necesitas flores urgente? Entregamos en 2 horas</p>
-                            <span class="btn btn-warning">Próximamente</span>
+                            <a href="/pages/under-construction.html" class="btn btn-warning text-decoration-none">Próximamente</a>
                         </div>
                     </div>
                 </div>
@@ -451,6 +480,18 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    <!-- Development Quick Login Buttons -->
+                    <div class="dev-login-buttons mb-3 p-2 bg-light rounded" style="border: 1px dashed #ffc107;">
+                        <small class="text-muted d-block mb-2"><i class="bi bi-tools"></i> Desarrollo - Acceso rápido:</small>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm flex-fill" id="devAdminLogin">
+                                <i class="bi bi-shield-check me-1"></i>Admin
+                            </button>
+                            <button type="button" class="btn btn-outline-success btn-sm flex-fill" id="devClientLogin">
+                                <i class="bi bi-person me-1"></i>Cliente
+                            </button>
+                        </div>
+                    </div>
                     <form id="loginForm">
                         <div class="mb-3">
                             <label for="loginEmail" class="form-label">Email</label>
@@ -699,12 +740,33 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Custom JS -->
+
+    <!-- Content visibility control -->
+    <script>
+        // Simple content visibility control
+        function ensureContentVisible() {
+            if (!document.documentElement.classList.contains('loaded')) {
+                document.documentElement.classList.add('loaded');
+                console.log('[✅] Content visibility ensured');
+            }
+        }
+
+        // Ensure content is visible when everything is loaded
+        if (document.readyState === 'complete') {
+            ensureContentVisible();
+        } else {
+            window.addEventListener('load', ensureContentVisible);
+        }
+    </script>
+
+    <!-- Custom JS - Load after critical styles -->
     <!-- 🌸 FloresYa TypeScript Modules - 100% Type-Safe Frontend -->
     <script type="module" src="/dist/frontend/utils/logger.js"></script>
     <script type="module" src="/dist/frontend/services/api.js"></script>
     <script type="module" src="/dist/frontend/main.js"></script>
+
+    <!-- Authentication System -->
+    <script type="module" src="/dist/frontend/auth.js"></script>
 
     <!-- Note: Additional modules like cart, auth, carousel will be migrated to TypeScript in future iterations -->
     
@@ -792,6 +854,49 @@
             }
         `;
         document.head.appendChild(style);
+
+        // Development Quick Login Functions
+        function setupDevLoginButtons() {
+            const adminBtn = document.getElementById('devAdminLogin');
+            const clientBtn = document.getElementById('devClientLogin');
+
+            if (adminBtn) {
+                adminBtn.addEventListener('click', () => {
+                    fillLoginForm('admin@floresya.com', 'admin');
+                });
+            }
+
+            if (clientBtn) {
+                clientBtn.addEventListener('click', () => {
+                    fillLoginForm('cliente@floresya.com', 'cliente');
+                });
+            }
+        }
+
+        function fillLoginForm(email, password) {
+            const emailField = document.getElementById('loginEmail');
+            const passwordField = document.getElementById('loginPassword');
+            const submitBtn = document.querySelector('#loginForm button[type="submit"]');
+
+            if (emailField && passwordField) {
+                emailField.value = email;
+                passwordField.value = password;
+
+                // Trigger input events for validation
+                emailField.dispatchEvent(new Event('input', { bubbles: true }));
+                passwordField.dispatchEvent(new Event('input', { bubbles: true }));
+
+                // Auto-submit after a short delay
+                setTimeout(() => {
+                    if (submitBtn) {
+                        submitBtn.click();
+                    }
+                }, 500);
+            }
+        }
+
+        // Initialize dev buttons when DOM is ready
+        document.addEventListener('DOMContentLoaded', setupDevLoginButtons);
     </script>
     
 </body>

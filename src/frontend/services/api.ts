@@ -9,14 +9,17 @@ import type {
   ProductImage,
   Occasion,
   User,
+  PaginationInfo as Pagination,
+  ApiResponse
+} from '../../config/supabase.js';
+import type {
   LoginCredentials,
   RegisterData,
-  ProductFilters,
-  PaginationInfo as Pagination,
-  ApiResponse,
   Logger,
   LogData
-} from '@frontend-types/*';
+} from '../../types/globals.js';
+import type { ProductQuery } from '../../config/supabase.js';
+type ProductFilters = ProductQuery;
 
 // Define carousel types locally to avoid import issues
 interface CarouselProduct {
@@ -90,6 +93,20 @@ export class FloresYaAPI {
     return headers;
   }
 
+  // Check network connectivity
+  private async checkConnectivity(): Promise<boolean> {
+    try {
+      // Try to fetch a small resource to check connectivity
+      const response = await fetch('/favicon.ico', {
+        method: 'HEAD',
+        cache: 'no-cache'
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+
   // Generic fetch method with error handling
   private async fetchData<T>(
     endpoint: string,
@@ -99,25 +116,36 @@ export class FloresYaAPI {
     const url = `${this.baseURL}${endpoint}`;
     this.log('🔄 Fetching data', { url, method: options.method || 'GET' }, 'info');
 
+    // Check connectivity before making request
+    const isConnected = await this.checkConnectivity();
+    if (!isConnected) {
+      this.log('⚠️ No network connectivity detected', { endpoint }, 'warn');
+      throw new Error('No network connectivity. Please check your internet connection.');
+    }
+
     try {
-      const response = await fetch(url, {
+      const requestOptions = {
         ...options,
         headers: {
           ...this.getHeaders(false),
           ...options.headers
         }
-      });
+      };
+
+
+      const response = await fetch(url, requestOptions);
 
       const data: ApiResponse<T> = await response.json();
 
       if (!response.ok) {
-        this.log(`❌ FETCH ${options.method || 'GET'} ${endpoint} - Failed`, {
+        // Only log as error for server errors (5xx), warn for client errors (4xx)
+        const logLevel = response.status >= 500 ? 'error' : 'warn';
+        this.log(`${response.status >= 500 ? '❌' : '⚠️'} FETCH ${options.method || 'GET'} ${endpoint} - ${response.status}`, {
           status: response.status,
           statusText: response.statusText,
-          data,
           endpoint,
           method: options.method || 'GET'
-        }, 'error');
+        }, logLevel);
         throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
       }
 
@@ -125,26 +153,35 @@ export class FloresYaAPI {
       return data;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const isNetworkError = errorMessage.includes('NetworkError') || errorMessage.includes('fetch');
+      const isNetworkError = errorMessage.includes('NetworkError') || errorMessage.includes('fetch') || errorMessage.includes('Failed to fetch');
 
-      this.log(`❌ ${isNetworkError ? 'NETWORK' : 'FETCH'} ${options.method || 'GET'} ${endpoint} - Failed`, {
+      // Use appropriate log level based on error type
+      const logLevel = isNetworkError ? 'warn' : 'error';
+      const logPrefix = isNetworkError ? '🌐 NETWORK' : '❌ FETCH';
+
+      this.log(`${logPrefix} ${options.method || 'GET'} ${endpoint} - ${isNetworkError ? 'Connection issue' : 'Failed'}`, {
         error: errorMessage,
         endpoint,
         method: options.method || 'GET',
         duration: Date.now() - startTime
-      }, 'error');
+      }, logLevel);
 
       throw error;
     }
   }
 
   // Products API
-  async getProducts(filters: ProductFilters = {}): Promise<ApiResponse<{ products: Product[], pagination: Pagination }>> {
+  async getProducts(filters: ProductQuery = {}): Promise<ApiResponse<{ products: Product[], pagination: Pagination }>> {
     const params = new URLSearchParams();
 
+    // Filter out undefined values and handle boolean conversion
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
-        params.append(key, value.toString());
+        if (typeof value === 'boolean') {
+          params.append(key, value.toString());
+        } else {
+          params.append(key, value.toString());
+        }
       }
     });
 
@@ -162,6 +199,30 @@ export class FloresYaAPI {
 
   async getProductById(id: number): Promise<ApiResponse<Product>> {
     return this.getProduct(id);
+  }
+
+  async createProduct(productData: Partial<Product>): Promise<ApiResponse<Product>> {
+    this.log('🔄 Creating product', { name: productData.name }, 'info');
+    return this.fetchData<Product>('/products', {
+      method: 'POST',
+      body: JSON.stringify(productData)
+    });
+  }
+
+  async updateProduct(productData: Partial<Product> & { id: number }): Promise<ApiResponse<Product>> {
+    const { id, ...updateData } = productData;
+    this.log('🔄 Updating product', { id, name: updateData.name }, 'info');
+    return this.fetchData<Product>(`/products/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updateData)
+    });
+  }
+
+  async deleteProduct(id: number): Promise<ApiResponse<{ success: boolean }>> {
+    this.log('🔄 Deleting product', { id }, 'info');
+    return this.fetchData<{ success: boolean }>(`/products/${id}`, {
+      method: 'DELETE'
+    });
   }
 
   // Occasions API

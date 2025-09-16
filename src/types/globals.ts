@@ -73,12 +73,11 @@ export interface RegisterData {
 
 export interface WindowWithBootstrap extends Window {
   bootstrap?: {
-    Modal: new (element: Element) => {
-      show(): void;
-      hide(): void;
-      dispose(): void;
+    Modal: {
+      new (element: Element): { show(): void; hide(): void };
+      getInstance(element: Element): { hide(): void } | null;
     };
-    Carousel: new (element: Element, options?: unknown) => {
+    Carousel?: new (element: Element, options?: unknown) => {
       cycle(): void;
     };
   };

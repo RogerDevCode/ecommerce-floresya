@@ -17,6 +17,7 @@ import { createProductRoutes } from './routes/productRoutes.js';
 import { createOrderRoutes } from './routes/orderRoutes.js';
 import { createOccasionsRoutes } from './routes/occasionsRoutes.js';
 import { createLogsRoutes } from './routes/logsRoutes.js';
+import { createImageRoutes } from './routes/imageRoutes.js';
 import { supabaseManager } from '../config/supabase.js';
 
 // Load environment variables
@@ -32,7 +33,7 @@ class FloresYaServer {
 
   constructor() {
     this.app = express();
-    this.port = parseInt(process.env.PORT || '3000');
+    this.port = parseInt(process.env.PORT ?? '3000');
     this.initializeMiddleware();
     this.initializeRoutes();
     this.initializeErrorHandling();
@@ -122,7 +123,7 @@ class FloresYaServer {
         message: 'FloresYa API is running',
         timestamp: new Date().toISOString(),
         version: '2.0.0',
-        environment: process.env.NODE_ENV || 'development'
+        environment: process.env.NODE_ENV ?? 'development'
       });
     });
 
@@ -131,6 +132,7 @@ class FloresYaServer {
     this.app.use('/api/orders', createOrderRoutes());
     this.app.use('/api/occasions', createOccasionsRoutes());
     this.app.use('/api/logs', createLogsRoutes());
+    this.app.use('/api/images', createImageRoutes());
 
     // Serve index.html for all non-API routes (SPA support)
     this.app.get('*', (req: Request, res: Response) => {
@@ -175,7 +177,7 @@ class FloresYaServer {
 
       this.app.listen(this.port, () => {
         console.log(`🌸 FloresYa Server running on port ${this.port}`);
-        console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
+        console.log(`📱 Environment: ${process.env.NODE_ENV ?? 'development'}`);
         console.log(`🔗 API Base URL: http://localhost:${this.port}/api`);
         console.log(`📊 Health Check: http://localhost:${this.port}/api/health`);
       });
@@ -195,7 +197,7 @@ const serverInstance = new FloresYaServer();
 
 // Start server if this is the main module
 if (import.meta.url === `file://${process.argv[1]}`) {
-  serverInstance.start();
+  void serverInstance.start();
 }
 
 // Export both the class and the app instance for different use cases

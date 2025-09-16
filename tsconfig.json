@@ -31,8 +31,7 @@
     "moduleDetection": "force",
     "paths": {
       "@shared-types/*": ["./src/types/globals.ts"],
-      "@database-types/*": ["./src/config/supabase.ts"],
-      "@frontend-types/*": ["./src/frontend/types/index.ts"]
+      "@database-types/*": ["./src/config/supabase.ts"]
     }
   },
   "include": [

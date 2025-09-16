@@ -1,18 +1,23 @@
 /**
  * 🌸 FloresYa Vercel Serverless Function Handler
- * Simple handler for serverless compatibility
+ * Integrates with the Express server for API routes
  */
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
+import { FloresYaServer } from '../src/app/server.js';
 
-// Simple serverless handler function
+// Create server instance once (for reuse across invocations)
+let serverInstance: FloresYaServer | undefined;
+
+function getServerInstance() {
+  if (!serverInstance) {
+    serverInstance = new FloresYaServer();
+  }
+  return serverInstance.getApp();
+}
+
+// Export serverless handler function
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // For now, respond with basic JSON to test if the handler works
-  res.status(200).json({
-    success: true,
-    message: 'FloresYa Serverless Function is working!',
-    timestamp: new Date().toISOString(),
-    method: req.method,
-    url: req.url
-  });
+  const app = getServerInstance();
+  return app(req, res);
 }

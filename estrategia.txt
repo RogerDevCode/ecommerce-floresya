@@ -1,0 +1,110 @@
+LISTA COMPLETA DE CASOS DE USO PRIORIZADOS
+🔥 FASE 1: CRUD DE PRODUCTOS (PRIORIDAD MÁXIMA)
+1.1 Gestión Básica de Productos
+✅ Crear producto - Formulario completo con validación
+✅ Listar productos - Tabla con paginación, filtros y búsqueda
+✅ Editar producto - Modal/formulario de edición
+✅ Eliminar producto - Confirmación y eliminación suave
+✅ Cambiar estado - Activar/desactivar productos
+1.2 Gestión Avanzada de Productos
+✅ Subida de imágenes - Drag & drop, preview, múltiples tamaños
+✅ Gestión de stock - Alertas de stock bajo, actualización automática
+✅ Categorización - Asignar categorías y ocasiones
+✅ Productos destacados - Toggle featured con validación
+✅ Orden del carrusel - Drag & drop para reordenar
+1.3 Búsqueda y Filtrado
+✅ Búsqueda en tiempo real - Por nombre, descripción, SKU
+✅ Filtros avanzados - Por precio, stock, categoría, estado
+✅ Ordenamiento múltiple - Por precio, nombre, fecha, stock
+✅ Paginación inteligente - Con indicadores de página
+🚀 FASE 2: GESTIÓN DE ÓRDENES
+2.1 Visualización de Órdenes
+✅ Listado de órdenes - Con filtros por estado y fecha
+✅ Vista detallada - Items, cliente, dirección, pagos
+✅ Historial de estados - Timeline de cambios
+✅ Búsqueda por cliente - Email, nombre, teléfono
+2.2 Gestión de Estados
+✅ Cambiar estado - Workflow completo con validaciones
+✅ Notificaciones - Alertas para cambios críticos
+✅ Comentarios admin - Notas internas por orden
+✅ Historial completo - Auditoría de todos los cambios
+2.3 Gestión de Pagos
+✅ Ver pagos - Lista de pagos por orden
+✅ Marcar como pagado - Confirmación manual
+✅ Reembolsos - Procesamiento de reembolsos
+✅ Métodos de pago - Gestión de métodos disponibles
+👥 FASE 3: GESTIÓN DE USUARIOS
+3.1 Usuarios del Sistema
+✅ Listar usuarios - Tabla con roles y estado
+✅ Crear usuario - Formulario con validación de email
+✅ Editar usuario - Cambiar rol, estado, información
+✅ Eliminar usuario - Soft delete con confirmación
+✅ Reset password - Enviar email de recuperación
+3.2 Roles y Permisos
+✅ Gestión de roles - Admin, User, Manager
+✅ Permisos granulares - CRUD por módulo
+✅ Auditoría de acciones - Log de cambios de permisos
+✅ Sesiones activas - Ver y revocar sesiones
+🎨 FASE 4: GESTIÓN DE OCASIONES
+4.1 CRUD de Ocasiones
+✅ Crear ocasión - Nombre, tipo, descripción, slug
+✅ Listar ocasiones - Con orden de visualización
+✅ Editar ocasión - Modificar todos los campos
+✅ Eliminar ocasión - Soft delete
+✅ Reordenar - Drag & drop para display_order
+4.2 Asociación con Productos
+✅ Asignar productos - Múltiples productos por ocasión
+✅ Ver productos - Lista de productos por ocasión
+✅ Remover asociación - Desvincular productos
+✅ Estadísticas - Conteo de productos por ocasión
+📊 FASE 5: DASHBOARD Y REPORTES
+5.1 Dashboard Ejecutivo
+✅ Métricas principales - Ventas, pedidos, productos, usuarios
+✅ Gráficos de ventas - Por día, semana, mes
+✅ Productos más vendidos - Top 10 con tendencias
+✅ Alertas del sistema - Stock bajo, pedidos pendientes
+5.2 Reportes Avanzados
+✅ Ventas por período - Filtros por fecha y categoría
+✅ Análisis de productos - Rendimiento individual
+✅ Comportamiento de usuarios - Actividad y conversiones
+✅ Exportación de datos - CSV, PDF, Excel
+⚙️ FASE 6: CONFIGURACIÓN DEL SISTEMA
+6.1 Configuración General
+✅ Parámetros del sistema - Nombre, logo, contacto
+✅ Configuración de email - SMTP, plantillas
+✅ Métodos de pago - Configuración de pasarelas
+✅ Envíos y costos - Zonas, costos, tiempos
+6.2 Mantenimiento
+✅ Backup de datos - Programado y manual
+✅ Limpieza de logs - Rotación automática
+✅ Optimización DB - Índices, vacuum
+✅ Monitoreo del sistema - CPU, memoria, disco
+🛠️ ESTRATEGIA DE IMPLEMENTACIÓN RECOMENDADA
+📅 PLAN DE EJECUCIÓN (4-6 semanas)
+Semana 1: CRUD de Productos Básico
+Día 1-2: Conectar API de productos al admin panel
+Día 3: Implementar listado con paginación real
+Día 4-5: Formulario de creación con validaciones
+Semana 2: Gestión Avanzada de Productos
+Día 1-2: Sistema de subida de imágenes
+Día 3: Gestión de stock y alertas
+Día 4-5: Categorización y ocasiones
+Semana 3: Órdenes y Usuarios
+Día 1-2: CRUD de órdenes
+Día 3: Gestión de usuarios
+Día 4-5: Roles y permisos
+Semana 4: Dashboard y Testing
+Día 1-2: Dashboard con métricas reales
+Día 3: Testing completo de funcionalidades
+Día 4-5: Optimizaciones y UX improvements
+🎯 PRÓXIMOS PASOS RECOMENDADOS
+Inmediato (Esta sesión)
+Conectar API de productos al admin panel existente
+Reemplazar datos mock con llamadas reales a la API
+Implementar formulario de creación de productos
+Beneficios de esta estrategia
+✅ Backend sólido - No necesitamos modificar APIs existentes
+✅ Progreso visible - Cada caso de uso aporta valor inmediato
+✅ Testing incremental - Podemos probar cada funcionalidad
+✅ UX mejorada - De mock a funcionalidad real
+✅ Escalabilidad - Arquitectura preparada para crecimiento

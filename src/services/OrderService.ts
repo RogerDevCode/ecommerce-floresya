@@ -14,9 +14,7 @@ import type {
   OrderUpdateRequest,
   OrderStatus,
   OrderResponse,
-  PaginationInfo,
   Product,
-  User,
   RawOrderWithItemsAndUser,
   RawOrderWithItemsPaymentsHistory,
   RawOrderStatusHistoryWithUser
@@ -182,8 +180,8 @@ export class OrderService {
       const orderItems = items.map(item => ({
         ...item,
         order_id: order.id,
-        unit_price_usd: item.unit_price_usd.toString(),
-        subtotal_usd: item.subtotal_usd.toString()
+        unit_price_usd: item.unit_price_usd,
+        subtotal_usd: item.subtotal_usd
       }));
 
       const { data: createdItems, error: itemsError } = await supabaseService

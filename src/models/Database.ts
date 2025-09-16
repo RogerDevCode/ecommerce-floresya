@@ -227,7 +227,6 @@ export interface ProductQuery {
   limit?: number;
   search?: string;
   occasion_id?: number;
-  category?: string;
   featured?: boolean;
   active?: boolean;
   has_carousel_order?: boolean;
@@ -247,7 +246,6 @@ export interface ProductCreateRequest {
   is_featured?: boolean;
   carousel_order?: number;
   occasion_id?: number;
-  category?: string;
   sku?: string;
   care_instructions?: string;
 }

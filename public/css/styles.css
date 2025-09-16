@@ -125,6 +125,23 @@ h1 {
     color: var(--primary-pink) !important;
 }
 
+/* Logout button styles */
+#logoutNavItem .nav-link {
+    color: var(--danger-red) !important;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+#logoutNavItem .nav-link:hover {
+    color: #b02a37 !important;
+    background-color: rgba(220, 53, 69, 0.1);
+    border-radius: 6px;
+}
+
+#logoutNavItem .nav-link i {
+    font-size: 0.9em;
+}
+
 .dropdown-menu {
     border: none;
     box-shadow: 0 8px 30px rgba(255, 105, 180, 0.15);
@@ -830,6 +847,16 @@ footer .social-links a:hover {
 @media (max-width: 768px) {
     .carousel-item {
         flex: 0 0 250px;
+    }
+
+    /* Mobile logout button styles */
+    #logoutNavItem .nav-link {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    #logoutNavItem .nav-link i {
+        display: none; /* Hide icon on mobile to save space */
     }
     
     .hero-section {

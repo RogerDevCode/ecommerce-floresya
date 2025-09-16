@@ -49,9 +49,6 @@ export interface Product {
   active: boolean;
   featured: boolean;
   carousel_order?: number;
-  occasion_id?: number;
-  category?: string;
-  care_instructions?: string;
   created_at: string;
   updated_at: string;
 }
@@ -252,9 +249,7 @@ export interface ProductQuery {
   page?: number;
   limit?: number;
   search?: string;
-  occasion_id?: number;
   occasion?: string;
-  category?: string;
   featured?: boolean;
   active?: boolean;
   has_carousel_order?: boolean;
@@ -269,18 +264,25 @@ export interface ProductCreateRequest {
   description: string;
   summary?: string;
   price_usd: number;
+  price_ves?: number;
   stock: number;
+  sku?: string;
   featured?: boolean;
   carousel_order?: number;
-  occasion_id?: number;
-  category?: string;
-  sku?: string;
-  care_instructions?: string;
 }
 
-export interface ProductUpdateRequest extends Partial<ProductCreateRequest> {
+export interface ProductUpdateRequest {
   id: number;
+  name?: string;
+  description?: string;
+  summary?: string;
+  price_usd?: number;
+  price_ves?: number;
+  stock?: number;
+  sku?: string;
   active?: boolean;
+  featured?: boolean;
+  carousel_order?: number | null;
 }
 
 export interface OccasionCreateRequest {
@@ -465,7 +467,7 @@ class SupabaseManager {
 
     this.serviceClient = createClient(
       config.url,
-      config.serviceKey || config.anonKey,
+      config.serviceKey ?? config.anonKey,
       {
         auth: { persistSession: false, autoRefreshToken: false }
       }
@@ -480,8 +482,8 @@ class SupabaseManager {
   }
 
   private getConfig(): SupabaseConfig {
-    const url = process.env.SUPABASE_URL || 'https://placeholder.supabase.co';
-    const anonKey = process.env.SUPABASE_ANON_KEY || 'placeholder-anon-key';
+    const url = process.env.SUPABASE_URL ?? 'https://placeholder.supabase.co';
+    const anonKey = process.env.SUPABASE_ANON_KEY ?? 'placeholder-anon-key';
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     return { url, anonKey, serviceKey };

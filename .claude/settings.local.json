@@ -24,7 +24,8 @@
       "Bash(npx tsc:*)",
       "Bash(npm run clean:*)",
       "Bash(npm install:*)",
-      "Bash(vercel:*)"
+      "Bash(vercel:*)",
+      "Bash(npm run lint:*)"
     ],
     "deny": [],
     "ask": []

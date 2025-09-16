@@ -6,12 +6,44 @@
 import { Request, Response } from 'express';
 import { query, param, validationResult } from 'express-validator';
 import { supabaseService } from '../config/supabase.js';
-import type { ApiResponse, Occasion } from '../config/supabase.js';
+// Import removed - ApiResponse unused
 
 export class OccasionsController {
   /**
-   * GET /api/occasions
-   * Get all active occasions
+   * @swagger
+   * /api/occasions:
+   *   get:
+   *     summary: Get all active occasions
+   *     description: Retrieves a list of all active occasions ordered by display order
+   *     tags: [Occasions]
+   *     parameters:
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 100
+   *         description: Maximum number of occasions to return
+   *     responses:
+   *       200:
+   *         description: Occasions retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 data:
+   *                   type: array
+   *                   items:
+   *                     $ref: '#/components/schemas/Occasion'
+   *                 message:
+   *                   type: string
+   *                   example: "Occasions retrieved successfully"
+   *       500:
+   *         description: Server error
    */
   public async getOccasions(req: Request, res: Response): Promise<void> {
     try {
@@ -51,8 +83,43 @@ export class OccasionsController {
   }
 
   /**
-   * GET /api/occasions/:id
-   * Get single occasion by ID
+   * @swagger
+   * /api/occasions/{id}:
+   *   get:
+   *     summary: Get single occasion by ID
+   *     description: Retrieves a specific occasion by its ID if it's active
+   *     tags: [Occasions]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *         description: Occasion ID
+   *     responses:
+   *       200:
+   *         description: Occasion retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     occasion:
+   *                       $ref: '#/components/schemas/Occasion'
+   *                 message:
+   *                   type: string
+   *                   example: "Occasion retrieved successfully"
+   *       404:
+   *         description: Occasion not found
+   *       500:
+   *         description: Server error
    */
   public async getOccasionById(req: Request, res: Response): Promise<void> {
     try {

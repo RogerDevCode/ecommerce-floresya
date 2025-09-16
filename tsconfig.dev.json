@@ -8,10 +8,10 @@
     "allowJs": true,                      // ✅ Máxima flexibilidad durante migración
     "checkJs": false,                     // ✅ No bloquear por JS durante desarrollo
     
-    // Verificaciones relajadas para desarrollo rápido
-    "strict": false,                      // 🔄 Relajado para desarrollo ágil
-    "noImplicitAny": false,               // 🔄 Permitir any durante desarrollo
-    "strictNullChecks": false,            // 🔄 Menos estricto durante desarrollo
+    // Verificaciones ESTRICTAS mantenidas en desarrollo
+    "strict": true,                       // ✅ Máxima seguridad de tipos
+    "noImplicitAny": true,                // ✅ Prohibir 'any' implícito
+    "strictNullChecks": true,             // ✅ Verificaciones null/undefined
     
     // Performance optimizado para desarrollo
     "incremental": true,                  // ✅ Compilación incremental (más rápida)

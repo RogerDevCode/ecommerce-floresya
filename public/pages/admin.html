@@ -3,199 +3,833 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Panel de Administración - FloresYa">
     <title>Panel de Administración - FloresYa</title>
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/admin.css">
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+
+    <style>
+        /* Admin Panel Styles */
+        .admin-sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .admin-content {
+            min-height: 100vh;
+            background-color: #f8f9fa;
+        }
+
+        .sidebar-brand {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-brand h4 {
+            color: white;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .sidebar-nav .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            margin: 0.25rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-nav .nav-link:hover {
+            color: white;
+            background-color: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+
+        .sidebar-nav .nav-link.active {
+            color: white;
+            background-color: rgba(255,105,180,0.8);
+            box-shadow: 0 4px 15px rgba(255,105,180,0.3);
+        }
+
+        .sidebar-nav .nav-link i {
+            width: 20px;
+            margin-right: 10px;
+        }
+
+        .admin-header {
+            background: white;
+            border-bottom: 1px solid #e9ecef;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .admin-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .admin-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .metric-card.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .metric-card.warning {
+            background: linear-gradient(135deg, #fcb045 0%, #fd1d1d 100%);
+        }
+
+        .metric-card.info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .table-responsive {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        }
+
+        .btn-admin {
+            border-radius: 8px;
+            font-weight: 600;
+            padding: 0.5rem 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-admin:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .admin-sidebar {
+                position: fixed;
+                z-index: 1000;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .admin-sidebar.show {
+                transform: translateX(0);
+            }
+
+            .admin-content {
+                margin-left: 0;
+            }
+        }
+
+        /* 🚨 FALLBACK MODE STYLES 🚨 */
+        .fallback-mode {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+
+        .fallback-alert {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 2px solid #ffc107;
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        }
+
+        .fallback-alert .alert-heading {
+            color: #856404;
+            font-weight: 600;
+        }
+
+        .fallback-retry-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .fallback-retry-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            background: linear-gradient(135deg, #218838 0%, #17a2b8 100%);
+        }
+
+        /* Emergency visibility styles */
+        .emergency-visible {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        /* Force show content even with CSS issues */
+        .force-show {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            min-height: 400px;
+        }
+
+        /* 🚨 CRITICAL MODAL FIX 🚨 */
+        .modal.show {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        .modal.fade.show {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transition: none !important;
+        }
+
+        /* Force modal to be visible when it has the show class */
+        #productModal.modal.show,
+        #testBootstrapModal.modal.show {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            z-index: 1055 !important;
+        }
+
+        /* Fix modal backdrop */
+        .modal-backdrop.show {
+            opacity: 0.5 !important;
+            z-index: 1050 !important;
+        }
+
+        /* 🎯 CAROUSEL POSITION INTERFACE STYLES 🎯 */
+        .carousel-position-container {
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .carousel-option {
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s;
+        }
+
+        .carousel-option:hover {
+            background-color: #e9ecef;
+        }
+
+        .carousel-option.occupied {
+            background-color: #fff5f5;
+            border-left: 4px solid #dc3545;
+        }
+
+        .carousel-option.available {
+            background-color: #f0fff4;
+            border-left: 4px solid #28a745;
+        }
+
+        .carousel-option .form-check-label {
+            width: 100%;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .carousel-option .position-text {
+            flex-grow: 1;
+            padding-right: 0.5rem;
+        }
+
+        .carousel-option small {
+            font-size: 0.75rem;
+            font-weight: normal;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .carousel-position-container {
+                max-height: 300px;
+                padding: 0.75rem;
+            }
+
+            .carousel-option {
+                margin-bottom: 0.5rem;
+                padding: 0.375rem;
+            }
+
+            .carousel-option .form-check-label {
+                font-size: 0.9rem;
+            }
+
+            .carousel-option .btn-sm {
+                font-size: 0.75rem;
+                padding: 0.2rem 0.4rem;
+            }
+
+            .position-text {
+                word-break: break-word;
+            }
+        }
+
+        /* Ensure text doesn't overflow */
+        .carousel-option .position-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 576px) {
+            .carousel-option .position-text {
+                white-space: normal;
+                overflow: visible;
+            }
+        }
+
+        /* 🔧 FIX OCCASION SELECT CONTRAST 🔧 */
+        .form-select option {
+            background-color: #ffffff !important;
+            color: #212529 !important;
+            padding: 8px !important;
+        }
+
+        .form-select option:checked,
+        .form-select option:hover,
+        .form-select option:focus {
+            background-color: #0d6efd !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+        }
+
+        /* Ensure select text is visible and has good contrast */
+        .form-select {
+            color: #212529 !important;
+            background-color: #ffffff !important;
+            border: 2px solid #dee2e6 !important;
+            font-weight: 500 !important;
+        }
+
+        .form-select:focus {
+            border-color: #0d6efd !important;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
+            color: #212529 !important;
+            background-color: #ffffff !important;
+        }
+
+        /* Specific fix for selected option visibility */
+        .form-select option[selected] {
+            background-color: #e7f3ff !important;
+            color: #0d6efd !important;
+            font-weight: 600 !important;
+        }
+
+        /* 🌸 PRODUCT MODAL PREMIUM STYLING 🌸 */
+
+        /* Modal Background and Container */
+        #productModal .modal-content {
+            border: none;
+            border-radius: 1rem;
+            box-shadow: 0 20px 50px rgba(233, 30, 99, 0.15);
+            background: linear-gradient(145deg, #ffffff 0%, #fce4ec 100%);
+            overflow: hidden;
+        }
+
+        #productModal .modal-header {
+            background: linear-gradient(135deg, #e91e63 0%, #f06292 100%);
+            color: white;
+            border-bottom: none;
+            padding: 1.5rem 2rem;
+            border-radius: 1rem 1rem 0 0;
+        }
+
+        #productModal .modal-title {
+            font-weight: 600;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+        }
+
+        #productModal .modal-title::before {
+            content: "🌸";
+            margin-right: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        #productModal .btn-close {
+            filter: brightness(0) invert(1);
+            opacity: 0.8;
+        }
+
+        #productModal .btn-close:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        #productModal .modal-body {
+            padding: 2rem;
+            background: linear-gradient(145deg, #ffffff 0%, #faf4f6 100%);
+        }
+
+        /* Form Styling */
+        #productModal .form-label {
+            font-weight: 600;
+            color: #e91e63;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        #productModal .form-control,
+        #productModal .form-select {
+            border: 2px solid #f8bbd9;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+            background-color: #ffffff;
+        }
+
+        #productModal .form-control:focus,
+        #productModal .form-select:focus {
+            border-color: #e91e63;
+            box-shadow: 0 0 0 0.2rem rgba(233, 30, 99, 0.15);
+            background-color: #ffffff;
+        }
+
+        #productModal .form-text {
+            color: #ad5389;
+            font-size: 0.8rem;
+            font-style: italic;
+        }
+
+        /* 🎯 OCCASIONS CHECKBOXES PREMIUM STYLING 🎯 */
+        .occasions-checkboxes {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 2px solid #f8bbd9;
+            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            background: linear-gradient(145deg, #ffffff 0%, #fdf8fc 100%);
+            box-shadow: inset 0 2px 8px rgba(233, 30, 99, 0.05);
+        }
+
+        .occasions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .occasions-list .form-check {
+            margin-bottom: 0;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            background-color: transparent;
+        }
+
+        .occasions-list .form-check:hover {
+            background-color: rgba(233, 30, 99, 0.05);
+            transform: translateX(4px);
+        }
+
+        .occasions-list .form-check-input {
+            margin-top: 0.25rem;
+            border: 2px solid #f06292;
+            border-radius: 0.25rem;
+            width: 1.1rem;
+            height: 1.1rem;
+        }
+
+        .occasions-list .form-check-input:checked {
+            background-color: #e91e63;
+            border-color: #e91e63;
+        }
+
+        .occasions-list .form-check-input:focus {
+            box-shadow: 0 0 0 0.2rem rgba(233, 30, 99, 0.25);
+        }
+
+        .occasions-list .form-check-label {
+            font-weight: 500;
+            color: #495057;
+            cursor: pointer;
+            margin-left: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .occasions-list .form-check-label small {
+            font-weight: 400;
+            font-style: italic;
+            color: #6c757d;
+        }
+
+        .occasions-list .form-check-input:checked + .form-check-label {
+            color: #e91e63;
+            font-weight: 600;
+        }
+
+        /* 📻 CAROUSEL RADIO BUTTONS OPTIMIZATION 📻 */
+        .carousel-positions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+            padding: 1rem;
+            background: linear-gradient(145deg, #ffffff 0%, #fdf8fc 100%);
+            border: 2px solid #f8bbd9;
+            border-radius: 0.75rem;
+            box-shadow: inset 0 2px 8px rgba(233, 30, 99, 0.05);
+        }
+
+        .carousel-position {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            background-color: transparent;
+            min-height: 2.5rem;
+        }
+
+        .carousel-position:hover {
+            background-color: rgba(233, 30, 99, 0.05);
+            transform: translateY(-1px);
+        }
+
+        .carousel-position input[type="radio"] {
+            margin-right: 0.75rem;
+            border: 2px solid #f06292;
+            width: 1.1rem;
+            height: 1.1rem;
+        }
+
+        .carousel-position input[type="radio"]:checked {
+            background-color: #e91e63;
+            border-color: #e91e63;
+        }
+
+        .carousel-position label {
+            font-weight: 500;
+            color: #495057;
+            cursor: pointer;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .carousel-position input[type="radio"]:checked + label {
+            color: #e91e63;
+            font-weight: 600;
+        }
+
+        /* Buttons Styling */
+        #productModal .btn-primary {
+            background: linear-gradient(135deg, #e91e63 0%, #f06292 100%);
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        #productModal .btn-primary:hover {
+            background: linear-gradient(135deg, #c2185b 0%, #e91e63 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(233, 30, 99, 0.3);
+        }
+
+        #productModal .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #868e96 100%);
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        #productModal .btn-secondary:hover {
+            background: linear-gradient(135deg, #545b62 0%, #6c757d 100%);
+            transform: translateY(-2px);
+        }
+
+        /* Message Area Styling */
+        #productModal .alert {
+            border: none;
+            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            font-weight: 500;
+        }
+
+        #productModal .alert-success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        #productModal .alert-danger {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            color: #856404;
+            border-left: 4px solid #ffc107;
+            border: 1px solid #ffeaa7;
+        }
+
+        /* Custom Scrollbar for occasions panel */
+        .occasions-checkboxes::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .occasions-checkboxes::-webkit-scrollbar-track {
+            background: #f8bbd9;
+            border-radius: 3px;
+        }
+
+        .occasions-checkboxes::-webkit-scrollbar-thumb {
+            background: #e91e63;
+            border-radius: 3px;
+        }
+
+        .occasions-checkboxes::-webkit-scrollbar-thumb:hover {
+            background: #c2185b;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #productModal .modal-body {
+                padding: 1.5rem;
+            }
+
+            .carousel-positions {
+                grid-template-columns: 1fr;
+            }
+
+            .occasions-checkboxes {
+                max-height: 150px;
+                padding: 0.75rem 1rem;
+            }
+        }
+        }
+    </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg admin-navbar">
-        <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="/">
-                <img src="/images/logoFloresYa.jpeg" alt="FloresYa Logo" class="admin-logo me-2" style="width: 40px; height: 40px; object-fit: cover;">
-                <span class="admin-brand-text">FloresYa Admin</span>
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-section="dashboard">
-                            <i class="bi bi-speedometer2"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-section="orders">
-                            <i class="bi bi-bag-check"></i> Pedidos
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-section="payments">
-                            <i class="bi bi-credit-card"></i> Pagos
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-section="products">
-                            <i class="bi bi-box-seam"></i> Productos
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-section="carousel">
-                            <i class="bi bi-images"></i> Carrusel
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-section="settings">
-                            <i class="bi bi-gear"></i> Configuración
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-section="testing">
-                            <i class="bi bi-bug"></i> Testing
-                        </a>
-                    </li>
-                </ul>
-                
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" id="adminUserMenu">
-                            <i class="bi bi-person-circle"></i> Admin
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/">Ver Sitio Web</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#" id="adminLogout">Cerrar Sesión</a></li>
-                        </ul>
-                    </li>
-                </ul>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <div class="mt-2">
+                <strong>Cargando panel de administración...</strong>
             </div>
         </div>
-    </nav>
+    </div>
 
-    <!-- Main Content -->
     <div class="container-fluid">
         <div class="row">
             <!-- Sidebar -->
-            <div class="col-md-3 col-lg-2 px-0 bg-light sidebar">
-                <div class="list-group list-group-flush">
-                    <a href="#" class="list-group-item list-group-item-action active" data-section="dashboard">
-                        <i class="bi bi-speedometer2 me-2"></i>Dashboard
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action" data-section="orders">
-                        <i class="bi bi-bag-check me-2"></i>Pedidos
-                        <span class="badge bg-warning rounded-pill ms-auto" id="pendingOrdersCount">0</span>
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action" data-section="payments">
-                        <i class="bi bi-credit-card me-2"></i>Pagos
-                        <span class="badge bg-info rounded-pill ms-auto" id="pendingPaymentsCount">0</span>
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action" data-section="products">
-                        <i class="bi bi-box-seam me-2"></i>Productos
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action" data-section="occasions">
-                        <i class="bi bi-calendar-heart me-2"></i>Ocasiones
-                        <span class="badge bg-primary rounded-pill ms-auto" id="totalOccasionsCount">0</span>
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action" data-section="carousel">
-                        <i class="bi bi-images me-2"></i>Carrusel
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action" data-section="settings">
-                        <i class="bi bi-gear me-2"></i>Configuración
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action" data-section="testing">
-                        <i class="bi bi-bug me-2"></i>Testing
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action" data-section="reports">
-                        <i class="bi bi-graph-up me-2"></i>Reportes
-                    </a>
+            <div class="col-md-3 col-lg-2 px-0 admin-sidebar" id="adminSidebar">
+                <div class="sidebar-brand">
+                    <h4>
+                        <i class="bi bi-shield-check me-2"></i>
+                        Admin Panel
+                    </h4>
                 </div>
+
+                <nav class="sidebar-nav">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#dashboard" data-section="dashboard">
+                                <i class="bi bi-speedometer2"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#products" data-section="products">
+                                <i class="bi bi-box-seam"></i>
+                                Productos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#orders" data-section="orders">
+                                <i class="bi bi-receipt"></i>
+                                Pedidos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#users" data-section="users">
+                                <i class="bi bi-people"></i>
+                                Usuarios
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#occasions" data-section="occasions">
+                                <i class="bi bi-calendar-event"></i>
+                                Ocasiones
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#settings" data-section="settings">
+                                <i class="bi bi-gear"></i>
+                                Configuración
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#logs" data-section="logs">
+                                <i class="bi bi-journal-text"></i>
+                                Logs
+                            </a>
+                        </li>
+                        <li class="nav-item mt-3">
+                            <a class="nav-link text-warning" href="/" id="backToSite">
+                                <i class="bi bi-arrow-left"></i>
+                                Volver al sitio
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-danger" href="#" id="logoutBtn">
+                                <i class="bi bi-box-arrow-right"></i>
+                                Cerrar sesión
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
             </div>
 
-            <!-- Content Area -->
-            <div class="col-md-9 col-lg-10 px-4 py-3">
-                <!-- Dashboard Section -->
-                <div id="dashboard-section" class="content-section active">
-                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                        <h1 class="h2">Dashboard</h1>
-                        <div class="btn-toolbar mb-2 mb-md-0">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="adminApp.refreshDashboard()">
-                                <i class="bi bi-arrow-clockwise"></i> Actualizar
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 px-0 admin-content">
+                <!-- Header -->
+                <header class="admin-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0" id="pageTitle">Dashboard</h5>
+                            <small class="text-muted" id="pageSubtitle">Vista general del sistema</small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-3" id="userRole">Administrador</span>
+                            <button class="btn btn-outline-secondary btn-sm d-md-none" id="sidebarToggle">
+                                <i class="bi bi-list"></i>
                             </button>
                         </div>
                     </div>
+                </header>
 
-                    <!-- Stats Cards -->
-                    <div class="row mb-4">
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-primary shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Pedidos Hoy</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="todayOrders">0</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="bi bi-bag-check fa-2x text-gray-300"></i>
-                                        </div>
+                <!-- Content Area -->
+                <main class="p-4">
+                    <!-- Dashboard Section -->
+                    <div id="dashboard-section" class="admin-section active">
+                        <div class="row mb-4">
+                            <div class="col-md-3 mb-3">
+                                <div class="card admin-card metric-card">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-box-seam display-4 mb-2"></i>
+                                        <h3 class="card-title" id="totalProducts">0</h3>
+                                        <p class="card-text">Productos</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card admin-card metric-card success">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-receipt display-4 mb-2"></i>
+                                        <h3 class="card-title" id="totalOrders">0</h3>
+                                        <p class="card-text">Pedidos</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card admin-card metric-card warning">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-people display-4 mb-2"></i>
+                                        <h3 class="card-title" id="totalUsers">0</h3>
+                                        <p class="card-text">Usuarios</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card admin-card metric-card info">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-graph-up display-4 mb-2"></i>
+                                        <h3 class="card-title" id="totalRevenue">$0</h3>
+                                        <p class="card-text">Ingresos</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-success shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Ventas Hoy</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="todaySales">$0.00</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="bi bi-currency-dollar fa-2x text-gray-300"></i>
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <div class="card admin-card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                                            Alertas Recientes
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="alertsList">
+                                            <p class="text-muted mb-0">Cargando alertas...</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-warning shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pagos Pendientes</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="pendingPayments">0</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="bi bi-clock fa-2x text-gray-300"></i>
-                                        </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="card admin-card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-activity text-success me-2"></i>
+                                            Actividad Reciente
+                                        </h6>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-info shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Productos Activos</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="activeProducts">0</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="bi bi-box-seam fa-2x text-gray-300"></i>
+                                    <div class="card-body">
+                                        <div id="recentActivity">
+                                            <p class="text-muted mb-0">Cargando actividad...</p>
                                         </div>
                                     </div>
                                 </div>
@@ -203,697 +837,1004 @@
                         </div>
                     </div>
 
-                    <!-- Recent Orders -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="mb-0">Pedidos Recientes</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table" id="recentOrdersTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Orden</th>
-                                            <th>Cliente</th>
-                                            <th>Total</th>
-                                            <th>Estado</th>
-                                            <th>Fecha</th>
-                                            <th>Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Recent orders will be loaded here -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Orders Section -->
-                <div id="orders-section" class="content-section">
-                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                        <h1 class="h2">Gestión de Pedidos</h1>
-                        <div class="btn-toolbar mb-2 mb-md-0">
-                            <button type="button" class="btn btn-sm btn-outline-secondary me-2" onclick="adminApp.refreshOrders()">
-                                <i class="bi bi-arrow-clockwise"></i> Actualizar
+                    <!-- Products Section -->
+                    <div id="products-section" class="admin-section" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4>Gestión de Productos</h4>
+                            <button class="btn btn-primary btn-admin" id="addProductBtn">
+                                <i class="bi bi-plus-circle me-2"></i>
+                                Nuevo Producto
                             </button>
                         </div>
-                    </div>
 
-                    <!-- Filters -->
-                    <div class="row mb-3">
-                        <div class="col-md-3">
-                            <select class="form-select" id="orderStatusFilter">
-                                <option value="">Todos los estados</option>
-                                <option value="pending">Pendiente</option>
-                                <option value="verified">Verificado</option>
-                                <option value="preparing">Preparando</option>
-                                <option value="shipped">Enviado</option>
-                                <option value="delivered">Entregado</option>
-                                <option value="cancelled">Cancelado</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="input-group">
-                                <input type="text" class="form-control" placeholder="Buscar por número de orden o cliente..." id="orderSearchInput">
-                                <button class="btn btn-outline-secondary" type="button" onclick="adminApp.searchOrders()">
-                                    <i class="bi bi-search"></i>
-                                </button>
+                        <div class="card admin-card">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="productsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Nombre</th>
+                                                <th>Precio</th>
+                                                <th>Stock</th>
+                                                <th>Estado</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="productsTableBody">
+                                            <tr>
+                                                <td colspan="6" class="text-center text-muted">
+                                                    Cargando productos...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Orders Table -->
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table" id="ordersTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Orden</th>
-                                            <th>Cliente</th>
-                                            <th>Total</th>
-                                            <th>Estado</th>
-                                            <th>Fecha</th>
-                                            <th>Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Orders will be loaded here -->
-                                    </tbody>
-                                </table>
+                    <!-- Orders Section -->
+                    <div id="orders-section" class="admin-section" style="display: none;">
+                        <h4>Gestión de Pedidos</h4>
+                        <div class="card admin-card">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="ordersTable">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Cliente</th>
+                                                <th>Total</th>
+                                                <th>Estado</th>
+                                                <th>Fecha</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="ordersTableBody">
+                                            <tr>
+                                                <td colspan="6" class="text-center text-muted">
+                                                    Cargando pedidos...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-
-                            <!-- Pagination -->
-                            <nav aria-label="Orders pagination" class="mt-3">
-                                <ul class="pagination justify-content-center" id="ordersPagination">
-                                </ul>
-                            </nav>
                         </div>
                     </div>
-                </div>
 
-                <!-- Payments Section -->
-                <div id="payments-section" class="content-section">
-                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                        <h1 class="h2">Gestión de Pagos</h1>
-                        <div class="btn-toolbar mb-2 mb-md-0">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="adminApp.refreshPayments()">
-                                <i class="bi bi-arrow-clockwise"></i> Actualizar
+                    <!-- Users Section -->
+                    <div id="users-section" class="admin-section" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4>Gestión de Usuarios</h4>
+                            <button class="btn btn-success btn-admin" id="addUserBtn">
+                                <i class="bi bi-person-plus me-2"></i>
+                                Nuevo Usuario
                             </button>
                         </div>
-                    </div>
 
-                    <!-- Payment Filters -->
-                    <div class="row mb-3">
-                        <div class="col-md-3">
-                            <select class="form-select" id="paymentStatusFilter">
-                                <option value="">Todos los estados</option>
-                                <option value="pending">Pendiente</option>
-                                <option value="verified">Verificado</option>
-                                <option value="failed">Rechazado</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="input-group">
-                                <input type="text" class="form-control" placeholder="Buscar por orden o referencia..." id="paymentSearchInput">
-                                <button class="btn btn-outline-secondary" type="button" onclick="adminApp.searchPayments()">
-                                    <i class="bi bi-search"></i>
-                                </button>
+                        <div class="card admin-card">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="usersTable">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Nombre</th>
+                                                <th>Email</th>
+                                                <th>Rol</th>
+                                                <th>Estado</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="usersTableBody">
+                                            <tr>
+                                                <td colspan="6" class="text-center text-muted">
+                                                    Cargando usuarios...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Payments Table -->
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table" id="paymentsTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Orden</th>
-                                            <th>Método</th>
-                                            <th>Monto</th>
-                                            <th>Referencia</th>
-                                            <th>Estado</th>
-                                            <th>Fecha</th>
-                                            <th>Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Payments will be loaded here -->
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <!-- Pagination -->
-                            <nav aria-label="Payments pagination" class="mt-3">
-                                <ul class="pagination justify-content-center" id="paymentsPagination">
-                                </ul>
-                            </nav>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Products Section -->
-                <div id="products-section" class="content-section">
-                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                        <h1 class="h2">Gestión de Productos</h1>
-                        <div class="btn-toolbar mb-2 mb-md-0">
-                            <button type="button" class="btn btn-sm btn-success me-2" onclick="adminApp.showProductModal()">
-                                <i class="bi bi-plus"></i> Nuevo Producto
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="adminApp.refreshProducts()">
-                                <i class="bi bi-arrow-clockwise"></i> Actualizar
+                    <!-- Occasions Section -->
+                    <div id="occasions-section" class="admin-section" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4>Gestión de Ocasiones</h4>
+                            <button class="btn btn-info btn-admin" id="addOccasionBtn">
+                                <i class="bi bi-calendar-plus me-2"></i>
+                                Nueva Ocasión
                             </button>
                         </div>
-                    </div>
 
-                    <div id="productsContent">
-                        <!-- Products will be loaded here -->
-                    </div>
-                </div>
-
-                <!-- Occasions Section -->
-                <div id="occasions-section" class="content-section">
-                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                        <h1 class="h2"><i class="bi bi-calendar-heart me-2"></i>Gestión de Ocasiones</h1>
-                        <div class="btn-toolbar mb-2 mb-md-0">
-                            <button type="button" class="btn btn-sm btn-success me-2" onclick="adminApp.createOccasion()">
-                                <i class="bi bi-plus"></i> Nueva Ocasión
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="adminApp.refreshOccasions()">
-                                <i class="bi bi-arrow-clockwise"></i> Actualizar
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Occasions Statistics -->
-                    <div class="row mb-4">
-                        <div class="col-md-3">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <h5 class="card-title text-primary">
-                                        <i class="bi bi-calendar-heart"></i>
-                                        <span id="totalOccasions">0</span>
-                                    </h5>
-                                    <p class="card-text small text-muted">Total Ocasiones</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <h5 class="card-title text-success">
-                                        <i class="bi bi-check-circle"></i>
-                                        <span id="activeOccasions">0</span>
-                                    </h5>
-                                    <p class="card-text small text-muted">Activas</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <h5 class="card-title text-info">
-                                        <i class="bi bi-link-45deg"></i>
-                                        <span id="occasionRelations">0</span>
-                                    </h5>
-                                    <p class="card-text small text-muted">Relaciones con Productos</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <h5 class="card-title text-warning">
-                                        <i class="bi bi-star"></i>
-                                        <span id="topOccasion">-</span>
-                                    </h5>
-                                    <p class="card-text small text-muted">Más Popular</p>
+                        <div class="card admin-card">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="occasionsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Nombre</th>
+                                                <th>Tipo</th>
+                                                <th>Orden</th>
+                                                <th>Estado</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="occasionsTableBody">
+                                            <tr>
+                                                <td colspan="6" class="text-center text-muted">
+                                                    Cargando ocasiones...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Occasions Management -->
-                    <div class="card">
-                        <div class="card-header">
-                            <ul class="nav nav-tabs card-header-tabs" id="occasionsTabs" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="occasions-list-tab" data-bs-toggle="tab" 
-                                            data-bs-target="#occasions-list" type="button" role="tab">
-                                        <i class="bi bi-list-ul"></i> Lista de Ocasiones
-                                    </button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="occasions-relations-tab" data-bs-toggle="tab" 
-                                            data-bs-target="#occasions-relations" type="button" role="tab">
-                                        <i class="bi bi-diagram-3"></i> Relaciones Productos
-                                    </button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="occasions-analytics-tab" data-bs-toggle="tab" 
-                                            data-bs-target="#occasions-analytics" type="button" role="tab">
-                                        <i class="bi bi-graph-up"></i> Analytics
-                                    </button>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="card-body">
-                            <div class="tab-content" id="occasionsTabContent">
-                                <!-- Occasions List Tab -->
-                                <div class="tab-pane fade show active" id="occasions-list" role="tabpanel">
-                                    <div id="occasionsContent">
-                                        <!-- Occasions will be loaded here -->
-                                    </div>
-                                </div>
-                                
-                                <!-- Occasions Relations Tab -->
-                                <div class="tab-pane fade" id="occasions-relations" role="tabpanel">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h6>Productos por Ocasión</h6>
-                                        <select class="form-select form-select-sm" style="width: auto;" id="occasionFilter">
-                                            <option value="">Todas las ocasiones</option>
-                                        </select>
-                                    </div>
-                                    <div id="occasionRelationsContent">
-                                        <!-- Relations will be loaded here -->
-                                    </div>
-                                </div>
-                                
-                                <!-- Occasions Analytics Tab -->
-                                <div class="tab-pane fade" id="occasions-analytics" role="tabpanel">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <canvas id="occasionsChart" width="400" height="200"></canvas>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div id="occasionsAnalyticsData">
-                                                <!-- Analytics data will be loaded here -->
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Carousel Section -->
-                <div id="carousel-section" class="content-section">
-                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                        <h1 class="h2">Gestión del Carrusel</h1>
-                        <div class="btn-toolbar mb-2 mb-md-0">
-                            <button type="button" class="btn btn-sm btn-success me-2" onclick="adminApp.addCarouselItem()">
-                                <i class="bi bi-plus"></i> Agregar Imagen
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="adminApp.refreshCarousel()">
-                                <i class="bi bi-arrow-clockwise"></i> Actualizar
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <div class="alert alert-info">
-                                <i class="bi bi-info-circle"></i>
-                                <strong>Información:</strong> Gestiona las imágenes que aparecen en la tira dinámica del home. 
-                                Las imágenes se muestran automáticamente con links a las cards de productos correspondientes.
+                    <!-- Settings Section -->
+                    <div id="settings-section" class="admin-section" style="display: none;">
+                        <h4>Configuración del Sistema</h4>
+                        <div class="card admin-card">
+                            <div class="card-body">
+                                <p class="text-muted">Configuración del sistema próximamente...</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-body">
-                            <div id="carouselItemsContainer" class="row">
-                                <!-- Carousel items will be loaded here -->
+                    <!-- Logs Section -->
+                    <div id="logs-section" class="admin-section" style="display: none;">
+                        <h4>Logs del Sistema</h4>
+                        <div class="card admin-card">
+                            <div class="card-body">
+                                <p class="text-muted">Sistema de logs próximamente...</p>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Settings Section -->
-                <div id="settings-section" class="content-section">
-                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                        <h1 class="h2">Configuración</h1>
-                        <div class="btn-toolbar mb-2 mb-md-0">
-                            <button type="button" class="btn btn-sm btn-success" onclick="adminApp.saveSettings()">
-                                <i class="bi bi-check"></i> Guardar Cambios
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <div class="card mb-4">
-                                <div class="card-header bg-primary-custom text-white">
-                                    <h5 class="mb-0"><i class="bi bi-calculator me-2"></i>Configuración BCV</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="defaultBcvRate" class="form-label">Tasa BCV por Defecto (Bs/$)</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">Bs</span>
-                                            <input type="number" class="form-control" id="defaultBcvRate" step="0.01" placeholder="36.50">
-                                        </div>
-                                        <small class="text-muted">Esta tasa se mostrará por defecto en la calculadora de pagos</small>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="shippingCost" class="form-label">Costo de Envío (USD)</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">$</span>
-                                            <input type="number" class="form-control" id="shippingCost" step="0.01" value="7.00">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-6">
-                            <div class="card mb-4">
-                                <div class="card-header bg-primary-custom text-white">
-                                    <h5 class="mb-0"><i class="bi bi-envelope me-2"></i>Configuración de Notificaciones</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="adminEmail" class="form-label">Email Admin</label>
-                                        <input type="email" class="form-control" id="adminEmail" placeholder="admin@floresya.com">
-                                        <small class="text-muted">Email para recibir notificaciones de nuevos pedidos</small>
-                                    </div>
-                                    <div class="form-check mb-3">
-                                        <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
-                                        <label class="form-check-label" for="emailNotifications">
-                                            Activar notificaciones por email
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header bg-primary-custom text-white">
-                                    <h5 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Configuración de Ocasiones</h5>
-                                </div>
-                                <div class="card-body">
-                                    <p class="text-muted mb-3">Gestiona las ocasiones especiales disponibles en el sitio web</p>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <h6>Ocasiones Actuales:</h6>
-                                            <div id="currentOccasions">
-                                                <span class="badge bg-light text-dark me-2 mb-2">💖 Amor</span>
-                                                <span class="badge bg-light text-dark me-2 mb-2">🎂 Cumpleaños</span>
-                                                <span class="badge bg-light text-dark me-2 mb-2">💍 Aniversario</span>
-                                                <span class="badge bg-light text-dark me-2 mb-2">🎓 Graduación</span>
-                                                <span class="badge bg-light text-dark me-2 mb-2">🤝 Día de la Amistad</span>
-                                                <span class="badge bg-light text-dark me-2 mb-2">🕊️ Condolencias</span>
-                                                <span class="badge bg-light text-dark me-2 mb-2">👩 Día de la Madre</span>
-                                                <span class="badge bg-light text-dark me-2 mb-2">🌻 Flor Amarilla</span>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <h6>Estadísticas de Uso:</h6>
-                                            <div id="occasionStats">
-                                                <!-- Occasion usage stats will be loaded here -->
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Testing Section -->
-                <div id="testing-section" class="content-section">
-                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                        <h1 class="h2">Testing & Pruebas</h1>
-                        <div class="btn-toolbar mb-2 mb-md-0">
-                            <button type="button" class="btn btn-sm btn-success" onclick="window.open('/pages/test.html', '_blank')">
-                                <i class="bi bi-box-arrow-up-right"></i> Abrir Test Browser
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <div class="alert alert-info">
-                                <i class="bi bi-info-circle"></i>
-                                <strong>Herramientas de Testing</strong> - Aquí puedes probar las funcionalidades principales del sistema
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- API Testing -->
-                    <div class="row mb-4">
-                        <div class="col-lg-6">
-                            <div class="card">
-                                <div class="card-header bg-primary text-white">
-                                    <h5 class="mb-0"><i class="bi bi-server me-2"></i>Test API</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="d-grid gap-2">
-                                        <button class="btn btn-outline-primary" onclick="adminApp.testAPI('health')">
-                                            <i class="bi bi-heart-pulse"></i> Test Health Check
-                                        </button>
-                                        <button class="btn btn-outline-success" onclick="adminApp.testAPI('products')">
-                                            <i class="bi bi-box"></i> Test Products API
-                                        </button>
-                                        <button class="btn btn-outline-info" onclick="adminApp.testAPI('occasions')">
-                                            <i class="bi bi-calendar-event"></i> Test Occasions API
-                                        </button>
-                                        <button class="btn btn-outline-warning" onclick="adminApp.testAPI('carousel')">
-                                            <i class="bi bi-images"></i> Test Carousel API
-                                        </button>
-                                        <button class="btn btn-outline-secondary" onclick="adminApp.testAPI('homepage')">
-                                            <i class="bi bi-house"></i> Test Homepage APIs
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-6">
-                            <div class="card">
-                                <div class="card-header bg-success text-white">
-                                    <h5 class="mb-0"><i class="bi bi-check-circle me-2"></i>Test Frontend</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="d-grid gap-2">
-                                        <button class="btn btn-outline-primary" onclick="window.open('/', '_blank')">
-                                            <i class="bi bi-house"></i> Homepage
-                                        </button>
-                                        <button class="btn btn-outline-success" onclick="window.open('/pages/admin.html', '_blank')">
-                                            <i class="bi bi-shield-check"></i> Admin Panel
-                                        </button>
-                                        <button class="btn btn-outline-info" onclick="adminApp.testCSP()">
-                                            <i class="bi bi-shield-lock"></i> Test CSP
-                                        </button>
-                                        <button class="btn btn-outline-warning" onclick="adminApp.testJavaScript()">
-                                            <i class="bi bi-code-slash"></i> Test JavaScript
-                                        </button>
-                                        <button class="btn btn-outline-secondary" onclick="adminApp.generateTestReport()">
-                                            <i class="bi bi-file-text"></i> Generar Reporte
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Test Results -->
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header bg-secondary text-white">
-                                    <h5 class="mb-0"><i class="bi bi-terminal me-2"></i>Resultados de Testing</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div id="testResults" class="bg-dark text-light p-3 rounded" style="min-height: 300px; font-family: monospace;">
-                                        <div class="text-muted">Resultados de las pruebas aparecerán aquí...</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Database Browser -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header bg-dark text-white">
-                                    <h5 class="mb-0"><i class="bi bi-database me-2"></i>Browser de Base de Datos</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row mb-3">
-                                        <div class="col-md-4">
-                                            <label for="tableSelect" class="form-label">Seleccionar Tabla:</label>
-                                            <select class="form-select" id="tableSelect" onchange="adminApp.loadTableData()">
-                                                <option value="">-- Seleccione una tabla --</option>
-                                                <option value="products">products (Productos)</option>
-                                                <option value="occasions">occasions (Ocasiones)</option>
-                                                <option value="users">users (Usuarios)</option>
-                                                <option value="orders">orders (Pedidos)</option>
-                                                <option value="order_items">order_items (Items de Pedidos)</option>
-                                                <option value="payments">payments (Pagos)</option>
-                                                <option value="payment_methods">payment_methods (Métodos de Pago)</option>
-                                                <option value="settings">settings (Configuraciones)</option>
-                                                <option value="carousel_images">carousel_images (Imágenes Carrusel)</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <label for="limitSelect" class="form-label">Límite:</label>
-                                            <select class="form-select" id="limitSelect">
-                                                <option value="10">10</option>
-                                                <option value="25" selected>25</option>
-                                                <option value="50">50</option>
-                                                <option value="100">100</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <label for="offsetInput" class="form-label">Offset:</label>
-                                            <input type="number" class="form-control" id="offsetInput" value="0" min="0">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">&nbsp;</label>
-                                            <div class="d-flex gap-2">
-                                                <button class="btn btn-primary" onclick="adminApp.loadTableData()">
-                                                    <i class="bi bi-search"></i> Consultar
-                                                </button>
-                                                <button class="btn btn-secondary" onclick="adminApp.refreshTableData()">
-                                                    <i class="bi bi-arrow-clockwise"></i> Refrescar
-                                                </button>
-                                                <button class="btn btn-success" onclick="adminApp.exportTableData()">
-                                                    <i class="bi bi-download"></i> Exportar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Loading Indicator -->
-                                    <div id="tableLoading" class="d-none">
-                                        <div class="d-flex justify-content-center py-4">
-                                            <div class="spinner-border text-primary" role="status">
-                                                <span class="visually-hidden">Cargando...</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Table Container with Scrolling -->
-                                    <div id="tableContainer" class="border rounded" style="max-height: 600px; overflow: auto; display: none;">
-                                        <table class="table table-striped table-hover mb-0" id="dataTable">
-                                            <thead class="table-dark sticky-top">
-                                            </thead>
-                                            <tbody>
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    <!-- Table Info -->
-                                    <div id="tableInfo" class="mt-3 d-none">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <small class="text-muted">
-                                                    <i class="bi bi-info-circle"></i>
-                                                    <span id="recordCount">0</span> registros mostrados
-                                                </small>
-                                            </div>
-                                            <div class="col-md-6 text-end">
-                                                <small class="text-muted">
-                                                    <i class="bi bi-clock"></i>
-                                                    Última consulta: <span id="lastQuery">--</span>
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Pagination -->
-                                    <div id="tablePagination" class="d-flex justify-content-between align-items-center mt-3 d-none">
-                                        <div>
-                                            <button class="btn btn-sm btn-outline-secondary" onclick="adminApp.prevPage()" id="prevPageBtn">
-                                                <i class="bi bi-chevron-left"></i> Anterior
-                                            </button>
-                                            <span class="mx-2">Página <span id="currentPage">1</span></span>
-                                            <button class="btn btn-sm btn-outline-secondary" onclick="adminApp.nextPage()" id="nextPageBtn">
-                                                Siguiente <i class="bi bi-chevron-right"></i>
-                                            </button>
-                                        </div>
-                                        <div>
-                                            <small class="text-muted">
-                                                Mostrando registros <span id="recordRange">0-0</span>
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                </main>
             </div>
-        </div>
-    </div>
-
-    <!-- Order Details Modal -->
-    <div class="modal fade" id="orderDetailsModal" tabindex="-1">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Detalles del Pedido</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="orderDetailsModalBody">
-                    <!-- Order details will be loaded here -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Payment Details Modal -->
-    <div class="modal fade" id="paymentDetailsModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Detalles del Pago</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="paymentDetailsModalBody">
-                    <!-- Payment details will be loaded here -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Product Modal -->
-    <div class="modal fade" id="productModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="productModalTitle">Nuevo Producto</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="productModalBody">
-                    <!-- Product form will be loaded here -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Loading Spinner -->
-    <div class="loading-overlay" id="loadingSpinner">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Cargando...</span>
         </div>
     </div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Custom JS -->
-    <script src="/js/responsive-image.js"></script>
-    <script src="/js/api.js"></script>
-    <script src="/js/admin.js"></script>
+
+    <!-- Force UI visibility after proper initialization -->
+    <script>
+        // Better timing for overlay hiding - let initialization complete first
+        document.addEventListener("DOMContentLoaded", function() {
+            // Wait a bit to allow proper initialization
+            setTimeout(() => {
+                const overlay = document.getElementById('loadingOverlay');
+                if (overlay && overlay.style.display !== 'none') {
+                    overlay.style.display = 'none';
+                    console.log('[🌸 Admin] ✅ Loading overlay ocultado después de inicialización.');
+
+                    // Ensure dashboard is visible
+                    const dashboardSection = document.getElementById('dashboard-section');
+                    if (dashboardSection) {
+                        dashboardSection.style.display = 'block';
+                        dashboardSection.classList.add('active');
+                        console.log('[🌸 Admin] ✅ Dashboard section forzado a visible');
+                    }
+                }
+            }, 500); // Give 500ms for proper initialization
+        });
+
+        // 🚨 DIAGNOSTIC FUNCTIONS - Remove in production
+        window.testModalDirectly = function() {
+            console.log('🧪 Testing modal creation directly...');
+
+            const modalHtml = `
+                <div class="modal fade" id="testModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Test Modal</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Este es un modal de prueba creado directamente.</p>
+                                <form id="testForm">
+                                    <div class="mb-3">
+                                        <label for="testName" class="form-label">Nombre</label>
+                                        <input type="text" class="form-control" id="testName" required>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-primary" id="testSaveBtn">Guardar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Remove existing test modal
+            const existing = document.getElementById('testModal');
+            if (existing) existing.remove();
+
+            // Add to body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            // Try to show with Bootstrap
+            const modalElement = document.getElementById('testModal');
+            if (modalElement && window.bootstrap && window.bootstrap.Modal) {
+                const Modal = window.bootstrap.Modal;
+                const modal = new Modal(modalElement);
+                modal.show();
+                console.log('✅ Test modal shown with Bootstrap');
+            } else {
+                // Fallback without Bootstrap
+                if (modalElement) {
+                    modalElement.style.display = 'block';
+                    modalElement.style.position = 'fixed';
+                    modalElement.style.top = '0';
+                    modalElement.style.left = '0';
+                    modalElement.style.width = '100%';
+                    modalElement.style.height = '100%';
+                    modalElement.style.backgroundColor = 'rgba(0,0,0,0.5)';
+                    modalElement.style.zIndex = '9999';
+                    console.log('✅ Test modal shown with fallback');
+                }
+            }
+        };
+
+        window.forceShowProductsSection = function() {
+            console.log('🚨 Forzando mostrar sección de productos...');
+
+            // Hide all sections
+            document.querySelectorAll('.admin-section').forEach(sec => {
+                sec.style.display = 'none';
+                sec.classList.remove('active');
+            });
+
+            // Show products section
+            const productsSection = document.getElementById('products-section');
+            if (productsSection) {
+                productsSection.style.display = 'block';
+                productsSection.classList.add('active');
+                console.log('✅ Products section forced visible');
+
+                // Update sidebar active state
+                document.querySelectorAll('.sidebar-nav .nav-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                const productsLink = document.querySelector('[data-section="products"]');
+                if (productsLink) {
+                    productsLink.classList.add('active');
+                }
+            } else {
+                console.log('❌ Products section not found');
+            }
+        };
+
+        console.log('🔧 Funciones de diagnóstico disponibles:');
+        console.log('   - testModalDirectly() - Probar modal básico');
+        console.log('   - forceShowProductsSection() - Forzar mostrar productos');
+        console.log('   - adminPanel.diagnose() - Diagnóstico completo (después de carga)');
+    </script>
+
+    <!-- Custom Admin JavaScript with Robust Fallback System -->
+    <script type="module">
+        // 🚨 ROBUST ADMIN PANEL INITIALIZATION SYSTEM 🚨
+        // This ensures the interface ALWAYS shows, even with errors
+
+        let initializationAttempts = 0;
+        const MAX_ATTEMPTS = 3;
+        let emergencyFallbackTimer = null;
+        const MAX_INIT_TIME = 10000; // 10 seconds max
+
+        // Force show interface after timeout
+        const forceShowInterface = () => {
+            console.log('[🌸 Admin] ⏰ Force showing interface after timeout');
+            hideLoadingOverlay();
+            showFallbackInterface();
+        };
+
+        // Hide loading overlay
+        const hideLoadingOverlay = () => {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                console.log('[🌸 Admin] 🔍 Loading overlay state BEFORE hiding:', {
+                    display: overlay.style.display,
+                    visible: overlay.style.display !== 'none',
+                    computed: window.getComputedStyle(overlay).display
+                });
+
+                overlay.style.display = 'none';
+
+                console.log('[🌸 Admin] 🔍 Loading overlay state AFTER hiding:', {
+                    display: overlay.style.display,
+                    visible: overlay.style.display !== 'none',
+                    computed: window.getComputedStyle(overlay).display
+                });
+
+                console.log('[🌸 Admin] ✅ Loading overlay hidden');
+            } else {
+                console.log('[🌸 Admin] ⚠️ Loading overlay element not found!');
+            }
+        };
+
+        // Show fallback interface
+        const showFallbackInterface = () => {
+            console.log('[🌸 Admin] 🔧 Showing fallback interface');
+
+            // Force show main content area
+            const mainContent = document.querySelector('.admin-content main');
+            if (mainContent) {
+                mainContent.classList.add('force-show');
+                mainContent.innerHTML = `
+                    <div class="container-fluid fallback-mode">
+                        <div class="row justify-content-center">
+                            <div class="col-md-8 col-lg-6">
+                                <div class="card admin-card fallback-alert">
+                                    <div class="card-body text-center">
+                                        <div class="mb-4">
+                                            <i class="bi bi-exclamation-triangle display-1 text-warning"></i>
+                                        </div>
+
+                                        <h4 class="alert-heading mb-3">
+                                            <i class="bi bi-shield-check me-2"></i>Modo de Recuperación Activado
+                                        </h4>
+
+                                        <p class="text-muted mb-4">
+                                            El panel de administración se cargó en modo básico debido a un problema técnico.
+                                            Todas las funciones críticas están disponibles.
+                                        </p>
+
+                                        <div class="alert alert-info text-start mb-4">
+                                            <h6 class="alert-heading mb-2">
+                                                <i class="bi bi-info-circle me-2"></i>Estado del Sistema:
+                                            </h6>
+                                            <ul class="mb-0">
+                                                <li>✅ Interfaz visible y funcional</li>
+                                                <li>✅ Navegación operativa</li>
+                                                <li>✅ Autenticación básica activa</li>
+                                                <li>⚠️ Funciones avanzadas limitadas</li>
+                                            </ul>
+                                        </div>
+
+                                        <div class="mb-4">
+                                            <h6>¿Qué puedes hacer?</h6>
+                                            <ul class="text-start">
+                                                <li>Refresca la página (F5) para intentar recargar completamente</li>
+                                                <li>Verifica tu conexión a internet</li>
+                                                <li>Las funciones básicas siguen disponibles</li>
+                                                <li>Contacta al administrador si el problema persiste</li>
+                                            </ul>
+                                        </div>
+
+                                        <div class="d-flex gap-2 justify-content-center">
+                                            <button onclick="location.reload()" class="btn fallback-retry-btn">
+                                                <i class="bi bi-arrow-clockwise me-2"></i>Recargar Página
+                                            </button>
+                                            <button onclick="window.history.back()" class="btn btn-outline-secondary">
+                                                <i class="bi bi-arrow-left me-2"></i>Volver Atrás
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                console.log('[🌸 Admin] ✅ Fallback interface displayed');
+            }
+
+            // Ensure sidebar is visible
+            const sidebar = document.getElementById('adminSidebar');
+            if (sidebar) {
+                sidebar.classList.add('emergency-visible');
+            }
+        };
+
+        // Main initialization function with error handling
+        async function initializeAdminPanel() {
+            console.log('[🌸 Admin] 🚀 Starting robust initialization...');
+
+            // Set timeout to force show interface
+            const timeoutId = setTimeout(forceShowInterface, MAX_INIT_TIME);
+
+            try {
+                initializationAttempts++;
+                console.log(`[🌸 Admin] 📊 Attempt ${initializationAttempts}/${MAX_ATTEMPTS}`);
+
+                // Dynamic import with error handling - COMPILED JavaScript FILE
+                const module = await import('/dist/frontend/admin.js');
+                console.log('[🌸 Admin] ✅ Module loaded successfully');
+
+                const AdminPanel = module.AdminPanel;
+                const adminPanel = new AdminPanel();
+
+                console.log('[🌸 Admin] 🔄 Initializing admin panel...');
+                await adminPanel.init();
+
+                // Success - clear timeout and hide overlay
+                clearTimeout(timeoutId);
+                hideLoadingOverlay();
+                console.log('[🌸 Admin] 🎉 Admin panel initialized successfully!');
+
+                // CRITICAL: Cancel emergency fallback timer since initialization succeeded
+                if (emergencyFallbackTimer) {
+                    clearTimeout(emergencyFallbackTimer);
+                    emergencyFallbackTimer = null;
+                    console.log('[🌸 Admin] ✅ Emergency fallback timer canceled - initialization successful');
+                }
+
+            } catch (error) {
+                console.error(`[🌸 Admin] ❌ Attempt ${initializationAttempts} failed:`, error);
+
+                // Clear timeout for this attempt
+                clearTimeout(timeoutId);
+
+                // If we haven't exceeded max attempts, try again
+                if (initializationAttempts < MAX_ATTEMPTS) {
+                    console.log(`[🌸 Admin] 🔄 Retrying in 2 seconds... (${initializationAttempts}/${MAX_ATTEMPTS})`);
+                    setTimeout(initializeAdminPanel, 2000);
+                } else {
+                    // Max attempts reached - show fallback
+                    console.log('[🌸 Admin] 💥 Max attempts reached, showing fallback interface');
+                    hideLoadingOverlay();
+                    showFallbackInterface();
+                }
+            }
+        }
+
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                console.log('[🌸 Admin] 📄 DOM loaded, starting initialization');
+                initializeAdminPanel();
+            });
+        } else {
+            console.log('[🌸 Admin] 📄 DOM already loaded, starting initialization');
+            initializeAdminPanel();
+        }
+
+        // Emergency fallback - show interface after 15 seconds no matter what
+        console.log('[🌸 Admin] ⏰ Setting emergency fallback timer for 15 seconds');
+        emergencyFallbackTimer = setTimeout(() => {
+            console.log('[🌸 Admin] 🚨 Emergency fallback triggered - 15 seconds elapsed');
+
+            // Add detailed diagnostic before triggering fallback
+            const currentState = {
+                initializationAttempts,
+                adminPanelExists: !!window.adminPanel,
+                adminPanelVisible: window.adminPanel && typeof window.adminPanel.isVisible === 'function' ? window.adminPanel.isVisible() : 'unknown',
+                loadingOverlayState: document.getElementById('loadingOverlay')?.style.display,
+                loadingOverlayVisible: document.getElementById('loadingOverlay')?.style.display !== 'none',
+                mainContentExists: !!document.getElementById('main-content'),
+                mainContentVisible: document.getElementById('main-content')?.style.display !== 'none',
+                dashboardExists: !!document.getElementById('dashboard-section'),
+                dashboardVisible: document.getElementById('dashboard-section')?.style.display !== 'none',
+                mainContentInnerHTML: document.querySelector('.admin-content main')?.innerHTML?.length || 0
+            };
+
+            console.log('[🌸 Admin] 🔍 Critical state at emergency fallback trigger:', currentState);
+
+            hideLoadingOverlay();
+            const mainContent = document.querySelector('.admin-content main');
+            console.log('[🌸 Admin] 🔍 Main content check for fallback:', {
+                exists: !!mainContent,
+                innerHTML: mainContent?.innerHTML?.trim() || '',
+                shouldShowFallback: mainContent && mainContent.innerHTML.trim() === ''
+            });
+
+            if (mainContent && mainContent.innerHTML.trim() === '') {
+                console.log('[🌸 Admin] 💥 Showing fallback interface - main content is empty');
+                showFallbackInterface();
+            } else {
+                console.log('[🌸 Admin] ✅ Main content exists, NOT showing fallback interface');
+            }
+        }, 15000);
+
+        console.log('[🌸 Admin] ⏰ Emergency fallback timer ID:', emergencyFallbackTimer);
+
+        // 🔍 ADVANCED DIAGNOSTIC FUNCTIONS 🔍
+
+        // Check if the admin.js module is accessible
+        window.checkAdminModule = async function() {
+            console.log('🔍 === DIAGNÓSTICO DE MÓDULO ADMIN ===');
+
+            try {
+                console.log('📦 Intentando cargar módulo admin.js...');
+                const startTime = Date.now();
+
+                const module = await import('/dist/frontend/admin.js');
+                const loadTime = Date.now() - startTime;
+
+                console.log(`✅ Módulo cargado exitosamente en ${loadTime}ms`);
+                console.log('📋 Contenido del módulo:', module);
+
+                if (module.AdminPanel) {
+                    console.log('✅ AdminPanel class encontrada');
+                    const testInstance = new module.AdminPanel();
+                    console.log('✅ Instancia de AdminPanel creada:', testInstance);
+                } else {
+                    console.log('❌ AdminPanel class NO encontrada en el módulo');
+                }
+
+            } catch (error) {
+                console.log('❌ Error cargando módulo admin.js:', error);
+                console.log('🔍 Detalles del error:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
+                });
+            }
+
+            console.log('=====================================');
+        };
+
+        // Force show basic interface (bypass all JavaScript)
+        window.forceShowInterface = function() {
+            console.log('🚨 FORZANDO MUESTRA DE INTERFAZ BÁSICA');
+
+            // Hide loading overlay
+            hideLoadingOverlay();
+
+            // Show basic interface
+            const mainContent = document.querySelector('.admin-content main');
+            if (mainContent) {
+                mainContent.innerHTML = `
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="alert alert-success">
+                                    <h4><i class="bi bi-check-circle me-2"></i>Interfaz Básica Activada</h4>
+                                    <p>Panel de administración cargado en modo básico de emergencia.</p>
+                                    <hr>
+                                    <p><strong>Funciones disponibles:</strong></p>
+                                    <ul>
+                                        <li>✅ Navegación visible</li>
+                                        <li>✅ Logout funcional</li>
+                                        <li>✅ Volver al sitio</li>
+                                        <li>⚠️ Funciones avanzadas deshabilitadas</li>
+                                    </ul>
+                                </div>
+
+                                <div class="row mt-4">
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card admin-card">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-house-door display-4 text-primary mb-3"></i>
+                                                <h5>Dashboard</h5>
+                                                <p class="text-muted">Vista general (modo básico)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card admin-card">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-box-seam display-4 text-success mb-3"></i>
+                                                <h5>Productos</h5>
+                                                <p class="text-muted">Próximamente</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card admin-card">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-people display-4 text-info mb-3"></i>
+                                                <h5>Usuarios</h5>
+                                                <p class="text-muted">Próximamente</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                mainContent.classList.add('emergency-visible');
+            }
+
+            console.log('✅ Interfaz básica mostrada exitosamente');
+        };
+
+        // Auto-diagnostic on load
+        setTimeout(() => {
+            const hasContent = document.querySelector('.admin-content main')?.innerHTML.trim();
+            if (!hasContent || hasContent === '') {
+                console.log('⚠️ No se detectó contenido en el panel, ejecutando diagnóstico automático...');
+                window.checkAdminModule();
+            }
+        }, 3000);
+
+        // 🚨 SYSTEM HEALTH CHECK 🚨
+        window.systemHealthCheck = function() {
+            console.log('🔍 === VERIFICACIÓN DE SALUD DEL SISTEMA ===');
+
+            // Enhanced sidebar visibility check
+            const sidebar = document.getElementById('adminSidebar');
+            const sidebarVisible = sidebar && window.getComputedStyle(sidebar).display !== 'none' && window.getComputedStyle(sidebar).visibility !== 'hidden';
+
+            const checks = {
+                'DOM Ready': document.readyState === 'complete',
+                'Loading Overlay Hidden': document.getElementById('loadingOverlay')?.style.display === 'none',
+                'Main Content': !!document.querySelector('.admin-content main'),
+                'Sidebar Element Exists': !!document.getElementById('adminSidebar'),
+                'Sidebar Visible': sidebarVisible,
+                'Navigation': !!document.querySelector('.sidebar-nav'),
+                'CSS Loaded': !!document.styleSheets.length,
+                'JavaScript Loaded': typeof window !== 'undefined',
+                'Console Available': typeof console !== 'undefined'
+            };
+
+            let allPassed = true;
+            for (const [check, passed] of Object.entries(checks)) {
+                const status = passed ? '✅' : '❌';
+                console.log(`${status} ${check}: ${passed}`);
+                if (!passed) allPassed = false;
+            }
+
+            console.log(`\n🏥 Estado General: ${allPassed ? '✅ SISTEMA SALUDABLE' : '❌ PROBLEMAS DETECTADOS'}`);
+
+            if (!allPassed) {
+                console.log('\n💡 RECOMENDACIONES:');
+                console.log('1. Verifica la conexión a internet');
+                console.log('2. Recarga la página (F5)');
+                console.log('3. Limpia la caché del navegador');
+                console.log('4. Ejecuta: forceShowInterface() para activar modo básico');
+            }
+
+            console.log('=====================================');
+            return allPassed;
+        };
+
+        // Auto health check
+        setTimeout(() => {
+            console.log('🔍 Ejecutando verificación automática de salud del sistema...');
+            window.systemHealthCheck();
+        }, 1000);
+
+        // � DIAGNOSTIC FUNCTION - Run this in browser console
+        window.checkAuthStatus = function() {
+            console.log('🔍 === DIAGNÓSTICO DE AUTENTICACIÓN ===');
+
+            const userData = localStorage.getItem('floresya_user');
+            const sessionTime = localStorage.getItem('floresya_session');
+
+            console.log('📊 Estado de localStorage:');
+            console.log('  - Usuario:', userData ? '✅ Presente' : '❌ Ausente');
+            console.log('  - Sesión:', sessionTime ? '✅ Presente' : '❌ Ausente');
+
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    console.log('👤 Datos del usuario:');
+                    console.log('  - Email:', user.email);
+                    console.log('  - Nombre:', user.full_name || user.name || 'N/A');
+                    console.log('  - Rol:', user.role);
+                    console.log('  - Activo:', user.is_active);
+
+                    if (user.role !== 'admin') {
+                        console.log('🚫 PROBLEMA: El usuario no tiene rol de administrador');
+                        console.log('💡 SOLUCIÓN: Inicia sesión con admin@floresya.com / admin');
+                    } else {
+                        console.log('✅ El usuario tiene rol de administrador');
+                    }
+                } catch (e) {
+                    console.log('❌ Error parseando datos del usuario:', e);
+                }
+            }
+
+            if (sessionTime) {
+                const sessionAge = Date.now() - parseInt(sessionTime);
+                const hoursOld = Math.floor(sessionAge / (1000 * 60 * 60));
+                console.log('⏰ Edad de la sesión:', hoursOld, 'horas');
+
+                if (sessionAge > 24 * 60 * 60 * 1000) {
+                    console.log('🚫 PROBLEMA: La sesión ha expirado (más de 24 horas)');
+                    console.log('💡 SOLUCIÓN: Inicia sesión nuevamente');
+                } else {
+                    console.log('✅ La sesión está dentro del tiempo válido');
+                }
+            }
+
+            console.log('🔗 Para acceder como admin:');
+            console.log('  1. Ve a la página principal: http://localhost:3000');
+            console.log('  2. Haz click en "Iniciar Sesión"');
+            console.log('  3. Usa: admin@floresya.com / admin');
+            console.log('  4. O usa el botón rápido "Admin" en el modal de login');
+
+            console.log('=====================================');
+        };
+
+        // Auto-run diagnostic if no user data found
+        setTimeout(() => {
+            const userData = localStorage.getItem('floresya_user');
+            if (!userData) {
+                console.log('ℹ️ No se encontraron datos de usuario. Ejecuta checkAuthStatus() para diagnóstico.');
+            }
+        }, 1000);
+
+        // 🔧 MODAL DIAGNOSTIC FUNCTION 🔧
+        window.testBootstrapModal = function() {
+            console.log('🧪 === TESTING BOOTSTRAP MODAL DIRECTLY ===');
+
+            // Create a simple test modal
+            const testModalHtml = `
+                <div class="modal fade" id="testBootstrapModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-warning">
+                                <h5 class="modal-title">🧪 Test Bootstrap Modal</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p><strong>¡Modal de prueba funcionando!</strong></p>
+                                <p>Si puedes ver esto, Bootstrap Modal está funcionando correctamente.</p>
+                                <div class="alert alert-info">
+                                    <small>Timestamp: ${new Date().toISOString()}</small>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                <button type="button" class="btn btn-warning" onclick="alert('Botón de prueba funcionando')">Test Button</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Remove existing test modal
+            const existing = document.getElementById('testBootstrapModal');
+            if (existing) {
+                existing.remove();
+                console.log('🗑️ Removed existing test modal');
+            }
+
+            // Add to body
+            document.body.insertAdjacentHTML('beforeend', testModalHtml);
+            console.log('✅ Test modal HTML added to body');
+
+            // Try Bootstrap Modal
+            const modalElement = document.getElementById('testBootstrapModal');
+            if (modalElement && window.bootstrap && window.bootstrap.Modal) {
+                try {
+                    const modal = new window.bootstrap.Modal(modalElement, {
+                        backdrop: true,
+                        keyboard: true,
+                        focus: true
+                    });
+
+                    console.log('✅ Bootstrap Modal instance created');
+
+                    modal.show();
+                    console.log('✅ modal.show() called');
+
+                    // FORCE MODAL VISIBILITY - Critical fix
+                    setTimeout(() => {
+                        const modalToFix = document.getElementById('testBootstrapModal');
+                        if (modalToFix) {
+                            modalToFix.style.visibility = 'visible';
+                            modalToFix.style.opacity = '1';
+                            modalToFix.style.display = 'block';
+                            modalToFix.classList.add('show');
+                            console.log('🔧 FORCED test modal visibility');
+                        }
+                    }, 50);
+
+                    // Check state after show
+                    setTimeout(() => {
+                        const style = window.getComputedStyle(modalElement);
+                        console.log('🔍 Modal state after show:', {
+                            display: style.display,
+                            visibility: style.visibility,
+                            opacity: style.opacity,
+                            zIndex: style.zIndex,
+                            position: style.position,
+                            top: style.top,
+                            left: style.left,
+                            transform: style.transform
+                        });
+
+                        console.log('🔍 Modal classes:', modalElement.className);
+
+                        const backdrop = document.querySelector('.modal-backdrop');
+                        if (backdrop) {
+                            const backdropStyle = window.getComputedStyle(backdrop);
+                            console.log('🔍 Backdrop found:', {
+                                display: backdropStyle.display,
+                                zIndex: backdropStyle.zIndex,
+                                opacity: backdropStyle.opacity
+                            });
+                        } else {
+                            console.log('❌ No backdrop found');
+                        }
+                    }, 300);
+
+                } catch (error) {
+                    console.error('❌ Error with Bootstrap Modal:', error);
+                }
+            } else {
+                console.log('❌ Bootstrap Modal not available');
+                console.log('Bootstrap available:', !!window.bootstrap);
+                console.log('Modal class available:', !!(window.bootstrap && window.bootstrap.Modal));
+            }
+
+            console.log('======================================');
+        };
+
+        // 🎯 CAROUSEL PRODUCT DETAILS FUNCTION 🎯
+        window.showCarouselProductDetails = function(productId, productName, productSummary, position) {
+            console.log('🔍 Showing product details:', { productId, productName, productSummary, position });
+
+            // Create modal HTML
+            const detailsModalHtml = `
+                <div class="modal fade" id="carouselProductDetailsModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-info text-white">
+                                <h5 class="modal-title">📋 Producto en Carousel</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">🌹 Nombre del Producto:</label>
+                                    <p class="border p-2 bg-light rounded">${productName}</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">📍 Posición en Carousel:</label>
+                                    <p class="border p-2 bg-light rounded">Posición ${position}</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">📝 Resumen:</label>
+                                    <p class="border p-2 bg-light rounded" style="max-height: 150px; overflow-y: auto;">
+                                        ${productSummary || 'Sin resumen disponible'}
+                                    </p>
+                                </div>
+
+                                <div class="alert alert-info">
+                                    <small>
+                                        💡 <strong>Tip:</strong> Para cambiar este producto, selecciona su posición en el formulario principal.
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Remove existing modal if any
+            const existingModal = document.getElementById('carouselProductDetailsModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', detailsModalHtml);
+
+            // Show modal
+            const modalElement = document.getElementById('carouselProductDetailsModal');
+            if (modalElement && window.bootstrap && window.bootstrap.Modal) {
+                try {
+                    const modal = new window.bootstrap.Modal(modalElement);
+                    modal.show();
+
+                    // Force visibility (same fix as product modal)
+                    setTimeout(() => {
+                        if (modalElement) {
+                            modalElement.style.visibility = 'visible';
+                            modalElement.style.opacity = '1';
+                            modalElement.style.display = 'block';
+                            modalElement.classList.add('show');
+                        }
+                    }, 50);
+
+                    console.log('✅ Product details modal shown');
+                } catch (error) {
+                    console.error('❌ Error showing product details modal:', error);
+                }
+            } else {
+                console.log('❌ Bootstrap Modal not available for details');
+            }
+        };
+
+        // 🔧 SIDEBAR SPECIFIC DIAGNOSTIC FUNCTION 🔧
+        window.diagnoseSidebar = function() {
+            console.log('🔍 === DIAGNÓSTICO ESPECÍFICO DEL SIDEBAR ===');
+
+            const sidebar = document.getElementById('adminSidebar');
+            if (!sidebar) {
+                console.log('❌ CRÍTICO: Elemento adminSidebar NO encontrado en el DOM');
+                return false;
+            }
+
+            console.log('✅ Elemento adminSidebar encontrado');
+
+            // Check all visibility properties
+            const computedStyle = window.getComputedStyle(sidebar);
+            const inlineStyle = sidebar.style;
+
+            console.log('📊 Propiedades de visibilidad:');
+            console.log('  - display (computed):', computedStyle.display);
+            console.log('  - display (inline):', inlineStyle.display);
+            console.log('  - visibility (computed):', computedStyle.visibility);
+            console.log('  - visibility (inline):', inlineStyle.visibility);
+            console.log('  - opacity (computed):', computedStyle.opacity);
+            console.log('  - opacity (inline):', inlineStyle.opacity);
+
+            console.log('📊 Propiedades de posicionamiento:');
+            console.log('  - position (computed):', computedStyle.position);
+            console.log('  - position (inline):', inlineStyle.position);
+            console.log('  - width (computed):', computedStyle.width);
+            console.log('  - width (inline):', inlineStyle.width);
+            console.log('  - min-height (computed):', computedStyle.minHeight);
+            console.log('  - min-height (inline):', inlineStyle.minHeight);
+
+            console.log('📊 Clases CSS aplicadas:', sidebar.className);
+
+            // Check for conflicting CSS rules
+            const conflictingRules = [];
+            if (computedStyle.display === 'none') conflictingRules.push('display: none');
+            if (computedStyle.visibility === 'hidden') conflictingRules.push('visibility: hidden');
+            if (computedStyle.opacity === '0') conflictingRules.push('opacity: 0');
+            if (computedStyle.width === '0px') conflictingRules.push('width: 0px');
+
+            if (conflictingRules.length > 0) {
+                console.log('⚠️ REGLAS CSS CONFLICTIVAS ENCONTRADAS:', conflictingRules);
+            } else {
+                console.log('✅ No se encontraron reglas CSS conflictivas');
+            }
+
+            // Check parent containers
+            const parent = sidebar.parentElement;
+            if (parent) {
+                const parentStyle = window.getComputedStyle(parent);
+                console.log('👨‍👩‍👧‍👦 Contenedor padre:');
+                console.log('  - Elemento padre:', parent.tagName + (parent.id ? '#' + parent.id : '') + (parent.className ? '.' + parent.className.split(' ').join('.') : ''));
+                console.log('  - Display padre:', parentStyle.display);
+                console.log('  - Overflow padre:', parentStyle.overflow);
+            }
+
+            // Check if sidebar content is loaded
+            const nav = sidebar.querySelector('.sidebar-nav');
+            const navItems = sidebar.querySelectorAll('.nav-link');
+
+            console.log('📋 Contenido del sidebar:');
+            console.log('  - Navegación encontrada:', !!nav);
+            console.log('  - Items de navegación:', navItems.length);
+
+            // Final assessment
+            const isVisible = computedStyle.display !== 'none' &&
+                            computedStyle.visibility !== 'hidden' &&
+                            computedStyle.opacity !== '0' &&
+                            computedStyle.width !== '0px';
+
+            console.log(`🏁 RESULTADO FINAL: ${isVisible ? '✅ SIDEBAR VISIBLE' : '❌ SIDEBAR OCULTO'}`);
+
+            if (!isVisible) {
+                console.log('💡 POSIBLES SOLUCIONES:');
+                console.log('1. Ejecuta: document.getElementById("adminSidebar").style.display = "block"');
+                console.log('2. Ejecuta: document.getElementById("adminSidebar").classList.add("emergency-visible")');
+                console.log('3. Verifica que no haya CSS que oculte .admin-sidebar');
+                console.log('4. Recarga la página completamente (Ctrl+F5)');
+            }
+
+            console.log('=====================================');
+            return isVisible;
+        };
+
+        // Auto-run sidebar diagnostic after initialization
+        setTimeout(() => {
+            console.log('🔍 Ejecutando diagnóstico automático del sidebar...');
+            window.diagnoseSidebar();
+        }, 2000);
+    </script>
 </body>
 </html>

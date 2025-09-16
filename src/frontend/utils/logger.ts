@@ -47,7 +47,7 @@ export class FloresYaLogger implements Logger {
   private maxLogs: number = 500;
   private context: Record<string, LogData> = {};
   private isDevMode: boolean = false;
-  private logLevel: string = 'WARN'; // Changed from INFO to WARN to reduce verbosity
+  private logLevel: string = 'ERROR'; // Only show errors to reduce verbosity
   private endpoint: string = '';
   private endpointExists?: boolean;
   private autoSendInterval?: NodeJS.Timeout;
@@ -235,6 +235,16 @@ export class FloresYaLogger implements Logger {
     };
   }
 
+  private extractErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message;
+    }
+    if (typeof error === 'string') {
+      return error;
+    }
+    return 'Unknown error occurred';
+  }
+
   private addLog(entry: LogEntry): void {
     this.logs.push(entry);
 
@@ -278,8 +288,8 @@ export class FloresYaLogger implements Logger {
   }
 
   public info(module: string, message: string, data?: LogData): void {
-    // Skip INFO logs in production mode to reduce verbosity
-    if (this.logLevel === 'WARN' && !this.isDevMode) return;
+    // Skip INFO logs when log level is WARN or ERROR to reduce verbosity
+    if ((this.logLevel === 'WARN' || this.logLevel === 'ERROR') && !this.isDevMode) return;
     const entry = this.createLogEntry('INFO', module, message, data);
     this.addLog(entry);
     this.logToConsole('INFO', module, message, data);
@@ -347,6 +357,11 @@ export class FloresYaLogger implements Logger {
     // Check if endpoint exists (cache for performance)
     if (this.endpointExists === false) return;
 
+    // Temporary fix: Skip sending logs to avoid NetworkError spam
+    // TODO: Debug and fix the CORS/connection issue
+    console.log(`[🌸 Logger] Would send ${this.logs.length} logs to server (temporarily disabled)`);
+    return;
+
     try {
       const response = await fetch(this.endpoint, {
         method: 'POST',
@@ -368,9 +383,18 @@ export class FloresYaLogger implements Logger {
         this.endpointExists = false;
         this.warn('SYSTEM', 'Failed to send logs to server', { status: response.status });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       this.endpointExists = false;
-      this.debug('SYSTEM', 'Cannot send logs to server', { error: error instanceof Error ? error.message : String(error) });
+
+      // Safe error message extraction
+      const errorMessage = this.extractErrorMessage(error);
+
+      // Only log network errors as debug to reduce verbosity, not as errors
+      if (errorMessage.includes('NetworkError') || errorMessage.includes('fetch')) {
+        this.debug('SYSTEM', `Network connectivity issue: ${errorMessage}`);
+      } else {
+        this.warn('SYSTEM', `Cannot send logs to server: ${errorMessage}`);
+      }
     }
   }
 

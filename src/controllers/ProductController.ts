@@ -66,7 +66,7 @@ export class ProductController {
             'carousel_order': 'carousel_order'
           };
 
-          sort_by = fieldMap[sortField] || 'created_at';
+          sort_by = fieldMap[sortField] ?? 'created_at';
           sort_direction = sortDir.toLowerCase() === 'asc' ? 'asc' : 'desc';
         }
       }
@@ -75,9 +75,7 @@ export class ProductController {
         page: parseInt(req.query.page as string) || 1,
         limit: Math.min(parseInt(req.query.limit as string) || 20, 100), // Max 100 items
         search: req.query.search as string || undefined,
-        occasion_id: req.query.occasion_id ? parseInt(req.query.occasion_id as string) : undefined,
         occasion: req.query.occasion as string || undefined, // Support slug-based filtering
-        category: req.query.category as string || undefined,
         featured: req.query.featured === 'true' ? true : req.query.featured === 'false' ? false : undefined,
         has_carousel_order: req.query.has_carousel_order === 'true' ? true : req.query.has_carousel_order === 'false' ? false : undefined,
         sort_by,
@@ -339,7 +337,6 @@ export const productValidators = {
   getProducts: [
     query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
     query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
-    query('occasion_id').optional().isInt({ min: 1 }).withMessage('Occasion ID must be a positive integer'),
     query('featured').optional().isIn(['true', 'false']).withMessage('featured must be true or false'),
     query('has_carousel_order').optional().isIn(['true', 'false']).withMessage('has_carousel_order must be true or false'),
     query('sort_by').optional().isIn(['name', 'price_usd', 'created_at', 'carousel_order']).withMessage('Invalid sort field'),
@@ -360,16 +357,21 @@ export const productValidators = {
     body('description').notEmpty().isLength({ min: 10, max: 2000 }).withMessage('Description must be 10-2000 characters'),
     body('summary').optional().isLength({ max: 500 }).withMessage('Summary must not exceed 500 characters'),
     body('price_usd').notEmpty().isDecimal().withMessage('price_usd must be a decimal string').custom((value) => {
-      if (parseFloat(value) <= 0) {
+      const price = parseFloat(value);
+      if (price <= 0) {
         throw new Error('Price must be a positive number');
+      }
+      if (price > 999999.99) {
+        throw new Error('Price cannot exceed $999,999.99');
       }
       return true;
     }),
-    body('stock').isInt({ min: 0 }).withMessage('Stock must be non-negative'),
+    body('price_ves').optional().isDecimal().withMessage('price_ves must be a decimal'),
+    body('stock').isInt({ min: 0, max: 999999 }).withMessage('Stock must be between 0 and 999,999'),
+    body('sku').optional().isLength({ max: 100 }).withMessage('SKU must not exceed 100 characters'),
+    body('active').optional().isBoolean().withMessage('active must be boolean'),
     body('featured').optional().isBoolean().withMessage('featured must be boolean'),
     body('carousel_order').optional().isInt({ min: 1 }).withMessage('Carousel order must be a positive integer'),
-    body('occasion_id').optional().isInt({ min: 1 }).withMessage('Occasion ID must be a positive integer'),
-    body('category').optional().isLength({ max: 100 }).withMessage('Category must not exceed 100 characters')
   ],
 
   updateProduct: [
@@ -378,12 +380,18 @@ export const productValidators = {
     body('description').optional().isLength({ min: 10, max: 2000 }).withMessage('Description must be 10-2000 characters'),
     body('summary').optional().isLength({ max: 500 }).withMessage('Summary must not exceed 500 characters'),
     body('price_usd').optional().isDecimal().withMessage('price_usd must be a decimal string').custom((value) => {
-      if (parseFloat(value) <= 0) {
+      const price = parseFloat(value);
+      if (price <= 0) {
         throw new Error('Price must be a positive number');
+      }
+      if (price > 999999.99) {
+        throw new Error('Price cannot exceed $999,999.99');
       }
       return true;
     }),
-    body('stock').optional().isInt({ min: 0 }).withMessage('Stock must be non-negative'),
+    body('price_ves').optional().isDecimal().withMessage('price_ves must be a decimal'),
+    body('stock').optional().isInt({ min: 0, max: 999999 }).withMessage('Stock must be between 0 and 999,999'),
+    body('sku').optional().isLength({ max: 100 }).withMessage('SKU must not exceed 100 characters'),
     body('active').optional().isBoolean().withMessage('active must be boolean'),
     body('featured').optional().isBoolean().withMessage('featured must be boolean'),
     body('carousel_order').optional().custom((value) => {

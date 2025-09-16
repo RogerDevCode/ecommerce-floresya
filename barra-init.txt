@@ -52,13 +52,8 @@ Luego en otro archivo:
 .ts
 import { api } from './api';
 
-2.- Usa tipos específicos diferentes a 'any' en TypeScript, evitando tipos genéricos o ambiguos. Exijo una programación con tipado estricto que no permita ambigüedades. Si es necesario, crea types globales personalizados para definir claramente las estructuras y asegurar robustez y mantenibilidad del código.
+Usa tipos específicos diferentes a 'any' en TypeScript, evitando tipos genéricos o ambiguos. Exijo una programación con tipado estricto que no permita ambigüedades. Si es necesario, crea types globales personalizados para definir claramente las estructuras y asegurar robustez y mantenibilidad del código.
 
-3.- Para migracion usa ts-migrate, te sugiero seguir estos pasos:
-ts-migrate init <carpeta>
-ts-migrate rename <carpeta>
-ts-migrate migrate <carpeta>
-npx tsc --noEmit <carpeta>
-npx eslint <carpeta>
+
 
 no uses configuraciones temporales, repara el error

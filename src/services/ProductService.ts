@@ -15,7 +15,6 @@ import type {
   ProductUpdateRequest,
   ImageSize,
   ProductImage,
-  RawCarouselProduct,
   RawProductWithImages
 } from '../config/supabase.js';
 
@@ -132,9 +131,7 @@ export class ProductService {
         page = 1,
         limit = 20,
         search,
-        occasion_id,
         occasion,
-        category,
         featured,
         active = true,
         has_carousel_order,
@@ -166,25 +163,7 @@ export class ProductService {
       }
 
       // Filter by occasion using N:N relationship through product_occasions
-      if (occasion_id) {
-        // Get product IDs for this occasion
-        const { data: productIds, error: productIdsError } = await supabaseService
-          .from('product_occasions')
-          .select('product_id')
-          .eq('occasion_id', occasion_id);
-
-        if (productIdsError) {
-          throw new Error(`Error filtering by occasion: ${productIdsError.message}`);
-        }
-
-        if (productIds && productIds.length > 0) {
-          const ids = productIds.map(row => row.product_id);
-          queryBuilder = queryBuilder.in('id', ids);
-        } else {
-          // No products for this occasion - return empty result
-          queryBuilder = queryBuilder.eq('id', -1); // Non-existent ID
-        }
-      } else if (occasion) {
+      if (occasion) {
         // Filter by occasion slug - resolve slug to ID first
         const { data: occasionData, error: occasionError } = await supabaseService
           .from('occasions')
@@ -215,9 +194,6 @@ export class ProductService {
         }
       }
 
-      if (category) {
-        queryBuilder = queryBuilder.ilike('category', `%${category}%`);
-      }
 
       if (typeof featured === 'boolean') {
         queryBuilder = queryBuilder.eq('featured', featured);
@@ -345,16 +321,91 @@ export class ProductService {
   }
 
   /**
+   * Handle carousel order reorganization when inserting/updating
+   */
+  private async reorganizeCarouselOrder(desiredOrder: number, excludeProductId?: number): Promise<void> {
+    try {
+      // Get all products with carousel_order >= desiredOrder (excluding current product if updating)
+      let query = supabaseService
+        .from('products')
+        .select('id, carousel_order')
+        .gte('carousel_order', desiredOrder)
+        .not('carousel_order', 'is', null);
+
+      if (excludeProductId) {
+        query = query.neq('id', excludeProductId);
+      }
+
+      const { data: productsToShift, error: fetchError } = await query.order('carousel_order', { ascending: true });
+
+      if (fetchError) {
+        throw new Error(`Error fetching products for carousel reorganization: ${fetchError.message}`);
+      }
+
+      if (!productsToShift || productsToShift.length === 0) {
+        // No products to shift
+        return;
+      }
+
+      // Shift each product's carousel_order by +1
+      for (const product of productsToShift) {
+        const newOrder = (product.carousel_order || 0) + 1;
+
+        // Ensure we don't exceed maximum positions (7)
+        if (newOrder <= 7) {
+          const { error: updateError } = await supabaseService
+            .from('products')
+            .update({ carousel_order: newOrder })
+            .eq('id', product.id);
+
+          if (updateError) {
+            throw new Error(`Error updating carousel order for product ${product.id}: ${updateError.message}`);
+          }
+        } else {
+          // Remove from carousel if it would exceed max positions
+          const { error: removeError } = await supabaseService
+            .from('products')
+            .update({ carousel_order: null })
+            .eq('id', product.id);
+
+          if (removeError) {
+            throw new Error(`Error removing product ${product.id} from carousel: ${removeError.message}`);
+          }
+        }
+      }
+
+      console.log(`✅ Successfully reorganized carousel orders starting from position ${desiredOrder}`);
+    } catch (error) {
+      console.error('❌ Error in carousel reorganization:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Create new product (admin only)
    */
   public async createProduct(productData: ProductCreateRequest): Promise<Product> {
     try {
-      const { stock, featured, ...restData } = productData;
+      const { stock, featured, carousel_order, price_ves, sku, ...restData } = productData;
+
+      // Debug log to see what we're receiving
+      console.log('ProductService.createProduct received data:', JSON.stringify(productData, null, 2));
+
+      // Handle carousel reorganization if carousel_order is provided
+      if (carousel_order && carousel_order > 0) {
+        console.log(`🔄 Reorganizing carousel for new product at position ${carousel_order}`);
+        await this.reorganizeCarouselOrder(carousel_order);
+      }
+
+      // Prepare insert data according to actual schema
       const insertData = {
         ...restData,
+        price_ves: price_ves || undefined,
         stock: stock,
+        sku: sku || undefined,
         featured: featured || false,
-        active: true
+        active: true,
+        carousel_order: carousel_order || undefined
       };
 
       const { data, error } = await supabaseService
@@ -383,7 +434,15 @@ export class ProductService {
    */
   public async updateProduct(updateData: ProductUpdateRequest): Promise<Product> {
     try {
-      const { id, stock, active, featured, ...updates } = updateData;
+      const { id, stock, active, featured, carousel_order, ...updates } = updateData;
+
+      // Handle carousel reorganization if carousel_order is being changed
+      if (carousel_order !== undefined) {
+        if (carousel_order && carousel_order > 0) {
+          console.log(`🔄 Reorganizing carousel for product ${id} to position ${carousel_order}`);
+          await this.reorganizeCarouselOrder(carousel_order, id);
+        }
+      }
 
       const updatePayload: Partial<Omit<Product, 'id' | 'created_at' | 'updated_at'>> = {
         ...updates,
@@ -397,6 +456,9 @@ export class ProductService {
       }
       if (featured !== undefined) {
         updatePayload.featured = featured;
+      }
+      if (carousel_order !== undefined) {
+        updatePayload.carousel_order = carousel_order || undefined;
       }
 
       const { data, error } = await supabaseService
@@ -457,7 +519,7 @@ export class ProductService {
   /**
    * Get featured products
    */
-  public async getFeaturedProducts(limit: number = 8): Promise<ProductWithImages[]> {
+  public async getFeaturedProducts(limit = 8): Promise<ProductWithImages[]> {
     try {
       const response = await this.getProducts({
         featured: true,
@@ -476,7 +538,7 @@ export class ProductService {
   /**
    * Search products by name or description
    */
-  public async searchProducts(searchTerm: string, limit: number = 20): Promise<ProductWithImages[]> {
+  public async searchProducts(searchTerm: string, limit = 20): Promise<ProductWithImages[]> {
     try {
       const response = await this.getProducts({
         search: searchTerm,

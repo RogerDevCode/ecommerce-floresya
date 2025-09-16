@@ -16,8 +16,64 @@ interface LogEntry {
 
 export class LogsController {
   /**
-   * POST /api/logs/frontend
-   * Receive and process frontend logs
+   * @swagger
+   * /api/logs/frontend:
+   *   post:
+   *     summary: Receive and process frontend logs
+   *     description: Accepts log entries from the frontend for debugging and monitoring purposes
+   *     tags: [Logs]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               logs:
+   *                 type: array
+   *                 items:
+   *                   type: object
+   *                   properties:
+   *                     timestamp:
+   *                       type: string
+   *                       format: date-time
+   *                     level:
+   *                       type: string
+   *                       enum: [ERROR, WARN, INFO, DEBUG]
+   *                     module:
+   *                       type: string
+   *                     message:
+   *                       type: string
+   *                     data:
+   *                       type: object
+   *                       description: Optional additional data
+   *               sessionId:
+   *                 type: string
+   *                 description: Optional session identifier
+   *     responses:
+   *       200:
+   *         description: Logs received successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 message:
+   *                   type: string
+   *                   example: "Logs received successfully"
+   *                 received:
+   *                   type: integer
+   *                   description: Number of log entries received
+   *                 sessionId:
+   *                   type: string
+   *                   description: Session identifier
+   *       400:
+   *         description: Invalid log data format
+   *       500:
+   *         description: Server error processing logs
    */
   public async receiveFrontendLogs(req: Request, res: Response): Promise<void> {
     try {

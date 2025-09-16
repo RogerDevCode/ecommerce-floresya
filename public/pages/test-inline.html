@@ -220,8 +220,7 @@
                     `;
                     
                     data.data.products.slice(0, 5).forEach(prod => {
-                        const categoryName = prod.category ? prod.category.name : 'Sin categoría';
-                        html += `<li>• <strong>${prod.name}</strong> - $${prod.price} (${categoryName})</li>`;
+                        html += `<li>• <strong>${prod.name}</strong> - $${prod.price}</li>`;
                     });
                     
                     html += `
@@ -286,8 +285,7 @@
                             if (data.data.products.length > 0) {
                                 html += '<ul>';
                                 data.data.products.slice(0, 3).forEach(prod => {
-                                    const catName = prod.category ? prod.category.name : 'Sin categoría';
-                                    html += `<li>${prod.name} - $${prod.price} (${catName} - ${prod.occasion})</li>`;
+                                    html += `<li>${prod.name} - $${prod.price} (${prod.occasion || 'General'})</li>`;
                                 });
                                 html += '</ul>';
                             }
