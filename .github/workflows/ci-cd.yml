@@ -304,7 +304,18 @@ jobs:
       - name: Build for production
         run: npm run build
 
+      - name: Check if Vercel secrets are configured
+        id: check-secrets
+        run: |
+          if [ -n "${{ secrets.VERCEL_TOKEN }}" ] && [ -n "${{ secrets.VERCEL_ORG_ID }}" ] && [ -n "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+            echo "secrets-available=true" >> $GITHUB_OUTPUT
+          else
+            echo "secrets-available=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Vercel secrets not configured. Skipping deployment."
+          fi
+
       - name: Deploy to Vercel
+        if: steps.check-secrets.outputs.secrets-available == 'true'
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
@@ -312,8 +323,30 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           working-directory: ./
           vercel-args: '--prod'
+        continue-on-error: true
+        id: vercel-deploy
+
+      - name: Handle deployment result
+        if: steps.check-secrets.outputs.secrets-available == 'true'
+        run: |
+          if [ "${{ steps.vercel-deploy.outcome }}" = "success" ]; then
+            echo "✅ Deployment successful!"
+          else
+            echo "❌ Deployment failed. Possible causes:"
+            echo "   - VERCEL_PROJECT_ID is incorrect"
+            echo "   - VERCEL_ORG_ID is incorrect"
+            echo "   - VERCEL_TOKEN doesn't have proper permissions"
+            echo "   - Project doesn't exist in Vercel"
+            echo ""
+            echo "🔧 To fix:"
+            echo "   1. Check your project settings in Vercel Dashboard"
+            echo "   2. Verify the Project ID and Org ID are correct"
+            echo "   3. Ensure the token has deploy permissions"
+            echo "   4. Or deploy manually: npm run build && vercel --prod"
+          fi
 
       - name: Health check after deployment
+        if: steps.check-secrets.outputs.secrets-available == 'true' && steps.vercel-deploy.outcome == 'success'
         run: |
           echo "Performing post-deployment health checks..."
           sleep 30
@@ -327,10 +360,19 @@ jobs:
           fi
 
       - name: Notify deployment success
-        if: success()
+        if: steps.check-secrets.outputs.secrets-available == 'true' && steps.vercel-deploy.outcome == 'success'
         run: |
           echo "🎉 Deployment successful!"
           echo "Site URL: https://floresya.vercel.app"
+
+      - name: Notify secrets missing
+        if: steps.check-secrets.outputs.secrets-available == 'false'
+        run: |
+          echo "📋 To enable automatic deployment, configure these GitHub Secrets:"
+          echo "   VERCEL_TOKEN - Your Vercel token"
+          echo "   VERCEL_ORG_ID - Your Vercel organization ID"
+          echo "   VERCEL_PROJECT_ID - Your Vercel project ID"
+          echo "🔧 Build completed successfully. Deploy manually using: npm run build && vercel --prod"
 
   # Generate comprehensive test report
   test-report:
