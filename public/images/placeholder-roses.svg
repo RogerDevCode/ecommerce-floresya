@@ -1,0 +1,18 @@
+<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="roseGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF1493"/>
+      <stop offset="100%" stop-color="#DC143C"/>
+    </linearGradient>
+  </defs>
+  <rect width="300" height="300" fill="url(#roseGradient)"/>
+  <circle cx="150" cy="150" r="80" fill="#FF6994" opacity="0.8"/>
+  <circle cx="150" cy="150" r="50" fill="#FF1493" opacity="0.9"/>
+  <circle cx="150" cy="150" r="25" fill="#DC143C"/>
+  <text x="150" y="220" font-family="Arial, sans-serif" font-size="18" fill="white" text-anchor="middle" font-weight="bold">
+    Rosas Rojas
+  </text>
+  <text x="150" y="245" font-family="Arial, sans-serif" font-size="14" fill="white" text-anchor="middle" opacity="0.9">
+    Premium
+  </text>
+</svg>

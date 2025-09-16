@@ -1,0 +1,196 @@
+/* Compact Navigation Optimization
+ * Reduces navbar height and optimizes space usage
+ * Addresses user feedback: "considero muy alto"
+ */
+
+/* Main Navbar Compact Optimization */
+.navbar {
+    padding: 0.15rem 0 !important; /* Further reduced */
+    min-height: 40px !important; /* More compact height */
+    max-height: 50px !important; /* Prevent expansion */
+}
+
+.navbar .container {
+    padding: 0.15rem 1rem !important;
+}
+
+/* Logo and Brand Compact */
+.navbar-brand {
+    padding: 0.125rem 0 !important;
+    margin-right: 0.5rem !important;
+}
+
+.logo-img {
+    height: 28px !important; /* Further reduced from 32px */
+    width: auto !important;
+}
+
+.brand-container {
+    line-height: 1.1 !important;
+}
+
+.brand-text {
+    font-size: 1.1rem !important; /* Slightly smaller */
+    font-weight: 700;
+}
+
+.brand-tagline {
+    font-size: 0.6rem !important; /* More compact */
+    display: block;
+    margin-top: -2px;
+}
+
+/* User Journey Compact Design */
+.user-journey {
+    max-width: 240px !important; /* Further reduced width */
+    height: 30px !important; /* More compact height */
+    align-items: center !important;
+}
+
+.journey-step {
+    flex-direction: row !important; /* Horizontal layout */
+    gap: 4px !important;
+    align-items: center !important;
+}
+
+.step-icon {
+    width: 24px !important; /* Smaller icons */
+    height: 24px !important;
+    font-size: 0.7rem !important;
+    line-height: 24px !important;
+    text-align: center !important;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.journey-step small {
+    font-size: 0.6rem !important; /* Compact text */
+    color: rgba(255, 255, 255, 0.9);
+    white-space: nowrap;
+    margin: 0 !important;
+}
+
+.journey-line {
+    width: 20px !important; /* Shorter lines */
+    height: 1px !important;
+    margin: 0 6px !important; /* Reduced spacing */
+}
+
+/* Action Buttons Compact */
+.nav-actions {
+    gap: 0.25rem !important;
+}
+
+.nav-actions .btn {
+    padding: 0.25rem 0.5rem !important; /* More compact buttons */
+    font-size: 0.8rem !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.nav-actions .btn i {
+    font-size: 0.9rem !important;
+}
+
+/* Achievement Toast Positioning Fix */
+.achievement-toast {
+    position: absolute;
+    top: 100%; /* Position below compact navbar */
+    right: 1rem;
+    z-index: 1050;
+}
+
+/* Mobile Responsive Compact */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0.125rem 0 !important;
+        min-height: 45px !important;
+        max-height: 50px !important;
+    }
+    
+    .user-journey {
+        display: none !important; /* Hide on mobile for space */
+    }
+    
+    .nav-actions .btn {
+        padding: 0.125rem 0.25rem !important;
+        height: 28px !important;
+        font-size: 0.7rem !important;
+    }
+    
+    .brand-tagline {
+        display: none !important; /* Hide tagline on mobile */
+    }
+    
+    .logo-img {
+        height: 28px !important;
+    }
+    
+    .brand-text {
+        font-size: 1rem !important;
+    }
+}
+
+/* Extra Small Screens */
+@media (max-width: 576px) {
+    .navbar {
+        padding: 0.1rem 0 !important;
+        min-height: 40px !important;
+        max-height: 45px !important;
+    }
+    
+    .nav-actions .btn {
+        height: 24px !important;
+        font-size: 0.65rem !important;
+        padding: 0.1rem 0.2rem !important;
+    }
+    
+    .nav-actions .btn i {
+        font-size: 0.8rem !important;
+    }
+    
+    .logo-img {
+        height: 24px !important;
+    }
+    
+    .brand-text {
+        font-size: 0.9rem !important;
+    }
+}
+
+/* Fix Bootstrap Override Issues */
+.navbar-expand-lg .navbar-nav {
+    flex-direction: row;
+}
+
+/* Ensure compact spacing takes precedence */
+.navbar.navbar-expand-lg {
+    padding: 0.25rem 0 !important;
+}
+
+/* Animation Performance Optimization */
+.navbar * {
+    transform: translateZ(0); /* Hardware acceleration */
+}
+
+/* Fix Journey Step Active States for Compact Design */
+.journey-step.active .step-icon {
+    background: rgba(255, 255, 255, 0.9) !important;
+    color: #FF69B4 !important;
+    transform: scale(1.05) !important;
+}
+
+.journey-step.current .step-icon {
+    background: #FFD700 !important;
+    color: #FF69B4 !important;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.4) !important; /* Reduced glow */
+}
+
+/* Compact Animation Keyframes */
+@keyframes pulse-current {
+    0%, 100% { transform: scale(1.05); }
+    50% { transform: scale(1.1); }
+}
