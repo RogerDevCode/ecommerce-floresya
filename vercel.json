@@ -1,17 +1,15 @@
 {
   "version": 2,
-  "name": "floresya-ecommerce",
-  "buildCommand": "npm run build",
   "builds": [
     {
-      "src": "dist/app/server.js",
+      "src": "api/index.ts",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "dist/app/server.js"
+      "dest": "/api/index.ts"
     },
     {
       "src": "/dist/(.*)",
@@ -19,15 +17,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "dist/app/server.js"
+      "dest": "/api/index.ts"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "functions": {
-    "dist/app/server.js": {
-      "maxDuration": 30
-    }
-  }
+  ]
 }

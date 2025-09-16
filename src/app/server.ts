@@ -190,10 +190,16 @@ class FloresYaServer {
   }
 }
 
+// Create server instance for export (Vercel compatibility)
+const serverInstance = new FloresYaServer();
+
 // Start server if this is the main module
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const server = new FloresYaServer();
-  server.start();
+  serverInstance.start();
 }
 
+// Export both the class and the app instance for different use cases
 export { FloresYaServer };
+
+// For Vercel serverless functions - export as default function
+export default serverInstance.getApp();

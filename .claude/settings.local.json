@@ -22,7 +22,9 @@
       "Bash(xargs kill:*)",
       "Bash(tsc)",
       "Bash(npx tsc:*)",
-      "Bash(npm run clean:*)"
+      "Bash(npm run clean:*)",
+      "Bash(npm install:*)",
+      "Bash(vercel:*)"
     ],
     "deny": [],
     "ask": []
