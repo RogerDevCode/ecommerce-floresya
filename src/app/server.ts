@@ -9,7 +9,6 @@ import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { config } from 'dotenv';
 
 // Import routes
@@ -23,9 +22,8 @@ import { supabaseManager } from '../config/supabase.js';
 // Load environment variables
 config();
 
-// ES Module directory resolution
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Directory resolution for Vercel compatibility
+const __dirname = path.resolve();
 
 class FloresYaServer {
   private app: Application;
@@ -195,8 +193,8 @@ class FloresYaServer {
 // Create server instance for export (Vercel compatibility)
 const serverInstance = new FloresYaServer();
 
-// Start server if this is the main module
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Start server if this is the main module (CommonJS compatibility)
+if (require.main === module) {
   void serverInstance.start();
 }
 

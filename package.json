@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "description": "FloresYa E-commerce - TypeScript Enterprise Edition",
   "type": "module",
-  "main": "dist/app/server.js",
+  "main": "api/index.ts",
   "scripts": {
     "build": "tsc --project tsconfig.prod.json",
     "start": "npm run build && node dist/app/server.js",

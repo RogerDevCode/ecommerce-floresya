@@ -39,10 +39,13 @@
     "listFiles": false,                   // ❌ No listar archivos
     "listEmittedFiles": false,           // ❌ No listar outputs
 
-    // Configuración de módulos optimizada
-    "moduleResolution": "bundler",        // ✅ Resolución compatible con bundlers
+    // Configuración de módulos optimizada para Vercel
+    "module": "CommonJS",                 // ✅ CommonJS para Vercel serverless
+    "moduleResolution": "node",           // ✅ Node.js resolution para Vercel
+    "target": "ES2020",                   // ✅ Compatible con Vercel Node.js runtime
     "allowSyntheticDefaultImports": true, // ✅ Compatibilidad con ES modules
-    "isolatedModules": true              // ✅ Compatibilidad con bundlers
+    "esModuleInterop": true,              // ✅ Interoperabilidad ES modules
+    "isolatedModules": true               // ✅ Compatibilidad con bundlers
   },
   
   "include": [
