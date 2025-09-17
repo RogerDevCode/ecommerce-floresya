@@ -16,7 +16,7 @@ export type OccasionType = 'general' | 'birthday' | 'anniversary' | 'wedding' | 
 export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
 export type PaymentStatus = 'pending' | 'confirmed' | 'failed' | 'refunded';
 export type PaymentMethodType = 'bank_transfer' | 'mobile_payment' | 'cash' | 'card';
-export type UserRole = 'admin' | 'user';
+export type UserRole = 'admin' | 'user' | 'support';
 export type ImageSize = 'thumb' | 'small' | 'medium' | 'large';
 
 // Custom JSON object types - strict typing without 'any'
@@ -350,6 +350,57 @@ export interface PaymentCreateRequest {
   reference_number?: string;
   payment_details?: PaymentDetailsObject;
   receipt_image_url?: string;
+}
+
+// User-related request types
+export interface UserCreateRequest {
+  email: string;
+  password: string;
+  full_name: string;
+  phone?: string;
+  role: UserRole;
+  is_active?: boolean;
+  email_verified?: boolean;
+}
+
+export interface UserUpdateRequest {
+  id: number;
+  email?: string;
+  password?: string;
+  full_name?: string;
+  phone?: string;
+  role?: UserRole;
+  is_active?: boolean;
+  email_verified?: boolean;
+}
+
+export interface UserQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  role?: UserRole;
+  is_active?: boolean;
+  email_verified?: boolean;
+  sort_by?: 'email' | 'full_name' | 'role' | 'created_at' | 'updated_at';
+  sort_direction?: 'asc' | 'desc';
+  [key: string]: unknown;
+}
+
+export interface UserResponse {
+  id: number;
+  email: string;
+  full_name?: string;
+  phone?: string;
+  role: UserRole;
+  is_active: boolean;
+  email_verified: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserListResponse {
+  users: UserResponse[];
+  pagination?: PaginationInfo;
 }
 
 // Response Wrappers

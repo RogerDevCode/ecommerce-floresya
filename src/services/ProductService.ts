@@ -359,10 +359,11 @@ export class ProductService {
    * Note: This method is now handled by the PostgreSQL function update_carousel_order_atomic
    * Keeping for backward compatibility but it now delegates to the atomic function
    */
-  private async reorganizeCarouselOrder(desiredOrder: number, excludeProductId?: number): Promise<void> {
+  private async reorganizeCarouselOrder(desiredOrder: number, _excludeProductId?: number): Promise<void> {
     // This method is now deprecated - carousel reorganization is handled
     // atomically by the PostgreSQL function update_carousel_order_atomic
     console.log(`🔄 Carousel reorganization delegated to PostgreSQL function for position ${desiredOrder}`);
+    // _excludeProductId is kept for backward compatibility but not used
   }
 
   /**
@@ -558,6 +559,111 @@ export class ProductService {
       return response.products;
     } catch (error) {
       console.error('ProductService.searchProducts error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete product (conditional logic)
+   * Performs logical deletion if product has references, physical deletion if not
+   */
+  public async deleteProduct(productId: number): Promise<void> {
+    try {
+      // Check if product exists
+      const product = await this.getProductById(productId);
+      if (!product) {
+        throw new Error('Product not found');
+      }
+
+      // Check for references in related tables
+      const hasReferences = await this.checkProductReferences(productId);
+
+      if (hasReferences) {
+        // Logical deletion - just deactivate
+        const { error } = await supabaseService
+          .from('products')
+          .update({
+            active: false,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', productId);
+
+        if (error) {
+          throw new Error(`Failed to deactivate product: ${error.message}`);
+        }
+
+        console.log(`✅ Product ${productId} deactivated (has references)`);
+      } else {
+        // Physical deletion - safe to delete
+        const { error } = await supabaseService
+          .from('products')
+          .delete()
+          .eq('id', productId);
+
+        if (error) {
+          throw new Error(`Failed to delete product: ${error.message}`);
+        }
+
+        console.log(`✅ Product ${productId} physically deleted (no references)`);
+      }
+    } catch (error) {
+      console.error('ProductService.deleteProduct error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if product has references in related tables
+   */
+  private async checkProductReferences(productId: number): Promise<boolean> {
+    try {
+      // Check product_images table
+      const { data: images, error: imagesError } = await supabaseService
+        .from('product_images')
+        .select('id')
+        .eq('product_id', productId)
+        .limit(1);
+
+      if (imagesError) {
+        throw new Error(`Failed to check product images: ${imagesError.message}`);
+      }
+
+      if (images && images.length > 0) {
+        return true;
+      }
+
+      // Check product_occasions table
+      const { data: occasions, error: occasionsError } = await supabaseService
+        .from('product_occasions')
+        .select('id')
+        .eq('product_id', productId)
+        .limit(1);
+
+      if (occasionsError) {
+        throw new Error(`Failed to check product occasions: ${occasionsError.message}`);
+      }
+
+      if (occasions && occasions.length > 0) {
+        return true;
+      }
+
+      // Check order_items table (if orders exist)
+      const { data: orderItems, error: orderItemsError } = await supabaseService
+        .from('order_items')
+        .select('id')
+        .eq('product_id', productId)
+        .limit(1);
+
+      if (orderItemsError) {
+        // If order_items table doesn't exist yet, continue
+        console.warn('Order items table may not exist yet:', orderItemsError.message);
+      } else if (orderItems && orderItems.length > 0) {
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error checking product references:', error);
       throw error;
     }
   }

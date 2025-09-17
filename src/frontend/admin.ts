@@ -261,154 +261,180 @@ export class AdminPanel {
   }
 
   /**
-   * Bind all event listeners
+   * Bind all event listeners using event delegation for better performance and reliability
    */
   private bindEvents(): void {
-    // Sidebar navigation
-    document.querySelectorAll('.sidebar-nav .nav-link').forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const section = (e.target as HTMLElement).dataset.section ?? '';
-        this.switchSection(section);
-      });
-    });
+    // Use event delegation on the main admin container for better performance
+    const adminContainer = document.getElementById('adminPanel');
 
-    // Mobile sidebar toggle
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    if (sidebarToggle) {
-      sidebarToggle.addEventListener('click', () => {
+    if (!adminContainer) {
+      this.log('❌ Admin container not found for event delegation - RETRYING in 500ms', 'error');
+
+      // Retry after a short delay to handle timing issues
+      setTimeout(() => {
+        this.bindEvents();
+      }, 500);
+      return;
+    }
+
+    // Remove any existing event listeners to prevent duplicates
+    const newContainer = adminContainer.cloneNode(true) as HTMLElement;
+    adminContainer.parentNode?.replaceChild(newContainer, adminContainer);
+
+    // Bind event delegation to the fresh container
+    newContainer.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+
+      // Sidebar navigation links
+      if (target.matches('.sidebar-nav .nav-link') || target.closest('.sidebar-nav .nav-link')) {
+        e.preventDefault();
+        const link = target.closest('.sidebar-nav .nav-link') as HTMLElement;
+        const section = link?.dataset.section ?? '';
+        if (section) {
+          this.switchSection(section);
+        }
+      }
+
+      // Mobile sidebar toggle
+      if (target.matches('#sidebarToggle') || target.closest('#sidebarToggle')) {
         const sidebar = document.getElementById('adminSidebar');
         sidebar?.classList.toggle('show');
-      });
-    }
+      }
 
-    // Logout button
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', () => {
+      // Logout button
+      if (target.matches('#logoutBtn') || target.closest('#logoutBtn')) {
         this.logout();
-      });
-    }
+      }
 
-    // Back to site button
-    const backToSiteBtn = document.getElementById('backToSite');
-    if (backToSiteBtn) {
-      backToSiteBtn.addEventListener('click', () => {
+      // Back to site button
+      if (target.matches('#backToSite') || target.closest('#backToSite')) {
         window.location.href = '/';
-      });
-    }
+      }
 
-    // Product management buttons
-    const addProductBtn = document.getElementById('addProductBtn');
-    if (addProductBtn) {
-      this.log('✅ addProductBtn found in bindEvents, adding event listener', 'info');
-      addProductBtn.addEventListener('click', (e) => {
+      // Product management buttons
+      if (target.matches('#addProductBtn') || target.closest('#addProductBtn')) {
         e.preventDefault();
-        this.log('🖱️ addProductBtn clicked from bindEvents, calling showAddProductModal', 'info');
-        try {
-          void this.showAddProductModal();
-        } catch (error) {
-          this.log('❌ Error in showAddProductModal from bindEvents: ' + error, 'error');
-          console.error('Error calling showAddProductModal:', error);
-        }
-      });
-    } else {
-      this.log('❌ addProductBtn not found in bindEvents', 'warn');
-    }
-
-    // User management buttons
-    const addUserBtn = document.getElementById('addUserBtn');
-    if (addUserBtn) {
-      addUserBtn.addEventListener('click', () => {
-        this.showAddUserModal();
-      });
-    }
-
-    // Occasion management buttons
-    const addOccasionBtn = document.getElementById('addOccasionBtn');
-    if (addOccasionBtn) {
-      addOccasionBtn.addEventListener('click', () => {
-        this.showAddOccasionModal();
-      });
-    }
-  }
-
-  /**
-   * Bind product management buttons (called after products section is loaded)
-   */
-  private bindProductButtons(): void {
-    this.log('🔧 Binding product management buttons...', 'info');
-
-    // Debug: Check if we're in the products section
-    const currentSection = document.querySelector('.admin-section.active');
-    this.log('📍 Current active section: ' + (currentSection ? currentSection.id : 'none'), 'info');
-
-    // Product management buttons
-    const addProductBtn = document.getElementById('addProductBtn');
-    if (addProductBtn) {
-      this.log('✅ addProductBtn found, adding event listener', 'info');
-      this.log('📋 Button details: ' + addProductBtn.outerHTML.substring(0, 100) + '...', 'info');
-
-      // Remove any existing event listeners to prevent duplicates
-      const newBtn = addProductBtn.cloneNode(true) as HTMLElement;
-      addProductBtn.parentNode?.replaceChild(newBtn, addProductBtn);
-
-      // Add new event listener
-      newBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.log('🖱️ addProductBtn clicked, calling showAddProductModal', 'info');
+        this.log('🖱️ addProductBtn clicked via delegation, calling showAddProductModal', 'info');
         try {
           void this.showAddProductModal();
         } catch (error) {
           this.log('❌ Error in showAddProductModal: ' + error, 'error');
           console.error('Error calling showAddProductModal:', error);
         }
-      });
-
-      this.log('✅ Event listener successfully attached to addProductBtn', 'success');
-    } else {
-      this.log('❌ addProductBtn not found in DOM', 'error');
-
-      // Debug: List all buttons in the document
-      const allButtons = document.querySelectorAll('button');
-      this.log('🔍 All buttons found: ' + allButtons.length, 'info');
-      allButtons.forEach((btn, index) => {
-        if (btn.id) {
-          this.log(`🔍 Button ${index}: #${btn.id} - ${btn.textContent?.trim()}`, 'info');
-        }
-      });
-
-      // Try to find it in the products section specifically
-      const productsSection = document.getElementById('products-section');
-      if (productsSection) {
-        this.log('📂 Products section found, searching for button inside it', 'info');
-        const btnInSection = productsSection.querySelector('#addProductBtn');
-        if (btnInSection) {
-          this.log('✅ Found addProductBtn in products section, attaching listener', 'info');
-          btnInSection.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.log('🖱️ addProductBtn (in section) clicked, calling showAddProductModal', 'info');
-            try {
-              void this.showAddProductModal();
-            } catch (error) {
-              this.log('❌ Error in showAddProductModal: ' + error, 'error');
-              console.error('Error calling showAddProductModal:', error);
-            }
-          });
-        } else {
-          this.log('❌ addProductBtn not found even in products section', 'error');
-          // Debug: List all elements in products section
-          const allElements = productsSection.querySelectorAll('*');
-          this.log('🔍 All elements in products section: ' + allElements.length, 'info');
-          allElements.forEach((el, index) => {
-            if (el.id?.includes('Btn')) {
-              this.log(`🔍 Element ${index}: #${el.id} - ${el.tagName}`, 'info');
-            }
-          });
-        }
-      } else {
-        this.log('❌ Products section not found', 'error');
       }
+
+      // User management buttons
+      if (target.matches('#addUserBtn') || target.closest('#addUserBtn')) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.log('🖱️ addUserBtn clicked via delegation, calling showAddUserModal', 'info');
+        try {
+          void this.showAddUserModal();
+        } catch (error) {
+          this.log('❌ Error in showAddUserModal: ' + error, 'error');
+          console.error('Error calling showAddUserModal:', error);
+          // Fallback: try to show modal directly
+          const userModal = document.getElementById('userModal');
+          if (userModal && window.bootstrap?.Modal) {
+            try {
+              const Modal = window.bootstrap.Modal as unknown as new (element: Element) => { show(): void };
+              const modal = new Modal(userModal);
+              modal.show();
+              this.log('✅ Fallback: Modal shown directly', 'info');
+            } catch (fallbackError) {
+              this.log('❌ Fallback modal failed: ' + fallbackError, 'error');
+            }
+          }
+        }
+      }
+
+      // Occasion management buttons
+      if (target.matches('#addOccasionBtn') || target.closest('#addOccasionBtn')) {
+        this.showAddOccasionModal();
+      }
+
+      // Schema management buttons
+      if (target.matches('#loadSchemaInfo') || target.closest('#loadSchemaInfo')) {
+        void this.loadSchemaInfo();
+      }
+
+      if (target.matches('#viewSchemaSQL') || target.closest('#viewSchemaSQL')) {
+        void this.viewSchemaSQL();
+      }
+
+      if (target.matches('#updateSchemaFile') || target.closest('#updateSchemaFile')) {
+        void this.updateSchemaFile();
+      }
+
+      if (target.matches('#downloadSchemaSQL') || target.closest('#downloadSchemaSQL')) {
+        void this.downloadSchemaSQL();
+      }
+
+      if (target.matches('#copySchemaSQLBtn') || target.closest('#copySchemaSQLBtn')) {
+        void this.copySchemaSQLToClipboard();
+      }
+    });
+
+    this.log('✅ Event delegation bound to admin container', 'success');
+  }
+
+  /**
+   * Bind product management buttons (called after products section is loaded)
+   * Note: Event handling is now done via event delegation in bindEvents()
+   */
+  private bindProductButtons(): void {
+    this.log('🔧 Product management buttons bound via event delegation', 'info');
+    // Event handling is now managed by the event delegation in bindEvents()
+    // This method is kept for future extensibility and logging purposes
+  }
+
+  /**
+   * Bind user management buttons (called after users section is loaded)
+   * Uses both event delegation and direct binding for maximum reliability
+   */
+  private bindUserButtons(): void {
+    this.log('🔧 Binding user management buttons with dual approach', 'info');
+
+    // First, ensure event delegation is working
+    const adminContainer = document.getElementById('adminPanel');
+    if (!adminContainer) {
+      this.log('❌ Admin container not found for user button binding', 'error');
+      return;
+    }
+
+    // Direct binding as backup to event delegation
+    const addUserBtn = document.getElementById('addUserBtn');
+    if (addUserBtn) {
+      this.log('✅ addUserBtn found, setting up direct event listener', 'info');
+
+      // Remove any existing listeners to prevent duplicates
+      const newBtn = addUserBtn.cloneNode(true) as HTMLElement;
+      addUserBtn.parentNode?.replaceChild(newBtn, addUserBtn);
+
+      // Add direct event listener
+      newBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation(); // Prevent event bubbling to delegation
+        this.log('🖱️ addUserBtn clicked via direct binding, calling showAddUserModal', 'info');
+        try {
+          void this.showAddUserModal();
+        } catch (error) {
+          this.log('❌ Error in showAddUserModal: ' + error, 'error');
+          console.error('Error calling showAddUserModal:', error);
+        }
+      });
+
+      this.log('✅ Direct event listener attached to addUserBtn', 'success');
+    } else {
+      this.log('❌ addUserBtn not found in DOM', 'error');
+    }
+
+    // Also ensure the modal exists and is properly configured
+    const userModal = document.getElementById('userModal');
+    if (!userModal) {
+      this.log('❌ userModal not found in DOM', 'error');
+    } else {
+      this.log('✅ userModal found and ready', 'info');
     }
   }
 
@@ -501,6 +527,8 @@ export class AdminPanel {
         break;
       case 'users':
         await this.loadUsersData();
+        // Ensure user buttons are properly bound after loading users section
+        setTimeout(() => this.bindUserButtons(), 100);
         break;
       case 'occasions':
         await this.loadOccasionsData();
@@ -605,6 +633,9 @@ export class AdminPanel {
         { id: 2, email: 'cliente@floresya.com', full_name: 'Cliente de Prueba', role: 'user', is_active: true }
       ];
       this.renderUsersTable(mockUsers);
+
+      // Bind user management buttons after DOM is ready
+      this.bindUserButtons();
     } catch (error) {
       this.log('Error loading users: ' + error, 'error');
     }
@@ -1724,7 +1755,25 @@ export class AdminPanel {
     return html;
   }
 
+  /**
+   * Log messages with reduced verbosity for production
+   */
   private log(message: string, level: 'info' | 'success' | 'error' | 'warn' = 'info'): void {
+    // Reduce verbosity in production - only log errors and important success messages
+    const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+
+    if (isProduction && level === 'warn') {
+      // Skip verbose warn messages in production
+      return;
+    }
+
+    if (isProduction && level === 'info') {
+      // Skip info messages in production unless they're critical
+      if (!message.includes('CRITICAL') && !message.includes('ERROR') && !message.includes('FAILED')) {
+        return;
+      }
+    }
+
     const prefix = '[🌸 Admin Panel]';
     const timestamp = new Date().toISOString();
     const output = `${prefix} [${level.toUpperCase()}] ${timestamp} — ${message}`;
@@ -1734,7 +1783,10 @@ export class AdminPanel {
         console.error(output);
         break;
       case 'warn':
-        console.warn(output);
+        // Only show critical warnings
+        if (message.includes('CRITICAL') || message.includes('ERROR') || message.includes('FAILED')) {
+          console.warn(output);
+        }
         break;
       default:
         console.log(output);
@@ -2308,12 +2360,349 @@ export class AdminPanel {
     this.log('Product form cleared after successful creation', 'info');
   }
 
-  private showAddUserModal(): void {
-    alert('Funcionalidad de agregar usuario próximamente...');
+  private async showAddUserModal(): Promise<void> {
+    this.log('👤 showAddUserModal called - showing user creation modal', 'info');
+
+    try {
+      // Use the existing modal from the HTML
+      const modalElement = document.getElementById('userModal');
+      if (!modalElement) {
+        this.log('❌ User modal element not found in DOM', 'error');
+        return;
+      }
+
+      // Reset form and modal state
+      this.resetUserModal();
+
+      let modal: { show(): void; hide(): void } | null = null;
+
+      // Wait for Bootstrap to be ready
+      setTimeout(() => {
+        const bootstrap = (window as WindowWithBootstrap).bootstrap;
+
+        if (bootstrap?.Modal) {
+          try {
+            modal = new bootstrap.Modal(modalElement);
+            modal.show();
+
+            // Force visibility
+            setTimeout(() => {
+              if (modalElement) {
+                modalElement.style.visibility = 'visible';
+                modalElement.style.opacity = '1';
+                modalElement.style.display = 'block';
+                modalElement.classList.add('show');
+              }
+            }, 50);
+
+            this.log('✅ User creation modal shown successfully', 'success');
+          } catch (error) {
+            this.log('❌ Error creating Bootstrap modal: ' + error, 'error');
+            this.showFallbackModal(modalElement);
+          }
+        } else {
+          this.log('❌ Bootstrap not available, using fallback modal', 'warn');
+          this.showFallbackModal(modalElement);
+        }
+      }, 100);
+
+      // Add password strength indicator
+      const passwordInput = document.getElementById('userPassword') as HTMLInputElement;
+      const strengthIndicator = document.getElementById('passwordStrength');
+
+      if (passwordInput && strengthIndicator) {
+        passwordInput.addEventListener('input', () => {
+          const password = passwordInput.value;
+          const strength = this.checkPasswordStrength(password);
+
+          if (password.length > 0) {
+            strengthIndicator.style.display = 'block';
+            strengthIndicator.className = `password-strength ${strength}`;
+            strengthIndicator.textContent = this.getPasswordStrengthText(strength);
+          } else {
+            strengthIndicator.style.display = 'none';
+          }
+        });
+      }
+
+      // Handle save button
+      const saveBtn = document.getElementById('saveUserBtn');
+      if (saveBtn) {
+        // Remove existing listeners to prevent duplicates
+        const newSaveBtn = saveBtn.cloneNode(true) as HTMLElement;
+        saveBtn.parentNode?.replaceChild(newSaveBtn, saveBtn);
+
+        newSaveBtn.addEventListener('click', async () => {
+          this.log('💾 Save user button clicked, calling saveUser');
+          const success = await this.saveUser();
+
+          if (success) {
+            // Close modal on success
+            if (modal && typeof modal.hide === 'function') {
+              modal.hide();
+            } else if (modalElement) {
+              modalElement.style.display = 'none';
+            }
+          }
+        });
+      }
+
+    } catch (error) {
+      this.log('❌ Error in showAddUserModal: ' + error, 'error');
+      alert('Error al abrir el modal de creación de usuario');
+    }
   }
 
-  private showAddOccasionModal(): void {
-    alert('Funcionalidad de agregar ocasión próximamente...');
+  /**
+   * Reset user modal form and state
+   */
+  private resetUserModal(): void {
+    // Reset form
+    const form = document.getElementById('userForm') as HTMLFormElement;
+    if (form) form.reset();
+
+    // Reset modal title
+    const modalTitle = document.getElementById('userModalLabel');
+    if (modalTitle) {
+      modalTitle.textContent = 'Crear Nuevo Usuario';
+    }
+
+    // Reset password label
+    const passwordLabel = document.getElementById('passwordLabel');
+    if (passwordLabel) {
+      passwordLabel.textContent = '(requerida para nuevo usuario)';
+    }
+
+    // Reset checkboxes to default
+    const isActiveInput = document.getElementById('userIsActive') as HTMLInputElement;
+    const emailVerifiedInput = document.getElementById('userEmailVerified') as HTMLInputElement;
+
+    if (isActiveInput) isActiveInput.checked = true;
+    if (emailVerifiedInput) emailVerifiedInput.checked = false;
+
+    // Hide message area
+    const messageArea = document.getElementById('userMessageArea');
+    if (messageArea) {
+      messageArea.style.display = 'none';
+    }
+
+    // Clear validation errors
+    this.clearUserValidationErrors();
+
+    this.log('🔄 User modal reset to creation state', 'info');
+  }
+
+  /**
+   * Clear user form validation errors
+   */
+  private clearUserValidationErrors(): void {
+    const errorFields = ['userEmail', 'userFullName', 'userPhone', 'userRole', 'userPassword'];
+    errorFields.forEach(field => {
+      const errorElement = document.getElementById(`${field}Error`);
+      const inputElement = document.getElementById(field) as HTMLInputElement | HTMLSelectElement;
+
+      if (errorElement) {
+        errorElement.textContent = '';
+      }
+      if (inputElement) {
+        inputElement.classList.remove('is-invalid');
+      }
+    });
+  }
+
+  private async showAddOccasionModal(): Promise<void> {
+    this.log('📝 showAddOccasionModal called - creating new occasion modal', 'info');
+    await this.showOccasionModal(null);
+  }
+
+  private async showOccasionModal(occasion: Occasion | null): Promise<void> {
+    this.log('🔧 showOccasionModal called with occasion: ' + (occasion ? 'existing' : 'null'));
+
+    const modalTitle = occasion ? 'Editar Ocasión' : 'Crear Nueva Ocasión';
+    const saveButtonText = occasion ? 'Actualizar' : 'Crear';
+
+    const modalHtml = `
+      <div class="modal fade" id="occasionModal" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">${modalTitle}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <!-- Message Area -->
+              <div id="occasionMessageArea" class="alert-container mb-3" style="display: none;">
+                <div id="occasionMessage" class="alert" role="alert"></div>
+              </div>
+
+              <form id="occasionForm">
+                <div class="mb-3">
+                  <label for="occasionName" class="form-label">Nombre *</label>
+                  <input type="text" class="form-control" id="occasionName" required
+                         value="${occasion?.name ?? ''}" placeholder="Nombre de la ocasión">
+                  <div class="form-text">El slug se generará automáticamente a partir del nombre.</div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="occasionDescription" class="form-label">Descripción</label>
+                  <textarea class="form-control" id="occasionDescription" rows="3">${occasion?.description ?? ''}</textarea>
+                </div>
+
+                <div class="mb-3 form-check">
+                  <input type="checkbox" class="form-check-input" id="occasionActive" ${occasion?.is_active !== false ? 'checked' : ''}>
+                  <label class="form-check-label" for="occasionActive">
+                    Ocasión activa
+                  </label>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="button" class="btn btn-primary" id="saveOccasionBtn">${saveButtonText}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Remove existing modal if present
+    const existingModal = document.getElementById('occasionModal');
+    if (existingModal) {
+      existingModal.remove();
+    }
+
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // Show modal
+    const modalElement = document.getElementById('occasionModal');
+    if (!modalElement) {
+      this.log('❌ Occasion modal element not found in DOM', 'error');
+      return;
+    }
+
+    setTimeout(() => {
+      const bootstrap = (window as WindowWithBootstrap).bootstrap;
+      if (bootstrap?.Modal) {
+        try {
+          const modal = new bootstrap.Modal(modalElement);
+          modal.show();
+          this.log('✅ Occasion modal shown successfully', 'success');
+
+          // Slug is now generated automatically in saveOccasion method
+
+          // Bind save button
+          const saveBtn = document.getElementById('saveOccasionBtn');
+          if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+              void this.saveOccasion(occasion?.id ?? null);
+            });
+          }
+
+        } catch (error) {
+          this.log('❌ Error showing occasion modal: ' + error, 'error');
+        }
+      } else {
+        this.log('❌ Bootstrap Modal not available for occasion modal', 'error');
+      }
+    }, 100);
+  }
+
+  private async saveOccasion(occasionId: number | null): Promise<void> {
+    try {
+      const nameInput = document.getElementById('occasionName') as HTMLInputElement;
+      const descriptionInput = document.getElementById('occasionDescription') as HTMLTextAreaElement;
+      const activeInput = document.getElementById('occasionActive') as HTMLInputElement;
+
+      // Validation
+      const name = nameInput.value.trim();
+      const description = descriptionInput.value.trim();
+      const active = activeInput.checked;
+
+      if (!name) {
+        this.showOccasionMessage('Por favor, ingresa el nombre de la ocasión.', 'error');
+        return;
+      }
+
+      // Generate slug automatically from name
+      const slug = name
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+        .replace(/\s+/g, '-') // Replace spaces with hyphens
+        .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+        .trim(); // Remove leading/trailing whitespace
+
+      const occasionData = {
+        name,
+        slug,
+        description: description || null,
+        is_active: active
+      };
+
+      this.showOccasionMessage('Guardando ocasión...', 'info');
+
+      let response;
+      if (occasionId) {
+        // Update existing occasion
+        response = await this.api.request('/occasions/' + occasionId, {
+          method: 'PUT',
+          body: { ...occasionData, id: occasionId }
+        });
+      } else {
+        // Create new occasion
+        response = await this.api.request('/occasions', {
+          method: 'POST',
+          body: occasionData
+        });
+      }
+
+      if (response.success) {
+        this.showOccasionMessage(
+          occasionId ? 'Ocasión actualizada exitosamente' : 'Ocasión creada exitosamente',
+          'success'
+        );
+
+        // Close modal after success
+        setTimeout(() => {
+          const modal = document.getElementById('occasionModal');
+          if (modal) {
+            const bootstrap = (window as WindowWithBootstrap).bootstrap;
+            if (bootstrap?.Modal) {
+              const modalInstance = bootstrap.Modal.getInstance(modal);
+              if (modalInstance) {
+                modalInstance.hide();
+              }
+            }
+          }
+          // Reload occasions in the admin panel
+          void this.loadOccasions();
+        }, 1500);
+
+      } else {
+        this.showOccasionMessage(response.message || 'Error al guardar la ocasión', 'error');
+      }
+
+    } catch (error) {
+      this.log('❌ Error saving occasion: ' + error, 'error');
+      this.showOccasionMessage('Error al guardar la ocasión', 'error');
+    }
+  }
+
+  private showOccasionMessage(message: string, type: 'success' | 'error' | 'info'): void {
+    const messageArea = document.getElementById('occasionMessageArea');
+    const messageDiv = document.getElementById('occasionMessage');
+
+    if (messageArea && messageDiv) {
+      messageDiv.className = `alert alert-${type === 'error' ? 'danger' : type}`;
+      messageDiv.textContent = message;
+      messageArea.style.display = 'block';
+
+      if (type === 'success') {
+        setTimeout(() => {
+          messageArea.style.display = 'none';
+        }, 3000);
+      }
+    }
   }
 
   // Public methods for HTML onclick handlers
@@ -2375,6 +2764,191 @@ export class AdminPanel {
   public deleteUser(id: number): void {
     if (confirm(`¿Eliminar usuario ${id}?`)) {
       alert('Funcionalidad de eliminar usuario próximamente...');
+    }
+  }
+
+  /**
+   * Check password strength
+   */
+  private checkPasswordStrength(password: string): 'weak' | 'medium' | 'strong' {
+    if (password.length < 8) return 'weak';
+
+    const hasLower = /[a-z]/.test(password);
+    const hasUpper = /[A-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+
+    if (hasLower && hasUpper && hasNumber && password.length >= 10) {
+      return 'strong';
+    } else if ((hasLower && hasUpper) || (hasLower && hasNumber) || (hasUpper && hasNumber)) {
+      return 'medium';
+    } else {
+      return 'weak';
+    }
+  }
+
+  /**
+   * Get password strength text
+   */
+  private getPasswordStrengthText(strength: 'weak' | 'medium' | 'strong'): string {
+    switch (strength) {
+      case 'weak': return 'Débil - Agrega mayúsculas, minúsculas y números';
+      case 'medium': return 'Media - Buena, pero puede ser más fuerte';
+      case 'strong': return 'Fuerte - Excelente contraseña';
+    }
+  }
+
+  /**
+   * Save user from modal
+   */
+  private async saveUser(): Promise<boolean> {
+    try {
+      // Get form elements
+      const emailInput = document.getElementById('userEmail') as HTMLInputElement;
+      const fullNameInput = document.getElementById('userFullName') as HTMLInputElement;
+      const passwordInput = document.getElementById('userPassword') as HTMLInputElement;
+      const phoneInput = document.getElementById('userPhone') as HTMLInputElement;
+      const roleSelect = document.getElementById('userRole') as HTMLSelectElement;
+      const isActiveInput = document.getElementById('userIsActive') as HTMLInputElement;
+      const emailVerifiedInput = document.getElementById('userEmailVerified') as HTMLInputElement;
+      const saveBtn = document.getElementById('saveUserBtn') as HTMLButtonElement;
+
+      // Client-side validation
+      const errors: string[] = [];
+
+      const email = emailInput.value.trim();
+      const fullName = fullNameInput.value.trim();
+      const password = passwordInput.value.trim();
+      const phone = phoneInput.value.trim();
+      const role = roleSelect.value;
+      const isActive = isActiveInput.checked;
+      const emailVerified = emailVerifiedInput.checked;
+
+      // Required field validation
+      if (!email) {
+        errors.push('El email es obligatorio');
+        if (!errors.length) emailInput.focus();
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errors.push('El email no tiene un formato válido');
+        if (!errors.length) emailInput.focus();
+      }
+
+      if (!fullName) {
+        errors.push('El nombre completo es obligatorio');
+        if (!errors.length) fullNameInput.focus();
+      } else if (fullName.length < 2) {
+        errors.push('El nombre debe tener al menos 2 caracteres');
+        if (!errors.length) fullNameInput.focus();
+      }
+
+      if (!password) {
+        errors.push('La contraseña es obligatoria');
+        if (!errors.length) passwordInput.focus();
+      } else {
+        const strength = this.checkPasswordStrength(password);
+        if (strength === 'weak') {
+          errors.push('La contraseña es muy débil. Debe tener al menos 8 caracteres con mayúsculas, minúsculas y números');
+          if (!errors.length) passwordInput.focus();
+        }
+      }
+
+      if (!role) {
+        errors.push('Debe seleccionar un rol');
+        if (!errors.length) roleSelect.focus();
+      }
+
+      // Show validation errors
+      if (errors.length > 0) {
+        this.showUserMessage('Errores de validación:\n• ' + errors.join('\n• '), 'error');
+        return false;
+      }
+
+      // Hide any previous messages
+      this.hideUserMessage();
+
+      // Disable save button and show loading state
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Creando...';
+      }
+
+      // Prepare user data
+      const userData = {
+        email,
+        password,
+        full_name: fullName,
+        phone: phone || undefined,
+        role: role as 'user' | 'admin' | 'support',
+        is_active: isActive,
+        email_verified: emailVerified
+      };
+
+      this.log('Submitting user data: ' + JSON.stringify({ ...userData, password: '[HIDDEN]' }, null, 2), 'info');
+
+      // Create user via API
+      const response = await this.api.createUser(userData);
+
+      if (response.success) {
+        // Success message
+        this.showUserMessage('✅ Usuario creado exitosamente', 'success');
+
+        // Reload users list
+        await this.loadUsersData();
+
+        // Auto-hide success message after 3 seconds
+        setTimeout(() => {
+          this.hideUserMessage();
+        }, 3000);
+
+        return true;
+      } else {
+        // API returned error
+        const errorMessage = response.message ?? 'Error desconocido al crear el usuario';
+        this.showUserMessage(`⚠️ ${errorMessage}`, 'error');
+        this.log('API returned error', 'error');
+        return false;
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      this.log('Error saving user: ' + errorMessage, 'error');
+      this.showUserMessage(`⚠️ Error al crear el usuario: ${errorMessage}`, 'error');
+      return false;
+    } finally {
+      // Re-enable save button and restore text
+      const saveBtn = document.getElementById('saveUserBtn') as HTMLButtonElement;
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = 'Crear Usuario';
+      }
+    }
+  }
+
+  /**
+   * Show message in user modal
+   */
+  private showUserMessage(message: string, type: 'success' | 'error' | 'warning' = 'error'): void {
+    const messageArea = document.getElementById('userMessageArea');
+    const messageDiv = document.getElementById('userMessage');
+
+    if (!messageArea || !messageDiv) return;
+
+    // Set message and style
+    messageDiv.textContent = message;
+    messageDiv.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'warning'}`;
+
+    // Show message area
+    messageArea.style.display = 'block';
+
+    // Scroll to top of modal to ensure message is visible
+    messageArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  /**
+   * Hide message in user modal
+   */
+  private hideUserMessage(): void {
+    const messageArea = document.getElementById('userMessageArea');
+    if (messageArea) {
+      messageArea.style.display = 'none';
     }
   }
 
@@ -2496,6 +3070,367 @@ export class AdminPanel {
       this.bindProductButtons();
       console.log('✅ Sección productos forzada y botones vinculados');
     }, 100);
+  }
+
+  // ============================================================================
+  // SCHEMA DATABASE MANAGEMENT METHODS
+  // ============================================================================
+
+  /**
+   * Load and display schema statistics
+   */
+  private async loadSchemaInfo(): Promise<void> {
+    this.log('📊 Cargando información del esquema...', 'info');
+
+    try {
+      this.showSchemaLoading();
+      this.hideSchemaAlerts();
+
+      const response = await this.api.request<{
+        stats: {
+          totalTables: number;
+          totalRecords: number;
+          totalIndexes: number;
+          totalConstraints: number;
+          extractionDate: string;
+          version: string;
+        };
+        lastUpdate: string;
+      }>('/admin/schema/info');
+
+      if (response.success && response.data) {
+        this.displaySchemaStats(response.data);
+        this.hideSchemaLoading();
+        this.showSchemaSuccess('Estadísticas del esquema cargadas exitosamente');
+      } else {
+        throw new Error(response.message || 'Error desconocido');
+      }
+
+    } catch (error) {
+      this.log('❌ Error cargando información del esquema', 'error');
+      this.hideSchemaLoading();
+      this.showSchemaError(error instanceof Error ? error.message : 'Error desconocido');
+    }
+  }
+
+  /**
+   * Display schema statistics in the UI
+   */
+  private displaySchemaStats(data: {
+    stats: {
+      totalTables: number;
+      totalRecords: number;
+      totalIndexes: number;
+      totalConstraints: number;
+      extractionDate: string;
+      version: string;
+    };
+    lastUpdate: string;
+  }): void {
+    const statsCard = document.getElementById('schemaStatsCard');
+    const statsContent = document.getElementById('schemaStatsContent');
+
+    if (!statsCard || !statsContent) return;
+
+    const { stats, lastUpdate } = data;
+    const lastUpdateDate = new Date(lastUpdate).toLocaleString();
+
+    statsContent.innerHTML = `
+      <div class="row">
+        <div class="col-md-6">
+          <div class="d-flex align-items-center mb-3">
+            <div class="bg-primary text-white rounded-circle p-2 me-3">
+              <i class="bi bi-table"></i>
+            </div>
+            <div>
+              <h6 class="mb-0">Total de Tablas</h6>
+              <span class="text-primary fw-bold">${stats.totalTables}</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="d-flex align-items-center mb-3">
+            <div class="bg-success text-white rounded-circle p-2 me-3">
+              <i class="bi bi-database"></i>
+            </div>
+            <div>
+              <h6 class="mb-0">Total de Registros</h6>
+              <span class="text-success fw-bold">${stats.totalRecords.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="d-flex align-items-center mb-3">
+            <div class="bg-warning text-white rounded-circle p-2 me-3">
+              <i class="bi bi-lightning"></i>
+            </div>
+            <div>
+              <h6 class="mb-0">Total de Índices</h6>
+              <span class="text-warning fw-bold">${stats.totalIndexes}</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="d-flex align-items-center mb-3">
+            <div class="bg-info text-white rounded-circle p-2 me-3">
+              <i class="bi bi-shield-check"></i>
+            </div>
+            <div>
+              <h6 class="mb-0">Total de Constraints</h6>
+              <span class="text-info fw-bold">${stats.totalConstraints}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <hr>
+      <div class="row">
+        <div class="col-md-6">
+          <small class="text-muted">
+            <i class="bi bi-calendar3 me-1"></i>
+            Última extracción: ${new Date(stats.extractionDate).toLocaleString()}
+          </small>
+        </div>
+        <div class="col-md-6">
+          <small class="text-muted">
+            <i class="bi bi-clock me-1"></i>
+            Última actualización: ${lastUpdateDate}
+          </small>
+        </div>
+      </div>
+      <div class="mt-2">
+        <small class="text-muted">
+          <i class="bi bi-tag me-1"></i>
+          Versión: ${stats.version}
+        </small>
+      </div>
+    `;
+
+    statsCard.style.display = 'block';
+  }
+
+  /**
+   * View complete SQL schema
+   */
+  private async viewSchemaSQL(): Promise<void> {
+    this.log('📜 Cargando esquema SQL completo...', 'info');
+
+    try {
+      this.showSchemaLoading();
+      this.hideSchemaAlerts();
+
+      const response = await this.api.request<{
+        schema: string;
+        stats: {
+          totalTables: number;
+          totalRecords: number;
+          totalIndexes: number;
+          totalConstraints: number;
+          extractionDate: string;
+          version: string;
+        };
+      }>('/admin/schema/extract');
+
+      if (response.success && response.data) {
+        this.displaySchemaSQL(response.data.schema);
+        this.hideSchemaLoading();
+        this.showSchemaSuccess('Esquema SQL cargado exitosamente');
+      } else {
+        throw new Error(response.message || 'Error desconocido');
+      }
+
+    } catch (error) {
+      this.log('❌ Error cargando esquema SQL', 'error');
+      this.hideSchemaLoading();
+      this.showSchemaError(error instanceof Error ? error.message : 'Error desconocido');
+    }
+  }
+
+  /**
+   * Display SQL schema in the UI
+   */
+  private displaySchemaSQL(schema: string): void {
+    const sqlCard = document.getElementById('schemaSQLCard');
+    const sqlContent = document.getElementById('schemaSQLContent');
+
+    if (!sqlCard || !sqlContent) return;
+
+    sqlContent.textContent = schema;
+    sqlCard.style.display = 'block';
+  }
+
+  /**
+   * Update schema file on server
+   */
+  private async updateSchemaFile(): Promise<void> {
+    this.log('🔄 Actualizando archivo de esquema...', 'info');
+
+    try {
+      this.showSchemaLoading();
+      this.hideSchemaAlerts();
+
+      const response = await this.api.request<{
+        filePath: string;
+        stats: {
+          totalTables: number;
+          totalRecords: number;
+          totalIndexes: number;
+          totalConstraints: number;
+          extractionDate: string;
+          version: string;
+        };
+      }>('/admin/schema/update-file', {
+        method: 'POST'
+      });
+
+      if (response.success && response.data) {
+        this.hideSchemaLoading();
+        this.showSchemaSuccess(`Archivo ${response.data.filePath} actualizado exitosamente`);
+        this.log('✅ Archivo de esquema actualizado', 'success');
+      } else {
+        throw new Error(response.message || 'Error desconocido');
+      }
+
+    } catch (error) {
+      this.log('❌ Error actualizando archivo de esquema', 'error');
+      this.hideSchemaLoading();
+      this.showSchemaError(error instanceof Error ? error.message : 'Error desconocido');
+    }
+  }
+
+  /**
+   * Download SQL schema as file
+   */
+  private async downloadSchemaSQL(): Promise<void> {
+    this.log('📥 Descargando esquema SQL...', 'info');
+
+    try {
+      this.showSchemaLoading();
+
+      // Fetch schema as text
+      const response = await fetch('/api/admin/schema/extract?format=sql', {
+        headers: {
+          'Accept': 'text/plain'
+        }
+      });
+
+      if (response.ok) {
+        const schema = await response.text();
+
+        // Create download
+        const blob = new Blob([schema], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `supabase_schema_${new Date().toISOString().split('T')[0]}.sql`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        this.hideSchemaLoading();
+        this.showSchemaSuccess('Esquema SQL descargado exitosamente');
+        this.log('✅ Esquema SQL descargado', 'success');
+      } else {
+        throw new Error('Error en la descarga');
+      }
+
+    } catch (error) {
+      this.log('❌ Error descargando esquema SQL', 'error');
+      this.hideSchemaLoading();
+      this.showSchemaError(error instanceof Error ? error.message : 'Error desconocido');
+    }
+  }
+
+  /**
+   * Copy SQL schema to clipboard
+   */
+  private async copySchemaSQLToClipboard(): Promise<void> {
+    const sqlContent = document.getElementById('schemaSQLContent');
+
+    if (!sqlContent || !sqlContent.textContent) {
+      this.showSchemaError('No hay contenido SQL para copiar. Primero carga el esquema.');
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(sqlContent.textContent);
+      this.showSchemaSuccess('Esquema SQL copiado al portapapeles');
+      this.log('✅ Esquema SQL copiado al portapapeles', 'success');
+
+      // Update button text temporarily
+      const copyBtn = document.getElementById('copySchemaSQLBtn');
+      if (copyBtn) {
+        const originalHTML = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="bi bi-check"></i> Copiado';
+        setTimeout(() => {
+          copyBtn.innerHTML = originalHTML;
+        }, 2000);
+      }
+    } catch (error) {
+      this.log('❌ Error copiando al portapapeles', 'error');
+      this.showSchemaError('Error al copiar al portapapeles');
+    }
+  }
+
+  /**
+   * Show loading indicator
+   */
+  private showSchemaLoading(): void {
+    const loading = document.getElementById('schemaLoadingIndicator');
+    if (loading) loading.style.display = 'block';
+  }
+
+  /**
+   * Hide loading indicator
+   */
+  private hideSchemaLoading(): void {
+    const loading = document.getElementById('schemaLoadingIndicator');
+    if (loading) loading.style.display = 'none';
+  }
+
+  /**
+   * Hide all alerts
+   */
+  private hideSchemaAlerts(): void {
+    const errorAlert = document.getElementById('schemaErrorAlert');
+    const successAlert = document.getElementById('schemaSuccessAlert');
+
+    if (errorAlert) errorAlert.style.display = 'none';
+    if (successAlert) successAlert.style.display = 'none';
+  }
+
+  /**
+   * Show success message
+   */
+  private showSchemaSuccess(message: string): void {
+    const successAlert = document.getElementById('schemaSuccessAlert');
+    const successMessage = document.getElementById('schemaSuccessMessage');
+
+    if (successAlert && successMessage) {
+      successMessage.textContent = message;
+      successAlert.style.display = 'block';
+
+      setTimeout(() => {
+        successAlert.style.display = 'none';
+      }, 5000);
+    }
+  }
+
+  /**
+   * Show error message
+   */
+  private showSchemaError(message: string): void {
+    const errorAlert = document.getElementById('schemaErrorAlert');
+    const errorMessage = document.getElementById('schemaErrorMessage');
+
+    if (errorAlert && errorMessage) {
+      errorMessage.textContent = message;
+      errorAlert.style.display = 'block';
+
+      setTimeout(() => {
+        errorAlert.style.display = 'none';
+      }, 10000);
+    }
   }
 }
 

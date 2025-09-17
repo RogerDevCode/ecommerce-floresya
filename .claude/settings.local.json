@@ -26,7 +26,15 @@
       "Bash(npm install:*)",
       "Bash(vercel:*)",
       "Bash(npm run lint:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(bash:*)",
+      "Bash(PORT=3001 timeout 10s node dist/app/server.js)",
+      "Bash(PORT=3001 node dist/app/server.js)",
+      "Bash(npm run test:*)",
+      "Bash(tree:*)",
+      "Bash(PORT=3002 node dist/app/server.js)",
+      "Bash(PORT=3002 node dist/src/app/server.js)",
+      "Bash(PORT=3003 node dist/src/app/server.js)"
     ],
     "deny": [],
     "ask": []

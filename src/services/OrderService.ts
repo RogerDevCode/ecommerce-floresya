@@ -8,7 +8,6 @@ import type {
   Order,
   OrderWithItems,
   OrderWithItemsAndPayments,
-  OrderItem,
   OrderStatusHistory,
   OrderCreateRequest,
   OrderUpdateRequest,
@@ -34,6 +33,8 @@ interface OrderQuery {
 export class OrderService {
   /**
    * Get all orders with filtering and pagination
+   * @param query - Query parameters for filtering and pagination
+   * @returns Promise<OrderResponse> - Orders with pagination info
    */
   public async getOrders(query: OrderQuery = {}): Promise<OrderResponse> {
     try {
@@ -230,8 +231,8 @@ export class OrderService {
       const { data, error } = await supabaseService.rpc('update_order_status_with_history', {
         order_id: orderId,
         new_status: newStatus,
-        notes: notes || null,
-        changed_by: changedBy || null
+        notes: notes ?? null,
+        changed_by: changedBy ?? null
       });
 
       if (error) {

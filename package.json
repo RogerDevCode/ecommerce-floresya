@@ -5,7 +5,8 @@
   "type": "module",
   "main": "api/index.ts",
   "scripts": {
-    "build": "tsc --project tsconfig.prod.json",
+    "build": "tsc --project tsconfig.prod.json && npm run build:post",
+    "build:post": "mkdir -p dist/app dist/frontend && cp -r dist/src/app/* dist/app/ 2>/dev/null || true && cp -r dist/src/frontend/* dist/frontend/ 2>/dev/null || true && cp -r dist/src/config dist/ 2>/dev/null || true && cp -r dist/src/controllers dist/ 2>/dev/null || true && cp -r dist/src/services dist/ 2>/dev/null || true && cp -r dist/src/types dist/ 2>/dev/null || true && cp -r dist/src/utils dist/ 2>/dev/null || true && cp -r dist/src/models dist/ 2>/dev/null || true",
     "start": "npm run build && node dist/app/server.js",
     "dev": "tsc --watch & nodemon --delay 2 dist/app/server.js",
     "dev:build": "tsc && node dist/app/server.js",
@@ -18,7 +19,8 @@
     "lint:fix": "eslint src/**/*.ts --fix",
     "type:check": "tsc --noEmit",
     "clean": "rm -rf dist/",
-    "reset": "npm run clean && npm run build"
+    "reset": "npm run clean && npm run build",
+    "schema:update": "npx ts-node /home/manager/Sync/ecommerce-floresya/dist/utils/schema-extractor.js"
   },
   "keywords": [
     "ecommerce",
@@ -41,7 +43,9 @@
     "helmet": "^7.0.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
-    "sharp": "^0.33.5"
+    "sharp": "^0.33.5",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -51,6 +55,8 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.3.1",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
     "@typescript-eslint/eslint-plugin": "^8.43.0",
     "@typescript-eslint/parser": "^8.43.0",
     "@vercel/node": "^5.3.22",

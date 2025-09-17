@@ -52,5 +52,11 @@ export function createProductRoutes(): Router {
     productController.updateCarouselOrder.bind(productController)
   );
 
+  // DELETE /api/products/:id - Delete product (conditional)
+  router.delete('/:id',
+    productValidators.deleteProduct,
+    productController.deleteProduct.bind(productController)
+  );
+
   return router;
 }

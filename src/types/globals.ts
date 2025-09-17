@@ -77,6 +77,10 @@ export interface WindowWithBootstrap extends Window {
       new (element: Element): { show(): void; hide(): void };
       getInstance(element: Element): { hide(): void } | null;
     };
+    Toast: {
+      new (element: Element, options?: { delay?: number }): { show(): void; hide(): void };
+      getInstance(element: Element): { hide(): void } | null;
+    };
     Carousel?: new (element: Element, options?: unknown) => {
       cycle(): void;
     };
@@ -104,6 +108,88 @@ export interface WindowWithCart extends Window {
 
 export interface WindowWithFloresyaLogger extends Window {
   floresyaLogger?: Logger;
+}
+
+// ============================================
+// USER MANAGEMENT TYPES
+// ============================================
+
+export interface UserCreateRequest {
+  email: string;
+  password: string;
+  full_name: string;
+  phone?: string;
+  role: 'user' | 'admin' | 'support';
+  is_active?: boolean;
+  email_verified?: boolean;
+}
+
+export interface UserUpdateRequest {
+  id: number;
+  email?: string;
+  password?: string;
+  full_name?: string;
+  phone?: string;
+  role?: 'user' | 'admin' | 'support';
+  is_active?: boolean;
+  email_verified?: boolean;
+}
+
+export interface UserResponse {
+  id: number;
+  email: string;
+  full_name?: string;
+  phone?: string;
+  role: 'user' | 'admin' | 'support';
+  is_active: boolean;
+  email_verified: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserListResponse {
+  users: UserResponse[];
+  pagination?: {
+    current_page: number;
+    total_pages: number;
+    total_items: number;
+    items_per_page: number;
+  };
+}
+
+export interface UserQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  role?: 'user' | 'admin' | 'support';
+  is_active?: boolean;
+  email_verified?: boolean;
+  sort_by?: 'email' | 'full_name' | 'role' | 'created_at' | 'updated_at';
+  sort_direction?: 'asc' | 'desc';
+  [key: string]: unknown;
+}
+
+export interface UserFormData {
+  email: string;
+  full_name: string;
+  phone?: string;
+  role: string;
+  is_active: boolean;
+  email_verified: boolean;
+  password?: string;
+}
+
+export interface UserValidationError {
+  field: string;
+  message: string;
+  code?: string;
+}
+
+export interface UserOperationResult {
+  success: boolean;
+  data?: UserResponse;
+  message: string;
+  errors?: UserValidationError[];
 }
 
 // ============================================

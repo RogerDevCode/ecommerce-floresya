@@ -6,20 +6,16 @@
 // Import shared types
 import type {
   Product,
-  ProductImage,
   Occasion,
   User,
   PaginationInfo as Pagination,
   ApiResponse
 } from '../../config/supabase.js';
 import type {
-  LoginCredentials,
   RegisterData,
-  Logger,
   LogData
 } from '../../types/globals.js';
 import type { ProductQuery } from '../../config/supabase.js';
-type ProductFilters = ProductQuery;
 
 // Define carousel types locally to avoid import issues
 interface CarouselProduct {
@@ -244,8 +240,8 @@ export class FloresYaAPI {
     // Log the actual data structure for debugging
     if (response.success && response.data) {
       this.log('✅ Carousel data received', {
-        count: response.data.carousel_products?.length || 0,
-        firstProduct: response.data.carousel_products?.[0] || null
+        count: response.data.carousel_products?.length ?? 0,
+        firstProduct: response.data.carousel_products?.[0] ?? null
       }, 'success');
     }
 
@@ -300,6 +296,69 @@ export class FloresYaAPI {
     localStorage.removeItem('floresya_token');
 
     this.log('✅ Logout successful', {}, 'success');
+  }
+
+  // Users API
+  async createUser(userData: {
+    email: string;
+    password: string;
+    full_name: string;
+    phone?: string;
+    role: 'user' | 'admin' | 'support';
+    is_active?: boolean;
+    email_verified?: boolean;
+  }): Promise<ApiResponse<User>> {
+    this.log('🔄 Creating user', { email: userData.email, role: userData.role }, 'info');
+    return this.fetchData<User>('/users', {
+      method: 'POST',
+      body: JSON.stringify(userData)
+    });
+  }
+
+  async getUsers(params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    role?: string;
+    is_active?: boolean;
+    email_verified?: boolean;
+    sort_by?: string;
+    sort_direction?: string;
+  } = {}): Promise<ApiResponse<{ users: User[], pagination: Pagination }>> {
+    const queryParams = new URLSearchParams();
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value.toString());
+      }
+    });
+
+    const queryString = queryParams.toString();
+    const endpoint = `/users${queryString ? `?${queryString}` : ''}`;
+
+    this.log('🔄 Getting users', params, 'info');
+    return this.fetchData<{ users: User[], pagination: Pagination }>(endpoint);
+  }
+
+  async getUserById(id: number): Promise<ApiResponse<User>> {
+    this.log('🔄 Getting user by ID', { id }, 'info');
+    return this.fetchData<User>(`/users/${id}`);
+  }
+
+  async updateUser(userData: Partial<User> & { id: number }): Promise<ApiResponse<User>> {
+    const { id, ...updateData } = userData;
+    this.log('🔄 Updating user', { id, email: updateData.email }, 'info');
+    return this.fetchData<User>(`/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updateData)
+    });
+  }
+
+  async deleteUser(id: number): Promise<ApiResponse<{ success: boolean }>> {
+    this.log('🔄 Deleting user', { id }, 'info');
+    return this.fetchData<{ success: boolean }>(`/users/${id}`, {
+      method: 'DELETE'
+    });
   }
 
   // User utilities
@@ -440,7 +499,7 @@ export class FloresYaAPI {
       throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
     }
 
-    this.log('✅ Site image uploaded successfully', { type: data.data?.type }, 'success');
+    this.log('✅ Site image uploaded successfully', { type: data.data?.type ?? 'unknown' }, 'success');
     return data;
   }
 
@@ -449,6 +508,42 @@ export class FloresYaAPI {
     return this.fetchData<{ success: boolean }>(`/images/${imageId}`, {
       method: 'DELETE'
     });
+  }
+
+  // Generic request method for custom API calls
+  async request<T>(endpoint: string, options: {
+    method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    body?: unknown;
+    params?: Record<string, unknown>;
+  } = {}): Promise<ApiResponse<T>> {
+    let url = endpoint;
+
+    // Handle query parameters
+    if (options.params) {
+      const searchParams = new URLSearchParams();
+      Object.entries(options.params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          searchParams.append(key, String(value));
+        }
+      });
+      const queryString = searchParams.toString();
+      if (queryString) {
+        url += (url.includes('?') ? '&' : '?') + queryString;
+      }
+    }
+
+    const requestOptions: RequestInit = {
+      method: options.method || 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+
+    if (options.body) {
+      requestOptions.body = JSON.stringify(options.body);
+    }
+
+    return this.fetchData<T>(url, requestOptions);
   }
 }
 

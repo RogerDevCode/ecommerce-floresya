@@ -1,215 +1,232 @@
-# CLAUDE.md
+# IA.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to IA Code (IA.ai/code) when working with code in this repository.
 
-## Development Commands
+## Project Overview
 
-### Build & Development
-- `npm run build` - Production build using tsconfig.prod.json (strict, no source maps)
-- `npm run start` - Build and start production server
-- `npm run dev` - Development with TypeScript watch mode + nodemon
-- `npm run dev:build` - Quick development build and run (most used)
-- `npm run ts:watch` - TypeScript compiler in watch mode
+FloresYa is an enterprise-grade e-commerce platform for flower sales built with TypeScript in strict mode, Node.js, Express, and Supabase PostgreSQL. The project follows clean architecture principles with zero technical debt tolerance and extensive use of atomic database transactions.
 
-### Code Quality
-- `npm run lint` - ESLint validation for TypeScript files
-- `npm run lint:fix` - Auto-fix ESLint issues
-- `npm run type:check` - TypeScript type checking without emission
-- `npm run clean` - Remove dist/ directory
-- `npm run reset` - Clean and rebuild
+## Essential Commands
+
+### Development
+```bash
+npm run dev              # Development server with TypeScript watch + nodemon
+npm run dev:build        # Single build + start (for quick testing)
+npm run ts:watch         # TypeScript compilation in watch mode only
+```
+
+### Build & Production
+```bash
+npm run build           # Production build (uses tsconfig.prod.json)
+npm run start           # Build + start production server
+npm run clean           # Remove dist/ directory
+npm run reset           # Clean + build
+```
+
+### Quality Assurance
+```bash
+npm run lint            # Run ESLint on src/**/*.ts
+npm run lint:fix        # Auto-fix ESLint issues
+npm run type:check      # TypeScript type checking without emit
+```
 
 ### Testing
-- `npm test` - Run Vitest test suite
-- `npm run test:watch` - Tests in watch mode
-- `npm run test:ui` - Vitest UI interface
-- `npm run test:coverage` - Generate coverage reports
+```bash
+npm run test            # Run Vitest tests
+npm run test:watch      # Tests in watch mode
+npm run test:coverage   # Coverage report
+npm run test:ui         # Vitest UI interface
+```
+
+### Schema & Database
+```bash
+npm run schema:update   # Extract schema from Supabase
+npm run schema:info     # Get current schema information
+```
 
 ## Architecture Overview
 
-This is a TypeScript-first e-commerce application for FloresYa with strict typing and zero technical debt policy.
-
-### Core Stack
-- **Backend**: Node.js + Express + TypeScript (ES Modules)
-- **Database**: Supabase PostgreSQL (REST API only, no direct client)
-- **Frontend**: Vanilla TypeScript with modular architecture
-- **Deployment**: Vercel with specialized build configurations
-- **Testing**: Vitest with comprehensive coverage
-
-### Project Structure
-
-#### TypeScript Configuration
-- **Development**: `tsconfig.json` - Incremental builds, source maps, declaration files
-- **Production**: `tsconfig.prod.json` - Optimized, no source maps, strict checks
-- **Compilation Target**: ES2022 with ESNext modules
-- **Output**: All TypeScript compiles to `dist/` directory maintaining structure
-
-#### Database Architecture
-- **Schema**: `supabase_schema.sql` contains complete database structure
-- **Key Tables**: products, orders, occasions, users, product_images, order_items
-- **Custom Types**: Extensive PostgreSQL enums (order_status, payment_status, occasion_type, etc.)
-- **Access**: Exclusively through REST API endpoints, no direct Supabase client usage
-
-#### Backend Architecture (`src/`)
+### Directory Structure
 ```
-app/
-├── server.ts          # Express application entry point
-└── routes/            # Route definitions
-    ├── productRoutes.ts
-    ├── orderRoutes.ts
-    ├── occasionsRoutes.ts
-    ├── imageRoutes.ts
-    └── logsRoutes.ts
+src/
+├── app/                 # Express server setup and routes
+│   ├── server.ts       # Main FloresYaServer class
+│   ├── routes/         # API route definitions
+│   └── middleware/     # Express middleware (auth, etc.)
+├── controllers/        # API endpoint handlers
+├── services/           # Business logic layer
+├── config/             # Configuration (Supabase, Swagger)
+├── types/              # TypeScript type definitions
+├── utils/              # Utility functions
+└── frontend/           # Frontend TypeScript code
 
-controllers/           # Request handlers with validation
-services/             # Business logic layer
-config/               # Supabase connection and types
-types/                # Global TypeScript definitions
-models/               # Database interaction layer
+api/                    # Vercel serverless handler
+public/                 # Static files served by Express
+dist/                   # Compiled TypeScript output
 ```
 
-#### Frontend Architecture (`src/frontend/`)
-```
-frontend/
-├── main.ts           # Main application controller
-├── auth.ts           # Authentication management
-├── admin.ts          # Admin panel functionality
-├── services/
-│   └── api.ts        # FloresYaAPI class - centralized API communication
-├── types/            # Frontend-specific types
-└── utils/
-    └── logger.ts     # Frontend logging system
-```
+### Key Architectural Patterns
 
-#### Static Assets (`public/`)
-```
-public/
-├── index.html        # Main application entry
-├── pages/            # Additional HTML pages
-├── css/              # Modular stylesheets
-└── images/           # Static assets and placeholders
-```
+**Service Layer Pattern**: All business logic is encapsulated in service classes (ProductService, OrderService, etc.). Controllers are thin and delegate to services.
 
-## Critical Development Rules
+**Atomic Transactions**: All critical database operations use PostgreSQL functions defined in `database-transactions.sql` to ensure data integrity:
+- `create_order_with_items()` - Order creation with items and status history
+- `update_order_status_with_history()` - Status updates with audit trail
+- `create_product_with_occasions()` - Product creation with occasion associations
+- `update_carousel_order_atomic()` - Carousel position management
+- `create_product_images_atomic()` - Multi-image creation
 
-### TypeScript Standards
-- **Strict Mode**: All configurations enforce strict typing
-- **No 'any' Types**: Use specific interfaces and types defined in `src/types/globals.ts`
-- **ES Modules**: Exclusive use of import/export syntax
-- **Path Aliases**: Use `@shared-types/*` and `@database-types/*` for common imports
+**Type Safety**: The project uses strict TypeScript with no `any` types. All database types are defined in `src/config/supabase.ts` and shared types in `src/types/globals.ts`.
 
-### Code Organization
-- **Clean Architecture**: Controllers → Services → Models pattern
-- **Type Safety**: Every function must have explicit return types
-- **API Communication**: All database operations through `FloresYaAPI` class
-- **Error Handling**: Comprehensive logging through custom Logger interface
+## Database Integration
 
-### File Search Commands
-- **File Search**: Use `fdfind` (fd) instead of find
-- **Content Search**: Use `rg` (ripgrep) instead of grep
+### Supabase Configuration
+- **Client**: `supabase` (anonymous key) - for general operations
+- **Service Client**: `supabaseService` (service role key) - for admin operations
+- **Types**: All database types are inlined in `src/config/supabase.ts`
 
-## API Architecture
+### Transaction Requirements
+Before making database changes, ensure PostgreSQL transaction functions are deployed by executing `database-transactions.sql` in Supabase Dashboard > SQL Editor.
 
-### Core API Class
-All backend communication flows through `FloresYaAPI` class in `src/frontend/services/api.ts`:
-```typescript
-// Centralized API instance
-export const api = new FloresYaAPI();
+### Critical Schema Files
+- `supabase_schema.sql` - **Single source of truth** for database schema (never modify)
+- `database-transactions.sql` - PostgreSQL functions for atomic operations
 
-// Usage in other files
-import { api } from './api';
-```
+## Development Standards
 
-### REST Endpoints
-- `GET /api/products` - Product catalog with filtering
-- `POST /api/orders` - Order creation
-- `GET /api/occasions` - Available occasions
-- `POST /api/images/upload` - Image handling
-- `POST /api/logs` - System logging
+### TypeScript Configuration
+- **Strict mode enabled**: No `any` types allowed
+- **Module system**: ESNext with bundler resolution
+- **Path mapping**: `@shared-types/*` and `@database-types/*` aliases
+- **Build target**: ES2022 with DOM types
 
-### Database Integration
-- **Connection**: Managed through `supabaseManager` in `src/config/supabase.ts`
-- **Types**: Auto-generated from schema in `src/config/supabase-types.ts`
-- **Transactions**: Handled at service layer with proper error management
-
-## Development Workflow
-
-### Starting Development
-1. `npm install` - Install dependencies
-2. `npm run dev:build` - Build and start development server
-3. Server runs on port from environment variables
-
-### Making Changes
-1. Edit TypeScript files in `src/`
-2. TypeScript auto-compiles to `dist/`
-3. Frontend references compiled JavaScript files
-4. Always run `npm run type:check` before commits
-
-### Database Updates
-1. Modify `supabase_schema.sql`
-2. Update types in `src/config/supabase-types.ts`
-3. Adjust controllers to match new schema
-4. Test with `npm run dev:build`
-
-## Deployment
-
-### Vercel Configuration
-- API routes handled by `api/index.ts`
-- Static files served from `public/` and `dist/`
-- Production builds use optimized TypeScript configuration
-
-### Environment Variables
-- Supabase connection details required
-- Check `.env.example` for required variables
-
-## Image Handling
-
-### Strategy
-- Primary images stored in Supabase storage
-- Local placeholders used when Supabase returns null
-- Multiple image sizes supported (thumb, small, medium, large)
-- Automatic cleanup of temporary files after upload
-
-## Logging System
-
-### Frontend Logging
-- Centralized logger in `src/frontend/utils/logger.ts`
-- Categories: info, success, error, warn, debug, api, user, cart, perf
-- Auto-send capability with configurable intervals
-- Structured logging with performance metrics
-
-### Backend Logging
-- Critical process logging only
-- Error tracking through service layer
-- Integration with frontend logging system via `/api/logs` endpoint
-
-## Performance Considerations
-
-### TypeScript Compilation
-- Development: Incremental builds for speed
-- Production: Full optimization with comment removal
-- Watch mode available for continuous development
+### Code Quality
+- **ESLint**: Strict configuration in `.eslintrc.json`
+- **Type checking**: Must pass `npm run type:check`
+- **No technical debt**: Zero tolerance for stubs, commented code, or temporary fixes
 
 ### Frontend Architecture
-- Modular loading of TypeScript modules
-- Efficient API caching through FloresYaAPI
-- Optimized image loading with size variants
+- **Vanilla TypeScript**: No framework dependencies
+- **Module compilation**: TypeScript files transpiled to `dist/` and served via Express
+- **Bootstrap 5**: For UI components and styling
+- **API communication**: Via `src/frontend/services/api.ts`
 
-### Database Optimization
-- Indexed queries for product searches
-- Efficient pagination implementation
-- Proper foreign key relationships
+## Authentication & Security
+
+### JWT Authentication
+- **Middleware**: `src/app/middleware/auth.ts`
+- **Service**: `UserService` handles authentication logic
+- **Roles**: `admin`, `user`, `support` with role-based access control
+
+### Security Middleware Stack
+1. Helmet - Security headers
+2. CORS - Cross-origin configuration
+3. Rate limiting - 100 requests/15min (production)
+4. Body parsing - 10MB limit
+5. Compression - Response compression
+
+## API Documentation
+
+### Swagger/OpenAPI
+- **Access**: `/api-docs` endpoint
+- **JSON spec**: `/api-docs.json`
+- **Configuration**: `src/config/swagger.ts`
+
+### Health Check
+- **Endpoint**: `GET /api/health`
+- **Purpose**: Server status, memory usage, uptime monitoring
+
+## Environment Configuration
+
+### Required Environment Variables
+```bash
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+JWT_SECRET=your_jwt_secret
+NODE_ENV=development|production
+PORT=3000
+```
+
+### Deployment
+- **Platform**: Vercel
+- **Handler**: `api/index.ts` (serverless function)
+- **Static files**: Served from `public/`
+- **Build command**: `npm run build`
+
+## Search and Development Tools
+
+### File Operations
+- **File search**: Use `fdfind` (fd) for file searching
+- **Content search**: Use `rg` (ripgrep) for content searching
+- **Avoid**: Standard `find` and `grep` commands
+
+### Logging System
+- **Server**: `src/utils/serverLogger.ts` - Comprehensive server logging
+- **Frontend**: `src/frontend/utils/logger.ts` - Client-side logging
+- **Categories**: SYSTEM, SECURITY, DATABASE, API, PERF, STATIC
+
+## Important Constraints
+
+### Configuration Changes
+**CRITICAL**: Always ask for explicit permission before modifying:
+- `tsconfig.json`, `tsconfig.prod.json`, `tsconfig.dev.json`
+- `package.json`
+- `vercel.json`
+- `.eslintrc.json`
+
+### Database Schema
+- **Never modify** `supabase_schema.sql` - it's the single source of truth
+- **Always reference** schema file to ensure controller compatibility
+- **Use atomic transactions** for all critical operations
+
+### Code Standards
+- **No `any` types**: Use specific types or create custom interfaces
+- **No stubs or TODO comments**: Implement complete solutions
+- **Event handling**: Use proper DOM lifecycle and event delegation
+- **Error handling**: Comprehensive error handling with logging
 
 ## Testing Strategy
 
-### Test Structure
-- Unit tests in `tests/unit/`
-- Vitest configuration optimized for ES6 modules
-- Coverage reporting enabled
-- Mock support for Supabase operations
+### Framework
+- **Test runner**: Vitest
+- **HTTP testing**: Supertest for API endpoint testing
+- **Coverage**: Available via `npm run test:coverage`
 
-### Running Tests
-- `npm test` for full test suite
-- `npm run test:watch` during development
-- `npm run test:coverage` for coverage analysis
+### Focus Areas
+- API endpoint functionality
+- Service layer business logic
+- Database transaction integrity
+- Input validation rules
 
-When working with this codebase, always prioritize type safety, maintain the clean architecture patterns, and ensure all changes are reflected in both TypeScript source and the database schema.
+## Performance Considerations
+
+### Static File Serving
+- **Production**: 1-year cache for static assets
+- **Development**: No caching for faster iteration
+- **Compression**: Enabled for all responses
+
+### Database Optimization
+- **Prepared statements**: All queries use parameterized statements
+- **Connection pooling**: Managed by Supabase
+- **Transaction batching**: Related operations grouped in single transactions
+
+## Troubleshooting
+
+### Common Issues
+1. **Build failures**: Check TypeScript errors with `npm run type:check`
+2. **Lint errors**: Run `npm run lint:fix` for auto-fixable issues
+3. **Database connection**: Verify environment variables and Supabase status
+4. **Transaction failures**: Ensure PostgreSQL functions are deployed
+
+### Debug Commands
+```bash
+# Check server health
+curl http://localhost:3000/api/health
+
+# Verify database connection
+npm run schema:info
+
+# Monitor server logs
+# Check serverLogger output in console
+```

@@ -40,7 +40,7 @@
     "listEmittedFiles": false,           // ❌ No listar outputs
 
     // Configuración de módulos optimizada para Vercel
-    "module": "CommonJS",                 // ✅ CommonJS para Vercel serverless
+    "module": "ES2020",                   // ✅ ES2020 para compatibilidad con import.meta
     "moduleResolution": "node",           // ✅ Node.js resolution para Vercel
     "target": "ES2020",                   // ✅ Compatible con Vercel Node.js runtime
     "allowSyntheticDefaultImports": true, // ✅ Compatibilidad con ES modules
@@ -49,7 +49,8 @@
   },
   
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "scripts/**/*.ts"
   ],
   "exclude": [
     "node_modules",

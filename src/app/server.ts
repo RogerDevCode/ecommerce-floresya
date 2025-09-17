@@ -17,13 +17,23 @@ import { createOrderRoutes } from './routes/orderRoutes.js';
 import { createOccasionsRoutes } from './routes/occasionsRoutes.js';
 import { createLogsRoutes } from './routes/logsRoutes.js';
 import { createImageRoutes } from './routes/imageRoutes.js';
+import { createUserRoutes } from './routes/userRoutes.js';
+import { createSchemaRoutes } from './routes/schemaRoutes.js';
 import { supabaseManager } from '../config/supabase.js';
+
+// Import comprehensive logging system
+import { serverLogger } from '../utils/serverLogger.js';
+
+// Import Swagger configuration
+import { swaggerUi, swaggerSpec } from '../config/swagger.js';
 
 // Load environment variables
 config();
 
-// Directory resolution for Vercel compatibility
-const __dirname = path.resolve();
+// Directory resolution for ES modules and Vercel compatibility
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 class FloresYaServer {
   private app: Application;
@@ -38,7 +48,10 @@ class FloresYaServer {
   }
 
   private initializeMiddleware(): void {
+    serverLogger.info('SYSTEM', 'Initializing middleware stack');
+
     // Security middleware
+    serverLogger.info('SECURITY', 'Setting up Helmet security headers');
     this.app.use(helmet({
       contentSecurityPolicy: {
         directives: {
@@ -55,19 +68,28 @@ class FloresYaServer {
     }));
 
     // CORS configuration
+    const corsOrigins = process.env.NODE_ENV === 'production'
+      ? ['https://floresya.vercel.app', 'https://floresya.com']
+      : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:8080', 'http://127.0.0.1:8080'];
+
+    serverLogger.info('SECURITY', 'Configuring CORS', { origins: corsOrigins });
     this.app.use(cors({
-      origin: process.env.NODE_ENV === 'production'
-        ? ['https://floresya.vercel.app', 'https://floresya.com']
-        : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:8080', 'http://127.0.0.1:8080'],
+      origin: corsOrigins,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
     }));
 
     // Rate limiting
+    const rateLimitMax = process.env.NODE_ENV === 'production' ? 100 : 1000;
+    serverLogger.info('SECURITY', 'Setting up rate limiting', {
+      windowMs: '15 minutes',
+      maxRequests: rateLimitMax
+    });
+
     const limiter = rateLimit({
       windowMs: 15 * 60 * 1000, // 15 minutes
-      max: process.env.NODE_ENV === 'production' ? 100 : 1000, // Limit requests per windowMs
+      max: rateLimitMax,
       message: {
         success: false,
         message: 'Too many requests, please try again later.'
@@ -78,14 +100,22 @@ class FloresYaServer {
     this.app.use('/api', limiter);
 
     // Compression
+    serverLogger.info('PERF', 'Enabling response compression');
     this.app.use(compression());
 
     // Body parsing middleware
+    serverLogger.info('SYSTEM', 'Setting up body parsers', { jsonLimit: '10mb', urlencodedLimit: '10mb' });
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
     // Static files middleware
     const publicPath = path.join(__dirname, '../../public');
+    const staticMaxAge = process.env.NODE_ENV === 'production' ? '1y' : '0';
+    serverLogger.info('STATIC', 'Setting up static file serving', {
+      path: publicPath,
+      maxAge: staticMaxAge
+    });
+
     this.app.use(express.static(publicPath, {
       maxAge: process.env.NODE_ENV === 'production' ? '1y' : '0',
       etag: true,
@@ -93,7 +123,9 @@ class FloresYaServer {
     }));
 
     // Serve compiled TypeScript modules with correct MIME types
-    this.app.use('/dist', express.static(path.join(__dirname, '../../dist'), {
+    const distPath = path.join(__dirname, '../../dist');
+    serverLogger.info('STATIC', 'Setting up dist file serving', { path: distPath });
+    this.app.use('/dist', express.static(distPath, {
       setHeaders: (res, filePath) => {
         if (filePath.endsWith('.js')) {
           res.setHeader('Content-Type', 'application/javascript');
@@ -104,39 +136,150 @@ class FloresYaServer {
       }
     }));
 
-    // Request logging in development
-    if (process.env.NODE_ENV !== 'production') {
-      this.app.use((req: Request, res: Response, next: NextFunction) => {
-        console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-        next();
-      });
-    }
+    // Request logging middleware
+    serverLogger.info('SYSTEM', 'Enabling request logging middleware');
+    this.app.use(serverLogger.createRequestLogger());
+
+    serverLogger.success('SYSTEM', 'Middleware stack initialized successfully');
   }
 
   private initializeRoutes(): void {
-    // Health check endpoint
+    serverLogger.info('SYSTEM', 'Initializing API routes');
+
+    /**
+     * @swagger
+     * /api/health:
+     *   get:
+     *     summary: Health check endpoint
+     *     description: Returns the health status of the API server with system information
+     *     tags: [System]
+     *     responses:
+     *       200:
+     *         description: API is healthy and running
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 success:
+     *                   type: boolean
+     *                   example: true
+     *                 message:
+     *                   type: string
+     *                   example: "FloresYa API is running"
+     *                 timestamp:
+     *                   type: string
+     *                   format: date-time
+     *                   example: "2024-01-15T10:30:00.000Z"
+     *                 version:
+     *                   type: string
+     *                   example: "2.0.0"
+     *                 environment:
+     *                   type: string
+     *                   example: "production"
+     *                 uptime:
+     *                   type: number
+     *                   description: Server uptime in seconds
+     *                   example: 3600.5
+     *                 memory:
+     *                   type: object
+     *                   description: Memory usage statistics
+     *                   properties:
+     *                     rss:
+     *                       type: number
+     *                       description: Resident Set Size
+     *                     heapTotal:
+     *                       type: number
+     *                       description: Total heap size
+     *                     heapUsed:
+     *                       type: number
+     *                       description: Used heap size
+     *                     external:
+     *                       type: number
+     *                       description: External memory usage
+     */
     this.app.get('/api/health', (req: Request, res: Response) => {
-      res.status(200).json({
+      const healthData = {
         success: true,
         message: 'FloresYa API is running',
         timestamp: new Date().toISOString(),
         version: '2.0.0',
-        environment: process.env.NODE_ENV ?? 'development'
+        environment: process.env.NODE_ENV ?? 'development',
+        uptime: process.uptime(),
+        memory: process.memoryUsage()
+      };
+
+      serverLogger.info('HEALTH', 'Health check requested', {
+        ip: req.ip,
+        userAgent: req.get('User-Agent')
       });
+
+      res.status(200).json(healthData);
     });
 
-    // API routes
+    // API routes with logging
+    serverLogger.info('SYSTEM', 'Setting up product routes');
     this.app.use('/api/products', createProductRoutes());
+
+    serverLogger.info('SYSTEM', 'Setting up order routes');
     this.app.use('/api/orders', createOrderRoutes());
+
+    serverLogger.info('SYSTEM', 'Setting up occasions routes');
     this.app.use('/api/occasions', createOccasionsRoutes());
+
+    serverLogger.info('SYSTEM', 'Setting up logs routes');
     this.app.use('/api/logs', createLogsRoutes());
+
+    serverLogger.info('SYSTEM', 'Setting up image routes');
     this.app.use('/api/images', createImageRoutes());
+
+    serverLogger.info('SYSTEM', 'Setting up user routes');
+    this.app.use('/api/users', createUserRoutes());
+
+    serverLogger.info('SYSTEM', 'Setting up schema routes');
+    this.app.use('/api/admin/schema', createSchemaRoutes());
+
+    // Swagger API documentation
+    serverLogger.info('SYSTEM', 'Setting up Swagger API documentation');
+    this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+      explorer: true,
+      swaggerOptions: {
+        docExpansion: 'list',
+        filter: true,
+        showRequestDuration: true
+      }
+    }));
+
+    // Swagger JSON endpoint
+    this.app.get('/api-docs.json', (req: Request, res: Response) => {
+      res.setHeader('Content-Type', 'application/json');
+      res.send(swaggerSpec);
+    });
 
     // Serve index.html for all non-API routes (SPA support)
     this.app.get('*', (req: Request, res: Response) => {
       const indexPath = path.join(__dirname, '../../public/index.html');
-      res.sendFile(indexPath);
+
+      // Log static file serving for debugging
+      if (req.path !== '/' && req.path !== '/index.html') {
+        serverLogger.debug('STATIC', `Serving index.html for route: ${req.path}`, {
+          originalPath: req.path,
+          indexPath
+        });
+      }
+
+      res.sendFile(indexPath, (err) => {
+        if (err) {
+          serverLogger.error('STATIC', 'Failed to serve index.html', {
+            error: err.message,
+            path: req.path,
+            indexPath
+          });
+        }
+      });
     });
+
+    serverLogger.success('SYSTEM', 'All routes initialized successfully');
   }
 
   private initializeErrorHandling(): void {
@@ -149,14 +292,24 @@ class FloresYaServer {
       });
     });
 
-    // Global error handler
+    // Global error handler with comprehensive logging
     this.app.use((error: Error, req: Request, res: Response, _next: NextFunction) => {
-      console.error('Unhandled error:', error);
-      
+      serverLogger.error('SYSTEM', 'Unhandled application error', {
+        error: {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        },
+        url: req.url,
+        method: req.method,
+        ip: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+
       res.status(500).json({
         success: false,
-        message: process.env.NODE_ENV === 'production' 
-          ? 'Internal server error' 
+        message: process.env.NODE_ENV === 'production'
+          ? 'Internal server error'
           : error.message,
         ...(process.env.NODE_ENV !== 'production' && { stack: error.stack })
       });
@@ -164,23 +317,42 @@ class FloresYaServer {
   }
 
   public async start(): Promise<void> {
+    const timer = serverLogger.startTimer('Server Startup');
+
     try {
+      serverLogger.info('SYSTEM', 'Initializing FloresYa Server', {
+        port: this.port,
+        environment: process.env.NODE_ENV ?? 'development'
+      });
+
+      // Test database connection
       const isConnected = await supabaseManager.testConnection();
-      
+
       if (!isConnected) {
-        console.warn('⚠️ Warning: Could not connect to Supabase. Check your configuration.');
+        serverLogger.warn('DATABASE', 'Could not connect to Supabase', {
+          message: 'Check your database configuration'
+        });
       } else {
-        console.log('✅ Supabase connection verified');
+        serverLogger.success('DATABASE', 'Supabase connection verified');
       }
 
+      // Start server
       this.app.listen(this.port, () => {
-        console.log(`🌸 FloresYa Server running on port ${this.port}`);
-        console.log(`📱 Environment: ${process.env.NODE_ENV ?? 'development'}`);
-        console.log(`🔗 API Base URL: http://localhost:${this.port}/api`);
-        console.log(`📊 Health Check: http://localhost:${this.port}/api/health`);
+        serverLogger.success('SYSTEM', 'FloresYa Server started successfully', {
+          port: this.port,
+          environment: process.env.NODE_ENV ?? 'development',
+          apiBaseUrl: `http://localhost:${this.port}/api`,
+          healthCheckUrl: `http://localhost:${this.port}/api/health`
+        });
+
+        timer(); // End timer
       });
     } catch (error) {
-      console.error('❌ Failed to start server:', error);
+      serverLogger.error('SYSTEM', 'Failed to start server', {
+        error: error instanceof Error ? error.message : String(error),
+        port: this.port
+      });
+      timer(); // End timer
       process.exit(1);
     }
   }
@@ -193,8 +365,8 @@ class FloresYaServer {
 // Create server instance for export (Vercel compatibility)
 const serverInstance = new FloresYaServer();
 
-// Start server if this is the main module (CommonJS compatibility)
-if (require.main === module) {
+// Start server if this is the main module (ES module compatibility)
+if (import.meta.url === `file://${process.argv[1]}`) {
   void serverInstance.start();
 }
 

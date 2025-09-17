@@ -2,6 +2,311 @@
 -- Atomic operations for data integrity
 
 -- ============================================
+-- USER TRANSACTIONS
+-- ============================================
+
+-- Function to create user with validation and audit
+CREATE OR REPLACE FUNCTION create_user_atomic(
+    user_data JSONB
+) RETURNS JSONB AS $$
+DECLARE
+    new_user_id INTEGER;
+    result_user JSONB;
+BEGIN
+    -- Validate email format
+    IF NOT (user_data->>'email' ~ '^[^@\s]+@[^@\s]+\.[^@\s]+$') THEN
+        RAISE EXCEPTION 'Invalid email format: %', user_data->>'email';
+    END IF;
+
+    -- Check if email already exists
+    IF EXISTS (SELECT 1 FROM public.users WHERE email = user_data->>'email') THEN
+        RAISE EXCEPTION 'Email already exists: %', user_data->>'email';
+    END IF;
+
+    -- Insert user
+    INSERT INTO public.users (
+        email,
+        password_hash,
+        full_name,
+        phone,
+        role,
+        is_active,
+        email_verified
+    ) VALUES (
+        user_data->>'email',
+        user_data->>'password_hash',
+        user_data->>'full_name',
+        user_data->>'phone',
+        COALESCE((user_data->>'role')::user_role, 'user'::user_role),
+        COALESCE((user_data->>'is_active')::BOOLEAN, true),
+        COALESCE((user_data->>'email_verified')::BOOLEAN, false)
+    ) RETURNING id INTO new_user_id;
+
+    -- Get created user (without password_hash)
+    SELECT jsonb_build_object(
+        'id', u.id,
+        'email', u.email,
+        'full_name', u.full_name,
+        'phone', u.phone,
+        'role', u.role,
+        'is_active', u.is_active,
+        'email_verified', u.email_verified,
+        'created_at', u.created_at,
+        'updated_at', u.updated_at
+    ) INTO result_user
+    FROM public.users u
+    WHERE u.id = new_user_id;
+
+    RETURN jsonb_build_object(
+        'success', true,
+        'user', result_user,
+        'message', 'User created successfully'
+    );
+
+EXCEPTION WHEN OTHERS THEN
+    RETURN jsonb_build_object(
+        'success', false,
+        'message', SQLERRM,
+        'error_code', SQLSTATE
+    );
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to update user with validation
+CREATE OR REPLACE FUNCTION update_user_atomic(
+    user_id INTEGER,
+    user_data JSONB
+) RETURNS JSONB AS $$
+DECLARE
+    existing_user RECORD;
+    result_user JSONB;
+    update_clause TEXT := '';
+    values_array TEXT[] := ARRAY[]::TEXT[];
+    param_count INTEGER := 0;
+BEGIN
+    -- Check if user exists
+    SELECT * INTO existing_user FROM public.users WHERE id = user_id;
+    IF NOT FOUND THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'message', 'User not found',
+            'error_code', 'USER_NOT_FOUND'
+        );
+    END IF;
+
+    -- Build dynamic update query
+    IF user_data ? 'email' THEN
+        param_count := param_count + 1;
+        update_clause := update_clause || CASE WHEN param_count > 1 THEN ', ' ELSE '' END || 'email = $' || param_count;
+        values_array := values_array || (user_data->>'email');
+
+        -- Validate email format
+        IF NOT (user_data->>'email' ~ '^[^@\s]+@[^@\s]+\.[^@\s]+$') THEN
+            RAISE EXCEPTION 'Invalid email format: %', user_data->>'email';
+        END IF;
+
+        -- Check if new email already exists (excluding current user)
+        IF EXISTS (SELECT 1 FROM public.users WHERE email = user_data->>'email' AND id != user_id) THEN
+            RAISE EXCEPTION 'Email already exists: %', user_data->>'email';
+        END IF;
+    END IF;
+
+    IF user_data ? 'password_hash' THEN
+        param_count := param_count + 1;
+        update_clause := update_clause || CASE WHEN param_count > 1 THEN ', ' ELSE '' END || 'password_hash = $' || param_count;
+        values_array := values_array || (user_data->>'password_hash');
+    END IF;
+
+    IF user_data ? 'full_name' THEN
+        param_count := param_count + 1;
+        update_clause := update_clause || CASE WHEN param_count > 1 THEN ', ' ELSE '' END || 'full_name = $' || param_count;
+        values_array := values_array || (user_data->>'full_name');
+    END IF;
+
+    IF user_data ? 'phone' THEN
+        param_count := param_count + 1;
+        update_clause := update_clause || CASE WHEN param_count > 1 THEN ', ' ELSE '' END || 'phone = $' || param_count;
+        values_array := values_array || (user_data->>'phone');
+    END IF;
+
+    IF user_data ? 'role' THEN
+        param_count := param_count + 1;
+        update_clause := update_clause || CASE WHEN param_count > 1 THEN ', ' ELSE '' END || 'role = $' || param_count;
+        values_array := values_array || (user_data->>'role');
+    END IF;
+
+    IF user_data ? 'is_active' THEN
+        param_count := param_count + 1;
+        update_clause := update_clause || CASE WHEN param_count > 1 THEN ', ' ELSE '' END || 'is_active = $' || param_count;
+        values_array := values_array || (user_data->>'is_active');
+    END IF;
+
+    IF user_data ? 'email_verified' THEN
+        param_count := param_count + 1;
+        update_clause := update_clause || CASE WHEN param_count > 1 THEN ', ' ELSE '' END || 'email_verified = $' || param_count;
+        values_array := values_array || (user_data->>'email_verified');
+    END IF;
+
+    -- Add updated_at
+    param_count := param_count + 1;
+    update_clause := update_clause || CASE WHEN param_count > 1 THEN ', ' ELSE '' END || 'updated_at = NOW()';
+
+    -- Execute update if there are fields to update
+    IF param_count > 1 THEN
+        param_count := param_count + 1;
+        EXECUTE format('UPDATE public.users SET %s WHERE id = $%s', update_clause, param_count)
+        USING values_array[1], values_array[2], values_array[3], values_array[4], values_array[5], values_array[6], values_array[7], user_id;
+    END IF;
+
+    -- Get updated user (without password_hash)
+    SELECT jsonb_build_object(
+        'id', u.id,
+        'email', u.email,
+        'full_name', u.full_name,
+        'phone', u.phone,
+        'role', u.role,
+        'is_active', u.is_active,
+        'email_verified', u.email_verified,
+        'created_at', u.created_at,
+        'updated_at', u.updated_at
+    ) INTO result_user
+    FROM public.users u
+    WHERE u.id = user_id;
+
+    RETURN jsonb_build_object(
+        'success', true,
+        'user', result_user,
+        'message', 'User updated successfully'
+    );
+
+EXCEPTION WHEN OTHERS THEN
+    RETURN jsonb_build_object(
+        'success', false,
+        'message', SQLERRM,
+        'error_code', SQLSTATE
+    );
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to toggle user active status
+CREATE OR REPLACE FUNCTION toggle_user_active_atomic(
+    user_id INTEGER
+) RETURNS JSONB AS $$
+DECLARE
+    existing_user RECORD;
+    result_user JSONB;
+BEGIN
+    -- Check if user exists and get current status
+    SELECT * INTO existing_user FROM public.users WHERE id = user_id;
+    IF NOT FOUND THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'message', 'User not found',
+            'error_code', 'USER_NOT_FOUND'
+        );
+    END IF;
+
+    -- Toggle active status
+    UPDATE public.users
+    SET is_active = NOT existing_user.is_active,
+        updated_at = NOW()
+    WHERE id = user_id;
+
+    -- Get updated user (without password_hash)
+    SELECT jsonb_build_object(
+        'id', u.id,
+        'email', u.email,
+        'full_name', u.full_name,
+        'phone', u.phone,
+        'role', u.role,
+        'is_active', u.is_active,
+        'email_verified', u.email_verified,
+        'created_at', u.created_at,
+        'updated_at', u.updated_at
+    ) INTO result_user
+    FROM public.users u
+    WHERE u.id = user_id;
+
+    RETURN jsonb_build_object(
+        'success', true,
+        'user', result_user,
+        'message', CASE
+            WHEN NOT existing_user.is_active THEN 'User activated successfully'
+            ELSE 'User deactivated successfully'
+        END
+    );
+
+EXCEPTION WHEN OTHERS THEN
+    RETURN jsonb_build_object(
+        'success', false,
+        'message', SQLERRM,
+        'error_code', SQLSTATE
+    );
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to delete user with safety checks
+CREATE OR REPLACE FUNCTION delete_user_atomic(
+    user_id INTEGER
+) RETURNS JSONB AS $$
+DECLARE
+    existing_user RECORD;
+    order_count INTEGER;
+    payment_count INTEGER;
+BEGIN
+    -- Check if user exists
+    SELECT * INTO existing_user FROM public.users WHERE id = user_id;
+    IF NOT FOUND THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'message', 'User not found',
+            'error_code', 'USER_NOT_FOUND'
+        );
+    END IF;
+
+    -- Check for related orders
+    SELECT COUNT(*) INTO order_count FROM public.orders WHERE user_id = user_id;
+    IF order_count > 0 THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'message', format('Cannot delete user: has %s related orders. Consider deactivating instead.', order_count),
+            'error_code', 'USER_HAS_ORDERS'
+        );
+    END IF;
+
+    -- Check for related payments
+    SELECT COUNT(*) INTO payment_count FROM public.payments WHERE user_id = user_id;
+    IF payment_count > 0 THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'message', format('Cannot delete user: has %s related payments. Consider deactivating instead.', payment_count),
+            'error_code', 'USER_HAS_PAYMENTS'
+        );
+    END IF;
+
+    -- Safe to delete
+    DELETE FROM public.users WHERE id = user_id;
+
+    RETURN jsonb_build_object(
+        'success', true,
+        'message', 'User deleted successfully',
+        'deleted_user', jsonb_build_object(
+            'id', existing_user.id,
+            'email', existing_user.email,
+            'full_name', existing_user.full_name
+        )
+    );
+
+EXCEPTION WHEN OTHERS THEN
+    RETURN jsonb_build_object(
+        'success', false,
+        'message', SQLERRM,
+        'error_code', SQLSTATE
+    );
+END;
+$$ LANGUAGE plpgsql;
+
+-- ============================================
 -- ORDER TRANSACTIONS
 -- ============================================
 

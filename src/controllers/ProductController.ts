@@ -6,14 +6,45 @@
 import { Request, Response } from 'express';
 import { body, query, param, validationResult } from 'express-validator';
 import { ProductService } from '../services/ProductService.js';
+import { supabaseService } from '../config/supabase.js';
 import type { ProductQuery, ProductCreateRequest, ProductUpdateRequest } from '../config/supabase.js';
 
 const productService = new ProductService();
 
 export class ProductController {
   /**
-   * GET /api/products/carousel
-   * Fetch carousel products using carousel_order optimization
+   * @swagger
+   * /api/products/carousel:
+   *   get:
+   *     summary: Get carousel products
+   *     description: Retrieves products configured for the homepage carousel, ordered by carousel_order
+   *     tags: [Products]
+   *     responses:
+   *       200:
+   *         description: Carousel products retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     products:
+   *                       type: array
+   *                       items:
+   *                         $ref: '#/components/schemas/Product'
+   *                     count:
+   *                       type: integer
+   *                       description: Number of carousel products
+   *                 message:
+   *                   type: string
+   *                   example: "Carousel products retrieved successfully"
+   *       500:
+   *         description: Server error
    */
   public async getCarousel(req: Request, res: Response): Promise<void> {
     try {
@@ -35,8 +66,93 @@ export class ProductController {
   }
 
   /**
-   * GET /api/products
-   * Get all products with filtering and pagination
+   * @swagger
+   * /api/products:
+   *   get:
+   *     summary: Get products with filtering and pagination
+   *     description: Retrieves a paginated list of products with optional filtering by search, occasion, featured status, and sorting
+   *     tags: [Products]
+   *     parameters:
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           default: 1
+   *         description: Page number for pagination
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 100
+   *           default: 20
+   *         description: Number of products per page
+   *       - in: query
+   *         name: search
+   *         schema:
+   *           type: string
+   *           minLength: 2
+   *           maxLength: 100
+   *         description: Search term for product name or description
+   *       - in: query
+   *         name: occasion
+   *         schema:
+   *           type: string
+   *         description: Occasion slug to filter products
+   *       - in: query
+   *         name: featured
+   *         schema:
+   *           type: boolean
+   *         description: Filter by featured products only
+   *       - in: query
+   *         name: has_carousel_order
+   *         schema:
+   *           type: boolean
+   *         description: Filter by products with carousel ordering
+   *       - in: query
+   *         name: sort
+   *         schema:
+   *           type: string
+   *           enum: [name:asc, name:desc, price:asc, price:desc, created_at:asc, created_at:desc, carousel_order:asc, carousel_order:desc]
+   *           default: created_at:desc
+   *         description: Sort field and direction (format field-direction)
+   *     responses:
+   *       200:
+   *         description: Products retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     products:
+   *                       type: array
+   *                       items:
+   *                         $ref: '#/components/schemas/Product'
+   *                     pagination:
+   *                       type: object
+   *                       properties:
+   *                         page:
+   *                           type: integer
+   *                         limit:
+   *                           type: integer
+   *                         total:
+   *                           type: integer
+   *                         totalPages:
+   *                           type: integer
+   *                 message:
+   *                   type: string
+   *                   example: "Products retrieved successfully"
+   *       400:
+   *         description: Invalid query parameters
+   *       500:
+   *         description: Server error
    */
   public async getProducts(req: Request, res: Response): Promise<void> {
     try {
@@ -100,8 +216,47 @@ export class ProductController {
   }
 
   /**
-   * GET /api/products/featured
-   * Get featured products
+   * @swagger
+   * /api/products/featured:
+   *   get:
+   *     summary: Get featured products
+   *     description: Retrieves a list of featured products for display on the homepage
+   *     tags: [Products]
+   *     parameters:
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 20
+   *           default: 8
+   *         description: Maximum number of featured products to return
+   *     responses:
+   *       200:
+   *         description: Featured products retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     products:
+   *                       type: array
+   *                       items:
+   *                         $ref: '#/components/schemas/Product'
+   *                     count:
+   *                       type: integer
+   *                       description: Number of featured products returned
+   *                 message:
+   *                   type: string
+   *                   example: "Featured products retrieved successfully"
+   *       500:
+   *         description: Server error
    */
   public async getFeatured(req: Request, res: Response): Promise<void> {
     try {
@@ -124,8 +279,45 @@ export class ProductController {
   }
 
   /**
-   * GET /api/products/:id
-   * Get single product by ID
+   * @swagger
+   * /api/products/{id}:
+   *   get:
+   *     summary: Get product by ID
+   *     description: Retrieves a single product by its unique identifier
+   *     tags: [Products]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *         description: Product ID
+   *     responses:
+   *       200:
+   *         description: Product retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     product:
+   *                       $ref: '#/components/schemas/Product'
+   *                 message:
+   *                   type: string
+   *                   example: "Product retrieved successfully"
+   *       400:
+   *         description: Invalid product ID
+   *       404:
+   *         description: Product not found
+   *       500:
+   *         description: Server error
    */
   public async getProductById(req: Request, res: Response): Promise<void> {
     try {
@@ -208,8 +400,57 @@ export class ProductController {
   }
 
   /**
-   * GET /api/products/search
-   * Search products
+   * @swagger
+   * /api/products/search:
+   *   get:
+   *     summary: Search products
+   *     description: Performs a full-text search across product names and descriptions
+   *     tags: [Products]
+   *     parameters:
+   *       - in: query
+   *         name: q
+   *         required: true
+   *         schema:
+   *           type: string
+   *           minLength: 2
+   *           maxLength: 100
+   *         description: Search query string
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 50
+   *           default: 20
+   *         description: Maximum number of search results
+   *     responses:
+   *       200:
+   *         description: Search completed successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     products:
+   *                       type: array
+   *                       items:
+   *                         $ref: '#/components/schemas/Product'
+   *                     count:
+   *                       type: integer
+   *                       description: Number of products found
+   *                 message:
+   *                   type: string
+   *                   example: "Search completed successfully"
+   *       400:
+   *         description: Invalid search parameters
+   *       500:
+   *         description: Server error
    */
   public async searchProducts(req: Request, res: Response): Promise<void> {
     try {
@@ -252,8 +493,105 @@ export class ProductController {
   }
 
   /**
-   * POST /api/products
-   * Create new product (admin only)
+   * @swagger
+   * /api/products:
+   *   post:
+   *     summary: Create new product
+   *     description: Creates a new product in the catalog (Admin only)
+   *     tags: [Products]
+   *     security:
+   *       - bearerAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - name
+   *               - description
+   *               - price_usd
+   *               - stock
+   *             properties:
+   *               name:
+   *                 type: string
+   *                 minLength: 2
+   *                 maxLength: 200
+   *                 description: Product name
+   *               description:
+   *                 type: string
+   *                 minLength: 10
+   *                 maxLength: 2000
+   *                 description: Detailed product description
+   *               summary:
+   *                 type: string
+   *                 maxLength: 500
+   *                 description: Short product summary
+   *               price_usd:
+   *                 type: number
+   *                 minimum: 0.01
+   *                 maximum: 999999.99
+   *                 description: Product price in USD
+   *               price_ves:
+   *                 type: number
+   *                 description: Product price in VES (optional)
+   *               stock:
+   *                 type: integer
+   *                 minimum: 0
+   *                 maximum: 999999
+   *                 description: Available stock quantity
+   *               sku:
+   *                 type: string
+   *                 maxLength: 100
+   *                 description: Stock Keeping Unit
+   *               active:
+   *                 type: boolean
+   *                 default: true
+   *                 description: Whether product is active
+   *               featured:
+   *                 type: boolean
+   *                 default: false
+   *                 description: Whether product is featured
+   *               carousel_order:
+   *                 type: integer
+   *                 minimum: 1
+   *                 description: Display order in carousel
+   *               occasion_id:
+   *                 type: integer
+   *                 minimum: 1
+   *                 description: Associated occasion ID
+   *               category:
+   *                 type: string
+   *                 maxLength: 100
+   *                 description: Product category
+   *               care_instructions:
+   *                 type: string
+   *                 description: Care and maintenance instructions
+   *     responses:
+   *       201:
+   *         description: Product created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     product:
+   *                       $ref: '#/components/schemas/Product'
+   *                 message:
+   *                   type: string
+   *                   example: "Product created successfully"
+   *       400:
+   *         description: Validation failed
+   *       401:
+   *         description: Unauthorized - Admin access required
+   *       500:
+   *         description: Server error
    */
   public async createProduct(req: Request, res: Response): Promise<void> {
     try {
@@ -286,8 +624,108 @@ export class ProductController {
   }
 
   /**
-   * PUT /api/products/:id
-   * Update product (admin only)
+   * @swagger
+   * /api/products/{id}:
+   *   put:
+   *     summary: Update product
+   *     description: Updates an existing product by ID (Admin only)
+   *     tags: [Products]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *         description: Product ID to update
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               name:
+   *                 type: string
+   *                 minLength: 2
+   *                 maxLength: 200
+   *                 description: Product name
+   *               description:
+   *                 type: string
+   *                 minLength: 10
+   *                 maxLength: 2000
+   *                 description: Detailed product description
+   *               summary:
+   *                 type: string
+   *                 maxLength: 500
+   *                 description: Short product summary
+   *               price_usd:
+   *                 type: number
+   *                 minimum: 0.01
+   *                 maximum: 999999.99
+   *                 description: Product price in USD
+   *               price_ves:
+   *                 type: number
+   *                 description: Product price in VES
+   *               stock:
+   *                 type: integer
+   *                 minimum: 0
+   *                 maximum: 999999
+   *                 description: Available stock quantity
+   *               sku:
+   *                 type: string
+   *                 maxLength: 100
+   *                 description: Stock Keeping Unit
+   *               active:
+   *                 type: boolean
+   *                 description: Whether product is active
+   *               featured:
+   *                 type: boolean
+   *                 description: Whether product is featured
+   *               carousel_order:
+   *                 type: integer
+   *                 minimum: 1
+   *                 description: Display order in carousel
+   *               occasion_id:
+   *                 type: integer
+   *                 minimum: 1
+   *                 description: Associated occasion ID
+   *               category:
+   *                 type: string
+   *                 maxLength: 100
+   *                 description: Product category
+   *               care_instructions:
+   *                 type: string
+   *                 description: Care and maintenance instructions
+   *     responses:
+   *       200:
+   *         description: Product updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     product:
+   *                       $ref: '#/components/schemas/Product'
+   *                 message:
+   *                   type: string
+   *                   example: "Product updated successfully"
+   *       400:
+   *         description: Validation failed or no update data provided
+   *       401:
+   *         description: Unauthorized - Admin access required
+   *       404:
+   *         description: Product not found
+   *       500:
+   *         description: Server error
    */
   public async updateProduct(req: Request, res: Response): Promise<void> {
     try {
@@ -370,6 +808,175 @@ export class ProductController {
         message: 'Failed to update carousel order',
         error: error instanceof Error ? error.message : 'Unknown error'
       });
+    }
+  }
+
+  /**
+   * @swagger
+   * /api/products/{id}:
+   *   delete:
+   *     summary: Delete product (conditional)
+   *     description: |
+   *       Deletes a product with conditional logic:
+   *       - If product has references in other tables: performs logical deletion (active = false)
+   *       - If product has no references: performs physical deletion with user confirmation
+   *     tags: [Products]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *         description: Product ID to delete
+   *     responses:
+   *       200:
+   *         description: Product logically deleted (deactivated)
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     product:
+   *                       $ref: '#/components/schemas/Product'
+   *                     deletion_type:
+   *                       type: string
+   *                       enum: [logical, physical]
+   *                       example: logical
+   *                     has_references:
+   *                       type: boolean
+   *                       example: true
+   *                 message:
+   *                   type: string
+   *                   example: "Product deactivated successfully (has order references)"
+   *       204:
+   *         description: Product physically deleted (no content returned)
+   *       404:
+   *         description: Product not found
+   *       500:
+   *         description: Server error
+   */
+  public async deleteProduct(req: Request, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({
+          success: false,
+          message: 'Invalid product ID',
+          errors: errors.array()
+        });
+        return;
+      }
+
+      const productId = parseInt(req.params.id as string);
+
+      // Get current product data
+      const product = await productService.getProductById(productId);
+      if (!product) {
+        res.status(404).json({
+          success: false,
+          message: 'Product not found'
+        });
+        return;
+      }
+
+      // Check if product has references in related tables
+      const hasReferences = await this.checkProductReferences(productId);
+
+      if (hasReferences) {
+        // Logical deletion - just deactivate
+        const updatedProduct = await productService.updateProduct({
+          id: productId,
+          active: false
+        });
+
+        res.status(200).json({
+          success: true,
+          data: {
+            product: updatedProduct,
+            deletion_type: 'logical',
+            has_references: true
+          },
+          message: 'Product deactivated successfully (has references in other tables)'
+        });
+      } else {
+        // Physical deletion - no references, safe to delete
+        await productService.deleteProduct(productId);
+
+        // Return 204 No Content for successful physical deletion
+        res.status(204).send();
+      }
+    } catch (error) {
+      console.error('ProductController.deleteProduct error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to delete product',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  /**
+   * Check if product has references in related tables
+   */
+  private async checkProductReferences(productId: number): Promise<boolean> {
+    try {
+      // Check product_images table
+      const { data: images, error: imagesError } = await supabaseService
+        .from('product_images')
+        .select('id')
+        .eq('product_id', productId)
+        .limit(1);
+
+      if (imagesError) {
+        throw new Error(`Failed to check product images: ${imagesError.message}`);
+      }
+
+      if (images && images.length > 0) {
+        return true;
+      }
+
+      // Check product_occasions table
+      const { data: occasions, error: occasionsError } = await supabaseService
+        .from('product_occasions')
+        .select('id')
+        .eq('product_id', productId)
+        .limit(1);
+
+      if (occasionsError) {
+        throw new Error(`Failed to check product occasions: ${occasionsError.message}`);
+      }
+
+      if (occasions && occasions.length > 0) {
+        return true;
+      }
+
+      // Check order_items table (if orders exist)
+      const { data: orderItems, error: orderItemsError } = await supabaseService
+        .from('order_items')
+        .select('id')
+        .eq('product_id', productId)
+        .limit(1);
+
+      if (orderItemsError) {
+        // If order_items table doesn't exist yet, continue
+        console.warn('Order items table may not exist yet:', orderItemsError.message);
+      } else if (orderItems && orderItems.length > 0) {
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error checking product references:', error);
+      throw error;
     }
   }
 }
@@ -456,5 +1063,9 @@ export const productValidators = {
       }
       throw new Error('Carousel order must be null or positive integer');
     })
+  ],
+
+  deleteProduct: [
+    param('id').isInt({ min: 1 }).withMessage('Product ID must be a positive integer')
   ]
 };

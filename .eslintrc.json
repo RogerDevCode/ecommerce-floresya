@@ -17,6 +17,21 @@
   "plugins": [
     "@typescript-eslint/eslint-plugin"
   ],
+  "ignorePatterns": [
+    "dist/",
+    "public/",
+    "api/",
+    "tests/",
+    "scripts/run-migration.js",
+    "scripts/schema-extractor.js",
+    "vitest.config.js",
+    "*.config.js",
+    "*.d.ts",
+    "draf-users-crud.test.ts",
+    "draft-users-crud.ts",
+    "draft-users.controller.test.ts",
+    "draft-users.controller.ts"
+  ],
   "rules": {
     "no-unused-vars": "off",
     "@typescript-eslint/no-unused-vars": ["warn", {

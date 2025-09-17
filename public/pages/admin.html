@@ -18,6 +18,20 @@
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
 
     <style>
+        /* 🚨 CRITICAL: Prevent FOUC - Loading overlay must be visible immediately */
+        #loadingOverlay {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: rgba(255,255,255,0.9) !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            z-index: 9999 !important;
+        }
+
         /* Admin Panel Styles */
         .admin-sidebar {
             min-height: 100vh;
@@ -338,6 +352,159 @@
             }
         }
 
+        /* 🌸 USER CREATION MODAL STYLING 🌸 */
+
+        /* Modal Background and Container */
+        #userModal .modal-content {
+            border: none;
+            border-radius: 1rem;
+            box-shadow: 0 20px 50px rgba(102, 126, 234, 0.15);
+            background: linear-gradient(145deg, #ffffff 0%, #f0f2ff 100%);
+            overflow: hidden;
+        }
+
+        #userModal .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom: none;
+            padding: 1.5rem 2rem;
+            border-radius: 1rem 1rem 0 0;
+        }
+
+        #userModal .modal-title {
+            font-weight: 600;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+        }
+
+        #userModal .modal-title::before {
+            content: "👤";
+            margin-right: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        #userModal .btn-close {
+            filter: brightness(0) invert(1);
+            opacity: 0.8;
+        }
+
+        #userModal .btn-close:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        #userModal .modal-body {
+            padding: 2rem;
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9ff 100%);
+        }
+
+        /* Form Styling */
+        #userModal .form-label {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        #userModal .form-control,
+        #userModal .form-select {
+            border: 2px solid #d1d5ff;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+            background-color: #ffffff;
+        }
+
+        #userModal .form-control:focus,
+        #userModal .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+            background-color: #ffffff;
+        }
+
+        #userModal .form-text {
+            color: #764ba2;
+            font-size: 0.8rem;
+            font-style: italic;
+        }
+
+        /* Password strength indicator */
+        .password-strength {
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .password-strength.weak {
+            color: #dc3545;
+        }
+
+        .password-strength.medium {
+            color: #ffc107;
+        }
+
+        .password-strength.strong {
+            color: #28a745;
+        }
+
+        /* Buttons Styling */
+        #userModal .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        #userModal .btn-primary:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        #userModal .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #868e96 100%);
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        #userModal .btn-secondary:hover {
+            background: linear-gradient(135deg, #545b62 0%, #6c757d 100%);
+            transform: translateY(-2px);
+        }
+
+        /* Message Area Styling */
+        #userModal .alert {
+            border: none;
+            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            font-weight: 500;
+        }
+
+        #userModal .alert-success {
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+            color: #1b5e20;
+            border-left: 4px solid #4caf50;
+        }
+
+        #userModal .alert-danger {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            color: #856404;
+            border-left: 4px solid #ffc107;
+            border: 1px solid #ffeaa7;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #userModal .modal-body {
+                padding: 1.5rem;
+            }
+        }
+
         /* 🔧 FIX OCCASION SELECT CONTRAST 🔧 */
         .form-select option {
             background-color: #ffffff !important;
@@ -655,6 +822,14 @@
                 padding: 0.75rem 1rem;
             }
         }
+
+        /* Force modal to be visible when it has the show class */
+        #userModal.modal.show {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            z-index: 1055 !important;
+        }
     </style>
 </head>
 <body>
@@ -670,7 +845,7 @@
         </div>
     </div>
 
-    <div class="container-fluid">
+    <div class="container-fluid" id="adminPanel">
         <div class="row">
             <!-- Sidebar -->
             <div class="col-md-3 col-lg-2 px-0 admin-sidebar" id="adminSidebar">
@@ -729,6 +904,12 @@
                             <a class="nav-link" href="#logs" data-section="logs">
                                 <i class="bi bi-journal-text"></i>
                                 Logs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#schema" data-section="schema">
+                                <i class="bi bi-diagram-3"></i>
+                                Esquema DB
                             </a>
                         </li>
                         <li class="nav-item mt-3">
@@ -1085,6 +1266,91 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Schema Section -->
+                    <div id="schema-section" class="admin-section" style="display: none;">
+                        <h4>
+                            <i class="bi bi-diagram-3 me-2"></i>
+                            Esquema de Base de Datos
+                        </h4>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-primary" id="loadSchemaInfo">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        Ver Estadísticas
+                                    </button>
+                                    <button type="button" class="btn btn-success" id="viewSchemaSQL">
+                                        <i class="bi bi-eye me-2"></i>
+                                        Ver Esquema
+                                    </button>
+                                    <button type="button" class="btn btn-warning" id="updateSchemaFile">
+                                        <i class="bi bi-arrow-clockwise me-2"></i>
+                                        Actualizar Archivo
+                                    </button>
+                                    <button type="button" class="btn btn-info" id="downloadSchemaSQL">
+                                        <i class="bi bi-download me-2"></i>
+                                        Descargar SQL
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Schema Stats Card -->
+                        <div class="card admin-card mb-4" id="schemaStatsCard" style="display: none;">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-graph-up me-2"></i>
+                                    Estadísticas del Esquema
+                                </h5>
+                            </div>
+                            <div class="card-body" id="schemaStatsContent">
+                                <!-- Content will be loaded here -->
+                            </div>
+                        </div>
+
+                        <!-- Schema SQL Card -->
+                        <div class="card admin-card" id="schemaSQLCard" style="display: none;">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-code-slash me-2"></i>
+                                    SQL Schema Completo
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="position-relative">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 mt-2 me-2" id="copySchemaSQLBtn">
+                                        <i class="bi bi-clipboard"></i>
+                                        Copiar
+                                    </button>
+                                    <pre><code id="schemaSQLContent" class="language-sql" style="max-height: 500px; overflow-y: auto; font-size: 0.85rem; line-height: 1.4;">
+<!-- SQL Content will be loaded here -->
+                                    </code></pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Loading Indicator -->
+                        <div class="text-center py-4" id="schemaLoadingIndicator" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Extrayendo esquema de la base de datos...</p>
+                        </div>
+
+                        <!-- Error Alert -->
+                        <div class="alert alert-danger" role="alert" id="schemaErrorAlert" style="display: none;">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <span id="schemaErrorMessage">Error al cargar el esquema</span>
+                        </div>
+
+                        <!-- Success Alert -->
+                        <div class="alert alert-success" role="alert" id="schemaSuccessAlert" style="display: none;">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <span id="schemaSuccessMessage">Operación completada exitosamente</span>
+                        </div>
+                    </div>
                 </main>
             </div>
         </div>
@@ -1336,7 +1602,7 @@
                 console.log(`[🌸 Admin] 📊 Attempt ${initializationAttempts}/${MAX_ATTEMPTS}`);
 
                 // Dynamic import with error handling - COMPILED JavaScript FILE
-                const module = await import('/dist/frontend/admin.js');
+                const module = await import('/dist/src/frontend/admin.js');
                 console.log('[🌸 Admin] ✅ Module loaded successfully');
 
                 const AdminPanel = module.AdminPanel;
@@ -1436,7 +1702,7 @@
                 console.log('📦 Intentando cargar módulo admin.js...');
                 const startTime = Date.now();
 
-                const module = await import('/dist/frontend/admin.js');
+                const module = await import('/dist/src/frontend/admin.js');
                 const loadTime = Date.now() - startTime;
 
                 console.log(`✅ Módulo cargado exitosamente en ${loadTime}ms`);
@@ -1924,5 +2190,101 @@
             window.diagnoseSidebar();
         }, 2000);
     </script>
+
+    <!-- User Creation Modal -->
+    <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userModalLabel">Crear Nuevo Usuario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Message Area -->
+                    <div id="userMessageArea" class="alert-container mb-3" style="display: none;">
+                        <div id="userMessage" class="alert" role="alert"></div>
+                    </div>
+
+                    <form id="userForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="userEmail" class="form-label">Email *</label>
+                                    <input type="email" class="form-control" id="userEmail" required
+                                           placeholder="usuario@ejemplo.com">
+                                    <div class="form-text">Email único para el usuario</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="userFullName" class="form-label">Nombre Completo *</label>
+                                    <input type="text" class="form-control" id="userFullName" required
+                                           placeholder="Juan Pérez">
+                                    <div class="form-text">Nombre completo del usuario</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="userPassword" class="form-label">Contraseña *</label>
+                                    <input type="password" class="form-control" id="userPassword" required
+                                           placeholder="Mínimo 8 caracteres">
+                                    <div class="form-text">Debe contener mayúscula, minúscula y número</div>
+                                    <div id="passwordStrength" class="password-strength" style="display: none;"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="userPhone" class="form-label">Teléfono</label>
+                                    <input type="tel" class="form-control" id="userPhone"
+                                           placeholder="+58 412 123 4567">
+                                    <div class="form-text">Opcional, formato internacional</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="userRole" class="form-label">Rol *</label>
+                                    <select class="form-select" id="userRole" required>
+                                        <option value="">Seleccionar rol...</option>
+                                        <option value="user">Usuario</option>
+                                        <option value="admin">Administrador</option>
+                                        <option value="support">Soporte</option>
+                                    </select>
+                                    <div class="form-text">Nivel de acceso del usuario</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" id="userIsActive" checked>
+                                    <label class="form-check-label" for="userIsActive">
+                                        Usuario activo
+                                    </label>
+                                    <div class="form-text">Puede iniciar sesión</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" id="userEmailVerified">
+                                    <label class="form-check-label" for="userEmailVerified">
+                                        Email verificado
+                                    </label>
+                                    <div class="form-text">Email confirmado</div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveUserBtn">Crear Usuario</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

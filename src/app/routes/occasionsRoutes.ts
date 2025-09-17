@@ -24,5 +24,26 @@ export function createOccasionsRoutes(): Router {
     occasionsController.getOccasionById.bind(occasionsController)
   );
 
+  // POST /api/occasions - Create new occasion
+  router.post(
+    '/',
+    occasionsValidators.createOccasion,
+    occasionsController.createOccasion.bind(occasionsController)
+  );
+
+  // PUT /api/occasions/:id - Update existing occasion
+  router.put(
+    '/:id',
+    occasionsValidators.updateOccasion,
+    occasionsController.updateOccasion.bind(occasionsController)
+  );
+
+  // DELETE /api/occasions/:id - Delete occasion (conditional)
+  router.delete(
+    '/:id',
+    occasionsValidators.deleteOccasion,
+    occasionsController.deleteOccasion.bind(occasionsController)
+  );
+
   return router;
 }

@@ -407,7 +407,7 @@ export class ImageController {
       if (!validation.valid) {
         res.status(400).json({
           success: false,
-          message: validation.error || 'Invalid image file'
+          message: validation.error ?? 'Invalid image file'
         });
         return;
       }

@@ -1,266 +1,340 @@
--- WARNING: This schema is for context only and is not meant to be run.
--- Table order and constraints may not be valid for execution.
+-- =============================================================================
+-- 🌸 FLORESYA E-COMMERCE DATABASE SCHEMA - ACTUALIZADO DESDE SUPABASE
+-- =============================================================================
+-- Schema actualizado basado en la estructura real de la base de datos
+-- Extracción realizada en: 2025-09-17
+-- Tablas confirmadas: 9
+-- Total de registros: 246
+-- Versión: 2.0.0
+-- =============================================================================
 
-CREATE TABLE public.occasions (
-  id integer NOT NULL DEFAULT nextval('occasions_id_seq'::regclass),
-  name character varying NOT NULL UNIQUE,
-  type USER-DEFINED DEFAULT 'general'::occasion_type,
-  description text,
-  is_active boolean DEFAULT true,
-  display_order integer DEFAULT 0,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  slug character varying NOT NULL UNIQUE,
-  CONSTRAINT occasions_pkey PRIMARY KEY (id)
+-- =============================================================================
+-- ENUM TYPES (Tipos Personalizados)
+-- =============================================================================
+
+-- Tipos de ocasiones para productos florales
+CREATE TYPE occasion_type AS ENUM (
+    'general',          -- Sin ocasión específica
+    'birthday',         -- Cumpleaños
+    'anniversary',      -- Aniversario
+    'wedding',          -- Boda
+    'sympathy',         -- Pésame
+    'congratulations'   -- Felicitaciones
 );
-CREATE TABLE public.order_items (
-  id integer NOT NULL DEFAULT nextval('order_items_id_seq'::regclass),
-  order_id integer NOT NULL,
-  product_id integer,
-  product_name character varying NOT NULL,
-  product_summary text,
-  unit_price_usd numeric NOT NULL CHECK (unit_price_usd >= 0::numeric),
-  unit_price_ves numeric,
-  quantity integer NOT NULL CHECK (quantity > 0),
-  subtotal_usd numeric NOT NULL CHECK (subtotal_usd >= 0::numeric),
-  subtotal_ves numeric,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT order_items_pkey PRIMARY KEY (id),
-  CONSTRAINT order_items_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id),
-  CONSTRAINT order_items_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
+
+-- Estados de órdenes
+CREATE TYPE order_status AS ENUM (
+    'pending',          -- Pendiente de confirmación
+    'confirmed',        -- Confirmada
+    'preparing',        -- En preparación
+    'ready',           -- Lista para entrega
+    'delivered',       -- Entregada
+    'cancelled'        -- Cancelada
 );
-CREATE TABLE public.order_status_history (
-  id integer NOT NULL DEFAULT nextval('order_status_history_id_seq'::regclass),
-  order_id integer NOT NULL,
-  old_status USER-DEFINED,
-  new_status USER-DEFINED NOT NULL,
-  notes text,
-  changed_by integer,
-  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT order_status_history_pkey PRIMARY KEY (id),
-  CONSTRAINT order_status_history_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id),
-  CONSTRAINT order_status_history_changed_by_fkey FOREIGN KEY (changed_by) REFERENCES public.users(id)
+
+-- Estados de pagos
+CREATE TYPE payment_status AS ENUM (
+    'pending',         -- Pendiente
+    'confirmed',       -- Confirmado
+    'failed',          -- Fallido
+    'refunded'         -- Reembolsado
 );
-CREATE TABLE public.orders (
-  id integer NOT NULL DEFAULT nextval('orders_id_seq'::regclass),
-  user_id integer,
-  customer_email character varying NOT NULL,
-  customer_name character varying NOT NULL,
-  customer_phone character varying,
-  delivery_address text NOT NULL,
-  delivery_city character varying,
-  delivery_state character varying,
-  delivery_zip character varying,
-  delivery_date date,
-  delivery_time_slot character varying,
-  delivery_notes text,
-  status USER-DEFINED DEFAULT 'pending'::order_status,
-  total_amount_usd numeric NOT NULL CHECK (total_amount_usd >= 0::numeric),
-  total_amount_ves numeric,
-  currency_rate numeric,
-  notes text,
-  admin_notes text,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT orders_pkey PRIMARY KEY (id),
-  CONSTRAINT orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+
+-- Métodos de pago disponibles
+CREATE TYPE payment_method_type AS ENUM (
+    'bank_transfer',   -- Transferencia bancaria
+    'mobile_payment',  -- Pago móvil
+    'cash',           -- Efectivo
+    'card'            -- Tarjeta
 );
-CREATE TABLE public.payment_methods (
-  id integer NOT NULL DEFAULT nextval('payment_methods_id_seq'::regclass),
-  name character varying NOT NULL,
-  type USER-DEFINED NOT NULL,
-  description text,
-  account_info jsonb,
-  is_active boolean DEFAULT true,
-  display_order integer DEFAULT 0,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT payment_methods_pkey PRIMARY KEY (id)
+
+-- Roles de usuario del sistema
+CREATE TYPE user_role AS ENUM (
+    'admin',          -- Administrador completo
+    'user',           -- Usuario regular
+    'support'         -- Soporte técnico
 );
-CREATE TABLE public.payments (
-  id integer NOT NULL DEFAULT nextval('payments_id_seq'::regclass),
-  order_id integer NOT NULL,
-  payment_method_id integer,
-  user_id integer,
-  amount_usd numeric NOT NULL CHECK (amount_usd >= 0::numeric),
-  amount_ves numeric,
-  currency_rate numeric,
-  status USER-DEFINED DEFAULT 'pending'::payment_status,
-  payment_method_name character varying NOT NULL,
-  transaction_id character varying,
-  reference_number character varying,
-  payment_details jsonb,
-  receipt_image_url text,
-  admin_notes text,
-  payment_date timestamp with time zone,
-  confirmed_date timestamp with time zone,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT payments_pkey PRIMARY KEY (id),
-  CONSTRAINT payments_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id),
-  CONSTRAINT payments_payment_method_id_fkey FOREIGN KEY (payment_method_id) REFERENCES public.payment_methods(id),
-  CONSTRAINT payments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
-);
-CREATE TABLE public.product_images (
-  id integer NOT NULL DEFAULT nextval('product_images_id_seq'::regclass),
-  product_id integer NOT NULL,
-  image_index integer NOT NULL CHECK (image_index > 0),
-  size USER-DEFINED NOT NULL,
-  url text NOT NULL,
-  file_hash character varying NOT NULL,
-  mime_type character varying NOT NULL DEFAULT 'image/webp'::character varying,
-  is_primary boolean NOT NULL DEFAULT false,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT product_images_pkey PRIMARY KEY (id),
-  CONSTRAINT product_images_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
-);
-CREATE TABLE public.product_occasions (
-  id integer NOT NULL DEFAULT nextval('product_occasions_id_seq'::regclass),
-  product_id integer NOT NULL,
-  occasion_id integer NOT NULL,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT product_occasions_pkey PRIMARY KEY (id),
-  CONSTRAINT product_occasions_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id),
-  CONSTRAINT product_occasions_occasion_id_fkey FOREIGN KEY (occasion_id) REFERENCES public.occasions(id)
-);
-CREATE TABLE public.products (
-  id integer NOT NULL DEFAULT nextval('products_id_seq'::regclass),
-  name character varying NOT NULL,
-  summary text,
-  description text,
-  price_usd numeric NOT NULL CHECK (price_usd >= 0::numeric),
-  price_ves numeric,
-  stock integer DEFAULT 0 CHECK (stock >= 0),
-  sku character varying UNIQUE,
-  active boolean DEFAULT true,
-  featured boolean DEFAULT false,
-  carousel_order integer CHECK (carousel_order >= 0),
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT products_pkey PRIMARY KEY (id)
-);
-CREATE TABLE public.settings (
-  id integer NOT NULL DEFAULT nextval('settings_id_seq'::regclass),
-  key character varying NOT NULL UNIQUE,
-  value text,
-  description text,
-  type character varying DEFAULT 'string'::character varying,
-  is_public boolean DEFAULT false,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT settings_pkey PRIMARY KEY (id)
-);
-CREATE TABLE public.users (
-  id integer NOT NULL DEFAULT nextval('users_id_seq'::regclass),
-  email character varying NOT NULL UNIQUE,
-  password_hash text,
-  full_name character varying,
-  phone character varying,
-  role USER-DEFINED DEFAULT 'user'::user_role,
-  is_active boolean DEFAULT true,
-  email_verified boolean DEFAULT false,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT users_pkey PRIMARY KEY (id)
+
+-- Tamaños de imágenes para optimización
+CREATE TYPE image_size AS ENUM (
+    'thumb',          -- Miniatura (pequeña)
+    'small',          -- Pequeña
+    'medium',         -- Mediana
+    'large'           -- Grande
 );
 
 -- =============================================================================
--- STORED PROCEDURES FOR TRANSACTIONS
+-- TABLA: users (Users)
+-- =============================================================================
+-- Registros: 2
+
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    email_verified BOOLEAN NOT NULL,
+    full_name VARCHAR(255) NOT NULL,
+    is_active BOOLEAN DEFAULT NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    phone VARCHAR(50) NOT NULL,
+    role VARCHAR(255) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+-- =============================================================================
+-- TABLA: products (Products)
+-- =============================================================================
+-- Registros: 20
+
+CREATE TABLE products (
+    id SERIAL PRIMARY KEY NOT NULL,
+    active BOOLEAN DEFAULT NOT NULL,
+    carousel_order INTEGER NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    featured BOOLEAN DEFAULT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    price_usd DECIMAL(10,2) NOT NULL,
+    price_ves DECIMAL(15,2),
+    sku VARCHAR(255) NOT NULL,
+    stock INTEGER DEFAULT 0 NOT NULL,
+    summary VARCHAR(255) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+-- =============================================================================
+-- TABLA: product_images (Product images)
+-- =============================================================================
+-- Registros: 160
+
+CREATE TABLE product_images (
+    id SERIAL PRIMARY KEY NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    file_hash VARCHAR(255) NOT NULL,
+    image_index INTEGER NOT NULL,
+    is_primary BOOLEAN DEFAULT NOT NULL,
+    mime_type VARCHAR(255) NOT NULL,
+    product_id INTEGER NOT NULL,
+    size VARCHAR(255) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    url VARCHAR(255) NOT NULL
+);
+
+-- =============================================================================
+-- TABLA: occasions (Occasions)
+-- =============================================================================
+-- Registros: 8
+
+CREATE TABLE occasions (
+    id SERIAL PRIMARY KEY NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    description TEXT,
+    display_order INTEGER NOT NULL,
+    is_active BOOLEAN DEFAULT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL,
+    type VARCHAR(255) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+-- =============================================================================
+-- TABLA: product_occasions (Product occasions)
+-- =============================================================================
+-- Registros: 56
+
+CREATE TABLE product_occasions (
+    id SERIAL PRIMARY KEY NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    occasion_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+-- =============================================================================
+-- TABLA: orders (Orders)
+-- =============================================================================
+-- Registros: 0
+
+CREATE TABLE orders (
+
+);
+
+-- =============================================================================
+-- TABLA: order_items (Order items)
+-- =============================================================================
+-- Registros: 0
+
+CREATE TABLE order_items (
+
+);
+
+-- =============================================================================
+-- TABLA: payments (Payments)
+-- =============================================================================
+-- Registros: 0
+
+CREATE TABLE payments (
+
+);
+
+-- =============================================================================
+-- TABLA: settings (Settings)
+-- =============================================================================
+-- Registros: 0
+
+CREATE TABLE settings (
+
+);
+
+-- Índices para users
+CREATE UNIQUE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_role ON users(role);
+CREATE INDEX idx_users_active ON users(is_active);
+
+-- Índices para products
+CREATE INDEX idx_products_active ON products(active);
+CREATE INDEX idx_products_featured ON products(featured);
+CREATE INDEX idx_products_carousel ON products(carousel_order) WHERE carousel_order IS NOT NULL;
+CREATE INDEX idx_products_sku ON products(sku) WHERE sku IS NOT NULL;
+CREATE INDEX idx_products_price ON products(price_usd);
+
+-- Índices para orders
+CREATE INDEX idx_orders_user_id ON orders(user_id);
+CREATE INDEX idx_orders_status ON orders(status);
+CREATE INDEX idx_orders_delivery_date ON orders(delivery_date);
+CREATE INDEX idx_orders_created_at ON orders(created_at);
+
+-- =============================================================================
+-- TRIGGERS PARA UPDATED_AT AUTOMÁTICO
 -- =============================================================================
 
--- Function to create product with occasions in a single transaction
-CREATE OR REPLACE FUNCTION create_product_with_occasions(
-  product_data jsonb,
-  occasion_ids integer[]
-)
-RETURNS TABLE(
-  id integer,
-  name varchar,
-  description text,
-  summary text,
-  price_usd numeric,
-  price_ves numeric,
-  stock integer,
-  sku varchar,
-  featured boolean,
-  active boolean,
-  carousel_order integer,
-  created_at timestamptz,
-  updated_at timestamptz
-)
-LANGUAGE plpgsql
-AS $$
-DECLARE
-  product_id integer;
-  occasion_id integer;
+-- Función para actualizar timestamp automáticamente
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
 BEGIN
-  -- Start transaction (implicit)
-  
-  -- Insert the product
-  INSERT INTO products (
-    name, 
-    description, 
-    summary, 
-    price_usd, 
-    price_ves, 
-    stock, 
-    sku, 
-    featured, 
-    active, 
-    carousel_order,
-    created_at,
-    updated_at
-  )
-  VALUES (
-    (product_data->>'name')::varchar,
-    (product_data->>'description')::text,
-    (product_data->>'summary')::text,
-    (product_data->>'price_usd')::numeric,
-    (product_data->>'price_ves')::numeric,
-    (product_data->>'stock')::integer,
-    (product_data->>'sku')::varchar,
-    COALESCE((product_data->>'featured')::boolean, false),
-    COALESCE((product_data->>'active')::boolean, true),
-    (product_data->>'carousel_order')::integer,
-    NOW(),
-    NOW()
-  )
-  RETURNING products.id INTO product_id;
-  
-  -- Insert occasion associations
-  FOREACH occasion_id IN ARRAY occasion_ids
-  LOOP
-    INSERT INTO product_occasions (product_id, occasion_id, created_at)
-    VALUES (product_id, occasion_id, NOW());
-  END LOOP;
-  
-  -- Return the created product
-  RETURN QUERY
-  SELECT 
-    p.id,
-    p.name,
-    p.description,
-    p.summary,
-    p.price_usd,
-    p.price_ves,
-    p.stock,
-    p.sku,
-    p.featured,
-    p.active,
-    p.carousel_order,
-    p.created_at,
-    p.updated_at
-  FROM products p
-  WHERE p.id = product_id;
-  
-  -- Transaction commits automatically on successful completion
-  
-EXCEPTION
-  WHEN OTHERS THEN
-    -- Transaction rolls back automatically on error
-    RAISE EXCEPTION 'Failed to create product with occasions: %', SQLERRM;
+    NEW.updated_at = NOW();
+    RETURN NEW;
 END;
-$$;
+$$ language 'plpgsql';
+
+-- Aplicar trigger a todas las tablas con updated_at
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_occasions_updated_at BEFORE UPDATE ON occasions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON products FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON payments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_settings_updated_at BEFORE UPDATE ON settings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- =============================================================================
+-- FUNCIONES DE UTILIDAD
+-- =============================================================================
+
+-- Función para obtener el stock disponible de un producto
+CREATE OR REPLACE FUNCTION get_available_stock(product_id_param INTEGER)
+RETURNS INTEGER AS $$
+DECLARE
+    current_stock INTEGER;
+    reserved_stock INTEGER;
+BEGIN
+    -- Obtener stock actual
+    SELECT stock INTO current_stock
+    FROM products
+    WHERE id = product_id_param AND active = true;
+
+    IF current_stock IS NULL THEN
+        RETURN 0;
+    END IF;
+
+    -- Obtener stock reservado en órdenes pendientes
+    SELECT COALESCE(SUM(oi.quantity), 0) INTO reserved_stock
+    FROM order_items oi
+    JOIN orders o ON o.id = oi.order_id
+    WHERE oi.product_id = product_id_param
+    AND o.status IN ('pending', 'confirmed', 'preparing');
+
+    RETURN GREATEST(current_stock - reserved_stock, 0);
+END;
+$$ LANGUAGE plpgsql;
+
+-- Función para calcular el total de una orden
+CREATE OR REPLACE FUNCTION calculate_order_total(order_id_param INTEGER)
+RETURNS DECIMAL(10,2) AS $$
+DECLARE
+    total_amount DECIMAL(10,2);
+BEGIN
+    SELECT COALESCE(SUM(total_price_usd), 0) INTO total_amount
+    FROM order_items
+    WHERE order_id = order_id_param;
+
+    RETURN total_amount;
+END;
+$$ LANGUAGE plpgsql;
+
+-- =============================================================================
+-- VISTAS ÚTILES
+-- =============================================================================
+
+-- Vista para productos con información de imágenes primarias
+CREATE VIEW products_with_primary_image AS
+SELECT
+    p.*,
+    pi.url as primary_image_url,
+    pi.file_hash as primary_image_hash
+FROM products p
+LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = true AND pi.size = 'thumb';
+
+-- Vista para órdenes con información de cliente y estado de pago
+CREATE VIEW orders_with_payment_status AS
+SELECT
+    o.*,
+    p.status as payment_status,
+    p.method as payment_method,
+    p.amount_usd as paid_amount
+FROM orders o
+LEFT JOIN payments p ON o.id = p.order_id;
+
+-- =============================================================================
+-- DATOS INICIALES (SEEDS)
+-- =============================================================================
+
+-- Insertar ocasiones básicas si no existen
+INSERT INTO occasions (name, type, description) VALUES
+('Sin ocasión específica', 'general', 'Para cualquier momento del año'),
+('Cumpleaños', 'birthday', 'Celebración de cumpleaños'),
+('Aniversario', 'anniversary', 'Conmemoración de aniversarios'),
+('Boda', 'wedding', 'Celebraciones de matrimonio'),
+('Pésame', 'sympathy', 'Momentos de duelo y condolencias'),
+('Felicitaciones', 'congratulations', 'Logros y celebraciones especiales')
+ON CONFLICT DO NOTHING;
+
+-- Insertar usuario administrador por defecto si no existe
+INSERT INTO users (email, password_hash, full_name, role, is_active, email_verified) VALUES
+('admin@floresya.com', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewLfOJy0oCGG.imu', 'Administrador FloresYa', 'admin', true, true)
+ON CONFLICT (email) DO NOTHING;
+
+-- Configuraciones básicas del sistema
+INSERT INTO settings (key, value, description, data_type, is_public) VALUES
+('site_name', 'FloresYa', 'Nombre del sitio web', 'string', true),
+('site_description', 'Tu floristería en línea de confianza', 'Descripción del sitio', 'string', true),
+('currency_primary', 'USD', 'Moneda principal del sitio', 'string', true),
+('currency_secondary', 'VES', 'Moneda secundaria del sitio', 'string', true),
+('delivery_enabled', 'true', 'Si está habilitada la entrega a domicilio', 'boolean', true),
+('min_order_amount', '15.00', 'Monto mínimo de orden en USD', 'number', true)
+ON CONFLICT (key) DO NOTHING;
+
+-- =============================================================================
+-- COMENTARIOS FINALES
+-- =============================================================================
+
+-- Este esquema fue generado automáticamente usando FloresYa Schema Extractor
+-- Fecha de extracción: 2025-09-17
+-- Versión: 2.0.0
+-- Total de tablas: 9
+-- Total de registros: 246
+-- Total de índices: 12
+
+-- Para actualizar este archivo ejecute:
+-- npx ts-node scripts/schema-extractor.ts
+-- o desde el panel de administrador: Configuración > Ver Esquema DB
+
+-- Compatible con FloresYa TypeScript types y controllers
