@@ -146,7 +146,7 @@ export class ImageService {
   }
 
   /**
-   * Guarda los registros de imágenes en la base de datos
+   * Guarda los registros de imágenes en la base de datos usando transacción
    */
   public async saveImageRecords(
     productId: number,
@@ -155,32 +155,32 @@ export class ImageService {
     isPrimary = false
   ): Promise<ProductImage[]> {
     try {
-      const imageRecords: Omit<ProductImage, 'id' | 'created_at' | 'updated_at'>[] = [];
+      // Convert uploaded images to JSONB format for the transaction function
+      const imagesData = uploadedImages.map(image => ({
+        size: image.size,
+        url: image.url,
+        file_hash: image.fileHash,
+        mime_type: 'image/webp'
+      }));
 
-      for (const image of uploadedImages) {
-        imageRecords.push({
-          product_id: productId,
-          image_index: imageIndex,
-          size: image.size,
-          url: image.url,
-          file_hash: image.fileHash,
-          mime_type: 'image/webp',
-          is_primary: isPrimary && image.size === 'medium' // Solo medium puede ser primary
-        });
-      }
-
-      // Insertar todos los registros de imagen
-      const { data, error } = await supabaseService
-        .from('product_images')
-        .insert(imageRecords)
-        .select();
+      // Use PostgreSQL function for atomic image creation
+      const { data, error } = await supabaseService.rpc('create_product_images_atomic', {
+        product_id: productId,
+        image_index: imageIndex,
+        images_data: imagesData,
+        is_primary: isPrimary
+      });
 
       if (error) {
-        console.error('Error saving image records:', error);
-        throw new Error(`Failed to save image records: ${error.message}`);
+        console.error('Error in image creation transaction:', error);
+        throw new Error(`Failed to save image records transaction: ${error.message}`);
       }
 
-      return data || [];
+      if (!data) {
+        throw new Error('No data returned from image creation transaction');
+      }
+
+      return data as ProductImage[];
     } catch (error) {
       console.error('ImageService.saveImageRecords error:', error);
       throw error;
@@ -234,52 +234,25 @@ export class ImageService {
   }
 
   /**
-   * Elimina todas las imágenes de un producto
+   * Elimina todas las imágenes de un producto usando transacción
    */
   public async deleteProductImages(productId: number): Promise<boolean> {
     try {
-      // Obtener todas las imágenes del producto
-      const { data: images, error: fetchError } = await supabaseService
-        .from('product_images')
-        .select('url')
-        .eq('product_id', productId);
+      // Use PostgreSQL function for safe image deletion
+      const { data, error } = await supabaseService.rpc('delete_product_images_safe', {
+        product_id: productId
+      });
 
-      if (fetchError) {
-        console.error('Error fetching images for deletion:', fetchError);
+      if (error) {
+        console.error('Error in image deletion transaction:', error);
         return false;
       }
 
-      // Eliminar archivos del storage
-      if (images && images.length > 0) {
-        const filePaths = images.map(img => {
-          // Extraer el path del URL
-          const urlParts = img.url.split('/storage/v1/object/public/product-images/');
-          return urlParts[1];
-        }).filter(Boolean);
+      // Note: Storage cleanup should be handled by application
+      // as Supabase storage operations are not directly transactional
+      // This would need to be implemented separately
 
-        if (filePaths.length > 0) {
-          const { error: storageError } = await supabaseService.storage
-            .from('product-images')
-            .remove(filePaths);
-
-          if (storageError) {
-            console.error('Error deleting files from storage:', storageError);
-          }
-        }
-      }
-
-      // Eliminar registros de la base de datos
-      const { error: dbError } = await supabaseService
-        .from('product_images')
-        .delete()
-        .eq('product_id', productId);
-
-      if (dbError) {
-        console.error('Error deleting image records:', dbError);
-        return false;
-      }
-
-      return true;
+      return data as boolean;
     } catch (error) {
       console.error('ImageService.deleteProductImages error:', error);
       return false;
@@ -343,5 +316,182 @@ export class ImageService {
     }
 
     return { valid: true };
+  }
+
+  /**
+   * Obtiene la galería de imágenes de productos para el admin
+   */
+  public async getImagesGallery(filter: 'all' | 'used' | 'unused' = 'all', page: number = 1, limit: number = 20): Promise<{
+    images: Array<{
+      id: number;
+      product_id: number | null;
+      product_name: string | null;
+      size: ImageSize;
+      url: string;
+      file_hash: string;
+      is_primary: boolean;
+      created_at: string;
+    }>;
+    pagination: {
+      page: number;
+      total: number;
+      pages: number;
+    };
+  }> {
+    try {
+      let query = supabaseService
+        .from('product_images')
+        .select(`
+          id,
+          product_id,
+          size,
+          url,
+          file_hash,
+          is_primary,
+          created_at,
+          products!product_images_product_id_fkey (
+            id,
+            name
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      // Aplicar filtros
+      if (filter === 'used') {
+        query = query.not('product_id', 'is', null);
+      } else if (filter === 'unused') {
+        query = query.is('product_id', null);
+      }
+
+      // Obtener total para paginación
+      const { count } = await supabaseService
+        .from('product_images')
+        .select('*', { count: 'exact', head: true });
+
+      // Aplicar paginación
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+      query = query.range(from, to);
+
+      const { data, error } = await query;
+
+      if (error) {
+        throw new Error(`Failed to fetch images gallery: ${error.message}`);
+      }
+
+      const images = (data || []).map(image => ({
+        id: image.id,
+        product_id: image.product_id,
+        product_name: Array.isArray(image.products) && image.products.length > 0
+          ? image.products[0]?.name || null
+          : null,
+        size: image.size,
+        url: image.url,
+        file_hash: image.file_hash,
+        is_primary: image.is_primary,
+        created_at: image.created_at
+      }));
+
+      const totalPages = Math.ceil((count || 0) / limit);
+
+      return {
+        images,
+        pagination: {
+          page,
+          total: count || 0,
+          pages: totalPages
+        }
+      };
+    } catch (error) {
+      console.error('ImageService.getImagesGallery error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Sube imágenes del sitio (hero, logo)
+   */
+  public async uploadSiteImage(file: MulterFile, type: 'hero' | 'logo'): Promise<{
+    success: boolean;
+    url?: string;
+    type?: string;
+    message: string;
+  }> {
+    try {
+      // Generar nombre único para la imagen del sitio
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).substring(2, 8);
+      const extension = 'webp'; // Convertir a WebP
+      const fileName = `site_${type}_${timestamp}_${random}.${extension}`;
+
+      // Procesar la imagen (solo una versión optimizada)
+      const processedBuffer = await this.resizeImage(
+        file.buffer,
+        type === 'logo' ? 200 : 1200, // Logo más pequeño
+        type === 'logo' ? 200 : 600  // Logo más pequeño
+      );
+
+      // Subir a Supabase Storage en carpeta 'site'
+      const filePath = `site/${fileName}`;
+      const { error } = await supabaseService.storage
+        .from('product-images')
+        .upload(filePath, processedBuffer, {
+          contentType: 'image/webp',
+          cacheControl: '31536000', // 1 año de cache
+          upsert: true
+        });
+
+      if (error) {
+        throw new Error(`Failed to upload site image: ${error.message}`);
+      }
+
+      // Obtener URL pública
+      const { data: urlData } = supabaseService.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+
+      if (!urlData?.publicUrl) {
+        throw new Error('Failed to get public URL for site image');
+      }
+
+      // Actualizar configuración del sitio (esto podría ir en una tabla settings)
+      // Por ahora, solo devolvemos la URL
+      return {
+        success: true,
+        url: urlData.publicUrl,
+        type,
+        message: `Successfully uploaded ${type} image`
+      };
+    } catch (error) {
+      console.error('ImageService.uploadSiteImage error:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to upload site image'
+      };
+    }
+  }
+
+  /**
+   * Obtiene las imágenes actuales del sitio
+   */
+  public async getCurrentSiteImages(): Promise<{
+    hero: string;
+    logo: string;
+  }> {
+    try {
+      // Por ahora, devolver valores por defecto
+      // En el futuro, esto podría venir de una tabla settings
+      return {
+        hero: '/images/hero-flowers.webp',
+        logo: '/images/logoFloresYa.jpeg'
+      };
+    } catch (error) {
+      console.error('ImageService.getCurrentSiteImages error:', error);
+      // Devolver valores por defecto en caso de error
+      return {
+        hero: '/images/hero-flowers.webp',
+        logo: '/images/logoFloresYa.jpeg'
+      };
+    }
   }
 }

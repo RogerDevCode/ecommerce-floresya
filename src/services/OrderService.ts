@@ -82,20 +82,20 @@ export class OrderService {
         throw new Error(`Failed to fetch orders: ${error.message}`);
       }
 
-      const ordersWithItems: OrderWithItems[] = (data as RawOrderWithItemsAndUser[] || []).map((order) => ({
+      const ordersWithItems: OrderWithItems[] = (data as RawOrderWithItemsAndUser[] ?? []).map((order) => ({
         ...order,
-        items: order.order_items || [],
+        items: order.order_items ?? [],
         user: order.users ? { ...order.users } : undefined
       }));
 
-      const totalPages = Math.ceil((count || 0) / limit);
+      const totalPages = Math.ceil((count ?? 0) / limit);
 
       return {
         orders: ordersWithItems,
         pagination: {
           current_page: page,
           total_pages: totalPages,
-          total_items: count || 0,
+          total_items: count ?? 0,
           items_per_page: limit
         }
       };
@@ -136,9 +136,9 @@ export class OrderService {
       const rawData = data as RawOrderWithItemsPaymentsHistory;
       const orderWithDetails: OrderWithItemsAndPayments = {
         ...rawData,
-        items: rawData.order_items || [],
-        payments: rawData.payments || [],
-        status_history: rawData.order_status_history || [],
+        items: rawData.order_items ?? [],
+        payments: rawData.payments ?? [],
+        status_history: rawData.order_status_history ?? [],
         user: rawData.users ? { ...rawData.users } : undefined
       };
 
@@ -150,7 +150,7 @@ export class OrderService {
   }
 
   /**
-   * Create new order with items
+   * Create new order with items using transaction
    */
   public async createOrder(orderData: OrderCreateRequest): Promise<OrderWithItems> {
     try {
@@ -159,54 +159,33 @@ export class OrderService {
       const { items: _items, ...orderFields } = orderData; // Exclude items from order insert
       void _items; // Silence unused variable warning
 
-      const { data: order, error: orderError } = await supabaseService
-        .from('orders')
-        .insert({
+      // Use PostgreSQL function for atomic transaction
+      const { data, error } = await supabaseService.rpc('create_order_with_items', {
+        order_data: {
           ...orderFields,
-          status: 'pending' as const,
-          total_amount_usd // Already a number
-        })
-        .select()
-        .single();
+          status: 'pending',
+          total_amount_usd
+        },
+        order_items: items.map(item => ({
+          product_id: item.product_id,
+          product_name: item.product_name,
+          product_summary: item.product_summary,
+          unit_price_usd: item.unit_price_usd,
+          quantity: item.quantity,
+          subtotal_usd: item.subtotal_usd
+        }))
+      });
 
-      if (orderError) {
-        throw new Error(`Failed to create order: ${orderError.message}`);
+      if (error) {
+        throw new Error(`Failed to create order transaction: ${error.message}`);
       }
 
-      if (!order) {
-        throw new Error('No order data returned from creation');
+      if (!data) {
+        throw new Error('No data returned from order creation transaction');
       }
 
-      const orderItems = items.map(item => ({
-        ...item,
-        order_id: order.id,
-        unit_price_usd: item.unit_price_usd,
-        subtotal_usd: item.subtotal_usd
-      }));
-
-      const { data: createdItems, error: itemsError } = await supabaseService
-        .from('order_items')
-        .insert(orderItems)
-        .select();
-
-      if (itemsError) {
-        // Attempt to roll back order creation for consistency
-        await supabaseService.from('orders').delete().eq('id', order.id);
-        throw new Error(`Failed to create order items: ${itemsError.message}`);
-      }
-
-      await supabaseService
-        .from('order_status_history')
-        .insert({
-          order_id: order.id,
-          new_status: 'pending' as const,
-          notes: 'Order created'
-        });
-
-      return {
-        ...(order as Order),
-        items: createdItems as OrderItem[] || []
-      };
+      // The function returns the complete order with items
+      return data as OrderWithItems;
     } catch (error) {
       console.error('OrderService.createOrder error:', error);
       throw error;
@@ -243,44 +222,27 @@ export class OrderService {
   }
 
   /**
-   * Update order status with history tracking
+   * Update order status with history tracking using transaction
    */
   public async updateOrderStatus(orderId: number, newStatus: OrderStatus, notes?: string, changedBy?: number): Promise<Order> {
     try {
-      const { data: currentOrder, error: fetchError } = await supabaseService
-        .from('orders')
-        .select('status')
-        .eq('id', orderId)
-        .single();
+      // Use PostgreSQL function for atomic status update with history
+      const { data, error } = await supabaseService.rpc('update_order_status_with_history', {
+        order_id: orderId,
+        new_status: newStatus,
+        notes: notes || null,
+        changed_by: changedBy || null
+      });
 
-      if (fetchError || !currentOrder) {
-        throw new Error(`Order with ID ${orderId} not found.`);
+      if (error) {
+        throw new Error(`Failed to update order status transaction: ${error.message}`);
       }
 
-      const oldStatus = currentOrder.status;
-
-      const { data: updatedOrder, error: updateError } = await supabaseService
-        .from('orders')
-        .update({ status: newStatus })
-        .eq('id', orderId)
-        .select()
-        .single();
-
-      if (updateError || !updatedOrder) {
-        throw new Error('Failed to update order status');
+      if (!data) {
+        throw new Error('No data returned from order status update transaction');
       }
 
-      await supabaseService
-        .from('order_status_history')
-        .insert({
-          order_id: orderId,
-          old_status: oldStatus,
-          new_status: newStatus,
-          notes,
-          changed_by: changedBy
-        });
-
-      return updatedOrder as Order;
+      return data as Order;
     } catch (error) {
       console.error('OrderService.updateOrderStatus error:', error);
       throw error;
@@ -302,7 +264,7 @@ export class OrderService {
         throw new Error(`Failed to fetch order status history: ${error.message}`);
       }
 
-      return (data as RawOrderStatusHistoryWithUser[]) || [];
+      return (data as RawOrderStatusHistoryWithUser[]) ?? [];
     } catch (error) {
       console.error('OrderService.getOrderStatusHistory error:', error);
       throw error;
@@ -322,7 +284,7 @@ export class OrderService {
       .eq('active', true);
 
     if (error || !products) {
-      throw new Error(`Failed to fetch product details: ${error?.message || 'No products returned'}`);
+      throw new Error(`Failed to fetch product details: ${error?.message ?? 'No products returned'}`);
     }
 
     const productMap = new Map<number, Product>(products.map((p) => [p.id, p as Product]));

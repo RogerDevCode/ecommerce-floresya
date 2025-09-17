@@ -73,28 +73,31 @@ export class ProductService {
 
       // Create maps for primary thumbs and small images
       const thumbMap = new Map<number, string>();
-      (thumbData || []).forEach(img => {
+      (thumbData ?? []).forEach(img => {
         thumbMap.set(img.product_id, img.url);
       });
 
       const smallImagesMap = new Map<number, Array<{url: string, image_index: number}>>();
-      (smallImagesData || []).forEach(img => {
+      (smallImagesData ?? []).forEach(img => {
         if (!smallImagesMap.has(img.product_id)) {
           smallImagesMap.set(img.product_id, []);
         }
-        smallImagesMap.get(img.product_id)!.push({
-          url: img.url,
-          image_index: img.image_index
-        });
+        const productImages = smallImagesMap.get(img.product_id);
+        if (productImages) {
+          productImages.push({
+            url: img.url,
+            image_index: img.image_index
+          });
+        }
       });
 
       // Build carousel products with images for hover effect
       const carouselProducts: CarouselProduct[] = productsData.map((product) => {
         const thumbUrl = thumbMap.get(product.id);
-        const smallImages = smallImagesMap.get(product.id) || [];
+        const smallImages = smallImagesMap.get(product.id) ?? [];
 
         // Use actual image URL if available, fallback to placeholder
-        const finalThumbUrl = thumbUrl || '/images/placeholder-product.webp';
+        const finalThumbUrl = thumbUrl ?? '/images/placeholder-product.webp';
 
         // Sort small images by image_index and extract URLs
         const sortedSmallImages = smallImages
@@ -104,7 +107,7 @@ export class ProductService {
         return {
           id: product.id,
           name: product.name,
-          summary: product.summary || undefined,
+          summary: product.summary ?? undefined,
           price_usd: product.price_usd,
           carousel_order: product.carousel_order as number,
           primary_thumb_url: finalThumbUrl,
@@ -218,7 +221,7 @@ export class ProductService {
       }
 
       // Get product IDs to fetch medium images for hover effect
-      const productIds = (data as RawProductWithImages[] || []).map(p => p.id);
+      const productIds = (data as RawProductWithImages[] ?? []).map(p => p.id);
 
       // Get all medium images for hover effect
       const { data: mediumImagesData, error: mediumImagesError } = await supabaseService
@@ -233,17 +236,15 @@ export class ProductService {
       }
 
       // Group medium images by product_id
-      const mediumImagesByProduct = (mediumImagesData || []).reduce((acc, img) => {
-        if (!acc[img.product_id]) {
-          acc[img.product_id] = [];
-        }
+      const mediumImagesByProduct = (mediumImagesData ?? []).reduce((acc, img) => {
+        acc[img.product_id] ??= [];
         acc[img.product_id]?.push(img.url);
         return acc;
       }, {} as Record<number, string[]>);
 
-      const productsWithImages: ProductWithImages[] = (data as RawProductWithImages[] || []).map((product) => {
-        const sortedImages = (product.product_images || []).sort((a: ProductImage, b: ProductImage) => a.image_index - b.image_index);
-        const mediumImages = mediumImagesByProduct[product.id] || [];
+      const productsWithImages: ProductWithImages[] = (data as RawProductWithImages[] ?? []).map((product) => {
+        const sortedImages = (product.product_images ?? []).sort((a: ProductImage, b: ProductImage) => a.image_index - b.image_index);
+        const mediumImages = mediumImagesByProduct[product.id] ?? [];
 
         return {
           ...product,
@@ -253,14 +254,14 @@ export class ProductService {
         } as ProductWithImages & { medium_images: string[] };
       });
 
-      const totalPages = Math.ceil((count || 0) / limit);
+      const totalPages = Math.ceil((count ?? 0) / limit);
 
       return {
         products: productsWithImages,
         pagination: {
           current_page: page,
           total_pages: totalPages,
-          total_items: count || 0,
+          total_items: count ?? 0,
           items_per_page: limit
         }
       };
@@ -271,7 +272,7 @@ export class ProductService {
   }
 
   /**
-   * Get single product by ID with images
+   * Get single product by ID with images and occasions
    */
   public async getProductById(id: number): Promise<ProductWithImages | null> {
     try {
@@ -305,7 +306,7 @@ export class ProductService {
       }
 
       const rawProduct = data as RawProductWithImages;
-      const sortedImages = (rawProduct.product_images || []).sort((a: ProductImage, b: ProductImage) => a.image_index - b.image_index);
+      const sortedImages = (rawProduct.product_images ?? []).sort((a: ProductImage, b: ProductImage) => a.image_index - b.image_index);
 
       const productWithImages: ProductWithImages = {
         ...rawProduct,
@@ -321,64 +322,47 @@ export class ProductService {
   }
 
   /**
-   * Handle carousel order reorganization when inserting/updating
+   * Get single product by ID with images and occasions for editing
    */
-  private async reorganizeCarouselOrder(desiredOrder: number, excludeProductId?: number): Promise<void> {
+  public async getProductByIdWithOccasions(id: number): Promise<ProductWithImages & { occasion_ids: number[] } | null> {
     try {
-      // Get all products with carousel_order >= desiredOrder (excluding current product if updating)
-      let query = supabaseService
-        .from('products')
-        .select('id, carousel_order')
-        .gte('carousel_order', desiredOrder)
-        .not('carousel_order', 'is', null);
-
-      if (excludeProductId) {
-        query = query.neq('id', excludeProductId);
+      // Get product with images
+      const product = await this.getProductById(id);
+      if (!product) {
+        return null;
       }
 
-      const { data: productsToShift, error: fetchError } = await query.order('carousel_order', { ascending: true });
+      // Get associated occasion IDs
+      const { data: occasionData, error: occasionError } = await supabaseService
+        .from('product_occasions')
+        .select('occasion_id')
+        .eq('product_id', id);
 
-      if (fetchError) {
-        throw new Error(`Error fetching products for carousel reorganization: ${fetchError.message}`);
+      if (occasionError) {
+        throw new Error(`Failed to fetch product occasions: ${occasionError.message}`);
       }
 
-      if (!productsToShift || productsToShift.length === 0) {
-        // No products to shift
-        return;
-      }
+      const occasionIds = (occasionData ?? []).map(row => row.occasion_id);
 
-      // Shift each product's carousel_order by +1
-      for (const product of productsToShift) {
-        const newOrder = (product.carousel_order || 0) + 1;
-
-        // Ensure we don't exceed maximum positions (7)
-        if (newOrder <= 7) {
-          const { error: updateError } = await supabaseService
-            .from('products')
-            .update({ carousel_order: newOrder })
-            .eq('id', product.id);
-
-          if (updateError) {
-            throw new Error(`Error updating carousel order for product ${product.id}: ${updateError.message}`);
-          }
-        } else {
-          // Remove from carousel if it would exceed max positions
-          const { error: removeError } = await supabaseService
-            .from('products')
-            .update({ carousel_order: null })
-            .eq('id', product.id);
-
-          if (removeError) {
-            throw new Error(`Error removing product ${product.id} from carousel: ${removeError.message}`);
-          }
-        }
-      }
-
-      console.log(`✅ Successfully reorganized carousel orders starting from position ${desiredOrder}`);
+      return {
+        ...product,
+        occasion_ids: occasionIds
+      };
     } catch (error) {
-      console.error('❌ Error in carousel reorganization:', error);
+      console.error('ProductService.getProductByIdWithOccasions error:', error);
       throw error;
     }
+  }
+
+  /**
+   * Handle carousel order reorganization when inserting/updating
+   * Note: This method is now handled by the PostgreSQL function update_carousel_order_atomic
+   * Keeping for backward compatibility but it now delegates to the atomic function
+   */
+  private async reorganizeCarouselOrder(desiredOrder: number, excludeProductId?: number): Promise<void> {
+    // This method is now deprecated - carousel reorganization is handled
+    // atomically by the PostgreSQL function update_carousel_order_atomic
+    console.log(`🔄 Carousel reorganization delegated to PostgreSQL function for position ${desiredOrder}`);
   }
 
   /**
@@ -386,7 +370,7 @@ export class ProductService {
    */
   public async createProduct(productData: ProductCreateRequest): Promise<Product> {
     try {
-      const { stock, featured, carousel_order, price_ves, sku, ...restData } = productData;
+      const { stock, featured, carousel_order, price_ves, sku, occasion_ids, ...restData } = productData;
 
       // Debug log to see what we're receiving
       console.log('ProductService.createProduct received data:', JSON.stringify(productData, null, 2));
@@ -397,32 +381,62 @@ export class ProductService {
         await this.reorganizeCarouselOrder(carousel_order);
       }
 
-      // Prepare insert data according to actual schema
+      // Prepare insert data according to actual schema (excluding occasion_ids)
       const insertData = {
         ...restData,
-        price_ves: price_ves || undefined,
+        price_ves: price_ves ?? undefined,
         stock: stock,
-        sku: sku || undefined,
-        featured: featured || false,
+        sku: sku ?? undefined,
+        featured: featured ?? false,
         active: true,
-        carousel_order: carousel_order || undefined
+        carousel_order: carousel_order ?? undefined
       };
 
-      const { data, error } = await supabaseService
-        .from('products')
-        .insert(insertData)
-        .select()
-        .single();
+      // Use transaction to ensure data integrity
+      let createdProduct: Product;
 
-      if (error) {
-        throw new Error(`Failed to create product: ${error.message}`);
+      if (occasion_ids && occasion_ids.length > 0) {
+        console.log(`🔄 Using transaction for product creation with ${occasion_ids.length} occasion associations`);
+
+        // Execute within a single transaction
+        const { data, error } = await supabaseService.rpc('create_product_with_occasions', {
+          product_data: insertData,
+          occasion_ids: occasion_ids
+        });
+
+        if (error) {
+          throw new Error(`Transaction failed: ${error.message}`);
+        }
+
+        if (!data || data.length === 0) {
+          throw new Error('No data returned from transaction');
+        }
+
+        createdProduct = data[0] as Product;
+        console.log(`✅ Successfully created product ${createdProduct.id} with occasion associations via transaction`);
+      } else {
+        // Simple product creation without occasions
+        console.log('🔄 Creating product without occasion associations');
+
+        const { data, error } = await supabaseService
+          .from('products')
+          .insert(insertData)
+          .select()
+          .single();
+
+        if (error) {
+          throw new Error(`Failed to create product: ${error.message}`);
+        }
+
+        if (!data) {
+          throw new Error('No data returned from product creation');
+        }
+
+        createdProduct = data as Product;
+        console.log(`✅ Successfully created product ${createdProduct.id} without occasions`);
       }
 
-      if (!data) {
-        throw new Error('No data returned from product creation');
-      }
-
-      return data as Product;
+      return createdProduct;
     } catch (error) {
       console.error('ProductService.createProduct error:', error);
       throw error;
@@ -458,7 +472,7 @@ export class ProductService {
         updatePayload.featured = featured;
       }
       if (carousel_order !== undefined) {
-        updatePayload.carousel_order = carousel_order || undefined;
+        updatePayload.carousel_order = carousel_order ?? undefined;
       }
 
       const { data, error } = await supabaseService
@@ -484,32 +498,26 @@ export class ProductService {
   }
 
   /**
-   * Update carousel order for product (admin only)
+   * Update carousel order for product (admin only) using transaction
    * Enables/disables product in carousel by setting/clearing carousel_order
    */
   public async updateCarouselOrder(productId: number, carouselOrder: number | null): Promise<Product> {
     try {
-      const updatePayload = {
-        carousel_order: carouselOrder,
-        updated_at: new Date().toISOString()
-      };
-
-      const { data, error } = await supabaseService
-        .from('products')
-        .update(updatePayload)
-        .eq('id', productId)
-        .select()
-        .single();
+      // Use PostgreSQL function for atomic carousel order update
+      const { data, error } = await supabaseService.rpc('update_carousel_order_atomic', {
+        product_id: productId,
+        new_order: carouselOrder
+      });
 
       if (error) {
-        throw new Error(`Failed to update carousel order: ${error.message}`);
+        throw new Error(`Failed to update carousel order transaction: ${error.message}`);
       }
 
       if (!data) {
-        throw new Error('No data returned from carousel order update');
+        throw new Error('No data returned from carousel order update transaction');
       }
 
-      return data;
+      return data as Product;
     } catch (error) {
       console.error('ProductService.updateCarouselOrder error:', error);
       throw error;

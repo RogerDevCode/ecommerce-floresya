@@ -112,7 +112,7 @@ export class FloresYaApp {
 
       // Normal initialization for main page
       this.bindEvents();
-      this.loadInitialData();
+      void this.loadInitialData();
       this.initializeConversionOptimizer();
       this.log('✅ Aplicación inicializada correctamente', {}, 'success');
     } catch (error) {
@@ -174,7 +174,7 @@ export class FloresYaApp {
       const response = await window.api.getProducts(params);
 
       if (response.success && response.data) {
-        this.products = (response.data.products || []).map((p: Product) => ({ ...p, images: (p as ProductWithImages).images || [] }));
+        this.products = (response.data.products ?? []).map((p: Product) => ({ ...p, images: (p as ProductWithImages).images ?? [] }));
 
         // Clear any existing hover intervals before rendering new products
         this.clearAllHoverIntervals();
@@ -221,7 +221,7 @@ export class FloresYaApp {
         }, 'success');
       } else {
         // Check if it's a network/connectivity issue
-        const errorMessage = response.message || 'Unknown error';
+        const errorMessage = response.message ?? 'Unknown error';
         const isConnectivityIssue = errorMessage.includes('NetworkError') ||
                                    errorMessage.includes('fetch') ||
                                    errorMessage.includes('connectivity');
@@ -269,11 +269,11 @@ export class FloresYaApp {
     const primaryImage = product.primary_image;
     const fallbackImage = product.images?.[0];
 
-    const imageToUse = smallImage || primaryImage || fallbackImage;
-    const imageUrl = imageToUse?.url || '/images/placeholder-product.webp';
+    const imageToUse = smallImage ?? primaryImage ?? fallbackImage;
+    const imageUrl = imageToUse?.url ?? '/images/placeholder-product.webp';
 
     // Obtener imágenes medium para el efecto hover
-    const mediumImages = (product as ProductWithImages & {medium_images?: string[]}).medium_images || [];
+    const mediumImages = (product as ProductWithImages & {medium_images?: string[]}).medium_images ?? [];
     const mediumImagesJson = JSON.stringify(mediumImages);
 
     // price_usd is already a number
@@ -295,7 +295,7 @@ export class FloresYaApp {
             <!-- Image indicator in top-left corner -->
             <div class="image-indicator position-absolute top-0 start-0 m-2 px-2 py-1 bg-dark bg-opacity-75 text-white rounded-pill small"
                  style="font-size: 0.75rem; z-index: 10;">
-              <span class="current-image">1</span>/<span class="total-images">${Math.max(1, mediumImages.length || 1)}</span>
+              <span class="current-image">1</span>/<span class="total-images">${Math.max(1, mediumImages.length ?? 1)}</span>
             </div>
 
             ${product.featured ? '<span class="badge badge-featured">Destacado</span>' : ''}
@@ -457,7 +457,7 @@ export class FloresYaApp {
       const target = e.target as HTMLElement;
       if (target.matches('#pagination .page-link')) {
         e.preventDefault();
-        const page = parseInt(target.dataset.page || '1');
+        const page = parseInt(target.dataset.page ?? '1');
         this.changePage(page);
       }
     });
@@ -468,20 +468,20 @@ export class FloresYaApp {
 
       if (target.matches('.add-to-cart-btn') || target.closest('.add-to-cart-btn')) {
         const button = target.matches('.add-to-cart-btn') ? target : target.closest('.add-to-cart-btn') as HTMLElement;
-        const productId = parseInt((button as HTMLElement)?.dataset?.productId || '0');
+        const productId = parseInt((button as HTMLElement)?.dataset?.productId ?? '0');
         if (productId) this.addToCart(productId);
       }
 
       // Handle BUY button for direct purchase
       if (target.matches('.buy-now-btn') || target.closest('.buy-now-btn')) {
         const button = target.matches('.buy-now-btn') ? target : target.closest('.buy-now-btn') as HTMLElement;
-        const productId = parseInt((button as HTMLElement)?.dataset?.productId || '0');
+        const productId = parseInt((button as HTMLElement)?.dataset?.productId ?? '0');
         if (productId) this.buyNow(productId);
       }
 
       if (target.matches('.view-details-btn') || target.closest('.view-details-btn')) {
         const button = target.matches('.view-details-btn') ? target : target.closest('.view-details-btn') as HTMLElement;
-        const productId = parseInt((button as HTMLElement)?.dataset?.productId || '0');
+        const productId = parseInt((button as HTMLElement)?.dataset?.productId ?? '0');
         if (productId) this.viewProductDetails(productId);
       }
     });
@@ -498,7 +498,7 @@ export class FloresYaApp {
 
     this.currentFilters.search = searchInput.value.trim();
     this.currentPage = 1;
-    this.loadProducts();
+    void this.loadProducts();
 
     this.log('🔍 Búsqueda realizada', { query: this.currentFilters.search }, 'info');
   }
@@ -516,14 +516,14 @@ export class FloresYaApp {
     }
 
     this.currentPage = 1;
-    this.loadProducts();
+    void this.loadProducts();
 
     this.log('🔽 Filtros aplicados', this.currentFilters, 'info');
   }
 
   private changePage(page: number): void {
     this.currentPage = page;
-    this.loadProducts();
+    void this.loadProducts();
 
     // Scroll to products section
     const productsSection = document.getElementById('productos');
@@ -542,7 +542,7 @@ export class FloresYaApp {
     if (typeof window !== 'undefined' && (window as WindowWithCart).cart) {
       (window as WindowWithCart).cart?.addItem({
         ...product,
-        price_usd: product.price_usd || 0
+        price_usd: product.price_usd ?? 0
       });
     }
 
@@ -560,7 +560,7 @@ export class FloresYaApp {
     if (typeof window !== 'undefined' && (window as WindowWithCart).cart) {
       (window as WindowWithCart).cart?.addItem({
         ...product,
-        price_usd: product.price_usd || 0
+        price_usd: product.price_usd ?? 0
       });
     }
 
@@ -620,14 +620,14 @@ export class FloresYaApp {
 
   private handleProductCardHover(card: HTMLElement, isEntering: boolean): void {
     const productImage = card.querySelector('.card-img-top') as HTMLImageElement;
-    const productId = card.dataset.productId || 'unknown';
+    const productId = card.dataset.productId ?? 'unknown';
 
     if (!productImage) return;
 
     // Obtener las imágenes medium del data attribute
     let mediumImages: string[] = [];
     try {
-      const mediumImagesData = card.dataset.mediumImages || '[]';
+      const mediumImagesData = card.dataset.mediumImages ?? '[]';
       mediumImages = JSON.parse(mediumImagesData);
     } catch (error) {
       this.log('❌ Error parseando imágenes medium', { productId, error: error instanceof Error ? error.message : String(error) }, 'error');
@@ -635,9 +635,7 @@ export class FloresYaApp {
     }
 
     // Guardar la imagen original si no está ya guardada
-    if (!card.dataset.originalImage) {
-      card.dataset.originalImage = productImage.src;
-    }
+    card.dataset.originalImage ??= productImage.src;
 
     if (isEntering) {
       // CSS maneja los efectos visuales de la card automáticamente
@@ -889,7 +887,7 @@ private renderCarousel(products: CarouselProduct[]): void {
   const createCardHtml = (product: CarouselProduct, index: number): string => {
     // Obtener imágenes small para el efecto hover
     const smallImages = product.images ? product.images.filter(img => img.size === 'small') : [];
-    const primaryImage = product.primary_thumb_url || '/images/placeholder-product.webp';
+    const primaryImage = product.primary_thumb_url ?? '/images/placeholder-product.webp';
 
     // Si no hay imágenes small, usar la principal
     const rotationImages = smallImages.length > 0
@@ -1100,7 +1098,7 @@ private initializeInfiniteCarousel(products: CarouselProduct[]): void {
   const imgWidth = 300;
   const totalProducts = products.length;
   const singleTrackWidth = imgWidth * totalProducts; // Ancho de un set
-  const fullTrackWidth = singleTrackWidth * 2; // Ancho total con duplicado
+  const _fullTrackWidth = singleTrackWidth * 2; // Ancho total con duplicado (unused in current implementation)
 
   let position = 0;
   const direction = 1; // 1 = derecha, -1 = izquierda
@@ -1142,8 +1140,8 @@ private initializeInfiniteCarousel(products: CarouselProduct[]): void {
 
     // Parsear las imágenes del producto
     try {
-      images = JSON.parse((imagesData || '[]').replace(/&quot;/g, '"'));
-    } catch (error) {
+      images = JSON.parse((imagesData ?? '[]').replace(/&quot;/g, '"'));
+    } catch (_error) {
       images = [productImage.src]; // Fallback a imagen actual
     }
 
@@ -1190,7 +1188,7 @@ private initializeInfiniteCarousel(products: CarouselProduct[]): void {
       }
 
       this.log('🖼️ Hover iniciado - Rotación de imágenes', {
-        productId: element.dataset.productId || 'unknown',
+        productId: element.dataset.productId ?? 'unknown',
         totalImages: images.length
       }, 'info');
     });
@@ -1227,12 +1225,12 @@ private initializeInfiniteCarousel(products: CarouselProduct[]): void {
       }
 
       this.log('🖼️ Hover terminado - Imagen restaurada', {
-        productId: element.dataset.productId || 'unknown'
+        productId: element.dataset.productId ?? 'unknown'
       }, 'info');
     });
 
     element.addEventListener('click', () => {
-      const productId = parseInt(element.dataset.productId || '0');
+      const productId = parseInt(element.dataset.productId ?? '0');
       if (productId) this.viewProductDetails(productId);
     });
   });

@@ -201,6 +201,11 @@ export class FloresYaAPI {
     return this.getProduct(id);
   }
 
+  async getProductByIdWithOccasions(id: number): Promise<ApiResponse<Product & { occasion_ids: number[] }>> {
+    this.log('🔄 Getting product with occasions', { id }, 'info');
+    return this.fetchData<Product & { occasion_ids: number[] }>(`/products/${id}/with-occasions`);
+  }
+
   async createProduct(productData: Partial<Product>): Promise<ApiResponse<Product>> {
     this.log('🔄 Creating product', { name: productData.name }, 'info');
     return this.fetchData<Product>('/products', {
@@ -382,6 +387,68 @@ export class FloresYaAPI {
       clearTimeout(timeout);
       timeout = setTimeout(later, wait);
     };
+  }
+
+  // Images API
+  async getCurrentSiteImages(): Promise<ApiResponse<{ hero: string; logo: string }>> {
+    this.log('🔄 Getting current site images', {}, 'info');
+    return this.fetchData<{ hero: string; logo: string }>('/images/site/current');
+  }
+
+  async getImagesGallery(params: { filter?: 'all' | 'used' | 'unused'; page?: number; limit?: number } = {}): Promise<ApiResponse<{
+    images: Array<{
+      id: number;
+      product_id: number | null;
+      product_name: string | null;
+      size: string;
+      url: string;
+      file_hash: string;
+      is_primary: boolean;
+      created_at: string;
+    }>;
+    pagination: {
+      page: number;
+      total: number;
+      pages: number;
+    };
+  }>> {
+    const queryParams = new URLSearchParams();
+    if (params.filter) queryParams.append('filter', params.filter);
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+
+    const queryString = queryParams.toString();
+    const endpoint = `/images/gallery${queryString ? `?${queryString}` : ''}`;
+
+    this.log('🔄 Getting images gallery', params, 'info');
+    return this.fetchData(endpoint);
+  }
+
+  async uploadSiteImage(formData: FormData): Promise<ApiResponse<{ url: string; type: string }>> {
+    this.log('🔄 Uploading site image', {}, 'info');
+
+    // Custom fetch for FormData (multipart)
+    const url = `${this.baseURL}/images/site`;
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData
+    });
+
+    const data: ApiResponse<{ url: string; type: string }> = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    this.log('✅ Site image uploaded successfully', { type: data.data?.type }, 'success');
+    return data;
+  }
+
+  async deleteImage(imageId: number): Promise<ApiResponse<{ success: boolean }>> {
+    this.log('🔄 Deleting image', { imageId }, 'info');
+    return this.fetchData<{ success: boolean }>(`/images/${imageId}`, {
+      method: 'DELETE'
+    });
   }
 }
 

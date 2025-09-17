@@ -12,7 +12,6 @@ interface AdminUser {
   is_active: boolean;
 }
 
-type AdminProduct = Product;
 
 interface AdminOrder {
   id: number;
@@ -269,7 +268,7 @@ export class AdminPanel {
     document.querySelectorAll('.sidebar-nav .nav-link').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
-        const section = (e.target as HTMLElement).dataset.section || '';
+        const section = (e.target as HTMLElement).dataset.section ?? '';
         this.switchSection(section);
       });
     });
@@ -307,7 +306,7 @@ export class AdminPanel {
         e.preventDefault();
         this.log('🖱️ addProductBtn clicked from bindEvents, calling showAddProductModal', 'info');
         try {
-          this.showAddProductModal();
+          void this.showAddProductModal();
         } catch (error) {
           this.log('❌ Error in showAddProductModal from bindEvents: ' + error, 'error');
           console.error('Error calling showAddProductModal:', error);
@@ -359,7 +358,7 @@ export class AdminPanel {
         e.preventDefault();
         this.log('🖱️ addProductBtn clicked, calling showAddProductModal', 'info');
         try {
-          this.showAddProductModal();
+          void this.showAddProductModal();
         } catch (error) {
           this.log('❌ Error in showAddProductModal: ' + error, 'error');
           console.error('Error calling showAddProductModal:', error);
@@ -390,7 +389,7 @@ export class AdminPanel {
             e.preventDefault();
             this.log('🖱️ addProductBtn (in section) clicked, calling showAddProductModal', 'info');
             try {
-              this.showAddProductModal();
+              void this.showAddProductModal();
             } catch (error) {
               this.log('❌ Error in showAddProductModal: ' + error, 'error');
               console.error('Error calling showAddProductModal:', error);
@@ -402,7 +401,7 @@ export class AdminPanel {
           const allElements = productsSection.querySelectorAll('*');
           this.log('🔍 All elements in products section: ' + allElements.length, 'info');
           allElements.forEach((el, index) => {
-            if (el.id && el.id.includes('Btn')) {
+            if (el.id?.includes('Btn')) {
               this.log(`🔍 Element ${index}: #${el.id} - ${el.tagName}`, 'info');
             }
           });
@@ -458,7 +457,7 @@ export class AdminPanel {
     this.updatePageTitle(section);
 
     // Load section data
-    this.loadSectionData(section);
+    void this.loadSectionData(section);
 
     this.currentSection = section;
   }
@@ -477,7 +476,7 @@ export class AdminPanel {
       logs: { title: 'Logs', subtitle: 'Registro de actividad del sistema' }
     };
 
-    const titleData = titles[section] || titles.dashboard;
+    const titleData = titles[section] ?? titles.dashboard;
 
     const titleElement = document.getElementById('pageTitle');
     const subtitleElement = document.getElementById('pageSubtitle');
@@ -505,6 +504,9 @@ export class AdminPanel {
         break;
       case 'occasions':
         await this.loadOccasionsData();
+        break;
+      case 'images':
+        await this.loadImagesData();
         break;
     }
   }
@@ -626,6 +628,361 @@ export class AdminPanel {
   }
 
   /**
+   * Load images data
+   */
+  private async loadImagesData(): Promise<void> {
+    try {
+      this.log('Loading images data...', 'info');
+
+      // Load current site images
+      await this.loadCurrentSiteImages();
+
+      // Load images gallery
+      await this.loadImagesGallery();
+
+      // Bind image management events
+      this.bindImageEvents();
+
+      this.log('Images data loaded successfully', 'success');
+    } catch (error) {
+      this.log('Error loading images data: ' + error, 'error');
+    }
+  }
+
+  /**
+   * Load current site images (hero and logo)
+   */
+  private async loadCurrentSiteImages(): Promise<void> {
+    try {
+      const response = await this.api.getCurrentSiteImages();
+
+      if (response.success && response.data) {
+        // Update hero image preview
+        const heroPreview = document.getElementById('heroImagePreview');
+        if (heroPreview) {
+          const img = heroPreview.querySelector('img');
+          if (img) img.src = response.data.hero;
+        }
+
+        // Update logo preview
+        const logoPreview = document.getElementById('logoPreview');
+        if (logoPreview) {
+          const img = logoPreview.querySelector('img');
+          if (img) img.src = response.data.logo;
+        }
+
+        this.log('Current site images loaded', 'success');
+      }
+    } catch (error) {
+      this.log('Error loading current site images: ' + error, 'error');
+    }
+  }
+
+  /**
+   * Load images gallery
+   */
+  private async loadImagesGallery(filter: 'all' | 'used' | 'unused' = 'all'): Promise<void> {
+    try {
+      const response = await this.api.getImagesGallery({ filter, page: 1, limit: 20 });
+
+      if (response.success && response.data) {
+        this.renderImagesGallery(response.data.images);
+        this.log(`Loaded ${response.data.images.length} images for gallery`, 'success');
+      } else {
+        this.renderImagesGallery([]);
+        this.log('Failed to load images gallery', 'error');
+      }
+    } catch (error) {
+      this.log('Error loading images gallery: ' + error, 'error');
+      this.renderImagesGallery([]);
+    }
+  }
+
+  /**
+   * Bind image management events
+   */
+  private bindImageEvents(): void {
+    // Site images buttons
+    const changeHeroBtn = document.getElementById('changeHeroImageBtn');
+    if (changeHeroBtn) {
+      changeHeroBtn.addEventListener('click', () => {
+        void this.showSiteImageUploadModal('hero');
+      });
+    }
+
+    const changeLogoBtn = document.getElementById('changeLogoBtn');
+    if (changeLogoBtn) {
+      changeLogoBtn.addEventListener('click', () => {
+        void this.showSiteImageUploadModal('logo');
+      });
+    }
+
+    // Gallery filter buttons
+    const filterAllBtn = document.getElementById('filterAllImages');
+    const filterUnusedBtn = document.getElementById('filterUnusedImages');
+    const filterProductBtn = document.getElementById('filterProductImages');
+
+    if (filterAllBtn) {
+      filterAllBtn.addEventListener('click', () => {
+        void this.updateGalleryFilter('all');
+      });
+    }
+
+    if (filterUnusedBtn) {
+      filterUnusedBtn.addEventListener('click', () => {
+        void this.updateGalleryFilter('unused');
+      });
+    }
+
+    if (filterProductBtn) {
+      filterProductBtn.addEventListener('click', () => {
+        void this.updateGalleryFilter('used');
+      });
+    }
+  }
+
+  /**
+   * Update gallery filter
+   */
+  private async updateGalleryFilter(filter: 'all' | 'used' | 'unused'): Promise<void> {
+    // Update active button state
+    const buttons = ['filterAllImages', 'filterUnusedImages', 'filterProductImages'];
+    buttons.forEach(btnId => {
+      const btn = document.getElementById(btnId);
+      if (btn) {
+        btn.classList.remove('active');
+      }
+    });
+
+    const activeBtnId = filter === 'all' ? 'filterAllImages' :
+                       filter === 'unused' ? 'filterUnusedImages' : 'filterProductImages';
+    const activeBtn = document.getElementById(activeBtnId);
+    if (activeBtn) {
+      activeBtn.classList.add('active');
+    }
+
+    // Reload gallery with new filter
+    await this.loadImagesGallery(filter);
+  }
+
+  /**
+   * Show site image upload modal
+   */
+  private showSiteImageUploadModal(type: 'hero' | 'logo'): void {
+    const title = type === 'hero' ? 'Cambiar Imagen Hero' : 'Cambiar Logo';
+    const description = type === 'hero'
+      ? 'La imagen hero se muestra en la parte superior de la página principal'
+      : 'El logo se muestra en la barra de navegación y otros lugares del sitio';
+
+    const modalHtml = `
+      <div class="modal fade" id="siteImageModal" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">${title}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <p class="text-muted mb-3">${description}</p>
+
+              <div class="mb-3">
+                <label for="siteImageFile" class="form-label">Seleccionar nueva imagen</label>
+                <input type="file" class="form-control" id="siteImageFile" accept="image/*" required>
+                <div class="form-text">Formatos soportados: JPEG, PNG, WebP. Tamaño máximo: 5MB</div>
+              </div>
+
+              <div id="siteImagePreview" class="text-center mb-3" style="display: none;">
+                <img id="previewImg" class="img-fluid rounded" style="max-height: 200px;">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="button" class="btn btn-primary" id="uploadSiteImageBtn">Subir Imagen</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Remove existing modal
+    const existing = document.getElementById('siteImageModal');
+    if (existing) existing.remove();
+
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // Show modal
+    const modalElement = document.getElementById('siteImageModal');
+    const bootstrap = (window as WindowWithBootstrap).bootstrap;
+    if (modalElement && bootstrap?.Modal) {
+      const Modal = bootstrap.Modal;
+      const modal = new Modal(modalElement);
+      modal.show();
+
+      // Bind file input change event
+      const fileInput = document.getElementById('siteImageFile') as HTMLInputElement;
+      if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+          const file = (e.target as HTMLInputElement).files?.[0];
+          if (file) {
+            this.previewSiteImage(file);
+          }
+        });
+      }
+
+      // Bind upload button
+      const uploadBtn = document.getElementById('uploadSiteImageBtn');
+      if (uploadBtn) {
+        uploadBtn.addEventListener('click', () => {
+          this.uploadSiteImage(type, modal);
+        });
+      }
+    }
+  }
+
+  /**
+   * Preview site image before upload
+   */
+  private previewSiteImage(file: File): void {
+    const previewContainer = document.getElementById('siteImagePreview');
+    const previewImg = document.getElementById('previewImg') as HTMLImageElement;
+
+    if (previewContainer && previewImg) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (previewImg && e.target?.result) {
+          previewImg.src = e.target.result as string;
+          previewContainer.style.display = 'block';
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  /**
+   * Upload site image
+   */
+  private async uploadSiteImage(type: 'hero' | 'logo', modal: { hide(): void }): Promise<void> {
+    try {
+      const fileInput = document.getElementById('siteImageFile') as HTMLInputElement;
+      const file = fileInput.files?.[0];
+
+      if (!file) {
+        alert('Por favor selecciona una imagen');
+        return;
+      }
+
+      // Validate file
+      if (file.size > 5 * 1024 * 1024) {
+        alert('La imagen debe ser menor a 5MB');
+        return;
+      }
+
+      if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
+        alert('Solo se permiten imágenes JPEG, PNG o WebP');
+        return;
+      }
+
+      // Show loading
+      const uploadBtn = document.getElementById('uploadSiteImageBtn') as HTMLButtonElement;
+      if (uploadBtn) {
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Subiendo...';
+      }
+
+      // Create FormData
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('type', type);
+
+      // Upload image
+      const response = await this.api.uploadSiteImage(formData);
+
+      if (response.success) {
+        alert(`Imagen ${type} actualizada exitosamente`);
+        modal.hide();
+
+        // Reload current site images
+        await this.loadCurrentSiteImages();
+      } else {
+        alert('Error al subir la imagen: ' + (response.message || 'Error desconocido'));
+      }
+
+    } catch (error) {
+      console.error('Error uploading site image:', error);
+      alert('Error al subir la imagen');
+    } finally {
+      // Reset button
+      const uploadBtn = document.getElementById('uploadSiteImageBtn') as HTMLButtonElement;
+      if (uploadBtn) {
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = 'Subir Imagen';
+      }
+    }
+  }
+
+  /**
+   * Render images gallery
+   */
+  private renderImagesGallery(images: Array<{
+    id: number;
+    product_id: number | null;
+    product_name: string | null;
+    size: string;
+    url: string;
+    file_hash: string;
+    is_primary: boolean;
+    created_at: string;
+  }>): void {
+    const galleryContainer = document.getElementById('imagesGallery');
+
+    if (!galleryContainer) return;
+
+    if (images.length === 0) {
+      galleryContainer.innerHTML = `
+        <div class="col-12 text-center py-5">
+          <i class="bi bi-images display-1 text-muted mb-3"></i>
+          <h5 class="text-muted">No hay imágenes</h5>
+          <p class="text-muted">Las imágenes de productos aparecerán aquí</p>
+        </div>
+      `;
+      return;
+    }
+
+    const imagesHtml = images.map(image => `
+      <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card h-100">
+          <div class="position-relative">
+            <img src="${image.url}" class="card-img-top" alt="Product image" style="height: 150px; object-fit: cover;">
+            ${image.is_primary ? '<span class="badge bg-success position-absolute top-0 end-0 m-2">Principal</span>' : ''}
+            <span class="badge bg-secondary position-absolute bottom-0 start-0 m-2">${image.size}</span>
+          </div>
+          <div class="card-body p-2">
+            <small class="text-muted d-block">
+              ${image.product_name ? `Producto: ${image.product_name}` : 'Sin asignar'}
+            </small>
+            <small class="text-muted d-block">
+              ${new Date(image.created_at).toLocaleDateString()}
+            </small>
+          </div>
+          <div class="card-footer p-2">
+            <div class="btn-group btn-group-sm w-100">
+              <button class="btn btn-outline-primary btn-sm" onclick="window.open('${image.url}', '_blank')" title="Ver imagen completa">
+                <i class="bi bi-eye"></i>
+              </button>
+              <button class="btn btn-outline-danger btn-sm" onclick="adminPanel.deleteImage(${image.id})" title="Eliminar imagen">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    galleryContainer.innerHTML = imagesHtml;
+  }
+
+  /**
    * Update dashboard metrics
    */
   private updateMetrics(data: { totalProducts?: number; totalOrders?: number; totalUsers?: number; totalRevenue?: number }): void {
@@ -634,10 +991,10 @@ export class AdminPanel {
     const totalUsers = document.getElementById('totalUsers');
     const totalRevenue = document.getElementById('totalRevenue');
 
-    if (totalProducts) totalProducts.textContent = (data.totalProducts || 0).toString();
-    if (totalOrders) totalOrders.textContent = (data.totalOrders || 0).toString();
-    if (totalUsers) totalUsers.textContent = (data.totalUsers || 0).toString();
-    if (totalRevenue) totalRevenue.textContent = `$${(data.totalRevenue || 0).toFixed(2)}`;
+    if (totalProducts) totalProducts.textContent = (data.totalProducts ?? 0).toString();
+    if (totalOrders) totalOrders.textContent = (data.totalOrders ?? 0).toString();
+    if (totalUsers) totalUsers.textContent = (data.totalUsers ?? 0).toString();
+    if (totalRevenue) totalRevenue.textContent = `$${(data.totalRevenue ?? 0).toFixed(2)}`;
   }
 
   /**
@@ -653,7 +1010,7 @@ export class AdminPanel {
     }
 
     const alertsHtml = alerts.map(alert => `
-      <div class="alert alert-${alert.type || 'info'} mb-2">
+      <div class="alert alert-${alert.type ?? 'info'} mb-2">
         <small>${alert.message}</small>
       </div>
     `).join('');
@@ -675,7 +1032,7 @@ export class AdminPanel {
 
     const activityHtml = activities.map(activity => `
       <div class="d-flex align-items-center mb-2">
-        <i class="bi bi-${activity.icon || 'circle'} me-2 text-muted"></i>
+        <i class="bi bi-${activity.icon ?? 'circle'} me-2 text-muted"></i>
         <div class="flex-grow-1">
           <small class="text-muted">${activity.description}</small>
         </div>
@@ -777,7 +1134,7 @@ export class AdminPanel {
     const rows = users.map(user => `
       <tr>
         <td>${user.id}</td>
-        <td>${user.full_name || 'N/A'}</td>
+        <td>${user.full_name ?? 'N/A'}</td>
         <td>${user.email}</td>
         <td>
           <span class="badge bg-${user.role === 'admin' ? 'primary' : 'secondary'}">
@@ -856,7 +1213,7 @@ export class AdminPanel {
       delivered: 'Entregado',
       cancelled: 'Cancelado'
     };
-    return statusMap[status] || status;
+    return statusMap[status] ?? status;
   }
 
   /**
@@ -871,7 +1228,7 @@ export class AdminPanel {
       sympathy: 'Condolencias',
       congratulations: 'Felicitaciones'
     };
-    return typeMap[type] || type;
+    return typeMap[type] ?? type;
   }
 
   /**
@@ -1016,7 +1373,7 @@ export class AdminPanel {
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('floresya_')) {
+        if (key?.startsWith('floresya_')) {
           keysToRemove.push(key);
         }
       }
@@ -1158,7 +1515,7 @@ export class AdminPanel {
             id: p.id,
             name: p.name,
             summary: p.summary,
-            carousel_order: p.carousel_order!
+            carousel_order: p.carousel_order ?? 0
           }))
           .sort((a, b) => a.carousel_order - b.carousel_order);
       }
@@ -1185,7 +1542,7 @@ export class AdminPanel {
       const response = await this.api.getOccasions();
       if (response.success && response.data) {
         // Sort occasions alphabetically by name
-        const occasions = response.data || [];
+        const occasions = response.data ?? [];
         return occasions
           .filter((occasion: Occasion) => occasion.is_active)
           .sort((a: Occasion, b: Occasion) => a.name.localeCompare(b.name));
@@ -1239,13 +1596,16 @@ export class AdminPanel {
   /**
    * Generate occasions checkboxes HTML
    */
-  private generateOccasionsCheckboxes(occasions: AdminOccasion[], product?: AdminProduct): string {
+  private generateOccasionsCheckboxes(occasions: AdminOccasion[], product?: (Product & { occasion_ids?: number[] }) | null): string {
     if (!occasions || occasions.length === 0) {
       return '<p class="text-muted">No hay ocasiones disponibles</p>';
     }
 
-    // TODO: Get product's current occasions when editing
-    const selectedOccasions = new Set<number>(); // For now, empty set for new products
+    // Get product's current occasions when editing
+    const selectedOccasions = new Set<number>();
+    if (product?.occasion_ids) {
+      product.occasion_ids.forEach(id => selectedOccasions.add(id));
+    }
 
     const checkboxes = occasions
       .filter(occasion => occasion.is_active)
@@ -1275,13 +1635,13 @@ export class AdminPanel {
   /**
    * Generate carousel position radio buttons HTML
    */
-  private generateCarouselPositionHTML(carouselProducts: Array<{id: number; name: string; summary?: string; carousel_order: number}>, currentProductId?: number): string {
+  private generateCarouselPositionHTML(carouselProducts: Array<{id: number; name: string; summary?: string; carousel_order: number}>, currentProduct?: (Product & { occasion_ids?: number[] }) | null): string {
     const maxPositions = 7;
     const occupiedPositions = new Map<number, {id: number; name: string; summary?: string}>();
 
     // Map occupied positions
     carouselProducts.forEach(product => {
-      if (product.carousel_order && product.id !== currentProductId) {
+      if (product.carousel_order && product.id !== currentProduct?.id) {
         occupiedPositions.set(product.carousel_order, product);
       }
     });
@@ -1305,18 +1665,34 @@ export class AdminPanel {
     // Generate positions 1-7
     for (let position = 1; position <= maxPositions; position++) {
       const occupied = occupiedPositions.get(position);
-      const isAvailable = !occupied;
+      const _isAvailable = !occupied;
       const inputId = `carouselPos${position}`;
 
-      if (occupied) {
-        // Occupied position - show product name and allow replacement
+      // Check if this position is the current product's position
+      const isCurrentProductPosition = currentProduct?.carousel_order === position;
+      const isChecked = isCurrentProductPosition || (position === 0 && !currentProduct?.carousel_order);
+
+      if (occupied && !isCurrentProductPosition) {
+        // Occupied position by another product - show product name and allow replacement
         const truncatedName = occupied.name.length > 25 ? occupied.name.substring(0, 25) + '...' : occupied.name;
         html += `
           <div class="carousel-position occupied">
-            <input type="radio" name="carouselPosition" id="${inputId}" value="${position}">
+            <input type="radio" name="carouselPosition" id="${inputId}" value="${position}" ${isChecked ? 'checked' : ''}>
             <label for="${inputId}">
               <strong>Posición ${position}</strong> - "${truncatedName}"
               <small class="text-muted d-block">🔄 Reemplazar</small>
+            </label>
+          </div>
+        `;
+      } else if (isCurrentProductPosition) {
+        // Current product's position - show as occupied by current product
+        const truncatedName = currentProduct.name.length > 25 ? currentProduct.name.substring(0, 25) + '...' : currentProduct.name;
+        html += `
+          <div class="carousel-position current">
+            <input type="radio" name="carouselPosition" id="${inputId}" value="${position}" ${isChecked ? 'checked' : ''}>
+            <label for="${inputId}">
+              <strong>Posición ${position}</strong> - "${truncatedName}"
+              <small class="text-primary d-block">📍 Posición actual</small>
             </label>
           </div>
         `;
@@ -1325,7 +1701,7 @@ export class AdminPanel {
         const isDisabled = isFull && position > carouselCount + 1;
         html += `
           <div class="carousel-position available">
-            <input type="radio" name="carouselPosition" id="${inputId}" value="${position}" ${isDisabled ? 'disabled' : ''}>
+            <input type="radio" name="carouselPosition" id="${inputId}" value="${position}" ${isChecked ? 'checked' : ''} ${isDisabled ? 'disabled' : ''}>
             <label for="${inputId}">
               <strong>Posición ${position}</strong> - Disponible
               ${position <= carouselCount + 1 ? '<small class="text-success d-block">✓ Insertar aquí</small>' : '<small class="text-muted d-block">Los posteriores se reorganizarán +1</small>'}
@@ -1381,7 +1757,7 @@ export class AdminPanel {
     await this.showProductModal(product);
   }
 
-  private async showProductModal(product: Product | null): Promise<void> {
+  private async showProductModal(product: (Product & { occasion_ids?: number[] }) | null): Promise<void> {
     this.log('🔧 showProductModal called with product: ' + (product ? 'existing' : 'null'));
 
     // Load occasions for the select dropdown
@@ -1397,7 +1773,7 @@ export class AdminPanel {
     this.log('🔍 Bootstrap available: ' + bootstrapAvailable, 'info');
 
     if ((window as WindowWithBootstrap).bootstrap) {
-      this.log('🔍 Bootstrap Modal available: ' + !!((window as WindowWithBootstrap).bootstrap!.Modal), 'info');
+      this.log('🔍 Bootstrap Modal available: ' + !!((window as WindowWithBootstrap).bootstrap?.Modal), 'info');
     }
 
     const modalTitle = product ? 'Editar Producto' : 'Crear Nuevo Producto';
@@ -1405,13 +1781,13 @@ export class AdminPanel {
 
     this.log('📝 Creating modal HTML for: ' + modalTitle);
 
-    // Create occasions options HTML
-    const occasionsOptions = occasions.map(occasion =>
+    // Create occasions options HTML (unused for now - checkboxes used instead)
+    const _occasionsOptions = occasions.map(occasion =>
       `<option value="${occasion.id}">${occasion.name}</option>`
     ).join('');
 
     // Generate carousel position HTML
-    const carouselPositionHTML = this.generateCarouselPositionHTML(carouselProducts, product?.id);
+    const carouselPositionHTML = this.generateCarouselPositionHTML(carouselProducts, product);
 
     const modalHtml = `
       <div class="modal fade" id="productModal" tabindex="-1">
@@ -1433,14 +1809,14 @@ export class AdminPanel {
                     <div class="mb-3">
                       <label for="productName" class="form-label">Nombre *</label>
                       <input type="text" class="form-control" id="productName" required
-                             value="${product?.name || ''}">
+                             value="${product?.name ?? ''}">
                     </div>
                   </div>
                   <div class="col-md-6">
                     <div class="mb-3">
                       <label for="productPrice" class="form-label">Precio USD *</label>
                       <input type="text" class="form-control" id="productPrice" required
-                             value="${product?.price_usd || ''}" placeholder="0.00">
+                             value="${product?.price_usd ?? ''}" placeholder="0.00">
                       <div class="form-text">Usar punto (.) como separador decimal. Ej: 25.50</div>
                     </div>
                   </div>
@@ -1450,20 +1826,20 @@ export class AdminPanel {
                 <div class="mb-3">
                   <label for="productSummary" class="form-label">Resumen *</label>
                   <input type="text" class="form-control" id="productSummary" required
-                         value="${product?.summary || ''}" placeholder="Breve descripción del producto">
+                         value="${product?.summary ?? ''}" placeholder="Breve descripción del producto">
                   <div class="form-text">Mínimo 10 caracteres, máximo 500</div>
                 </div>
 
                 <div class="mb-3">
                   <label for="productDescription" class="form-label">Descripción *</label>
-                  <textarea class="form-control" id="productDescription" rows="3" required>${product?.description || ''}</textarea>
+                  <textarea class="form-control" id="productDescription" rows="3" required>${product?.description ?? ''}</textarea>
                 </div>
 
                 <div class="mb-3">
                   <label class="form-label">Ocasiones</label>
                   <div class="form-text mb-2">Selecciona las ocasiones donde aparecerá este producto</div>
                   <div class="occasions-checkboxes" id="productOccasions">
-                    ${this.generateOccasionsCheckboxes(occasions, product || undefined)}
+                    ${this.generateOccasionsCheckboxes(occasions, product)}
                   </div>
                 </div>
 
@@ -1492,6 +1868,9 @@ export class AdminPanel {
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="button" class="btn btn-success me-2" id="closeModalBtn" style="display: none;">
+                <i class="bi bi-check-circle me-2"></i>Terminar y Cerrar
+              </button>
               <button type="button" class="btn btn-primary" id="saveProductBtn">${saveButtonText}</button>
             </div>
           </div>
@@ -1584,20 +1963,27 @@ export class AdminPanel {
       this.log('✅ Save button found, attaching event listener');
       saveBtn.addEventListener('click', async () => {
         this.log('💾 Save button clicked, calling saveProduct');
-        const success = await this.saveProduct(product?.id || null);
+        const success = await this.saveProduct(product?.id ?? null);
 
-        // Only hide modal if save was successful
-        if (success) {
+        // Only hide modal if save was successful AND it's an update (not creation)
+        if (success && product?.id) {
           const modalElement = document.getElementById('productModal');
           if (modalElement) {
             if (modal && typeof modal.hide === 'function') {
               modal.hide();
-              this.log('✅ Bootstrap modal hidden after successful save');
+              this.log('✅ Bootstrap modal hidden after successful update');
             } else {
               modalElement.style.display = 'none';
               modalElement.remove();
-              this.log('✅ Fallback modal hidden after successful save');
+              this.log('✅ Fallback modal hidden after successful update');
             }
+          }
+        } else if (success && !product?.id) {
+          this.log('✅ Product created successfully - modal remains open for next product');
+          // Show the "Terminar y Cerrar" button after successful creation
+          const closeModalBtn = document.getElementById('closeModalBtn');
+          if (closeModalBtn) {
+            closeModalBtn.style.display = 'inline-block';
           }
         } else {
           this.log('⚠️ Modal remains open due to save error');
@@ -1605,6 +1991,24 @@ export class AdminPanel {
       });
     } else {
       this.log('❌ Save button not found in modal');
+    }
+
+    // Handle close modal button (shown after successful creation)
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    if (closeModalBtn) {
+      closeModalBtn.addEventListener('click', () => {
+        const modalElement = document.getElementById('productModal');
+        if (modalElement) {
+          if (modal && typeof modal.hide === 'function') {
+            modal.hide();
+            this.log('✅ Modal closed by user after product creation');
+          } else {
+            modalElement.style.display = 'none';
+            modalElement.remove();
+            this.log('✅ Fallback modal closed by user after product creation');
+          }
+        }
+      });
     }
 
     this.log('✅ showProductModal completed successfully');
@@ -1725,7 +2129,7 @@ export class AdminPanel {
         name,
         price_usd: parseFloat(price_usd.toFixed(2)), // Ensure 2 decimal places
         stock,
-        summary: summary || undefined,
+        summary: summary ?? undefined,
         description,
         occasion_ids: selectedOccasions, // Send array of occasion IDs
         carousel_order: carouselOrder ? parseInt(carouselOrder) : undefined,
@@ -1754,18 +2158,46 @@ export class AdminPanel {
         // Reload products list
         await this.loadProductsData();
 
-        // Clear form for new products and prepare for next entry
+        // For new products (creation), keep modal open and prepare for next entry
         if (!productId) {
           this.clearProductForm();
-          // Auto-hide success message after showing it briefly
+
+          // Change modal title to indicate ready for next product
+          const modalTitle = document.querySelector('#productModal .modal-title');
+          if (modalTitle) {
+            modalTitle.innerHTML = '<i class="bi bi-check-circle-fill text-success me-2"></i>Producto Creado - Listo para Crear Otro';
+          }
+
+          // Change save button text to indicate ready for next
+          const saveBtn = document.getElementById('saveProductBtn') as HTMLButtonElement;
+          if (saveBtn) {
+            saveBtn.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Crear Otro Producto';
+          }
+
+          // Auto-hide success message after 3 seconds and reset title/button
           setTimeout(() => {
             this.hideProductMessage();
-          }, 2000);
+
+            // Reset modal title
+            if (modalTitle) {
+              modalTitle.innerHTML = 'Crear Nuevo Producto';
+            }
+
+            // Reset save button text
+            if (saveBtn) {
+              saveBtn.innerHTML = 'Crear';
+            }
+          }, 3000);
+
+          // Return false to keep modal open
+          return false;
+        } else {
+          // For updates, close modal after success
+          return true;
         }
-        return true; // Success
       } else {
         // API returned error - show in modal
-        const errorMessage = response.message || 'Error desconocido al guardar el producto';
+        const errorMessage = response.message ?? 'Error desconocido al guardar el producto';
         this.showProductMessage(`⚠️ ${errorMessage}`, 'error');
         this.log('API returned error', 'error');
         return false; // Error
@@ -1855,6 +2287,24 @@ export class AdminPanel {
     if (featuredInput) featuredInput.checked = false;
     if (activeInput) activeInput.checked = true; // Default to active
 
+    // Reset modal title to original state
+    const modalTitle = document.querySelector('#productModal .modal-title');
+    if (modalTitle) {
+      modalTitle.innerHTML = 'Crear Nuevo Producto';
+    }
+
+    // Reset save button text to original state
+    const saveBtn = document.getElementById('saveProductBtn') as HTMLButtonElement;
+    if (saveBtn) {
+      saveBtn.innerHTML = 'Crear';
+    }
+
+    // Hide the "Terminar y Cerrar" button
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    if (closeModalBtn) {
+      closeModalBtn.style.display = 'none';
+    }
+
     this.log('Product form cleared after successful creation', 'info');
   }
 
@@ -1871,11 +2321,11 @@ export class AdminPanel {
     try {
       this.log(`Editing product ${id}`, 'info');
 
-      // Get product data from API
-      const response = await this.api.getProduct(id);
+      // Get product data with occasions from API
+      const response = await this.api.getProductByIdWithOccasions(id);
 
       if (response.success && response.data) {
-        this.showProductModal(response.data);
+        void this.showProductModal(response.data);
       } else {
         this.log('Failed to load product for editing', 'error');
         alert('Error al cargar el producto para editar');
@@ -1935,6 +2385,30 @@ export class AdminPanel {
   public deleteOccasion(id: number): void {
     if (confirm(`¿Eliminar ocasión ${id}?`)) {
       alert('Funcionalidad de eliminar ocasión próximamente...');
+    }
+  }
+
+  public async deleteImage(imageId: number): Promise<void> {
+    if (confirm('¿Está seguro de que desea eliminar esta imagen? Esta acción no se puede deshacer.')) {
+      try {
+        this.log(`Deleting image ${imageId}`, 'info');
+
+        const response = await this.api.deleteImage(imageId);
+
+        if (response.success) {
+          this.log('Image deleted successfully', 'success');
+          alert('Imagen eliminada exitosamente');
+
+          // Reload images gallery
+          await this.loadImagesGallery();
+        } else {
+          this.log('Failed to delete image', 'error');
+          alert('Error al eliminar la imagen');
+        }
+      } catch (error) {
+        this.log('Error deleting image: ' + error, 'error');
+        alert('Error al eliminar la imagen');
+      }
     }
   }
 
@@ -2001,7 +2475,7 @@ export class AdminPanel {
   public testModal(): void {
     console.log('🧪 Probando modal directamente...');
     try {
-      this.showAddProductModal();
+      void this.showAddProductModal();
       console.log('✅ testModal ejecutado sin errores');
     } catch (error) {
       console.error('❌ Error en testModal:', error);

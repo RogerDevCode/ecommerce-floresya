@@ -166,3 +166,101 @@ CREATE TABLE public.users (
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT users_pkey PRIMARY KEY (id)
 );
+
+-- =============================================================================
+-- STORED PROCEDURES FOR TRANSACTIONS
+-- =============================================================================
+
+-- Function to create product with occasions in a single transaction
+CREATE OR REPLACE FUNCTION create_product_with_occasions(
+  product_data jsonb,
+  occasion_ids integer[]
+)
+RETURNS TABLE(
+  id integer,
+  name varchar,
+  description text,
+  summary text,
+  price_usd numeric,
+  price_ves numeric,
+  stock integer,
+  sku varchar,
+  featured boolean,
+  active boolean,
+  carousel_order integer,
+  created_at timestamptz,
+  updated_at timestamptz
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  product_id integer;
+  occasion_id integer;
+BEGIN
+  -- Start transaction (implicit)
+  
+  -- Insert the product
+  INSERT INTO products (
+    name, 
+    description, 
+    summary, 
+    price_usd, 
+    price_ves, 
+    stock, 
+    sku, 
+    featured, 
+    active, 
+    carousel_order,
+    created_at,
+    updated_at
+  )
+  VALUES (
+    (product_data->>'name')::varchar,
+    (product_data->>'description')::text,
+    (product_data->>'summary')::text,
+    (product_data->>'price_usd')::numeric,
+    (product_data->>'price_ves')::numeric,
+    (product_data->>'stock')::integer,
+    (product_data->>'sku')::varchar,
+    COALESCE((product_data->>'featured')::boolean, false),
+    COALESCE((product_data->>'active')::boolean, true),
+    (product_data->>'carousel_order')::integer,
+    NOW(),
+    NOW()
+  )
+  RETURNING products.id INTO product_id;
+  
+  -- Insert occasion associations
+  FOREACH occasion_id IN ARRAY occasion_ids
+  LOOP
+    INSERT INTO product_occasions (product_id, occasion_id, created_at)
+    VALUES (product_id, occasion_id, NOW());
+  END LOOP;
+  
+  -- Return the created product
+  RETURN QUERY
+  SELECT 
+    p.id,
+    p.name,
+    p.description,
+    p.summary,
+    p.price_usd,
+    p.price_ves,
+    p.stock,
+    p.sku,
+    p.featured,
+    p.active,
+    p.carousel_order,
+    p.created_at,
+    p.updated_at
+  FROM products p
+  WHERE p.id = product_id;
+  
+  -- Transaction commits automatically on successful completion
+  
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Transaction rolls back automatically on error
+    RAISE EXCEPTION 'Failed to create product with occasions: %', SQLERRM;
+END;
+$$;

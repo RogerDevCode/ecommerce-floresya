@@ -166,6 +166,48 @@ export class ProductController {
   }
 
   /**
+   * GET /api/products/:id/with-occasions
+   * Get single product by ID with occasion associations for editing
+   */
+  public async getProductByIdWithOccasions(req: Request, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({
+          success: false,
+          message: 'Invalid product ID',
+          errors: errors.array()
+        });
+        return;
+      }
+
+      const productId = parseInt(req.params.id as string);
+      const product = await productService.getProductByIdWithOccasions(productId);
+
+      if (!product) {
+        res.status(404).json({
+          success: false,
+          message: 'Product not found'
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: { product },
+        message: 'Product with occasions retrieved successfully'
+      });
+    } catch (error) {
+      console.error('ProductController.getProductByIdWithOccasions error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch product with occasions',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  /**
    * GET /api/products/search
    * Search products
    */
@@ -344,6 +386,10 @@ export const productValidators = {
   ],
 
   getProductById: [
+    param('id').isInt({ min: 1 }).withMessage('Product ID must be a positive integer')
+  ],
+
+  getProductByIdWithOccasions: [
     param('id').isInt({ min: 1 }).withMessage('Product ID must be a positive integer')
   ],
 

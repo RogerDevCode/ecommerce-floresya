@@ -269,6 +269,7 @@ export interface ProductCreateRequest {
   sku?: string;
   featured?: boolean;
   carousel_order?: number;
+  occasion_ids?: number[];
 }
 
 export interface ProductUpdateRequest {

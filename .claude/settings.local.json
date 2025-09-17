@@ -25,7 +25,8 @@
       "Bash(npm run clean:*)",
       "Bash(npm install:*)",
       "Bash(vercel:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(sed:*)"
     ],
     "deny": [],
     "ask": []

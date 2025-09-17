@@ -53,7 +53,7 @@ export class AuthManager {
     if (loginForm) {
       loginForm.addEventListener('submit', (e: Event) => {
         e.preventDefault();
-        this.handleLogin();
+        void this.handleLogin();
       });
     }
 
@@ -97,7 +97,7 @@ export class AuthManager {
         const loginModal = document.getElementById('loginModal');
         if (loginModal && window.bootstrap) {
           const Modal = window.bootstrap.Modal;
-          if (Modal && Modal.getInstance) {
+          if (Modal?.getInstance) {
             const modal = Modal.getInstance(loginModal);
             if (modal) modal.hide();
           }
@@ -108,7 +108,7 @@ export class AuthManager {
 
         this.showAlert('¡Bienvenido! Has iniciado sesión correctamente.', 'success');
       } else {
-        this.showAlert(response.message || 'Credenciales incorrectas', 'danger');
+        this.showAlert(response.message ?? 'Credenciales incorrectas', 'danger');
       }
 
     } catch (error) {
@@ -168,7 +168,7 @@ export class AuthManager {
     if (userData) {
       try {
         return JSON.parse(userData) as AuthUser;
-      } catch (e) {
+      } catch (_e) {
         return null;
       }
     }
@@ -237,7 +237,7 @@ export class AuthManager {
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('floresya_')) {
+        if (key?.startsWith('floresya_')) {
           keysToRemove.push(key);
         }
       }

@@ -4,7 +4,7 @@
  */
 
 import { Request, Response } from 'express';
-import { body, param, validationResult } from 'express-validator';
+import { body, param, query, validationResult } from 'express-validator';
 import { ImageService } from '../services/ImageService.js';
 import multer from 'multer';
 
@@ -231,6 +231,263 @@ export class ImageController {
     }
   }
 
+  /**
+   * @swagger
+   * /api/images/gallery:
+   *   get:
+   *     summary: Get all product images for gallery
+   *     description: Retrieves all product images with their metadata for the admin gallery
+   *     tags: [Images]
+   *     parameters:
+   *       - in: query
+   *         name: filter
+   *         schema:
+   *           type: string
+   *           enum: [all, used, unused]
+   *         description: Filter images by usage status
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *         description: Page number for pagination
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 100
+   *         description: Number of images per page
+   *     responses:
+   *       200:
+   *         description: Images retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     images:
+   *                       type: array
+   *                       items:
+   *                         type: object
+   *                         properties:
+   *                           id:
+   *                             type: integer
+   *                           product_id:
+   *                             type: integer
+   *                           product_name:
+   *                             type: string
+   *                           size:
+   *                             type: string
+   *                           url:
+   *                             type: string
+   *                           file_hash:
+   *                             type: string
+   *                           is_primary:
+   *                             type: boolean
+   *                           created_at:
+   *                             type: string
+   *                             format: date-time
+   *                     pagination:
+   *                       type: object
+   *                       properties:
+   *                         page:
+   *                           type: integer
+   *                         total:
+   *                           type: integer
+   *                         pages:
+   *                           type: integer
+   *       500:
+   *         description: Server error
+   */
+  public async getImagesGallery(req: Request, res: Response): Promise<void> {
+    try {
+      const filter = req.query.filter as 'all' | 'used' | 'unused' ?? 'all';
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
+
+      const result = await imageService.getImagesGallery(filter, page, limit);
+
+      res.status(200).json({
+        success: true,
+        data: result,
+        message: 'Images gallery retrieved successfully'
+      });
+    } catch (error) {
+      console.error('ImageController.getImagesGallery error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to retrieve images gallery',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  /**
+   * @swagger
+   * /api/images/site:
+   *   post:
+   *     summary: Upload site images (hero, logo)
+   *     description: Uploads and updates site-wide images like hero banner or logo
+   *     tags: [Images]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         multipart/form-data:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               image:
+   *                 type: string
+   *                 format: binary
+   *                 description: Image file to upload
+   *               type:
+   *                 type: string
+   *                 enum: [hero, logo]
+   *                 description: Type of site image
+   *     responses:
+   *       201:
+   *         description: Site image uploaded successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     url:
+   *                       type: string
+   *                     type:
+   *                       type: string
+   *       400:
+   *         description: Validation error or invalid file
+   *       500:
+   *         description: Server error during upload
+   */
+  public async uploadSiteImage(req: Request, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({
+          success: false,
+          message: 'Validation failed',
+          errors: errors.array()
+        });
+        return;
+      }
+
+      if (!req.file) {
+        res.status(400).json({
+          success: false,
+          message: 'No image file provided'
+        });
+        return;
+      }
+
+      const type = req.body.type as 'hero' | 'logo';
+      if (!['hero', 'logo'].includes(type)) {
+        res.status(400).json({
+          success: false,
+          message: 'Invalid image type. Must be "hero" or "logo"'
+        });
+        return;
+      }
+
+      const validation = imageService.validateImageFile(req.file);
+      if (!validation.valid) {
+        res.status(400).json({
+          success: false,
+          message: validation.error || 'Invalid image file'
+        });
+        return;
+      }
+
+      const result = await imageService.uploadSiteImage(req.file, type);
+
+      if (result.success) {
+        res.status(201).json({
+          success: true,
+          data: {
+            url: result.url,
+            type: result.type
+          },
+          message: `Successfully uploaded ${type} image`
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: result.message
+        });
+      }
+    } catch (error) {
+      console.error('ImageController.uploadSiteImage error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to upload site image',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  /**
+   * @swagger
+   * /api/images/site/current:
+   *   get:
+   *     summary: Get current site images
+   *     description: Retrieves the current hero and logo images for the site
+   *     tags: [Images]
+   *     responses:
+   *       200:
+   *         description: Site images retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     hero:
+   *                       type: string
+   *                       description: URL of the hero image
+   *                     logo:
+   *                       type: string
+   *                       description: URL of the logo image
+   *       500:
+   *         description: Server error
+   */
+  public async getCurrentSiteImages(req: Request, res: Response): Promise<void> {
+    try {
+      const result = await imageService.getCurrentSiteImages();
+
+      res.status(200).json({
+        success: true,
+        data: result,
+        message: 'Current site images retrieved successfully'
+      });
+    } catch (error) {
+      console.error('ImageController.getCurrentSiteImages error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to retrieve current site images',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
 
 }
 
@@ -247,5 +504,15 @@ export const imageValidators = {
 
   deleteProductImages: [
     param('productId').isInt({ min: 1 }).withMessage('Product ID must be a positive integer')
+  ],
+
+  getImagesGallery: [
+    query('filter').optional().isIn(['all', 'used', 'unused']).withMessage('Filter must be all, used, or unused'),
+    query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+    query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
+  ],
+
+  uploadSiteImage: [
+    body('type').isIn(['hero', 'logo']).withMessage('Type must be hero or logo')
   ]
 };

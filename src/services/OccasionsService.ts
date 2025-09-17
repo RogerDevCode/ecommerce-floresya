@@ -39,7 +39,7 @@ export class OccasionsService {
         throw new Error(`Failed to fetch occasions: ${error.message}`);
       }
 
-      return (data as Occasion[]) || [];
+      return (data as Occasion[]) ?? [];
     } catch (error) {
       console.error('OccasionsService.getActiveOccasions error:', error);
       throw error;
@@ -60,7 +60,7 @@ export class OccasionsService {
         throw new Error(`Failed to fetch all occasions: ${error.message}`);
       }
 
-      return (data as Occasion[]) || [];
+      return (data as Occasion[]) ?? [];
     } catch (error) {
       console.error('OccasionsService.getAllOccasions error:', error);
       throw error;
@@ -124,7 +124,7 @@ export class OccasionsService {
   public async createOccasion(occasionData: OccasionCreateRequest): Promise<Occasion> {
     try {
       // Generate slug if not provided
-      const slug = occasionData.slug || generateSlug(occasionData.name);
+      const slug = occasionData.slug ?? generateSlug(occasionData.name);
 
       // Check if slug already exists
       const existingOccasion = await this.getOccasionBySlug(slug);
@@ -135,9 +135,9 @@ export class OccasionsService {
       const insertData = {
         ...occasionData,
         slug,
-        type: occasionData.type || 'general',
+        type: occasionData.type ?? 'general',
         is_active: true,
-        display_order: occasionData.display_order || 0
+        display_order: occasionData.display_order ?? 0
       };
 
       const { data, error } = await supabaseService
@@ -245,7 +245,7 @@ export class OccasionsService {
         throw new Error(`Failed to fetch occasions by type: ${error.message}`);
       }
 
-      return (data as Occasion[]) || [];
+      return (data as Occasion[]) ?? [];
     } catch (error) {
       console.error('OccasionsService.getOccasionsByType error:', error);
       throw error;
