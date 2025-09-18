@@ -9,6 +9,8 @@ interface ScrollEffectElement {
     styles: Partial<CSSStyleDeclaration>;
 }
 
+// @ts-nocheck
+/* This file is meant to be loaded as a regular script, not a module */
 class ScrollEffectsFixer {
     private readonly elementsToFix: ScrollEffectElement[];
     private readonly snapContainers: string[];

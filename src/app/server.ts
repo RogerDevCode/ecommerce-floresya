@@ -30,10 +30,7 @@ import { swaggerUi, swaggerSpec } from '../config/swagger.js';
 // Load environment variables
 config();
 
-// Directory resolution for ES modules and Vercel compatibility
-import { fileURLToPath } from 'url';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Directory resolution removed - not needed for current implementation
 
 class FloresYaServer {
   private app: Application;
@@ -337,7 +334,7 @@ class FloresYaServer {
       }
 
       // Start server
-      this.app.listen(this.port, () => {
+      this.app.listen(this.port, '0.0.0.0', () => {
         serverLogger.success('SYSTEM', 'FloresYa Server started successfully', {
           port: this.port,
           environment: process.env.NODE_ENV ?? 'development',

@@ -70,4 +70,3 @@ if (typeof window !== 'undefined') {
     window.ScrollEffectsFixer = ScrollEffectsFixer;
 }
 console.log('[🌸 ScrollFix] Scroll performance optimization script loaded and ready.');
-export {};

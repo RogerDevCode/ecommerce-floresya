@@ -11,9 +11,11 @@ on:
 
 env:
   NODE_VERSION: '18'
-  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-  SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+  # Mock environment variables for CI testing
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://mock-supabase-url.supabase.co' }}
+  SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'mock-anon-key-for-testing' }}
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'mock-service-role-key-for-testing' }}
+  JWT_SECRET: ${{ secrets.JWT_SECRET || 'mock-jwt-secret-for-testing-only' }}
 
 jobs:
   # Security and dependency scanning
@@ -141,63 +143,124 @@ jobs:
       - name: Start backend server
         run: |
           echo "🚀 Starting backend server..."
-          npm run dev:build &
+          echo "📋 Environment variables:"
+
+          # Check if we're using mock values (secrets not configured)
+          if [[ "$SUPABASE_URL" == *"mock-supabase-url"* ]]; then
+            echo "⚠️  Using MOCK Supabase URL - configure GitHub Secrets for real testing"
+            echo "📖 See GITHUB_SECRETS_SETUP.md for instructions"
+          else
+            echo "✅ SUPABASE_URL: ${SUPABASE_URL:0:50}..."
+          fi
+
+          if [[ "$SUPABASE_ANON_KEY" == *"mock-anon-key"* ]]; then
+            echo "⚠️  Using MOCK Supabase ANON KEY - configure GitHub Secrets for real testing"
+          else
+            echo "✅ SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:0:20}..."
+          fi
+
+          echo "  NODE_ENV: $NODE_ENV"
+
+          # Start server with explicit host binding
+          HOST=0.0.0.0 PORT=3000 npm run dev:build > server.log 2>&1 &
           SERVER_PID=$!
           echo "📦 Server PID: $SERVER_PID"
           echo $SERVER_PID > server.pid
-          sleep 5
+
+          # Wait longer for server startup
+          echo "⏳ Waiting for server to initialize..."
+          sleep 10
 
           # Verificar que el proceso está corriendo
           if ps -p $SERVER_PID > /dev/null; then
             echo "✅ Server process is running"
+            echo "📜 Server logs (last 20 lines):"
+            tail -20 server.log || echo "No logs available yet"
           else
             echo "❌ Server process failed to start"
+            echo "📜 Server logs:"
+            cat server.log || echo "No logs available"
             exit 1
           fi
         env:
           NODE_ENV: test
+          HOST: 0.0.0.0
+          PORT: 3000
 
       - name: Wait for server to be ready
         run: |
-          for i in {1..60}; do  # ✅ Aumentar a 60 intentos (2 minutos máximo)
-            if curl -f http://localhost:3000/api/health > /dev/null 2>&1; then
-              echo "✅ Server is ready (attempt $i)"
+          echo "🔍 Checking network connectivity..."
+          echo "📡 Network interfaces:"
+          ip addr show | grep -E "inet|UP" || echo "Network info not available"
+
+          echo "🔍 Port status:"
+          netstat -tlnp | grep :3000 || echo "Port 3000 not found"
+
+          for i in {1..30}; do  # Reducir a 30 intentos con más diagnóstico
+            echo "⏳ Waiting for server... ($i/30)"
+
+            # Try multiple connection methods
+            if curl -f -s --max-time 5 http://127.0.0.1:3000/api/health; then
+              echo "✅ Server is ready via 127.0.0.1 (attempt $i)"
+              break
+            elif curl -f -s --max-time 5 http://localhost:3000/api/health; then
+              echo "✅ Server is ready via localhost (attempt $i)"
+              break
+            elif curl -f -s --max-time 5 http://0.0.0.0:3000/api/health; then
+              echo "✅ Server is ready via 0.0.0.0 (attempt $i)"
               break
             fi
-            if [ $i -eq 60 ]; then
-              echo "❌ Server failed to start after 60 attempts"
+
+            # Check if server process is still running
+            if [ -f server.pid ] && ! ps -p $(cat server.pid) > /dev/null; then
+              echo "❌ Server process died. Checking logs:"
+              tail -50 server.log || echo "No logs available"
               exit 1
             fi
-            echo "⏳ Waiting for server... ($i/60)"
-            sleep 2
+
+            if [ $i -eq 30 ]; then
+              echo "❌ Server failed to respond after 30 attempts"
+              echo "📜 Final server logs:"
+              tail -50 server.log || echo "No logs available"
+              echo "🔍 Final port check:"
+              netstat -tlnp | grep :3000 || echo "Port 3000 not found"
+              echo "🔍 Process check:"
+              ps aux | grep node || echo "No node processes found"
+              exit 1
+            fi
+
+            sleep 4
           done
 
       - name: Test API endpoints
         run: |
           echo "🧪 Testing API endpoints..."
 
-          # Test health endpoint
+          # Test health endpoint (critical - must pass)
           echo "🔍 Testing /api/health..."
-          if ! curl -f -s http://localhost:3000/api/health > /dev/null; then
+          HEALTH_RESPONSE=$(curl -f -s http://127.0.0.1:3000/api/health)
+          if [ $? -eq 0 ]; then
+            echo "✅ /api/health endpoint passed"
+            echo "📊 Health Response: $HEALTH_RESPONSE"
+          else
             echo "❌ /api/health endpoint failed"
             exit 1
           fi
-          echo "✅ /api/health endpoint passed"
 
-          # Test products endpoint
+          # Test products endpoint (may fail due to DB connection in CI)
           echo "🔍 Testing /api/products..."
-          if ! curl -f -s http://localhost:3000/api/products > /dev/null; then
-            echo "⚠️ /api/products endpoint failed (non-blocking)"
-          else
+          if curl -f -s http://127.0.0.1:3000/api/products > /dev/null; then
             echo "✅ /api/products endpoint passed"
+          else
+            echo "⚠️ /api/products endpoint failed (expected in CI without real DB)"
           fi
 
-          # Test occasions endpoint
+          # Test occasions endpoint (may fail due to DB connection in CI)
           echo "🔍 Testing /api/occasions..."
-          if ! curl -f -s http://localhost:3000/api/occasions > /dev/null; then
-            echo "⚠️ /api/occasions endpoint failed (non-blocking)"
-          else
+          if curl -f -s http://127.0.0.1:3000/api/occasions > /dev/null; then
             echo "✅ /api/occasions endpoint passed"
+          else
+            echo "⚠️ /api/occasions endpoint failed (expected in CI without real DB)"
           fi
 
           echo "🎉 All critical API tests completed"
@@ -205,10 +268,22 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
+          echo "🧹 Cleaning up backend server..."
           if [ -f server.pid ]; then
-            kill $(cat server.pid) || true
+            SERVER_PID=$(cat server.pid)
+            echo "📦 Stopping server with PID: $SERVER_PID"
+            kill $SERVER_PID || echo "Server already stopped"
             rm server.pid
           fi
+
+          # Show final logs for debugging
+          if [ -f server.log ]; then
+            echo "📜 Final server logs (last 30 lines):"
+            tail -30 server.log || echo "Could not read server logs"
+            rm server.log
+          fi
+
+          echo "✅ Cleanup completed"
 
   # Frontend Testing
   frontend-tests:
