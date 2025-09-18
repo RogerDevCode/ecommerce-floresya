@@ -494,7 +494,13 @@ export class OccasionsController {
       }
 
       // Prepare update data
-      const updateData: any = {
+      const updateData: {
+        is_active: boolean;
+        updated_at: string;
+        name?: string;
+        slug?: string;
+        description?: string | null;
+      } = {
         is_active,
         updated_at: new Date().toISOString()
       };
@@ -545,6 +551,7 @@ export class OccasionsController {
             let counter = 1;
             let uniqueSlug = `${newSlug}-${counter}`;
 
+            // eslint-disable-next-line no-constant-condition
             while (true) {
               const { data: conflictCheck, error: conflictError } = await supabaseService
                 .from('occasions')

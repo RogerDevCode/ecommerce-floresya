@@ -20,12 +20,10 @@ Proceso: Crea/actualiza todo.md con planificación y checklist, marcando complet
 
 Respuesta: Explicaciones claras y fluidas. Implementa soluciones generales, robustas, sin hardcode. Sigue buenas prácticas y principios de diseño. Notifica si inviable. No hardcodees; usa lógica real general. Código mantenible y extensible. Elimina temporales, scripts o helpers al concluir. Genera código solo si solicitado explícitamente. Ante dudas o ambigüedades, pregunta antes de actuar. No procedas sin nuevas instrucciones. Respuestas en párrafos fluidos bien redactados. Da lo máximo en cada entrega. Give it everything. Go all in. Put your heart into it. Unleash your full potential. Push yourself to the limit. Give it your absolute best. Go for broke. Leave nothing behind. Max out your effort.
 
-  1. **NO MODIFICAR** archivos de configuración (tsconfig.json, package.json, vercel.json) sin preguntarme primero
-  2. **PREGUNTAR EXPLÍCITAMENTE** antes de cualquier cambio de configuración
-  3. **BUSCAR ALTERNATIVAS** que no requieran cambios de configuración
-  4. **USAR CONFIGURACIONES EXISTENTES** siempre que sea posible
-  5. **Si necesitas cambiar configuración, **MOSTRAR DIFF** y esperar mi autorización
-  6. **Nunca actualices el archivo supabase_schema.sql, es la "single source of truth", considera el referido archivo supabase_schema.sql para asegurar que el código de los controladores controladores, sean compatibles estrictamente.
-  7. ** Al trabajar con HTML, JS/TS o CSS, sigue estas practicas estrictamente: Asigna eventos solo cuando el elemento exista en el DOM y esté visible. Usa delegación de eventos: asigna el listener a un contenedor padre siempre presente y filtra eventos por el elemento objetivo. Evita duplicar listeners al mostrar/ocultar elementos múltiples veces. Si usas frameworks, aprovecha sus hooks o ciclos de vida para asignar eventos después del renderizado.Considera usar MutationObserver para detectar elementos agregados dinámicamente.
-
-el boton id="addUserBtn", no funcion, no ejecuta alguna accion, deberia abrir una pagina o modal para crear el usuario asociada a su respetivo ts
+  1. NO MODIFICAR archivos de configuración (tsconfig.json, package.json, vercel.json) sin preguntarme primero
+  2. PREGUNTAR EXPLÍCITAMENTE antes de cualquier cambio de configuración
+  3. BUSCAR ALTERNATIVAS que no requieran cambios de configuración
+  4. USAR CONFIGURACIONES EXISTENTES** siempre que sea posible
+  5. Si necesitas cambiar configuración, MOSTRAR DIFF y esperar mi autorización
+  6. Nunca actualices el archivo supabase_schema.sql, es la "single source of truth", considera el referido archivo supabase_schema.sql para asegurar que el código de los controladores controladores, sean compatibles estrictamente.
+  7. Al trabajar con HTML, JS/TS o CSS, sigue estas practicas estrictamente: Asigna eventos solo cuando el elemento exista en el DOM y esté visible. Usa delegación de eventos: asigna el listener a un contenedor padre siempre presente y filtra eventos por el elemento objetivo. Evita duplicar listeners al mostrar/ocultar elementos múltiples veces. Si usas frameworks, aprovecha sus hooks o ciclos de vida para asignar eventos después del renderizado.Considera usar MutationObserver para detectar elementos agregados dinámicamente.

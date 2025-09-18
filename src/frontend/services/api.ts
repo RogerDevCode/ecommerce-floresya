@@ -197,9 +197,9 @@ export class FloresYaAPI {
     return this.getProduct(id);
   }
 
-  async getProductByIdWithOccasions(id: number): Promise<ApiResponse<Product & { occasion_ids: number[] }>> {
+  async getProductByIdWithOccasions(id: number): Promise<ApiResponse<{ product: Product & { occasion_ids: number[] } }>> {
     this.log('🔄 Getting product with occasions', { id }, 'info');
-    return this.fetchData<Product & { occasion_ids: number[] }>(`/products/${id}/with-occasions`);
+    return this.fetchData<{ product: Product & { occasion_ids: number[] } }>(`/products/${id}/with-occasions`);
   }
 
   async createProduct(productData: Partial<Product>): Promise<ApiResponse<Product>> {
@@ -230,6 +230,42 @@ export class FloresYaAPI {
   async getOccasions(): Promise<ApiResponse<Occasion[]>> {
     this.log('🔄 Getting occasions', {}, 'info');
     return this.fetchData<Occasion[]>('/occasions');
+  }
+
+  async getOccasionById(id: number): Promise<ApiResponse<{ occasion: Occasion }>> {
+    this.log('🔄 Getting occasion by ID', { id }, 'info');
+    return this.fetchData<{ occasion: Occasion }>(`/occasions/${id}`);
+  }
+
+  async createOccasion(occasionData: {
+    name: string;
+    type?: string;
+    description?: string;
+    slug?: string;
+    display_order?: number;
+    is_active?: boolean;
+  }): Promise<ApiResponse<Occasion>> {
+    this.log('🔄 Creating occasion', { name: occasionData.name, type: occasionData.type }, 'info');
+    return this.fetchData<Occasion>('/occasions', {
+      method: 'POST',
+      body: JSON.stringify(occasionData)
+    });
+  }
+
+  async updateOccasion(occasionData: Partial<Occasion> & { id: number }): Promise<ApiResponse<Occasion>> {
+    const { id, ...updateData } = occasionData;
+    this.log('🔄 Updating occasion', { id, name: updateData.name }, 'info');
+    return this.fetchData<Occasion>(`/occasions/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updateData)
+    });
+  }
+
+  async deleteOccasion(id: number): Promise<ApiResponse<{ success: boolean }>> {
+    this.log('🔄 Deleting occasion', { id }, 'info');
+    return this.fetchData<{ success: boolean }>(`/occasions/${id}`, {
+      method: 'DELETE'
+    });
   }
 
   // Carousel API
@@ -508,6 +544,25 @@ export class FloresYaAPI {
     return this.fetchData<{ success: boolean }>(`/images/${imageId}`, {
       method: 'DELETE'
     });
+  }
+
+  async getProductsWithImageCounts(params: { sort_by?: 'name' | 'image_count'; sort_direction?: 'asc' | 'desc' } = {}): Promise<ApiResponse<{
+    products: Array<{
+      id: number;
+      name: string;
+      price_usd: number;
+      image_count: number;
+    }>;
+  }>> {
+    const queryParams = new URLSearchParams();
+    if (params.sort_by) queryParams.append('sort_by', params.sort_by);
+    if (params.sort_direction) queryParams.append('sort_direction', params.sort_direction);
+
+    const queryString = queryParams.toString();
+    const endpoint = `/images/products-with-counts${queryString ? `?${queryString}` : ''}`;
+
+    this.log('🔄 Getting products with image counts', params, 'info');
+    return this.fetchData(endpoint);
   }
 
   // Generic request method for custom API calls

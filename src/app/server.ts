@@ -109,7 +109,7 @@ class FloresYaServer {
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
     // Static files middleware
-    const publicPath = path.join(__dirname, '../../public');
+    const publicPath = path.join(process.cwd(), 'public');
     const staticMaxAge = process.env.NODE_ENV === 'production' ? '1y' : '0';
     serverLogger.info('STATIC', 'Setting up static file serving', {
       path: publicPath,
@@ -123,7 +123,7 @@ class FloresYaServer {
     }));
 
     // Serve compiled TypeScript modules with correct MIME types
-    const distPath = path.join(__dirname, '../../dist');
+    const distPath = path.join(process.cwd(), 'dist');
     serverLogger.info('STATIC', 'Setting up dist file serving', { path: distPath });
     this.app.use('/dist', express.static(distPath, {
       setHeaders: (res, filePath) => {
@@ -256,9 +256,9 @@ class FloresYaServer {
       res.send(swaggerSpec);
     });
 
-    // Serve index.html for all non-API routes (SPA support)
-    this.app.get('*', (req: Request, res: Response) => {
-      const indexPath = path.join(__dirname, '../../public/index.html');
+    // Serve index.html for all non-API routes (SPA support) - exclude /dist/ routes
+    this.app.get(/^(?!\/dist\/).*/, (req: Request, res: Response) => {
+      const indexPath = path.join(process.cwd(), 'public/index.html');
 
       // Log static file serving for debugging
       if (req.path !== '/' && req.path !== '/index.html') {

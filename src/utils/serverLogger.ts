@@ -41,9 +41,9 @@ interface LogConfig {
 class ServerLogger {
   private config: LogConfig;
   private logs: LogEntry[] = [];
-  private maxLogs: number = 1000;
+  private maxLogs = 1000;
   private logFileStream?: fs.WriteStream;
-  private currentLogFile: string = '';
+  private currentLogFile = '';
 
   constructor(config: Partial<LogConfig> = {}) {
     this.config = {

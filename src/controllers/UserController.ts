@@ -5,6 +5,7 @@
 
 import { Request, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
+import { supabaseService } from '../config/supabase.js';
 import { userService } from '../services/UserService.js';
 import type {
   UserCreateRequest,
@@ -565,7 +566,7 @@ export class UserController {
    * @swagger
    * /api/users/{id}:
    *   delete:
-   *     summary: Delete user (with safety checks)
+   *     summary: Delete user (conditional logic)
    *     tags: [Users]
    *     security:
    *       - bearerAuth: []
@@ -578,7 +579,7 @@ export class UserController {
    *         description: User ID
    *     responses:
    *       200:
-   *         description: User deleted successfully
+   *         description: User logically deleted (deactivated)
    *         content:
    *           application/json:
    *             schema:
@@ -590,19 +591,22 @@ export class UserController {
    *                 data:
    *                   type: object
    *                   properties:
-   *                     deleted_user:
-   *                       type: object
-   *                       properties:
-   *                         id:
-   *                           type: integer
-   *                         email:
-   *                           type: string
-   *                         full_name:
-   *                           type: string
+   *                     user:
+   *                       $ref: '#/components/schemas/User'
+   *                     deletion_type:
+   *                       type: string
+   *                       enum: [logical, physical]
+   *                       example: logical
+   *                     has_references:
+   *                       type: boolean
+   *                       example: true
    *                 message:
    *                   type: string
+   *                   example: "User deactivated successfully (has orders or payments)"
+   *       204:
+   *         description: User physically deleted (no content returned)
    *       400:
-   *         description: Invalid user ID or user has related data
+   *         description: Invalid user ID
    *       404:
    *         description: User not found
    *       500:
@@ -629,18 +633,58 @@ export class UserController {
         });
         return;
       }
-      const result = await userService.deleteUser(id);
 
-      if (!result.success) {
-        let statusCode = 500;
-        if (result.error === 'USER_NOT_FOUND') statusCode = 404;
-        if (result.error === 'USER_HAS_ORDERS' || result.error === 'USER_HAS_PAYMENTS') statusCode = 400;
-
-        res.status(statusCode).json(result);
+      // Get user data first to check references
+      const userData = await userService.getUserById(id);
+      if (!userData.success) {
+        res.status(404).json({
+          success: false,
+          message: 'User not found',
+          error: 'USER_NOT_FOUND'
+        });
         return;
       }
 
-      res.status(200).json(result);
+      // Check for references in related tables
+      const hasReferences = await this.checkUserReferences(id);
+
+      if (hasReferences) {
+        // Logical deletion - just deactivate
+        const updateResult = await userService.updateUser(id, { id, is_active: false });
+
+        if (!updateResult.success) {
+          res.status(500).json({
+            success: false,
+            message: 'Failed to deactivate user',
+            error: 'UPDATE_ERROR'
+          });
+          return;
+        }
+
+        res.status(200).json({
+          success: true,
+          data: {
+            user: updateResult.data,
+            deletion_type: 'logical',
+            has_references: true
+          },
+          message: 'User deactivated successfully (has orders or payments)'
+        });
+      } else {
+        // Physical deletion - no references, safe to delete
+        const result = await userService.deleteUser(id);
+
+        if (!result.success) {
+          let statusCode = 500;
+          if (result.error === 'USER_NOT_FOUND') statusCode = 404;
+
+          res.status(statusCode).json(result);
+          return;
+        }
+
+        // Return 204 No Content for successful physical deletion
+        res.status(204).send();
+      }
 
     } catch (error) {
       console.error('UserController.deleteUser error:', error);
@@ -649,6 +693,44 @@ export class UserController {
         message: 'Internal server error',
         error: 'INTERNAL_ERROR'
       });
+    }
+  }
+
+  /**
+   * Check if user has references in related tables
+   */
+  private async checkUserReferences(userId: number): Promise<boolean> {
+    try {
+      // Check orders table
+      const { data: orders, error: ordersError } = await supabaseService
+        .from('orders')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(1);
+
+      if (ordersError) {
+        console.warn('Error checking user orders:', ordersError.message);
+      } else if (orders && orders.length > 0) {
+        return true;
+      }
+
+      // Check payments table
+      const { data: payments, error: paymentsError } = await supabaseService
+        .from('payments')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(1);
+
+      if (paymentsError) {
+        console.warn('Error checking user payments:', paymentsError.message);
+      } else if (payments && payments.length > 0) {
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error checking user references:', error);
+      throw error;
     }
   }
 }

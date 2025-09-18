@@ -4,7 +4,7 @@
 -- Schema actualizado basado en la estructura real de la base de datos
 -- Extracción realizada en: 2025-09-17
 -- Tablas confirmadas: 9
--- Total de registros: 246
+-- Total de registros: 251
 -- Versión: 2.0.0
 -- =============================================================================
 
@@ -123,7 +123,7 @@ CREATE TABLE product_images (
 -- =============================================================================
 -- TABLA: occasions (Occasions)
 -- =============================================================================
--- Registros: 8
+-- Registros: 13
 
 CREATE TABLE occasions (
     id SERIAL PRIMARY KEY NOT NULL,
@@ -330,7 +330,7 @@ ON CONFLICT (key) DO NOTHING;
 -- Fecha de extracción: 2025-09-17
 -- Versión: 2.0.0
 -- Total de tablas: 9
--- Total de registros: 246
+-- Total de registros: 251
 -- Total de índices: 12
 
 -- Para actualizar este archivo ejecute:

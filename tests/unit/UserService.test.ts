@@ -9,36 +9,7 @@ import { supabaseService } from '../../src/config/supabase.js';
 import bcrypt from 'bcryptjs';
 import type { UserCreateRequest, UserUpdateRequest, UserQuery } from '../../src/types/globals.js';
 
-// Mock Supabase with a simple approach - just return promises directly
-vi.mock('../../src/config/supabase.js', () => ({
-  supabaseService: {
-    from: vi.fn(() => {
-      // Return a mock that resolves directly when awaited
-      const mockChain = {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        or: vi.fn().mockReturnThis(),
-        order: vi.fn().mockReturnThis(),
-        range: vi.fn().mockReturnThis(),
-        single: vi.fn(),
-        insert: vi.fn().mockReturnThis(),
-        update: vi.fn().mockReturnThis(),
-        delete: vi.fn().mockReturnThis(),
-        then: vi.fn(),
-      };
-
-      // Make it thenable/awaitable
-      Object.keys(mockChain).forEach(key => {
-        if (key !== 'single' && key !== 'then') {
-          mockChain[key as keyof typeof mockChain] = vi.fn().mockReturnValue(mockChain);
-        }
-      });
-
-      return mockChain;
-    }),
-    rpc: vi.fn()
-  }
-}));
+// Mock Supabase will be set up in beforeEach
 
 // Mock bcrypt
 vi.mock('bcryptjs', () => ({
@@ -56,24 +27,32 @@ describe('UserService', () => {
     userService = new UserService();
     vi.clearAllMocks();
 
-    // Create a fresh mock for each test
+    // Mock supabaseService
+    vi.mock('../../src/config/supabase.js', () => ({
+      supabaseService: {
+        from: vi.fn(),
+        rpc: vi.fn()
+      }
+    }));
+
+    // Create a fresh mock for each test with proper chaining
     mockSupabaseQuery = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      or: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis(),
-      range: vi.fn().mockReturnThis(),
+      select: vi.fn(),
+      eq: vi.fn(),
+      or: vi.fn(),
+      order: vi.fn(),
+      range: vi.fn(),
       single: vi.fn(),
-      insert: vi.fn().mockReturnThis(),
-      update: vi.fn().mockReturnThis(),
-      delete: vi.fn().mockReturnThis(),
+      insert: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
       then: vi.fn(),
     };
 
     // Make all functions return the same mock instance for chaining
     Object.keys(mockSupabaseQuery).forEach(key => {
       if (key !== 'single' && key !== 'then') {
-        mockSupabaseQuery[key] = vi.fn().mockReturnValue(mockSupabaseQuery);
+        mockSupabaseQuery[key as keyof typeof mockSupabaseQuery] = vi.fn().mockReturnValue(mockSupabaseQuery);
       }
     });
 
@@ -359,7 +338,10 @@ describe('UserService', () => {
           user: createdUser,
           message: 'User created successfully'
         },
-        error: null
+        error: null,
+        count: null,
+        status: 200,
+        statusText: 'OK'
       });
 
       const result = await userService.createUser(newUser);
@@ -417,7 +399,10 @@ describe('UserService', () => {
           message: 'Email already exists: existing@test.com',
           error_code: 'EMAIL_EXISTS'
         },
-        error: null
+        error: null,
+        count: null,
+        status: 200,
+        statusText: 'OK'
       });
 
       const result = await userService.createUser(newUser);
@@ -438,7 +423,10 @@ describe('UserService', () => {
       vi.mocked(bcrypt.hash).mockResolvedValue('hashed_password' as never);
       vi.mocked(supabaseService.rpc).mockResolvedValue({
         data: null,
-        error: { message: 'Database connection failed' }
+        error: { message: 'Database connection failed', details: '', hint: '', code: 'CONNECTION_ERROR', name: 'PostgrestError' },
+        count: null,
+        status: 500,
+        statusText: 'Internal Server Error'
       });
 
       const result = await userService.createUser(newUser);
@@ -476,7 +464,10 @@ describe('UserService', () => {
           user: updatedUser,
           message: 'User updated successfully'
         },
-        error: null
+        error: null,
+        count: null,
+        status: 200,
+        statusText: 'OK'
       });
 
       const result = await userService.updateUser(1, updateData);
@@ -507,7 +498,10 @@ describe('UserService', () => {
           user: {},
           message: 'User updated successfully'
         },
-        error: null
+        error: null,
+        count: null,
+        status: 200,
+        statusText: 'OK'
       });
 
       await userService.updateUser(1, updateData);
@@ -522,7 +516,7 @@ describe('UserService', () => {
     });
 
     test('should return error for invalid ID', async () => {
-      const result = await userService.updateUser(NaN, { full_name: 'Updated' });
+      const result = await userService.updateUser(NaN, { id: 1, full_name: 'Updated' });
 
       expect(result.success).toBe(false);
       expect(result.message).toBe('Invalid user ID provided');
@@ -563,7 +557,10 @@ describe('UserService', () => {
           user: toggledUser,
           message: 'User deactivated successfully'
         },
-        error: null
+        error: null,
+        count: null,
+        status: 200,
+        statusText: 'OK'
       });
 
       const result = await userService.toggleUserActive(1);
@@ -599,7 +596,10 @@ describe('UserService', () => {
 
       vi.mocked(supabaseService.rpc).mockResolvedValue({
         data: deleteResponse,
-        error: null
+        error: null,
+        count: null,
+        status: 200,
+        statusText: 'OK'
       });
 
       const result = await userService.deleteUser(1);
@@ -618,7 +618,10 @@ describe('UserService', () => {
           message: 'Cannot delete user: has 5 related orders. Consider deactivating instead.',
           error_code: 'USER_HAS_ORDERS'
         },
-        error: null
+        error: null,
+        count: null,
+        status: 200,
+        statusText: 'OK'
       });
 
       const result = await userService.deleteUser(1);
@@ -657,7 +660,10 @@ describe('UserService', () => {
         vi.mocked(bcrypt.hash).mockResolvedValue('hashed' as never);
         vi.mocked(supabaseService.rpc).mockResolvedValue({
           data: { success: true, user: {}, message: 'Created' },
-          error: null
+          error: null,
+          count: null,
+          status: 200,
+          statusText: 'OK'
         });
 
         const result = await userService.createUser({
@@ -703,7 +709,10 @@ describe('UserService', () => {
         vi.mocked(bcrypt.hash).mockResolvedValue('hashed' as never);
         vi.mocked(supabaseService.rpc).mockResolvedValue({
           data: { success: true, user: {}, message: 'Created' },
-          error: null
+          error: null,
+          count: null,
+          status: 200,
+          statusText: 'OK'
         });
 
         const result = await userService.createUser({
@@ -747,7 +756,10 @@ describe('UserService', () => {
         vi.mocked(bcrypt.hash).mockResolvedValue('hashed' as never);
         vi.mocked(supabaseService.rpc).mockResolvedValue({
           data: { success: true, user: {}, message: 'Created' },
-          error: null
+          error: null,
+          count: null,
+          status: 200,
+          statusText: 'OK'
         });
 
         const result = await userService.createUser({

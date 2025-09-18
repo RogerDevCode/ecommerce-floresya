@@ -315,7 +315,7 @@ export class UserService {
       if (userData.email_verified !== undefined) {
         updateData.email_verified = userData.email_verified;
       }
-      if (userData.password && userData.password.trim()) {
+      if (userData.password?.trim()) {
         updateData.password_hash = await bcrypt.hash(userData.password, this.SALT_ROUNDS);
       }
 

@@ -440,35 +440,35 @@ export class ImageController {
   }
 
   /**
-   * @swagger
-   * /api/images/site/current:
-   *   get:
-   *     summary: Get current site images
-   *     description: Retrieves the current hero and logo images for the site
-   *     tags: [Images]
-   *     responses:
-   *       200:
-   *         description: Site images retrieved successfully
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 success:
-   *                   type: boolean
-   *                   example: true
-   *                 data:
-   *                   type: object
-   *                   properties:
-   *                     hero:
-   *                       type: string
-   *                       description: URL of the hero image
-   *                     logo:
-   *                       type: string
-   *                       description: URL of the logo image
-   *       500:
-   *         description: Server error
-   */
+    * @swagger
+    * /api/images/site/current:
+    *   get:
+    *     summary: Get current site images
+    *     description: Retrieves the current hero and logo images for the site
+    *     tags: [Images]
+    *     responses:
+    *       200:
+    *         description: Site images retrieved successfully
+    *         content:
+    *           application/json:
+    *             schema:
+    *               type: object
+    *               properties:
+    *                 success:
+    *                   type: boolean
+    *                   example: true
+    *                 data:
+    *                   type: object
+    *                   properties:
+    *                     hero:
+    *                       type: string
+    *                       description: URL of the hero image
+    *                     logo:
+    *                       type: string
+    *                       description: URL of the logo image
+    *       500:
+    *         description: Server error
+    */
   public async getCurrentSiteImages(req: Request, res: Response): Promise<void> {
     try {
       const result = await imageService.getCurrentSiteImages();
@@ -483,6 +483,78 @@ export class ImageController {
       res.status(500).json({
         success: false,
         message: 'Failed to retrieve current site images',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  /**
+    * @swagger
+    * /api/images/products-with-counts:
+    *   get:
+    *     summary: Get products with image counts
+    *     description: Retrieves all products with their associated image counts for admin management
+    *     tags: [Images]
+    *     parameters:
+    *       - in: query
+    *         name: sort_by
+    *         schema:
+    *           type: string
+    *           enum: [name, image_count]
+    *         description: Sort by name or image count
+    *       - in: query
+    *         name: sort_direction
+    *         schema:
+    *           type: string
+    *           enum: [asc, desc]
+    *         description: Sort direction
+    *     responses:
+    *       200:
+    *         description: Products with image counts retrieved successfully
+    *         content:
+    *           application/json:
+    *             schema:
+    *               type: object
+    *               properties:
+    *                 success:
+    *                   type: boolean
+    *                   example: true
+    *                 data:
+    *                   type: object
+    *                   properties:
+    *                     products:
+    *                       type: array
+    *                       items:
+    *                         type: object
+    *                         properties:
+    *                           id:
+    *                             type: integer
+    *                           name:
+    *                             type: string
+    *                           price_usd:
+    *                             type: number
+    *                           image_count:
+    *                             type: integer
+    *       500:
+    *         description: Server error
+    */
+  public async getProductsWithImageCounts(req: Request, res: Response): Promise<void> {
+    try {
+      const sortBy = req.query.sort_by as 'name' | 'image_count' ?? 'image_count';
+      const sortDirection = req.query.sort_direction as 'asc' | 'desc' ?? 'asc';
+
+      const result = await imageService.getProductsWithImageCounts(sortBy, sortDirection);
+
+      res.status(200).json({
+        success: true,
+        data: result,
+        message: 'Products with image counts retrieved successfully'
+      });
+    } catch (error) {
+      console.error('ImageController.getProductsWithImageCounts error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to retrieve products with image counts',
         error: error instanceof Error ? error.message : 'Unknown error'
       });
     }

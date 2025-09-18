@@ -830,6 +830,246 @@
             opacity: 1 !important;
             z-index: 1055 !important;
         }
+
+        /* 🖼️ PRODUCT IMAGES MODAL PREMIUM STYLING 🖼️ */
+
+        /* Modal Background and Container */
+        #productImagesModal .modal-content {
+            border: none;
+            border-radius: 1rem;
+            box-shadow: 0 20px 50px rgba(0, 123, 255, 0.15);
+            background: linear-gradient(145deg, #ffffff 0%, #f0f8ff 100%);
+            overflow: hidden;
+        }
+
+        #productImagesModal .modal-header {
+            background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+            color: white;
+            border-bottom: none;
+            padding: 1.5rem 2rem;
+            border-radius: 1rem 1rem 0 0;
+        }
+
+        #productImagesModal .modal-title {
+            font-weight: 600;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+        }
+
+        #productImagesModal .modal-body {
+            padding: 2rem;
+            background: linear-gradient(145deg, #ffffff 0%, #f8fffa 100%);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        /* Form Controls Styling */
+        #productImagesModal .form-label {
+            font-weight: 600;
+            color: #198754;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        #productImagesModal .form-control,
+        #productImagesModal .form-select {
+            border: 2px solid #d1ecf1;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+            background-color: #ffffff;
+        }
+
+        #productImagesModal .form-control:focus,
+        #productImagesModal .form-select:focus {
+            border-color: #198754;
+            box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.15);
+            background-color: #ffffff;
+        }
+
+        /* Upload Section Styling */
+        #productImagesModal .card {
+            border: 2px solid #d1ecf1;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(25, 135, 84, 0.1);
+            transition: box-shadow 0.3s ease;
+        }
+
+        #productImagesModal .card:hover {
+            box-shadow: 0 8px 15px rgba(25, 135, 84, 0.15);
+        }
+
+        #productImagesModal .card-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9f7ef 100%);
+            border-bottom: 2px solid #d1ecf1;
+            font-weight: 600;
+        }
+
+        /* Progress Bar Styling */
+        #productImagesModal .progress {
+            height: 8px;
+            border-radius: 10px;
+            background-color: #e9ecef;
+        }
+
+        #productImagesModal .progress-bar {
+            background: linear-gradient(90deg, #198754 0%, #20c997 100%);
+            border-radius: 10px;
+            transition: width 0.6s ease;
+        }
+
+        /* Images Gallery Styling */
+        .product-image-card {
+            border: 2px solid #e9ecef;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-image-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(25, 135, 84, 0.2);
+            border-color: #198754;
+        }
+
+        .product-image-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .product-image-card:hover img {
+            transform: scale(1.05);
+        }
+
+        .product-image-card .card-body {
+            padding: 1rem;
+        }
+
+        .product-image-card .badge {
+            font-size: 0.75rem;
+            padding: 0.35rem 0.65rem;
+        }
+
+        .product-image-card .badge.bg-primary {
+            background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%) !important;
+        }
+
+        .product-image-card .badge.bg-success {
+            background: linear-gradient(135deg, #198754 0%, #20c997 100%) !important;
+        }
+
+        .product-image-card .badge.bg-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%) !important;
+        }
+
+        /* Image Actions */
+        .image-actions {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 0.5rem;
+            padding: 0.25rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .product-image-card:hover .image-actions {
+            opacity: 1;
+        }
+
+        .image-actions .btn {
+            width: 2rem;
+            height: 2rem;
+            padding: 0;
+            margin: 0.1rem;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* List view styling */
+        .images-list-view .product-image-card {
+            display: flex;
+            flex-direction: row;
+            margin-bottom: 1rem;
+        }
+
+        .images-list-view .product-image-card img {
+            width: 150px;
+            height: 150px;
+            flex-shrink: 0;
+        }
+
+        .images-list-view .product-image-card .card-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* View mode buttons */
+        .btn-group .btn.active {
+            background-color: #198754 !important;
+            border-color: #198754 !important;
+            color: white !important;
+        }
+
+        /* Loading and empty states */
+        #productImagesModal .spinner-border {
+            color: #198754;
+        }
+
+        /* Pagination styling */
+        #productImagesModal .pagination .page-link {
+            color: #198754;
+            border-color: #d1ecf1;
+        }
+
+        #productImagesModal .pagination .page-link:hover {
+            color: #ffffff;
+            background-color: #198754;
+            border-color: #198754;
+        }
+
+        #productImagesModal .pagination .page-item.active .page-link {
+            background-color: #198754;
+            border-color: #198754;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #productImagesModal .modal-body {
+                padding: 1rem;
+            }
+
+            .product-image-card img {
+                height: 150px;
+            }
+
+            .images-list-view .product-image-card {
+                flex-direction: column;
+            }
+
+            .images-list-view .product-image-card img {
+                width: 100%;
+                height: 200px;
+            }
+        }
+
+        /* Force modal to be visible when it has the show class */
+        #productImagesModal.modal.show {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            z-index: 1055 !important;
+        }
     </style>
 </head>
 <body>
@@ -1177,7 +1417,7 @@
                     <!-- Images Section -->
                     <div id="images-section" class="admin-section" style="display: none;">
                         <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h4>Gestión de Imágenes</h4>
+                            <h4>Gestión de Imágenes de Productos</h4>
                             <div class="btn-group">
                                 <button class="btn btn-primary btn-admin" id="uploadSiteImagesBtn">
                                     <i class="bi bi-cloud-upload me-2"></i>
@@ -1185,8 +1425,52 @@
                                 </button>
                                 <button class="btn btn-success btn-admin" id="manageProductImagesBtn">
                                     <i class="bi bi-images me-2"></i>
-                                    Gestionar Imágenes de Productos
+                                    Ver Galería de Imágenes
                                 </button>
+                            </div>
+                        </div>
+
+                        <!-- Sorting Controls -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="sortImagesSelect" class="form-label">Ordenar por:</label>
+                                <select class="form-select" id="sortImagesSelect">
+                                    <option value="image_count">Cantidad de imágenes (menor a mayor)</option>
+                                    <option value="name_asc">Nombre (A-Z)</option>
+                                    <option value="name_desc">Nombre (Z-A)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Products Table -->
+                        <div class="card admin-card">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-table me-2"></i>
+                                    Productos y sus Imágenes
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="productsImagesTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Nombre del Producto</th>
+                                                <th>Precio</th>
+                                                <th>Cantidad de Imágenes</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="productsImagesTableBody">
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted">
+                                                    <i class="bi bi-hourglass-split me-2"></i>
+                                                    Cargando productos...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
 
@@ -2190,6 +2474,160 @@
             window.diagnoseSidebar();
         }, 2000);
     </script>
+
+    <!-- Product Images Management Modal -->
+    <div class="modal fade" id="productImagesModal" tabindex="-1" aria-labelledby="productImagesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="productImagesModalLabel">
+                        <i class="bi bi-images me-2"></i>Gestionar Imágenes de Productos
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Message Area -->
+                    <div id="productImagesMessageArea" class="alert-container mb-3" style="display: none;">
+                        <div id="productImagesMessage" class="alert" role="alert"></div>
+                    </div>
+
+                    <!-- Filter Controls -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label for="productFilter" class="form-label">Filtrar por Producto</label>
+                            <select class="form-select" id="productFilter">
+                                <option value="">Todos los productos</option>
+                                <!-- Products will be loaded here -->
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="sizeFilter" class="form-label">Tamaño de Imagen</label>
+                            <select class="form-select" id="sizeFilter">
+                                <option value="">Todos los tamaños</option>
+                                <option value="large">Grande (1200x1200)</option>
+                                <option value="medium">Mediana (600x600)</option>
+                                <option value="small">Pequeña (300x300)</option>
+                                <option value="thumb">Miniatura (150x150)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="statusFilter" class="form-label">Estado</label>
+                            <select class="form-select" id="statusFilter">
+                                <option value="">Todas</option>
+                                <option value="primary">Imagen Principal</option>
+                                <option value="secondary">Imagen Secundaria</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button class="btn btn-outline-primary w-100" id="refreshImagesBtn">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Upload New Image Section -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">
+                                <i class="bi bi-cloud-upload me-2"></i>Subir Nueva Imagen
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label for="uploadProductSelect" class="form-label">Producto *</label>
+                                    <select class="form-select" id="uploadProductSelect" required>
+                                        <option value="">Seleccionar producto...</option>
+                                        <!-- Products will be loaded here -->
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="imageIndex" class="form-label">Índice</label>
+                                    <input type="number" class="form-control" id="imageIndex" min="1" max="10" value="1">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="imageFile" class="form-label">Archivo de Imagen *</label>
+                                    <input type="file" class="form-control" id="imageFile" accept="image/*" required>
+                                    <div class="form-text">Máximo 5MB. Formatos: JPG, PNG, WebP</div>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="setPrimaryImage">
+                                        <label class="form-check-label" for="setPrimaryImage">
+                                            Principal
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <button class="btn btn-success" id="uploadImageBtn">
+                                        <i class="bi bi-upload me-2"></i>Subir Imagen
+                                    </button>
+                                    <div class="progress mt-2" id="uploadProgress" style="display: none;">
+                                        <div class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Images Gallery -->
+                    <div class="card">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">
+                                <i class="bi bi-grid-3x3-gap me-2"></i>Galería de Imágenes
+                            </h6>
+                            <div class="d-flex align-items-center">
+                                <small class="text-muted me-3" id="imagesCount">0 imágenes</small>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-secondary" id="viewModeGrid" title="Vista de Cuadrícula">
+                                        <i class="bi bi-grid-3x3-gap"></i>
+                                    </button>
+                                    <button class="btn btn-outline-secondary" id="viewModeList" title="Vista de Lista">
+                                        <i class="bi bi-list"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- Loading indicator -->
+                            <div id="imagesLoading" class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando imágenes...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Cargando galería de imágenes...</p>
+                            </div>
+
+                            <!-- Images container -->
+                            <div id="imagesContainer" class="row" style="display: none;">
+                                <!-- Images will be loaded here dynamically -->
+                            </div>
+
+                            <!-- Empty state -->
+                            <div id="imagesEmpty" class="text-center py-5" style="display: none;">
+                                <i class="bi bi-images display-1 text-muted mb-3"></i>
+                                <h5 class="text-muted">No hay imágenes</h5>
+                                <p class="text-muted">No se encontraron imágenes con los filtros aplicados</p>
+                            </div>
+
+                            <!-- Pagination -->
+                            <div id="imagesPagination" class="d-flex justify-content-center mt-4" style="display: none;">
+                                <nav aria-label="Paginación de imágenes">
+                                    <ul class="pagination">
+                                        <!-- Pagination will be generated here -->
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- User Creation Modal -->
     <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">

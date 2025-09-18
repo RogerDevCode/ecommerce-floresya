@@ -30,7 +30,7 @@ interface AdminOccasion {
 }
 
 import { FloresYaAPI } from './services/api.js';
-import type { Product, Occasion } from '../config/supabase.js';
+import type { Product, Occasion, OccasionType } from '../config/supabase.js';
 import type { WindowWithBootstrap } from '../types/globals.js';
 
 // Admin Panel Class
@@ -209,7 +209,7 @@ export class AdminPanel {
       }
 
       // Check if session is still valid (24 hours)
-      const sessionAge = Date.now() - parseInt(sessionTime);
+      const sessionAge = Date.now() - parseInt(sessionTime ?? '0');
       const maxAge = 24 * 60 * 60 * 1000; // 24 hours
 
       if (sessionAge > maxAge) {
@@ -351,6 +351,18 @@ export class AdminPanel {
       // Occasion management buttons
       if (target.matches('#addOccasionBtn') || target.closest('#addOccasionBtn')) {
         this.showAddOccasionModal();
+      }
+
+      // Image management buttons
+      if (target.matches('#manageProductImagesBtn') || target.closest('#manageProductImagesBtn')) {
+        e.preventDefault();
+        this.log('🖱️ manageProductImagesBtn clicked via delegation, calling showProductImagesModal', 'info');
+        try {
+          void this.showProductImagesModal();
+        } catch (error) {
+          this.log('❌ Error in showProductImagesModal: ' + error, 'error');
+          console.error('Error calling showProductImagesModal:', error);
+        }
       }
 
       // Schema management buttons
@@ -659,8 +671,8 @@ export class AdminPanel {
   }
 
   /**
-   * Load images data
-   */
+    * Load images data
+    */
   private async loadImagesData(): Promise<void> {
     try {
       this.log('Loading images data...', 'info');
@@ -668,8 +680,8 @@ export class AdminPanel {
       // Load current site images
       await this.loadCurrentSiteImages();
 
-      // Load images gallery
-      await this.loadImagesGallery();
+      // Load products with image counts for the table (default: image_count asc)
+      await this.loadProductsWithImageCounts('image_count', 'asc');
 
       // Bind image management events
       this.bindImageEvents();
@@ -710,8 +722,8 @@ export class AdminPanel {
   }
 
   /**
-   * Load images gallery
-   */
+    * Load images gallery
+    */
   private async loadImagesGallery(filter: 'all' | 'used' | 'unused' = 'all'): Promise<void> {
     try {
       const response = await this.api.getImagesGallery({ filter, page: 1, limit: 20 });
@@ -730,8 +742,30 @@ export class AdminPanel {
   }
 
   /**
-   * Bind image management events
-   */
+    * Load products with image counts
+    */
+  private async loadProductsWithImageCounts(sortBy: 'name' | 'image_count' = 'image_count', sortDirection: 'asc' | 'desc' = 'asc'): Promise<void> {
+    try {
+      this.log('Loading products with image counts...', 'info');
+
+      const response = await this.api.getProductsWithImageCounts({ sort_by: sortBy, sort_direction: sortDirection });
+
+      if (response.success && response.data) {
+        this.renderProductsWithImageCounts(response.data.products);
+        this.log(`Loaded ${response.data.products.length} products with image counts`, 'success');
+      } else {
+        this.renderProductsWithImageCounts([]);
+        this.log('Failed to load products with image counts', 'error');
+      }
+    } catch (error) {
+      this.log('Error loading products with image counts: ' + error, 'error');
+      this.renderProductsWithImageCounts([]);
+    }
+  }
+
+  /**
+    * Bind image management events
+    */
   private bindImageEvents(): void {
     // Site images buttons
     const changeHeroBtn = document.getElementById('changeHeroImageBtn');
@@ -768,6 +802,14 @@ export class AdminPanel {
     if (filterProductBtn) {
       filterProductBtn.addEventListener('click', () => {
         void this.updateGalleryFilter('used');
+      });
+    }
+
+    // Sorting dropdown for products table
+    const sortImagesSelect = document.getElementById('sortImagesSelect') as HTMLSelectElement;
+    if (sortImagesSelect) {
+      sortImagesSelect.addEventListener('change', () => {
+        void this.handleProductsSort();
       });
     }
   }
@@ -1192,8 +1234,8 @@ export class AdminPanel {
   }
 
   /**
-   * Render occasions table
-   */
+    * Render occasions table
+    */
   private renderOccasionsTable(occasions: AdminOccasion[]): void {
     const tbody = document.getElementById('occasionsTableBody');
     if (!tbody) return;
@@ -1224,6 +1266,47 @@ export class AdminPanel {
           </button>
           <button class="btn btn-sm btn-outline-danger" onclick="adminPanel.deleteOccasion(${occasion.id})">
             <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+
+    tbody.innerHTML = rows;
+  }
+
+  /**
+    * Render products with image counts table
+    */
+  private renderProductsWithImageCounts(products: Array<{
+    id: number;
+    name: string;
+    price_usd: number;
+    image_count: number;
+  }>): void {
+    const tbody = document.getElementById('productsImagesTableBody');
+    if (!tbody) return;
+
+    if (products.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No hay productos</td></tr>';
+      return;
+    }
+
+    const rows = products.map(product => `
+      <tr>
+        <td>
+          <div class="d-flex align-items-center">
+            <strong>${product.name}</strong>
+          </div>
+        </td>
+        <td>$${product.price_usd.toFixed(2)}</td>
+        <td>
+          <span class="badge ${product.image_count === 0 ? 'bg-danger' : product.image_count < 3 ? 'bg-warning' : 'bg-success'}">
+            ${product.image_count} ${product.image_count === 1 ? 'imagen' : 'imágenes'}
+          </span>
+        </td>
+        <td>
+          <button class="btn btn-sm btn-outline-primary" onclick="adminPanel.editProductImages(${product.id}, '${product.name}')">
+            <i class="bi bi-images me-1"></i>Gestionar Imágenes
           </button>
         </td>
       </tr>
@@ -2632,10 +2715,12 @@ export class AdminPanel {
         .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
         .trim(); // Remove leading/trailing whitespace
 
+      // Map data correctly for the API
       const occasionData = {
         name,
+        type: 'general' as OccasionType, // Default type value
+        description: description || undefined,
         slug,
-        description: description || null,
         is_active: active
       };
 
@@ -2644,16 +2729,13 @@ export class AdminPanel {
       let response;
       if (occasionId) {
         // Update existing occasion
-        response = await this.api.request('/occasions/' + occasionId, {
-          method: 'PUT',
-          body: { ...occasionData, id: occasionId }
+        response = await this.api.updateOccasion({
+          id: occasionId,
+          ...occasionData
         });
       } else {
         // Create new occasion
-        response = await this.api.request('/occasions', {
-          method: 'POST',
-          body: occasionData
-        });
+        response = await this.api.createOccasion(occasionData);
       }
 
       if (response.success) {
@@ -2705,6 +2787,511 @@ export class AdminPanel {
     }
   }
 
+  /**
+   * Show product images management modal
+   */
+  private async showProductImagesModal(): Promise<void> {
+    this.log('🖼️ showProductImagesModal called - showing image management modal', 'info');
+
+    try {
+      // Use the existing modal from the HTML
+      const modalElement = document.getElementById('productImagesModal');
+      if (!modalElement) {
+        this.log('❌ productImagesModal element not found in DOM', 'error');
+        this.showError('Modal de gestión de imágenes no encontrado');
+        return;
+      }
+
+      // Reset modal state
+      this.resetProductImagesModal();
+
+      // Load products for dropdowns
+      await this.loadProductsForImageModal();
+
+      // Load initial images
+      await this.loadProductImages();
+
+      // Bind modal events
+      this.bindProductImagesEvents();
+
+      // Show modal using Bootstrap
+      const bootstrap = (window as WindowWithBootstrap).bootstrap;
+      if (bootstrap?.Modal) {
+        try {
+          const modal = new bootstrap.Modal(modalElement);
+          modal.show();
+          this.log('✅ Product images modal shown successfully', 'success');
+
+          // Force modal visibility after a delay
+          setTimeout(() => {
+            if (modalElement) {
+              (modalElement as HTMLElement).style.visibility = 'visible';
+              (modalElement as HTMLElement).style.opacity = '1';
+              (modalElement as HTMLElement).style.display = 'block';
+              modalElement.classList.add('show');
+              this.log('🔧 FORCED product images modal visibility', 'info');
+            }
+          }, 50);
+
+        } catch (error) {
+          this.log('❌ Error showing product images modal with Bootstrap: ' + error, 'error');
+          this.showFallbackProductImagesModal(modalElement);
+        }
+      } else {
+        this.log('❌ Bootstrap Modal not available for product images modal', 'error');
+        this.showFallbackProductImagesModal(modalElement);
+      }
+
+    } catch (error) {
+      this.log('❌ Error in showProductImagesModal: ' + error, 'error');
+      this.showError('Error al abrir el modal de gestión de imágenes');
+    }
+  }
+
+  /**
+   * Reset product images modal form and state
+   */
+  private resetProductImagesModal(): void {
+    // Reset filters
+    const productFilter = document.getElementById('productFilter') as HTMLSelectElement;
+    const sizeFilter = document.getElementById('sizeFilter') as HTMLSelectElement;
+    const statusFilter = document.getElementById('statusFilter') as HTMLSelectElement;
+
+    if (productFilter) productFilter.value = '';
+    if (sizeFilter) sizeFilter.value = '';
+    if (statusFilter) statusFilter.value = '';
+
+    // Reset upload form
+    const uploadProductSelect = document.getElementById('uploadProductSelect') as HTMLSelectElement;
+    const imageIndex = document.getElementById('imageIndex') as HTMLInputElement;
+    const imageFile = document.getElementById('imageFile') as HTMLInputElement;
+    const setPrimaryImage = document.getElementById('setPrimaryImage') as HTMLInputElement;
+
+    if (uploadProductSelect) uploadProductSelect.value = '';
+    if (imageIndex) imageIndex.value = '1';
+    if (imageFile) imageFile.value = '';
+    if (setPrimaryImage) setPrimaryImage.checked = false;
+
+    // Hide progress bar
+    const uploadProgress = document.getElementById('uploadProgress');
+    if (uploadProgress) uploadProgress.style.display = 'none';
+
+    // Clear messages
+    const messageArea = document.getElementById('productImagesMessageArea');
+    if (messageArea) messageArea.style.display = 'none';
+
+    // Reset view mode to grid
+    const viewModeGrid = document.getElementById('viewModeGrid');
+    const viewModeList = document.getElementById('viewModeList');
+    const imagesContainer = document.getElementById('imagesContainer');
+
+    if (viewModeGrid) viewModeGrid.classList.add('active');
+    if (viewModeList) viewModeList.classList.remove('active');
+    if (imagesContainer) imagesContainer.classList.remove('images-list-view');
+  }
+
+  /**
+   * Load products for the image modal dropdowns
+   */
+  private async loadProductsForImageModal(): Promise<void> {
+    try {
+      this.log('Loading products for image modal dropdowns...', 'info');
+
+      const response = await this.api.getProducts({ limit: 100 });
+
+      if (response.success && response.data) {
+        const products = response.data.products;
+
+        // Populate filter dropdown
+        const productFilter = document.getElementById('productFilter') as HTMLSelectElement;
+        if (productFilter) {
+          productFilter.innerHTML = '<option value="">Todos los productos</option>';
+          products.forEach((product: Product) => {
+            const option = document.createElement('option');
+            option.value = product.id.toString();
+            option.textContent = product.name;
+            productFilter.appendChild(option);
+          });
+        }
+
+        // Populate upload dropdown
+        const uploadProductSelect = document.getElementById('uploadProductSelect') as HTMLSelectElement;
+        if (uploadProductSelect) {
+          uploadProductSelect.innerHTML = '<option value="">Seleccionar producto...</option>';
+          products.forEach((product: Product) => {
+            const option = document.createElement('option');
+            option.value = product.id.toString();
+            option.textContent = product.name;
+            uploadProductSelect.appendChild(option);
+          });
+        }
+
+        this.log(`✅ Loaded ${products.length} products for image modal`, 'success');
+      } else {
+        this.log('❌ Failed to load products for image modal', 'error');
+      }
+    } catch (error) {
+      this.log('❌ Error loading products for image modal: ' + error, 'error');
+    }
+  }
+
+  /**
+    * Load product images for the gallery
+    */
+  private async loadProductImages(page = 1, filters: Record<string, unknown> = {}): Promise<void> {
+    try {
+      this.log('Loading product images...', 'info');
+
+      // Show loading indicator
+      const imagesLoading = document.getElementById('imagesLoading');
+      const imagesContainer = document.getElementById('imagesContainer');
+      const imagesEmpty = document.getElementById('imagesEmpty');
+
+      if (imagesLoading) imagesLoading.style.display = 'block';
+      if (imagesContainer) imagesContainer.style.display = 'none';
+      if (imagesEmpty) imagesEmpty.style.display = 'none';
+
+      // Mock data for now (replace with actual API call when implemented)
+      const mockImages = [
+        {
+          id: 1,
+          product_id: 1,
+          product_name: 'Rosa Roja Premium',
+          size: 'medium',
+          url: '/images/placeholder-flower.jpg',
+          file_hash: 'mock_hash_1',
+          is_primary: true,
+          created_at: '2024-01-15T10:30:00Z'
+        },
+        {
+          id: 2,
+          product_id: 1,
+          product_name: 'Rosa Roja Premium',
+          size: 'thumb',
+          url: '/images/placeholder-flower.jpg',
+          file_hash: 'mock_hash_2',
+          is_primary: false,
+          created_at: '2024-01-15T10:30:00Z'
+        }
+      ];
+
+      setTimeout(() => {
+        this.renderProductImages(mockImages);
+
+        if (imagesLoading) imagesLoading.style.display = 'none';
+        if (imagesContainer) imagesContainer.style.display = 'block';
+      }, 500);
+
+    } catch (error) {
+      this.log('❌ Error loading product images: ' + error, 'error');
+
+      // Hide loading and show empty state
+      const imagesLoading = document.getElementById('imagesLoading');
+      const imagesEmpty = document.getElementById('imagesEmpty');
+
+      if (imagesLoading) imagesLoading.style.display = 'none';
+      if (imagesEmpty) imagesEmpty.style.display = 'block';
+    }
+  }
+
+  /**
+    * Render product images in the gallery
+    */
+  private renderProductImages(images: Array<{
+    id: number;
+    product_id: number | null;
+    product_name: string | null;
+    size: string;
+    url: string;
+    file_hash: string;
+    is_primary: boolean;
+    created_at: string;
+  }>): void {
+    const imagesContainer = document.getElementById('imagesContainer');
+    const imagesCount = document.getElementById('imagesCount');
+
+    if (!imagesContainer) return;
+
+    if (images.length === 0) {
+      const imagesEmpty = document.getElementById('imagesEmpty');
+      if (imagesEmpty) imagesEmpty.style.display = 'block';
+      imagesContainer.style.display = 'none';
+      return;
+    }
+
+    // Update count
+    if (imagesCount) {
+      imagesCount.textContent = `${images.length} imagen${images.length !== 1 ? 'es' : ''}`;
+    }
+
+    // Render images
+    imagesContainer.innerHTML = images.map(image => `
+      <div class="col-md-3 col-sm-6 mb-4">
+        <div class="product-image-card position-relative">
+          <img src="${image.url}" alt="${image.product_name || 'Imagen de producto'}" loading="lazy">
+
+          <div class="image-actions">
+            <button class="btn btn-sm btn-outline-primary" onclick="window.open('${image.url}', '_blank')" title="Ver imagen completa">
+              <i class="bi bi-eye"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="adminPanel.deleteProductImage(${image.id})" title="Eliminar imagen">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+
+          <div class="card-body">
+            <h6 class="card-title mb-2">${image.product_name || 'Sin producto'}</h6>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge bg-${image.is_primary ? 'primary' : 'secondary'}">${image.is_primary ? 'Principal' : 'Secundaria'}</span>
+              <small class="text-muted">${image.size}</small>
+            </div>
+            <small class="text-muted">${new Date(image.created_at).toLocaleDateString()}</small>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  /**
+   * Bind events for the product images modal
+   */
+  private bindProductImagesEvents(): void {
+    // Filter events
+    const productFilter = document.getElementById('productFilter');
+    const sizeFilter = document.getElementById('sizeFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const refreshImagesBtn = document.getElementById('refreshImagesBtn');
+
+    if (productFilter) {
+      productFilter.addEventListener('change', () => this.applyImageFilters());
+    }
+    if (sizeFilter) {
+      sizeFilter.addEventListener('change', () => this.applyImageFilters());
+    }
+    if (statusFilter) {
+      statusFilter.addEventListener('change', () => this.applyImageFilters());
+    }
+    if (refreshImagesBtn) {
+      refreshImagesBtn.addEventListener('click', () => void this.loadProductImages());
+    }
+
+    // Upload events
+    const uploadImageBtn = document.getElementById('uploadImageBtn');
+    if (uploadImageBtn) {
+      uploadImageBtn.addEventListener('click', () => void this.uploadProductImage());
+    }
+
+    // View mode events
+    const viewModeGrid = document.getElementById('viewModeGrid');
+    const viewModeList = document.getElementById('viewModeList');
+
+    if (viewModeGrid) {
+      viewModeGrid.addEventListener('click', () => this.setViewMode('grid'));
+    }
+    if (viewModeList) {
+      viewModeList.addEventListener('click', () => this.setViewMode('list'));
+    }
+  }
+
+  /**
+   * Apply filters to the image gallery
+   */
+  private applyImageFilters(): void {
+    const productFilter = document.getElementById('productFilter') as HTMLSelectElement;
+    const sizeFilter = document.getElementById('sizeFilter') as HTMLSelectElement;
+    const statusFilter = document.getElementById('statusFilter') as HTMLSelectElement;
+
+    const filters = {
+      productId: productFilter?.value ?? '',
+      size: sizeFilter?.value ?? '',
+      status: statusFilter?.value ?? ''
+    };
+
+    void this.loadProductImages(1, filters);
+  }
+
+  /**
+    * Set view mode for the gallery
+    */
+  private setViewMode(mode: 'grid' | 'list'): void {
+    const viewModeGrid = document.getElementById('viewModeGrid');
+    const viewModeList = document.getElementById('viewModeList');
+    const imagesContainer = document.getElementById('imagesContainer');
+
+    if (mode === 'grid') {
+      viewModeGrid?.classList.add('active');
+      viewModeList?.classList.remove('active');
+      imagesContainer?.classList.remove('images-list-view');
+    } else {
+      viewModeGrid?.classList.remove('active');
+      viewModeList?.classList.add('active');
+      imagesContainer?.classList.add('images-list-view');
+    }
+  }
+
+  /**
+    * Handle sorting for products table
+    */
+  private async handleProductsSort(): Promise<void> {
+    const sortSelect = document.getElementById('sortImagesSelect') as HTMLSelectElement;
+    if (!sortSelect) return;
+
+    const sortValue = sortSelect.value;
+    let sortBy: 'name' | 'image_count' = 'image_count';
+    let sortDirection: 'asc' | 'desc' = 'asc';
+
+    if (sortValue === 'name_asc') {
+      sortBy = 'name';
+      sortDirection = 'asc';
+    } else if (sortValue === 'name_desc') {
+      sortBy = 'name';
+      sortDirection = 'desc';
+    } else if (sortValue === 'image_count') {
+      sortBy = 'image_count';
+      sortDirection = 'asc';
+    }
+
+    await this.loadProductsWithImageCounts(sortBy, sortDirection);
+  }
+
+  /**
+    * Edit product images - opens modal for managing images of a specific product
+    */
+  public editProductImages(productId: number, productName: string): void {
+    this.log(`Editing images for product: ${productName} (ID: ${productId})`, 'info');
+    // For now, show the existing product images modal
+    // Later this will be replaced with a dedicated modal for editing images per product
+    void this.showProductImagesModal();
+  }
+
+  /**
+   * Upload a new product image
+   */
+  private async uploadProductImage(): Promise<void> {
+    try {
+      const uploadProductSelect = document.getElementById('uploadProductSelect') as HTMLSelectElement;
+      const imageIndex = document.getElementById('imageIndex') as HTMLInputElement;
+      const imageFile = document.getElementById('imageFile') as HTMLInputElement;
+      const setPrimaryImage = document.getElementById('setPrimaryImage') as HTMLInputElement;
+
+      // Validation
+      if (!uploadProductSelect.value) {
+        this.showProductImagesMessage('Por favor, selecciona un producto.', 'error');
+        return;
+      }
+
+      if (!imageFile.files || imageFile.files.length === 0) {
+        this.showProductImagesMessage('Por favor, selecciona un archivo de imagen.', 'error');
+        return;
+      }
+
+      const file = imageFile.files[0];
+
+      // Validate file size (5MB max)
+      if (file && file.size > 5 * 1024 * 1024) {
+        this.showProductImagesMessage('El archivo debe ser menor a 5MB.', 'error');
+        return;
+      }
+
+      // Validate file type
+      if (file && !file.type.startsWith('image/')) {
+        this.showProductImagesMessage('Por favor, selecciona un archivo de imagen válido.', 'error');
+        return;
+      }
+
+      // Show progress
+      const uploadProgress = document.getElementById('uploadProgress');
+      const progressBar = uploadProgress?.querySelector('.progress-bar') as HTMLElement;
+
+      if (uploadProgress) uploadProgress.style.display = 'block';
+      if (progressBar) progressBar.style.width = '0%';
+
+      // Simulate upload progress (replace with actual API call)
+      const progressInterval = setInterval(() => {
+        if (progressBar) {
+          const currentWidth = parseInt(progressBar.style.width) || 0;
+          const newWidth = Math.min(currentWidth + 10, 90);
+          progressBar.style.width = `${newWidth}%`;
+        }
+      }, 200);
+
+      // Mock successful upload after 2 seconds
+      setTimeout(() => {
+        clearInterval(progressInterval);
+        if (progressBar) progressBar.style.width = '100%';
+
+        setTimeout(() => {
+          if (uploadProgress) uploadProgress.style.display = 'none';
+          this.showProductImagesMessage('Imagen subida exitosamente.', 'success');
+
+          // Reset upload form
+          uploadProductSelect.value = '';
+          imageIndex.value = '1';
+          imageFile.value = '';
+          setPrimaryImage.checked = false;
+
+          // Reload images
+          void this.loadProductImages();
+        }, 500);
+      }, 2000);
+
+    } catch (error) {
+      this.log('❌ Error uploading product image: ' + error, 'error');
+      this.showProductImagesMessage('Error al subir la imagen.', 'error');
+    }
+  }
+
+  /**
+   * Show message in product images modal
+   */
+  private showProductImagesMessage(message: string, type: 'success' | 'error' | 'info'): void {
+    const messageArea = document.getElementById('productImagesMessageArea');
+    const messageDiv = document.getElementById('productImagesMessage');
+
+    if (messageArea && messageDiv) {
+      messageDiv.className = `alert alert-${type === 'error' ? 'danger' : type}`;
+      messageDiv.textContent = message;
+      messageArea.style.display = 'block';
+
+      if (type === 'success') {
+        setTimeout(() => {
+          messageArea.style.display = 'none';
+        }, 3000);
+      }
+    }
+  }
+
+  /**
+   * Show fallback product images modal (when Bootstrap is not available)
+   */
+  private showFallbackProductImagesModal(modalElement: HTMLElement): void {
+    modalElement.style.display = 'block';
+    modalElement.style.position = 'fixed';
+    modalElement.style.top = '0';
+    modalElement.style.left = '0';
+    modalElement.style.width = '100%';
+    modalElement.style.height = '100%';
+    modalElement.style.backgroundColor = 'rgba(0,0,0,0.5)';
+    modalElement.style.zIndex = '9999';
+
+    // Add close functionality
+    const closeButtons = modalElement.querySelectorAll('[data-bs-dismiss="modal"]');
+    closeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        modalElement.style.display = 'none';
+      });
+    });
+
+    // Close on background click
+    modalElement.addEventListener('click', (e) => {
+      if (e.target === modalElement) {
+        modalElement.style.display = 'none';
+      }
+    });
+
+    this.log('✅ Fallback product images modal shown successfully', 'success');
+  }
+
   // Public methods for HTML onclick handlers
   public async editProduct(id: number): Promise<void> {
     try {
@@ -2714,7 +3301,7 @@ export class AdminPanel {
       const response = await this.api.getProductByIdWithOccasions(id);
 
       if (response.success && response.data) {
-        void this.showProductModal(response.data);
+        void this.showProductModal(response.data.product);
       } else {
         this.log('Failed to load product for editing', 'error');
         alert('Error al cargar el producto para editar');
@@ -2758,7 +3345,8 @@ export class AdminPanel {
   }
 
   public editUser(id: number): void {
-    alert(`Editar usuario ${id} - Próximamente...`);
+    // Redirect to dedicated users admin page where full CRUD is implemented
+    window.location.href = `/pages/admin-users.html?edit=${id}`;
   }
 
   public deleteUser(id: number): void {
@@ -2952,8 +3540,23 @@ export class AdminPanel {
     }
   }
 
-  public editOccasion(id: number): void {
-    alert(`Editar ocasión ${id} - Próximamente...`);
+  public async editOccasion(id: number): Promise<void> {
+    try {
+      this.log(`Editing occasion ${id}`, 'info');
+
+      // Get occasion data from API
+      const response = await this.api.getOccasionById(id);
+
+      if (response.success && response.data) {
+        await this.showOccasionModal(response.data.occasion);
+      } else {
+        this.log('Failed to load occasion for editing', 'error');
+        alert('Error al cargar la ocasión para editar');
+      }
+    } catch (error) {
+      this.log('Error editing occasion: ' + error, 'error');
+      alert('Error al editar la ocasión');
+    }
   }
 
   public deleteOccasion(id: number): void {
@@ -2982,6 +3585,27 @@ export class AdminPanel {
       } catch (error) {
         this.log('Error deleting image: ' + error, 'error');
         alert('Error al eliminar la imagen');
+      }
+    }
+  }
+
+  public async deleteProductImage(imageId: number): Promise<void> {
+    if (confirm('¿Está seguro de que desea eliminar esta imagen? Esta acción no se puede deshacer.')) {
+      try {
+        this.log(`Deleting product image ${imageId}`, 'info');
+
+        // Mock successful deletion for now (replace with actual API call)
+        setTimeout(() => {
+          this.log('Product image deleted successfully', 'success');
+          this.showProductImagesMessage('Imagen eliminada exitosamente', 'success');
+
+          // Reload images in the modal
+          void this.loadProductImages();
+        }, 500);
+
+      } catch (error) {
+        this.log('Error deleting product image: ' + error, 'error');
+        this.showProductImagesMessage('Error al eliminar la imagen', 'error');
       }
     }
   }
@@ -3347,7 +3971,7 @@ export class AdminPanel {
   private async copySchemaSQLToClipboard(): Promise<void> {
     const sqlContent = document.getElementById('schemaSQLContent');
 
-    if (!sqlContent || !sqlContent.textContent) {
+    if (!sqlContent?.textContent) {
       this.showSchemaError('No hay contenido SQL para copiar. Primero carga el esquema.');
       return;
     }

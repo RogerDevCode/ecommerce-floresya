@@ -23,5 +23,28 @@ export function createImageRoutes(): Router {
     imageController.deleteProductImages.bind(imageController)
   );
 
+  // GET /api/images/gallery - Get all product images for gallery
+  router.get('/gallery',
+    imageValidators.getImagesGallery,
+    imageController.getImagesGallery.bind(imageController)
+  );
+
+  // POST /api/images/site - Upload site images (hero, logo)
+  router.post('/site',
+    imageValidators.uploadSiteImage,
+    imageUpload,
+    imageController.uploadSiteImage.bind(imageController)
+  );
+
+  // GET /api/images/site/current - Get current site images
+  router.get('/site/current',
+    imageController.getCurrentSiteImages.bind(imageController)
+  );
+
+  // GET /api/images/products-with-counts - Get products with image counts
+  router.get('/products-with-counts',
+    imageController.getProductsWithImageCounts.bind(imageController)
+  );
+
   return router;
 }

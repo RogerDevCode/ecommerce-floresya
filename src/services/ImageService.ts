@@ -321,7 +321,7 @@ export class ImageService {
   /**
    * Obtiene la galería de imágenes de productos para el admin
    */
-  public async getImagesGallery(filter: 'all' | 'used' | 'unused' = 'all', page: number = 1, limit: number = 20): Promise<{
+  public async getImagesGallery(filter: 'all' | 'used' | 'unused' = 'all', page = 1, limit = 20): Promise<{
     images: Array<{
       id: number;
       product_id: number | null;
@@ -383,7 +383,7 @@ export class ImageService {
         id: image.id,
         product_id: image.product_id,
         product_name: Array.isArray(image.products) && image.products.length > 0
-          ? image.products[0]?.name || null
+          ? image.products[0]?.name ?? null
           : null,
         size: image.size,
         url: image.url,
@@ -392,13 +392,13 @@ export class ImageService {
         created_at: image.created_at
       }));
 
-      const totalPages = Math.ceil((count || 0) / limit);
+      const totalPages = Math.ceil((count ?? 0) / limit);
 
       return {
         images,
         pagination: {
           page,
-          total: count || 0,
+          total: count ?? 0,
           pages: totalPages
         }
       };
@@ -472,8 +472,8 @@ export class ImageService {
   }
 
   /**
-   * Obtiene las imágenes actuales del sitio
-   */
+    * Obtiene las imágenes actuales del sitio
+    */
   public async getCurrentSiteImages(): Promise<{
     hero: string;
     logo: string;
@@ -492,6 +492,89 @@ export class ImageService {
         hero: '/images/hero-flowers.webp',
         logo: '/images/logoFloresYa.jpeg'
       };
+    }
+  }
+
+  /**
+    * Obtiene productos con conteo de imágenes para gestión administrativa
+    */
+  public async getProductsWithImageCounts(
+    sortBy: 'name' | 'image_count' = 'image_count',
+    sortDirection: 'asc' | 'desc' = 'asc'
+  ): Promise<{
+    products: Array<{
+      id: number;
+      name: string;
+      price_usd: number;
+      image_count: number;
+    }>;
+  }> {
+    try {
+      // Query para obtener productos con conteo de imágenes
+      const { data, error } = await supabaseService
+        .from('products')
+        .select(`
+          id,
+          name,
+          price_usd,
+          product_images!inner(count)
+        `)
+        .eq('active', true);
+
+      if (error) {
+        throw new Error(`Failed to fetch products with image counts: ${error.message}`);
+      }
+
+      // Procesar los datos para contar imágenes por producto
+      const productImageCounts = new Map<number, number>();
+
+      // Agrupar por producto y contar imágenes
+      if (data) {
+        data.forEach((product) => {
+          const productId = (product as { id: number }).id;
+          const productImages = (product as { product_images?: unknown[] }).product_images;
+          const imageCount = productImages ? productImages.length : 0;
+          productImageCounts.set(productId, imageCount);
+        });
+      }
+
+      // Obtener todos los productos activos
+      const { data: allProducts, error: productsError } = await supabaseService
+        .from('products')
+        .select('id, name, price_usd')
+        .eq('active', true);
+
+      if (productsError) {
+        throw new Error(`Failed to fetch products: ${productsError.message}`);
+      }
+
+      // Combinar productos con conteo de imágenes
+      const productsWithCounts = (allProducts || []).map(product => ({
+        id: product.id,
+        name: product.name,
+        price_usd: parseFloat(product.price_usd),
+        image_count: productImageCounts.get(product.id) ?? 0
+      }));
+
+      // Ordenar según los parámetros
+      productsWithCounts.sort((a, b) => {
+        let comparison = 0;
+
+        if (sortBy === 'name') {
+          comparison = a.name.localeCompare(b.name);
+        } else if (sortBy === 'image_count') {
+          comparison = a.image_count - b.image_count;
+        }
+
+        return sortDirection === 'desc' ? -comparison : comparison;
+      });
+
+      return {
+        products: productsWithCounts
+      };
+    } catch (error) {
+      console.error('ImageService.getProductsWithImageCounts error:', error);
+      throw error;
     }
   }
 }

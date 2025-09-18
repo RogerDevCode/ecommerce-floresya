@@ -49,8 +49,27 @@ class UsersAdminManager {
 
   private initialize(): void {
     this.bindEvents();
-    this.loadUsers();
+    void this.loadUsers();
+    this.handleUrlParameters();
     this.log('info', 'Users admin interface initialized');
+  }
+
+  private handleUrlParameters(): void {
+    const urlParams = new URLSearchParams(window.location.search);
+    const editUserId = urlParams.get('edit');
+
+    if (editUserId) {
+      const userId = parseInt(editUserId);
+      if (!isNaN(userId)) {
+        // Wait a bit for the page to load, then trigger edit
+        setTimeout(() => {
+          void this.editUser(userId);
+        }, 500);
+
+        // Clean up URL without reloading page
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
   }
 
   private bindEvents(): void {
@@ -61,7 +80,7 @@ class UsersAdminManager {
 
     // Save user button
     document.getElementById('btnSaveUser')?.addEventListener('click', () => {
-      this.saveUser();
+      void this.saveUser();
     });
 
     // Toggle password visibility
@@ -79,7 +98,7 @@ class UsersAdminManager {
     // Filter controls
     ['roleFilter', 'statusFilter', 'emailVerifiedFilter', 'sortBy'].forEach(id => {
       document.getElementById(id)?.addEventListener('change', () => {
-        this.applyFilters();
+        void this.applyFilters();
       });
     });
   }
@@ -92,7 +111,7 @@ class UsersAdminManager {
     this.searchTimeout = window.setTimeout(() => {
       this.currentQuery.search = searchTerm || undefined;
       this.currentPage = 1;
-      this.loadUsers();
+      void this.loadUsers();
     }, 500);
   }
 
@@ -112,7 +131,7 @@ class UsersAdminManager {
     };
 
     this.currentPage = 1;
-    this.loadUsers();
+    void this.loadUsers();
   }
 
   private async loadUsers(): Promise<void> {
@@ -420,7 +439,8 @@ class UsersAdminManager {
       });
 
       if (response.success && response.data) {
-        this.populateForm(response.data!);
+        this.log('info', 'User data received', response.data);
+        this.populateForm(response.data);
         this.openModal(true);
         this.log('success', 'User loaded for editing');
       } else {
@@ -456,7 +476,7 @@ class UsersAdminManager {
 
       if (response.success) {
         this.showSuccess(response.message || 'Estado del usuario cambiado correctamente');
-        this.loadUsers(); // Reload to show updated status
+        void this.loadUsers(); // Reload to show updated status
       } else {
         this.showError('Error al cambiar estado: ' + (response.message || 'Error desconocido'));
       }
@@ -488,7 +508,7 @@ class UsersAdminManager {
 
       if (response.success) {
         this.showSuccess('Usuario eliminado correctamente');
-        this.loadUsers(); // Reload to remove deleted user
+        void this.loadUsers(); // Reload to remove deleted user
       } else {
         this.showError('Error al eliminar usuario: ' + (response.message || 'Error desconocido'));
       }
@@ -526,7 +546,7 @@ class UsersAdminManager {
           email_verified: formData.email_verified
         };
 
-        if (formData.password && formData.password.trim()) {
+        if (formData.password?.trim()) {
           updateData.password = formData.password;
         }
 
@@ -558,7 +578,7 @@ class UsersAdminManager {
 
       if (response.success) {
         this.modal?.hide();
-        this.loadUsers();
+        void this.loadUsers();
         this.showSuccess(this.isEditing ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente');
         this.log('success', this.isEditing ? 'User updated' : 'User created');
       } else {
@@ -610,7 +630,7 @@ class UsersAdminManager {
     }
 
     // Phone validation (optional but must be valid if provided)
-    if (formData.phone && formData.phone.trim()) {
+    if (formData.phone?.trim()) {
       if (!this.isValidPhone(formData.phone)) {
         this.showFieldError('phone', 'Formato de teléfono inválido (ej: +58414XXXXXXX)');
         isValid = false;
@@ -620,7 +640,7 @@ class UsersAdminManager {
     // Password validation
     if (!this.isEditing) {
       // Required for new users
-      if (!formData.password || !formData.password.trim()) {
+      if (!formData.password?.trim()) {
         this.showFieldError('password', 'La contraseña es requerida');
         isValid = false;
       } else if (!this.isValidPassword(formData.password)) {
@@ -629,7 +649,7 @@ class UsersAdminManager {
       }
     } else {
       // Optional for editing, but must be valid if provided
-      if (formData.password && formData.password.trim() && !this.isValidPassword(formData.password)) {
+      if (formData.password?.trim() && !this.isValidPassword(formData.password)) {
         this.showFieldError('password', 'La contraseña debe tener al menos 8 caracteres con mayúsculas, minúsculas y números');
         isValid = false;
       }

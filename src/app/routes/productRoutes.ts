@@ -22,6 +22,12 @@ export function createProductRoutes(): Router {
     productController.searchProducts.bind(productController)
   );
 
+  // GET /api/products/:id/with-occasions - Get single product with occasions for editing
+  router.get('/:id/with-occasions',
+    productValidators.getProductById,
+    productController.getProductByIdWithOccasions.bind(productController)
+  );
+
   // GET /api/products/:id - Get single product
   router.get('/:id',
     productValidators.getProductById,
