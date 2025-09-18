@@ -146,7 +146,7 @@ jobs:
           echo "📦 Server PID: $SERVER_PID"
           echo $SERVER_PID > server.pid
           sleep 5
-    
+
           # Verificar que el proceso está corriendo
           if ps -p $SERVER_PID > /dev/null; then
             echo "✅ Server process is running"
@@ -156,7 +156,6 @@ jobs:
           fi
         env:
           NODE_ENV: test
-          PORT: 3000
 
       - name: Wait for server to be ready
         run: |
@@ -176,7 +175,7 @@ jobs:
       - name: Test API endpoints
         run: |
           echo "🧪 Testing API endpoints..."
-          
+
           # Test health endpoint
           echo "🔍 Testing /api/health..."
           if ! curl -f -s http://localhost:3000/api/health > /dev/null; then
@@ -184,7 +183,7 @@ jobs:
             exit 1
           fi
           echo "✅ /api/health endpoint passed"
-    
+
           # Test products endpoint
           echo "🔍 Testing /api/products..."
           if ! curl -f -s http://localhost:3000/api/products > /dev/null; then
@@ -192,7 +191,7 @@ jobs:
           else
             echo "✅ /api/products endpoint passed"
           fi
-    
+
           # Test occasions endpoint
           echo "🔍 Testing /api/occasions..."
           if ! curl -f -s http://localhost:3000/api/occasions > /dev/null; then
@@ -200,7 +199,7 @@ jobs:
           else
             echo "✅ /api/occasions endpoint passed"
           fi
-    
+
           echo "🎉 All critical API tests completed"
           
       - name: Cleanup
@@ -250,8 +249,8 @@ jobs:
           # Test if main page loads
           curl -f http://localhost:3000 || echo "Frontend page failed to load"
 
-          # Test static assets
-          curl -f http://localhost:3000/dist/frontend/main.js || echo "Main JS file not found"
+          # Test static assets (updated path)
+          curl -f http://localhost:3000/frontend/main.js || echo "Main JS file not found"
 
           echo "Frontend tests completed"
 
@@ -380,8 +379,8 @@ jobs:
           echo "Performing post-deployment health checks..."
           sleep 30
 
-          # Check if site is accessible
-          if curl -f https://floresya.vercel.app/api/health > /dev/null 2>&1; then
+          # Check if site is accessible (using current deployment URL)
+          if curl -f https://ecommerce-floresya-7-nacpim37m-floresyas-projects.vercel.app/api/occasions > /dev/null 2>&1; then
             echo "✅ Site is accessible"
           else
             echo "❌ Site health check failed"
@@ -392,7 +391,7 @@ jobs:
         if: steps.check-secrets.outputs.secrets-available == 'true' && steps.vercel-deploy.outcome == 'success'
         run: |
           echo "🎉 Deployment successful!"
-          echo "Site URL: https://floresya.vercel.app"
+          echo "Site URL: https://ecommerce-floresya-7-nacpim37m-floresyas-projects.vercel.app"
 
       - name: Notify secrets missing
         if: steps.check-secrets.outputs.secrets-available == 'false'

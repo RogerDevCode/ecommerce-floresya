@@ -4,18 +4,6 @@
  */
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
-// @ts-ignore - Dynamic import of built server
-import { FloresYaServer } from '../dist/app/server.js';
-
-// Create server instance once (for reuse across invocations)
-let serverInstance: FloresYaServer | undefined;
-
-function getServerInstance() {
-  if (!serverInstance) {
-    serverInstance = new FloresYaServer();
-  }
-  return serverInstance.getApp();
-}
 
 // Export serverless handler function
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -33,15 +21,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     console.log('✅ Environment variables verified');
-    const app = getServerInstance();
+
+    // Dynamic import with explicit error handling
+    console.log('🔄 Importing FloresYaServer...');
+    const serverModule = await import('../dist/app/server.js');
+    console.log('✅ FloresYaServer module imported:', Object.keys(serverModule));
+
+    const { FloresYaServer } = serverModule;
+    if (!FloresYaServer) {
+      throw new Error('FloresYaServer class not found in module exports');
+    }
+
+    console.log('✅ Creating FloresYaServer instance...');
+    const serverInstance = new FloresYaServer();
+    const app = serverInstance.getApp();
     console.log('✅ Server instance created');
+
     return app(req, res);
   } catch (error) {
     console.error('❌ Serverless handler error:', error);
+    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
     });
   }
 }
