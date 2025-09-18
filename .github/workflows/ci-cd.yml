@@ -140,40 +140,69 @@ jobs:
 
       - name: Start backend server
         run: |
+          echo "🚀 Starting backend server..."
           npm run dev:build &
           SERVER_PID=$!
+          echo "📦 Server PID: $SERVER_PID"
           echo $SERVER_PID > server.pid
-          sleep 15
+          sleep 5
+    
+          # Verificar que el proceso está corriendo
+          if ps -p $SERVER_PID > /dev/null; then
+            echo "✅ Server process is running"
+          else
+            echo "❌ Server process failed to start"
+            exit 1
+          fi
         env:
           NODE_ENV: test
-          PORT: 3001
+          PORT: 3000
 
       - name: Wait for server to be ready
         run: |
-          for i in {1..30}; do
-            if curl -f http://localhost:3001/api/health > /dev/null 2>&1; then
-              echo "Server is ready"
+          for i in {1..60}; do  # ✅ Aumentar a 60 intentos (2 minutos máximo)
+            if curl -f http://localhost:3000/api/health > /dev/null 2>&1; then
+              echo "✅ Server is ready (attempt $i)"
               break
             fi
-            echo "Waiting for server... ($i/30)"
+            if [ $i -eq 60 ]; then
+              echo "❌ Server failed to start after 60 attempts"
+              exit 1
+            fi
+            echo "⏳ Waiting for server... ($i/60)"
             sleep 2
           done
 
       - name: Test API endpoints
         run: |
-          echo "Testing API endpoints..."
-
+          echo "🧪 Testing API endpoints..."
+          
           # Test health endpoint
-          curl -f http://localhost:3001/api/health || exit 1
-
+          echo "🔍 Testing /api/health..."
+          if ! curl -f -s http://localhost:3000/api/health > /dev/null; then
+            echo "❌ /api/health endpoint failed"
+            exit 1
+          fi
+          echo "✅ /api/health endpoint passed"
+    
           # Test products endpoint
-          curl -f http://localhost:3001/api/products || echo "Products endpoint failed"
-
+          echo "🔍 Testing /api/products..."
+          if ! curl -f -s http://localhost:3000/api/products > /dev/null; then
+            echo "⚠️ /api/products endpoint failed (non-blocking)"
+          else
+            echo "✅ /api/products endpoint passed"
+          fi
+    
           # Test occasions endpoint
-          curl -f http://localhost:3001/api/occasions || echo "Occasions endpoint failed"
-
-          echo "API tests completed"
-
+          echo "🔍 Testing /api/occasions..."
+          if ! curl -f -s http://localhost:3000/api/occasions > /dev/null; then
+            echo "⚠️ /api/occasions endpoint failed (non-blocking)"
+          else
+            echo "✅ /api/occasions endpoint passed"
+          fi
+    
+          echo "🎉 All critical API tests completed"
+          
       - name: Cleanup
         if: always()
         run: |
