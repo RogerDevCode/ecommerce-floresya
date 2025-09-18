@@ -2,7 +2,7 @@
 -- 🌸 FLORESYA E-COMMERCE DATABASE SCHEMA - ACTUALIZADO DESDE SUPABASE
 -- =============================================================================
 -- Schema actualizado basado en la estructura real de la base de datos
--- Extracción realizada en: 2025-09-17
+-- Extracción realizada en: 2025-09-18
 -- Tablas confirmadas: 9
 -- Total de registros: 251
 -- Versión: 2.0.0
@@ -327,7 +327,7 @@ ON CONFLICT (key) DO NOTHING;
 -- =============================================================================
 
 -- Este esquema fue generado automáticamente usando FloresYa Schema Extractor
--- Fecha de extracción: 2025-09-17
+-- Fecha de extracción: 2025-09-18
 -- Versión: 2.0.0
 -- Total de tablas: 9
 -- Total de registros: 251

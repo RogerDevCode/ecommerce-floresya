@@ -1,6 +1,6 @@
-# IA.md
+# CLAUDE.md
 
-This file provides guidance to IA Code (IA.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
@@ -41,7 +41,6 @@ npm run test:ui         # Vitest UI interface
 ### Schema & Database
 ```bash
 npm run schema:update   # Extract schema from Supabase
-npm run schema:info     # Get current schema information
 ```
 
 ## Architecture Overview
@@ -107,7 +106,7 @@ Before making database changes, ensure PostgreSQL transaction functions are depl
 
 ### Frontend Architecture
 - **Vanilla TypeScript**: No framework dependencies
-- **Module compilation**: TypeScript files transpiled to `dist/` and served via Express
+- **Module compilation**: TypeScript files transpiled to `dist/` then copied to `public/`
 - **Bootstrap 5**: For UI components and styling
 - **API communication**: Via `src/frontend/services/api.ts`
 
@@ -152,7 +151,18 @@ PORT=3000
 - **Platform**: Vercel
 - **Handler**: `api/index.ts` (serverless function)
 - **Static files**: Served from `public/`
-- **Build command**: `npm run build`
+- **Build process**: TypeScript compilation to `dist/`, then copying to `public/`
+
+## Build Process Details
+
+### TypeScript Compilation Flow
+1. `npx tsc --project tsconfig.prod.json` - Compiles src/ to dist/src/
+2. `npm run build:post` - Copies dist/src/* to dist/ for flat structure
+3. `npm run build:copy` - Copies frontend files to public/ for Vercel static serving
+
+### Critical Build Dependencies
+- TypeScript and @types packages are in `dependencies` (not devDependencies) for Vercel build compatibility
+- Build process creates both server files in `dist/` and frontend files in `public/`
 
 ## Search and Development Tools
 
@@ -175,6 +185,12 @@ PORT=3000
 - `vercel.json`
 - `.eslintrc.json`
 
+### Vercel Configuration (vercel.json)
+**NEVER MODIFY WITHOUT PERMISSION** - Current working configuration:
+- Simple structure with `buildCommand`, `outputDirectory: "public"`, and `installCommand`
+- Avoids complex builds/routes that caused MIME type issues
+- Frontend files are copied to `public/` during build for static serving
+
 ### Database Schema
 - **Never modify** `supabase_schema.sql` - it's the single source of truth
 - **Always reference** schema file to ensure controller compatibility
@@ -185,6 +201,19 @@ PORT=3000
 - **No stubs or TODO comments**: Implement complete solutions
 - **Event handling**: Use proper DOM lifecycle and event delegation
 - **Error handling**: Comprehensive error handling with logging
+
+## Frontend Development Guidelines
+
+### DOM Event Handling
+- **Event Assignment**: Only assign events when elements exist in DOM and are visible
+- **Event Delegation**: Assign listeners to parent containers, filter by target element
+- **Avoid Duplicates**: Prevent duplicate listeners when showing/hiding elements multiple times
+- **Dynamic Elements**: Consider MutationObserver for dynamically added elements
+
+### Module Loading
+- Frontend TypeScript files are compiled to JavaScript and served from `public/`
+- Import paths in HTML should match the flat structure in `public/` (e.g., `/utils/logger.js`, `/services/api.js`)
+- Module preloading is configured for performance optimization
 
 ## Testing Strategy
 
@@ -202,7 +231,7 @@ PORT=3000
 ## Performance Considerations
 
 ### Static File Serving
-- **Production**: 1-year cache for static assets
+- **Production**: Optimized caching for static assets via Vercel
 - **Development**: No caching for faster iteration
 - **Compression**: Enabled for all responses
 
@@ -218,6 +247,7 @@ PORT=3000
 2. **Lint errors**: Run `npm run lint:fix` for auto-fixable issues
 3. **Database connection**: Verify environment variables and Supabase status
 4. **Transaction failures**: Ensure PostgreSQL functions are deployed
+5. **Frontend module loading**: Verify file paths match public/ structure and MIME types are correct
 
 ### Debug Commands
 ```bash
@@ -227,6 +257,20 @@ curl http://localhost:3000/api/health
 # Verify database connection
 npm run schema:info
 
-# Monitor server logs
-# Check serverLogger output in console
+# Test build process
+npm run build && ls -la public/
+
+# Check TypeScript compilation
+npm run type:check
 ```
+
+## Development Philosophy
+
+This project maintains enterprise-grade standards with zero tolerance for technical debt. All solutions must be:
+- **Complete**: No stubs, TODO comments, or temporary fixes
+- **Type-safe**: Strict TypeScript with no `any` types
+- **Atomic**: Database operations use PostgreSQL functions for integrity
+- **Tested**: Code changes must include appropriate tests
+- **Documented**: All functions documented with Swagger/JSDoc comments
+
+When working on this codebase, always implement robust, production-ready solutions that follow established patterns and maintain the high code quality standards already in place.

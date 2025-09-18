@@ -90,7 +90,19 @@ h1 {
 /* Navigation Styles */
 .navbar {
     box-shadow: 0 2px 10px rgba(255, 105, 180, 0.1);
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+    transform: translateY(0);
+}
+
+/* Navbar hide/show states - CSS-based to avoid scroll-linked positioning warnings */
+.navbar-hidden {
+    transform: translateY(-100%) !important;
+}
+
+.sticky-enhanced {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(255, 105, 180, 0.15);
 }
 
 .navbar-brand {

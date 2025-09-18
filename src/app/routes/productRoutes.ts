@@ -17,7 +17,7 @@ export function createProductRoutes(): Router {
   router.get('/featured', productController.getFeatured.bind(productController));
 
   // GET /api/products/search - Search products
-  router.get('/search', 
+  router.get('/search',
     productValidators.searchProducts,
     productController.searchProducts.bind(productController)
   );

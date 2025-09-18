@@ -131,7 +131,38 @@ export class FloresYaAPI {
 
       const response = await fetch(url, requestOptions);
 
-      const data: ApiResponse<T> = await response.json();
+      // Check if response is actually JSON before parsing
+      const contentType = response.headers.get('content-type');
+      let data: ApiResponse<T>;
+
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          data = await response.json();
+        } catch (jsonError) {
+          this.log('❌ Invalid JSON response', {
+            endpoint,
+            contentType,
+            status: response.status,
+            error: jsonError instanceof Error ? jsonError.message : String(jsonError)
+          }, 'error');
+          throw new Error(`Invalid JSON response from server: ${jsonError instanceof Error ? jsonError.message : String(jsonError)}`);
+        }
+      } else {
+        // If not JSON, read as text and create error response
+        const textResponse = await response.text();
+        this.log('❌ Non-JSON response received', {
+          endpoint,
+          contentType,
+          status: response.status,
+          responsePreview: textResponse.substring(0, 200)
+        }, 'error');
+
+        data = {
+          success: false,
+          message: `Server returned non-JSON response: ${response.status} ${response.statusText}`,
+          data: null as T
+        };
+      }
 
       if (!response.ok) {
         // Only log as error for server errors (5xx), warn for client errors (4xx)

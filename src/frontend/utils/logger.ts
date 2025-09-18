@@ -361,41 +361,6 @@ export class FloresYaLogger implements Logger {
     // TODO: Debug and fix the CORS/connection issue
     console.log(`[🌸 Logger] Would send ${this.logs.length} logs to server (temporarily disabled)`);
     return;
-
-    try {
-      const response = await fetch(this.endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          logs: this.logs,
-          context: this.context,
-          sessionId: this.sessionId
-        })
-      });
-
-      if (response.ok) {
-        this.endpointExists = true;
-        this.logs = []; // Clear logs after successful send
-        this.success('SYSTEM', 'Logs sent to server');
-      } else {
-        this.endpointExists = false;
-        this.warn('SYSTEM', 'Failed to send logs to server', { status: response.status });
-      }
-    } catch (error: unknown) {
-      this.endpointExists = false;
-
-      // Safe error message extraction
-      const errorMessage = this.extractErrorMessage(error);
-
-      // Only log network errors as debug to reduce verbosity, not as errors
-      if (errorMessage.includes('NetworkError') || errorMessage.includes('fetch')) {
-        this.debug('SYSTEM', `Network connectivity issue: ${errorMessage}`);
-      } else {
-        this.warn('SYSTEM', `Cannot send logs to server: ${errorMessage}`);
-      }
-    }
   }
 
   // Start auto-sending logs

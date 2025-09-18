@@ -7,26 +7,26 @@
     "noEmitOnError": false,               // ✅ Permitir JS aún con errores TS
     "allowJs": true,                      // ✅ Máxima flexibilidad durante migración
     "checkJs": false,                     // ✅ No bloquear por JS durante desarrollo
-    
+
     // Verificaciones ESTRICTAS mantenidas en desarrollo
     "strict": true,                       // ✅ Máxima seguridad de tipos
     "noImplicitAny": true,                // ✅ Prohibir 'any' implícito
     "strictNullChecks": true,             // ✅ Verificaciones null/undefined
-    
+
     // Performance optimizado para desarrollo
     "incremental": true,                  // ✅ Compilación incremental (más rápida)
     "tsBuildInfoFile": "./dist/.tsbuildinfo-dev", // Cache separado dev
-    
+
     // Debugging mejorado
     "inlineSourceMap": false,             // ✅ Source maps externos (mejores para debugger)
     "inlineSources": false,              // ✅ Fuentes externas (mejor para debugger)
-    
+
     // Reportes útiles durante desarrollo
     "pretty": true,                       // ✅ Errores formateados bonitos
     "listFiles": false,                   // ❌ No listar archivos compilados
     "listEmittedFiles": false            // ❌ No listar archivos emitidos
   },
-  
+
   "include": [
     "backend/src/**/*.ts",
     "backend/src/**/*.js",      // ✅ Incluir JS durante migración
@@ -35,7 +35,7 @@
     "shared/**/*.ts",
     "types/**/*.ts"
   ],
-  
+
   // Herramientas de desarrollo
   "ts-node": {
     "esm": true,
@@ -45,7 +45,7 @@
       "**/*.ts": "esm"
     }
   },
-  
+
   "watchOptions": {
     "watchFile": "useFsEvents",          // ✅ Mejor rendimiento en cambios de archivos
     "watchDirectory": "useFsEvents",     // ✅ Mejor rendimiento en directorios

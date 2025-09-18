@@ -1,0 +1,56 @@
+/* 🌸 FloresYa Scroll Performance Optimization CSS */
+/* Performance-optimized scroll effects */
+/* Replace JavaScript scroll manipulation with CSS */
+
+/* Sticky positioning */
+.sticky-element {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1000;
+    will-change: transform;
+}
+
+/* Scroll snapping */
+.scroll-snap-container {
+    scroll-snap-type: x proximity !important;
+    overflow-x: auto !important;
+    scroll-behavior: smooth !important;
+}
+
+.scroll-snap-item {
+    scroll-snap-align: start !important;
+    scroll-snap-stop: always !important;
+}
+
+/* Performance optimization */
+.will-change-transform {
+    will-change: transform;
+}
+
+/* Ensure smooth scrolling */
+html {
+    scroll-behavior: smooth;
+    scroll-snap-type: y proximity;
+}
+
+/* Prevent jank on touch devices */
+* {
+    touch-action: pan-y;
+}
+
+/* Enhanced navbar performance */
+.navbar-hidden {
+    transform: translateY(-100%) !important;
+    transition: transform 0.3s ease-out !important;
+}
+
+/* Carousel performance improvements */
+.carousel-container {
+    scroll-snap-type: x mandatory !important;
+    scroll-behavior: smooth !important;
+}
+
+.carousel-item {
+    scroll-snap-align: center !important;
+    scroll-snap-stop: always !important;
+}

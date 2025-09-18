@@ -36,7 +36,15 @@
       "Bash(PORT=3002 node dist/src/app/server.js)",
       "Bash(PORT=3003 node dist/src/app/server.js)",
       "Bash(npm start)",
-      "Bash(PORT=3001 node dist/src/app/server.js)"
+      "Bash(PORT=3001 node dist/src/app/server.js)",
+      "WebFetch(domain:ecommerce-floresya-7-br0d7j68m-floresyas-projects.vercel.app)",
+      "WebFetch(domain:ecommerce-floresya-7-gnbygrixj-floresyas-projects.vercel.app)",
+      "WebFetch(domain:ecommerce-floresya-7-hrxmf8cbo-floresyas-projects.vercel.app)",
+      "WebFetch(domain:ecommerce-floresya-7-7v9wz45sl-floresyas-projects.vercel.app)",
+      "Bash(sort:*)",
+      "Bash(grep:*)",
+      "Bash(npm audit:*)",
+      "Bash(npm cache clean:*)"
     ],
     "deny": [],
     "ask": []

@@ -512,7 +512,7 @@ class SupabaseManager {
 
   private constructor() {
     const config = this.getConfig();
-    
+
     this.client = createClient(config.url, config.anonKey, {
       auth: { persistSession: false }
     });

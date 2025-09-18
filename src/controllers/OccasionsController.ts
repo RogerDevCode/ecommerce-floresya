@@ -322,11 +322,15 @@ export class OccasionsController {
         return;
       }
 
-      const { name, description, is_active = true } = req.body as {
+      const { name, type, description, is_active = true } = req.body as {
         name: string;
+        type?: string;
         description?: string;
         is_active?: boolean;
       };
+
+      // Apply default AFTER validation passes
+      const finalType = type || 'general';
 
       // Apply smart capitalization to the name
       const capitalizedName = this.capitalizeOccasionName(name);
@@ -367,6 +371,7 @@ export class OccasionsController {
         .from('occasions')
         .insert({
           name: capitalizedName, // Use capitalized name for display
+          type: finalType,
           slug,
           description,
           is_active,
@@ -469,8 +474,9 @@ export class OccasionsController {
       }
 
       const occasionId = parseInt(req.params.id as string);
-      const { name, description, is_active = true } = req.body as {
+      const { name, type, description, is_active = true } = req.body as {
         name?: string;
+        type?: string;
         description?: string;
         is_active?: boolean;
       };
@@ -498,6 +504,7 @@ export class OccasionsController {
         is_active: boolean;
         updated_at: string;
         name?: string;
+        type?: string;
         slug?: string;
         description?: string | null;
       } = {
@@ -581,6 +588,11 @@ export class OccasionsController {
           updateData.slug = finalSlug;
           slugChanged = true;
         }
+      }
+
+      // Handle type change
+      if (type !== undefined) {
+        updateData.type = type;
       }
 
       // Handle description change
@@ -778,6 +790,7 @@ export const occasionsValidators = {
 
   createOccasion: [
     body('name').trim().isLength({ min: 2, max: 100 }).withMessage('Name must be between 2 and 100 characters'),
+    body('type').optional().isIn(['general', 'birthday', 'anniversary', 'wedding', 'sympathy', 'congratulations']).withMessage('Type must be a valid occasion type'),
     body('description').optional().trim().isLength({ max: 500 }).withMessage('Description must not exceed 500 characters'),
     body('is_active').optional().isBoolean().withMessage('is_active must be a boolean')
   ],
@@ -785,6 +798,7 @@ export const occasionsValidators = {
   updateOccasion: [
     param('id').isInt({ min: 1 }).withMessage('Occasion ID must be a positive integer'),
     body('name').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Name must be between 2 and 100 characters'),
+    body('type').optional().isIn(['general', 'birthday', 'anniversary', 'wedding', 'sympathy', 'congratulations']).withMessage('Type must be a valid occasion type'),
     body('description').optional().trim().isLength({ max: 500 }).withMessage('Description must not exceed 500 characters'),
     body('is_active').optional().isBoolean().withMessage('is_active must be a boolean')
   ],

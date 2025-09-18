@@ -47,7 +47,7 @@
     "esModuleInterop": true,              // ✅ Interoperabilidad ES modules
     "isolatedModules": true               // ✅ Compatibilidad con bundlers
   },
-  
+
   "include": [
     "src/**/*.ts",
     "scripts/**/*.ts"
