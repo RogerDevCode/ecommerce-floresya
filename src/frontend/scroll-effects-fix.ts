@@ -4,14 +4,16 @@
  * Follows Mozilla's recommendations: https://firefox-source-docs.mozilla.org/performance/scroll-linked_effects.html
  */
 
-interface ScrollEffectElement {
+export interface ScrollEffectElement {
     selector: string;
-    styles: Partial<CSSStyleDeclaration>;
+    styles: Record<string, string>;
 }
 
-// @ts-nocheck
-/* This file is meant to be loaded as a regular script, not a module */
-class ScrollEffectsFixer {
+export interface WindowWithScrollEffectsFixer extends Window {
+    ScrollEffectsFixer?: typeof ScrollEffectsFixer;
+}
+
+export class ScrollEffectsFixer {
     private readonly elementsToFix: ScrollEffectElement[];
     private readonly snapContainers: string[];
 
@@ -22,7 +24,7 @@ class ScrollEffectsFixer {
             { selector: '.carousel-wrapper', styles: { position: 'sticky', top: '0px', zIndex: '1000' } },
             { selector: '[style*="position: absolute"][style*="top:"]', styles: { position: 'sticky', top: '0px', zIndex: '1000' } },
             { selector: '[data-sticky]', styles: { position: 'sticky', top: '0px', zIndex: '1000' } }
-        ];
+        ] as ScrollEffectElement[];
 
         this.snapContainers = [
             '.carousel-container',
@@ -94,10 +96,10 @@ class ScrollEffectsFixer {
     }
 }
 
-// Initialize the fixer
+// Auto-initialize when loaded as module
 if (typeof window !== 'undefined') {
     new ScrollEffectsFixer();
-    (window as any).ScrollEffectsFixer = ScrollEffectsFixer;
+    (window as WindowWithScrollEffectsFixer).ScrollEffectsFixer = ScrollEffectsFixer;
 }
 
-console.log('[🌸 ScrollFix] Scroll performance optimization script loaded and ready.');
+console.log('[🌸 ScrollFix] Scroll performance optimization class loaded and exported.');
