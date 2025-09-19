@@ -500,7 +500,9 @@ export class ImageService {
     */
   public async getProductsWithImageCounts(
     sortBy: 'name' | 'image_count' = 'image_count',
-    sortDirection: 'asc' | 'desc' = 'asc'
+    sortDirection: 'asc' | 'desc' = 'asc',
+    productStatus: 'active' | 'inactive' | 'all' = 'active',
+    occasionFilter?: string
   ): Promise<{
     products: Array<{
       id: number;
@@ -510,50 +512,84 @@ export class ImageService {
     }>;
   }> {
     try {
-      // Query para obtener productos con conteo de imágenes
-      const { data, error } = await supabaseService
+      // Construir consulta base para productos
+      let productsQuery = supabaseService
         .from('products')
-        .select(`
-          id,
-          name,
-          price_usd,
-          product_images!inner(count)
-        `)
-        .eq('active', true);
+        .select('id, name, price_usd, active');
 
-      if (error) {
-        throw new Error(`Failed to fetch products with image counts: ${error.message}`);
+      // Aplicar filtro de estado del producto
+      if (productStatus === 'active') {
+        productsQuery = productsQuery.eq('active', true);
+      } else if (productStatus === 'inactive') {
+        productsQuery = productsQuery.eq('active', false);
       }
+      // Para 'all' no aplicamos filtro de estado
 
-      // Procesar los datos para contar imágenes por producto
-      const productImageCounts = new Map<number, number>();
-
-      // Agrupar por producto y contar imágenes
-      if (data) {
-        data.forEach((product) => {
-          const productId = (product as { id: number }).id;
-          const productImages = (product as { product_images?: unknown[] }).product_images;
-          const imageCount = productImages ? productImages.length : 0;
-          productImageCounts.set(productId, imageCount);
-        });
-      }
-
-      // Obtener todos los productos activos
-      const { data: allProducts, error: productsError } = await supabaseService
-        .from('products')
-        .select('id, name, price_usd')
-        .eq('active', true);
+      const { data: allProducts, error: productsError } = await productsQuery;
 
       if (productsError) {
         throw new Error(`Failed to fetch products: ${productsError.message}`);
       }
 
-      // Combinar productos con conteo de imágenes
-      const productsWithCounts = (allProducts || []).map(product => ({
+      if (!allProducts || allProducts.length === 0) {
+        return { products: [] };
+      }
+
+      // Si hay filtro de ocasión, necesitamos obtener productos que tengan esa ocasión
+      let filteredProductIds = allProducts.map(p => p.id);
+
+      if (occasionFilter && occasionFilter !== 'general') {
+        const { data: occasionProducts, error: occasionError } = await supabaseService
+          .from('product_occasions')
+          .select('product_id')
+          .eq('occasion_id', parseInt(occasionFilter));
+
+        if (occasionError) {
+          console.warn('Error fetching products by occasion, ignoring filter:', occasionError.message);
+        } else if (occasionProducts) {
+          const occasionProductIds = occasionProducts.map(op => op.product_id);
+          filteredProductIds = filteredProductIds.filter(id => occasionProductIds.includes(id));
+        }
+      }
+
+      // Obtener conteo de imágenes para los productos filtrados
+      // Agrupar por product_id para contar imágenes únicas (no por tamaño)
+      const { data: imageCounts, error: imagesError } = await supabaseService
+        .from('product_images')
+        .select('product_id, image_index')
+        .in('product_id', filteredProductIds);
+
+      if (imagesError) {
+        console.warn('Error fetching image counts, using 0 for all products:', imagesError.message);
+      }
+
+      // Contar imágenes únicas por producto (cada image_index representa una imagen)
+      const imageCountMap = new Map<number, number>();
+      if (imageCounts) {
+        // Usar un Set para evitar duplicados por image_index
+        const uniqueImages = new Map<number, Set<number>>();
+        imageCounts.forEach((image) => {
+          if (!uniqueImages.has(image.product_id)) {
+            uniqueImages.set(image.product_id, new Set());
+          }
+          uniqueImages.get(image.product_id)!.add(image.image_index);
+        });
+
+        // Contar los sets únicos
+        uniqueImages.forEach((imageIndexes, productId) => {
+          imageCountMap.set(productId, imageIndexes.size);
+        });
+      }
+
+      // Filtrar productos según los criterios aplicados
+      const filteredProducts = allProducts.filter(product => filteredProductIds.includes(product.id));
+
+      // Combinar productos filtrados con conteo de imágenes
+      const productsWithCounts = filteredProducts.map(product => ({
         id: product.id,
         name: product.name,
         price_usd: parseFloat(product.price_usd),
-        image_count: productImageCounts.get(product.id) ?? 0
+        image_count: imageCountMap.get(product.id) ?? 0
       }));
 
       // Ordenar según los parámetros

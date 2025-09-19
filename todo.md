@@ -1,123 +1,56 @@
-# FloresYa E-commerce Platform - Project Checklist
+# Plan de Acción: Limpieza de Archivos Duplicados y Estructura del Proyecto
 
-## Project Overview
-- [x] Enterprise-grade e-commerce platform for flower sales
-- [x] Built with TypeScript in strict mode, Node.js, Express, Supabase PostgreSQL
-- [x] Clean architecture principles with zero technical debt tolerance
-- [x] Extensive use of atomic database transactions
+## Finalidad
+Realizar una limpieza meticulosa del proyecto e-commerce para eliminar archivos duplicados, directorios replicados y archivos JS ubicados incorrectamente fuera de `dist`, manteniendo la integridad funcional y la estructura estándar compatible con Vercel.
 
-## Architecture Setup
-- [x] Directory structure implemented (src/app, controllers, services, config, types, utils, frontend)
-- [x] Express server setup with FloresYaServer class
-- [x] API route definitions in routes/
-- [x] Express middleware (auth, security stack)
-- [x] Service Layer Pattern: Business logic in service classes (ProductService, OrderService, etc.)
-- [x] Thin controllers delegating to services
+## Checklist de Tareas
 
-## Database Integration
-- [x] Supabase configuration (client and service client)
-- [x] Database types inlined in src/config/supabase.ts
-- [x] Atomic transactions via PostgreSQL functions (create_order_with_items, update_order_status_with_history, etc.)
-- [x] Schema compliance with supabase_schema.sql as single source of truth
-- [x] Transaction functions deployed in Supabase
+### Fase 1: Análisis y Diagnóstico
+- [x] Analizar estructura completa del proyecto para identificar duplicados
+- [x] Identificar archivos JS fuera de directorio dist
+- [x] Detectar directorios duplicados en src
+- [x] Verificar importaciones y exportaciones activas
 
-## TypeScript Configuration
-- [x] Strict mode enabled, no 'any' types
-- [x] ESNext modules with bundler resolution
-- [x] Path mapping: @shared-types/* and @database-types/* aliases
-- [x] Build target ES2022 with DOM types
-- [x] Separate configs: tsconfig.json, tsconfig.prod.json, tsconfig.dev.json
+### Fase 2: Mapeo y Planificación
+- [x] Crear mapa de dependencias entre archivos
+- [x] Identificar archivos seguros para eliminación
+- [x] Documentar rutas de importación que requieren corrección
 
-## Code Quality
-- [x] ESLint strict configuration
-- [x] Type checking passes npm run type:check
-- [x] Zero technical debt: no stubs, commented code, or temporary fixes
-- [x] Comprehensive error handling with logging
+### Fase 3: Limpieza Controlada
+- [x] Eliminar archivos duplicados confirmados como seguros
+- [x] Corregir rutas de importación rotas
+- [x] Mantener estructura estándar para Vercel
 
-## Frontend Architecture
-- [x] Vanilla TypeScript, no framework dependencies
-- [x] Module compilation to dist/ served via Express
-- [x] Bootstrap 5 for UI components
-- [x] API communication via src/frontend/services/api.ts
+### Fase 4: Verificación
+- [x] Verificar funcionalidad del proyecto post-limpieza
+- [x] Ejecutar build y validar compilación
+- [x] Confirmar que todas las rutas funcionan correctamente
 
-## Authentication & Security
-- [x] JWT authentication middleware
-- [x] UserService handles authentication logic
-- [x] Roles: admin, user, support with RBAC
-- [x] Security middleware: Helmet, CORS, rate limiting, body parsing, compression
+## ✅ LIMPIEZA COMPLETADA EXITOSAMENTE
 
-## API Documentation
-- [x] Swagger/OpenAPI at /api-docs
-- [x] JSON spec at /api-docs.json
-- [x] Configuration in src/config/swagger.ts
-- [x] Health check endpoint /api/health
+### Problemas Detectados y Resueltos
+1. **Duplicación masiva**: Se eliminó directorio `public/src/` que duplicaba completamente `src/`
+2. **Archivos JS fuera de dist**: Se eliminaron archivos JS esparcidos en `public/`
+3. **Configuración TypeScript incorrecta**: Se corrigió `rootDir: "."` a `rootDir: "./src"`
+4. **Comandos build con workarounds**: Se eliminaron `build:post` y `build:frontend` innecesarios
+5. **Rutas HTML incorrectas**: Se actualizaron todas las rutas para apuntar a `/dist/frontend/`
 
-## Environment & Deployment
-- [x] Environment variables configured (SUPABASE_URL, keys, JWT_SECRET, etc.)
-- [x] Vercel deployment with api/index.ts serverless handler
-- [x] Static files served from public/
-- [x] Build command npm run build
-- [x] Production URL live and operational
+### Archivos JS Restantes (Legítimos)
+- `scripts/check-env.js` - Script de configuración
+- `vitest.config.js` - Configuración de testing
 
-## Testing Strategy
-- [x] Vitest test runner configured
-- [x] Supertest for API endpoint testing
-- [x] Coverage reports available
-- [x] Focus on API, services, transactions, validation
+### Estructura Final Correcta
+```
+├── src/              # Código fuente TypeScript
+├── dist/             # Código compilado JavaScript
+│   ├── app/
+│   ├── frontend/
+│   ├── controllers/
+│   └── services/
+└── public/           # Solo archivos estáticos (HTML, CSS, imágenes)
+```
 
-## Performance & Optimization
-- [x] Static file serving with 1-year cache in production
-- [x] Prepared statements for all queries
-- [x] Connection pooling via Supabase
-- [x] Transaction batching for related operations
-- [x] Response compression enabled
-
-## Key Features Implementation
-- [x] Product catalog with images
-- [x] Shopping cart functionality
-- [x] Order management
-- [x] User authentication
-- [x] Admin panel with image management
-- [x] Payment processing
-- [x] Occasion-based filtering
-- [x] Responsive design
-- [x] Product image management with sorting and filtering
-
-## Recent Enhancements
-- [x] Product image management table in admin panel
-- [x] API endpoint /api/images/products-with-counts
-- [x] Sorting functionality (name, image_count)
-- [x] Modal links for editing images
-- [x] TypeScript type consistency
-- [x] Error handling and logging for image operations
-
-## Quality Assurance
-- [x] All TypeScript compilation errors resolved (0 errors)
-- [x] ESLint warnings reduced to acceptable levels
-- [x] Strict typing enforced across all files
-- [x] Schema compliance verified for controllers
-- [x] JSDoc documentation added to service methods
-
-## Future Considerations
-- [ ] Implement modal for editing product images
-- [ ] Add more advanced filtering options
-- [ ] Enhance payment processing integration
-- [ ] Implement user profile management
-- [ ] Add product reviews and ratings
-- [ ] Expand admin panel features
-- [ ] Optimize frontend performance further
-- [ ] Add comprehensive end-to-end testing
-
-## Maintenance Tasks
-- [ ] Regular dependency updates
-- [ ] Security audits
-- [ ] Performance monitoring
-- [ ] Database optimization reviews
-- [ ] Code refactoring as needed
-- [ ] Documentation updates
-
-## Processed Files for Scroll Effects Fix
-- [x] src/frontend/scroll-effects-fix.ts - Exported class and interface, removed @ts-nocheck, corrected types for strict TS, removed direct instantiation
-- [x] public/index.html - Updated script tag to type="module" for proper module loading
-
-Last updated: 2025-09-19
+## Notas Importantes
+- **Precaución máxima**: Cada eliminación debe ser verificada para evitar romper funcionalidad
+- **Backup implícito**: Git permite recuperar archivos si es necesario
+- **Estructura objetivo**: Mantener TypeScript en `src/` y JavaScript compilado solo en `dist/`

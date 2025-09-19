@@ -5,9 +5,7 @@
   "type": "module",
   "main": "api/index.ts",
   "scripts": {
-    "build": "npm run clean && npx tsc --project tsconfig.prod.json && npm run build:post && npm run build:frontend",
-    "build:frontend": "mkdir -p public/frontend && cp -r dist/frontend/* public/frontend/ 2>/dev/null || true",
-    "build:post": "mkdir -p dist/app dist/frontend dist/controllers dist/services dist/config dist/types dist/utils dist/models && cp -r dist/src/app/* dist/app/ 2>/dev/null || true && cp -r dist/src/frontend/* dist/frontend/ 2>/dev/null || true && cp -r dist/src/controllers/* dist/controllers/ 2>/dev/null || true && cp -r dist/src/services/* dist/services/ 2>/dev/null || true && cp -r dist/src/config/* dist/config/ 2>/dev/null || true && cp -r dist/src/types/* dist/types/ 2>/dev/null || true && cp -r dist/src/utils/* dist/utils/ 2>/dev/null || true && cp -r dist/src/models/* dist/models/ 2>/dev/null || true",
+    "build": "npm run clean && npx tsc --project tsconfig.prod.json",
     "start": "npm run build && node dist/app/server.js",
     "dev": "npx tsc --watch & nodemon --delay 2 dist/app/server.js",
     "dev:build": "npx tsc && node dist/app/server.js",
@@ -19,7 +17,7 @@
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "type:check": "npx tsc --noEmit",
-    "clean": "rm -rf dist/ && rm -rf public/frontend/",
+    "clean": "rm -rf dist/",
     "reset": "npm run clean && npm run build",
     "schema:update": "npx ts-node /home/manager/Sync/ecommerce-floresya/dist/utils/schema-extractor.js"
   },

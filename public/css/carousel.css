@@ -422,10 +422,17 @@
     }
 }
 
-/* Performance optimizations */
+/* Performance optimizations - will-change only during transitions */
 .carousel-container .carousel-item {
-    will-change: transform;
     transform: translateZ(0);
+}
+
+/* Apply will-change only during active sliding */
+.carousel-container .carousel-item.active.carousel-item-start,
+.carousel-container .carousel-item.active.carousel-item-end,
+.carousel-container .carousel-item.carousel-item-next,
+.carousel-container .carousel-item.carousel-item-prev {
+    will-change: transform;
 }
 
 .carousel-container .carousel-item.active {

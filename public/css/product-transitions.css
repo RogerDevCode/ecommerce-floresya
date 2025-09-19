@@ -42,8 +42,7 @@
   transform-origin: center bottom;
   transform: translateZ(0) translateY(0) scale(1);
 
-  /* Performance optimizations */
-  will-change: transform, box-shadow, border-color;
+  /* Performance optimizations - will-change only during interactions */
   backface-visibility: hidden;
   perspective: 1000px;
 
@@ -58,6 +57,9 @@
 /* === REFINED HOVER STATES === */
 .product-card:hover,
 .product-card.is-hovering {
+  /* Apply will-change only during hover for memory efficiency */
+  will-change: transform, box-shadow, border-color;
+
   /* Gentle lift with micro-scale */
   transform: translateZ(0) translateY(-6px) scale(1.015);
 
@@ -100,9 +102,16 @@
     filter var(--duration-quick) var(--ease-gentle);
 
   transform-origin: center;
-  will-change: opacity, transform, filter;
   position: relative;
+}
 
+/* Apply will-change to images only during crossfade animations */
+.card-img-top.crossfade-out,
+.card-img-top.crossfade-in {
+  will-change: opacity, transform, filter;
+}
+
+.product-card .card-img-top {
   /* Premium image rendering */
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;

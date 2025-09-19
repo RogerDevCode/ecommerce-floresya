@@ -2,12 +2,11 @@
 /* Performance-optimized scroll effects */
 /* Replace JavaScript scroll manipulation with CSS */
 
-/* Sticky positioning */
+/* Sticky positioning - will-change removed to reduce memory */
 .sticky-element {
     position: sticky !important;
     top: 0 !important;
     z-index: 1000;
-    will-change: transform;
 }
 
 /* Scroll snapping */
@@ -22,9 +21,22 @@
     scroll-snap-stop: always !important;
 }
 
-/* Performance optimization */
+/* Smart will-change utilities - only when needed */
 .will-change-transform {
     will-change: transform;
+}
+
+.will-change-opacity {
+    will-change: opacity;
+}
+
+.will-change-auto {
+    will-change: auto;
+}
+
+/* Remove will-change when animation is complete */
+.animation-complete {
+    will-change: auto !important;
 }
 
 /* Ensure smooth scrolling */

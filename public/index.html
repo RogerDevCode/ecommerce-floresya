@@ -30,9 +30,9 @@
     <link rel="stylesheet" href="/css/scroll-fix.css">
     <!-- Preload critical resources -->
     <link rel="preload" href="/images/logoFloresYa.jpeg" as="image" importance="high">
-    <link rel="modulepreload" href="/frontend/utils/logger.js">
-    <link rel="modulepreload" href="/frontend/services/api.js">
-    <link rel="modulepreload" href="/frontend/main.js">
+    <link rel="modulepreload" href="/dist/frontend/utils/logger.js">
+    <link rel="modulepreload" href="/dist/frontend/services/api.js">
+    <link rel="modulepreload" href="/dist/frontend/main.js">
     
     <!-- DNS prefetch for external domains -->
     <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
@@ -762,15 +762,15 @@
 
     <!-- Custom JS - Load after critical styles -->
     <!-- 🌸 FloresYa TypeScript Modules - 100% Type-Safe Frontend -->
-    <script type="module" src="/frontend/utils/logger.js"></script>
-    <script type="module" src="/frontend/services/api.js"></script>
-    <script type="module" src="/frontend/main.js"></script>
+    <script type="module" src="/dist/frontend/utils/logger.js"></script>
+    <script type="module" src="/dist/frontend/services/api.js"></script>
+    <script type="module" src="/dist/frontend/main.js"></script>
 
     <!-- Authentication System -->
-    <script type="module" src="/frontend/auth.js"></script>
+    <script type="module" src="/dist/frontend/auth.js"></script>
 
     <!-- Scroll Effects Fix -->
-    <script type="module" src="/frontend/scroll-effects-fix.js"></script>
+    <script type="module" src="/dist/frontend/scroll-effects-fix.js"></script>
 
     
 
@@ -915,7 +915,6 @@
     </script>
 
     <!-- Scroll optimization -->
-    <script src="/frontend/scroll-effects-fix.js" defer></script>
 
 </body>
 </html>

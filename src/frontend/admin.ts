@@ -16,9 +16,72 @@ interface AdminUser {
 interface AdminOrder {
   id: number;
   customer_name: string;
+  customer_email?: string;
   total_amount_usd: number;
+  total_amount_ves?: number;
   status: string;
   created_at: string;
+  delivery_date?: string;
+  items_count?: number;
+}
+
+interface OrdersFilters {
+  status?: string;
+  customer_email?: string;
+  date_from?: string;
+  date_to?: string;
+  search?: string;
+  sort_by?: string;
+  sort_direction?: string;
+}
+
+interface OrdersPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+interface OrdersData {
+  orders: AdminOrder[];
+  pagination: OrdersPagination;
+}
+
+interface OrderItemDetails {
+  product_name: string;
+  product_summary?: string;
+  quantity: number;
+  unit_price_usd?: number;
+  subtotal_usd: number;
+}
+
+interface OrderStatusHistoryItem {
+  new_status: string;
+  created_at: string;
+  notes?: string;
+}
+
+interface OrderDetails {
+  id: number;
+  customer_name: string;
+  customer_email?: string;
+  customer_phone?: string;
+  user_id?: number;
+  delivery_address: string;
+  delivery_city?: string;
+  delivery_date?: string;
+  delivery_time_slot?: string;
+  delivery_notes?: string;
+  status: string;
+  total_amount_usd?: number;
+  total_amount_ves?: number;
+  payment_status?: string;
+  payment_method?: string;
+  payment_date?: string;
+  admin_notes?: string;
+  created_at: string;
+  items: OrderItemDetails[];
+  status_history: OrderStatusHistoryItem[];
 }
 
 interface AdminOccasion {
@@ -536,6 +599,7 @@ export class AdminPanel {
         break;
       case 'orders':
         await this.loadOrdersData();
+        this.bindOrdersEvents();
         break;
       case 'users':
         await this.loadUsersData();
@@ -619,18 +683,43 @@ export class AdminPanel {
   }
 
   /**
-   * Load orders data
+   * Load orders data with enhanced filtering and pagination
    */
-  private async loadOrdersData(): Promise<void> {
+  private async loadOrdersData(page: number = 1, filters: OrdersFilters = {}): Promise<void> {
     try {
-      // Mock data for demonstration
-      const mockOrders: AdminOrder[] = [
-        { id: 1234, customer_name: 'María González', total_amount_usd: 45.99, status: 'pending', created_at: '2024-01-15' },
-        { id: 1235, customer_name: 'Juan Pérez', total_amount_usd: 78.50, status: 'confirmed', created_at: '2024-01-14' }
-      ];
-      this.renderOrdersTable(mockOrders);
+      this.showOrdersLoading();
+
+      // Build query parameters
+      const queryParams = {
+        page,
+        limit: 20,
+        ...filters
+      };
+
+      this.log(`Loading orders with params: ${JSON.stringify(queryParams)}`, 'info');
+
+      // For now, use mock data since API is not implemented yet
+      // TODO: Implement real API call when backend is ready
+      const ordersData = this.getMockOrdersData(queryParams);
+      this.log(`Loaded ${ordersData.orders.length} orders from mock data`, 'info');
+
+      // Update stats
+      this.updateOrdersStats(ordersData.orders);
+
+      // Render table
+      this.renderOrdersTable(ordersData.orders);
+
+      // Render pagination
+      this.renderOrdersPagination(ordersData.pagination);
+
+      // Update filter info
+      this.updateOrdersFilterInfo(filters, ordersData.orders.length);
+
     } catch (error) {
       this.log('Error loading orders: ' + error, 'error');
+      this.showOrdersError('Error al cargar los pedidos');
+    } finally {
+      this.hideOrdersLoading();
     }
   }
 
@@ -680,8 +769,12 @@ export class AdminPanel {
       // Load current site images
       await this.loadCurrentSiteImages();
 
-      // Load products with image counts for the table (default: image_count asc)
-      await this.loadProductsWithImageCounts('image_count', 'asc');
+      // Load products with image counts for the table with default filters
+      await this.loadProductsWithImageCounts('image_count', 'asc', {
+        productStatus: 'active',
+        imageStatus: 'active',
+        occasion: 'general'
+      });
 
       // Bind image management events
       this.bindImageEvents();
@@ -742,17 +835,59 @@ export class AdminPanel {
   }
 
   /**
-    * Load products with image counts
+    * Load products with image counts with enhanced filtering
     */
-  private async loadProductsWithImageCounts(sortBy: 'name' | 'image_count' = 'image_count', sortDirection: 'asc' | 'desc' = 'asc'): Promise<void> {
+  private async loadProductsWithImageCounts(sortBy: 'name' | 'image_count' = 'image_count', sortDirection: 'asc' | 'desc' = 'asc', filters: {
+    productStatus?: 'active' | 'inactive' | 'all';
+    imageStatus?: 'active' | 'inactive' | 'all';
+    occasion?: string;
+  } = {}): Promise<void> {
     try {
-      this.log('Loading products with image counts...', 'info');
+      this.log('Loading products with image counts with filters...', 'info');
 
-      const response = await this.api.getProductsWithImageCounts({ sort_by: sortBy, sort_direction: sortDirection });
+      // Build query parameters
+      const queryParams: {
+        sort_by: 'name' | 'image_count';
+        sort_direction: 'asc' | 'desc';
+        include_image_counts: boolean;
+        active?: boolean;
+        occasion?: string;
+      } = {
+        sort_by: sortBy,
+        sort_direction: sortDirection,
+        include_image_counts: true
+      };
+
+      // Add product status filter
+      if (filters.productStatus && filters.productStatus !== 'all') {
+        queryParams.active = filters.productStatus === 'active';
+      }
+
+      // Add occasion filter
+      if (filters.occasion && filters.occasion !== 'general') {
+        queryParams.occasion = filters.occasion;
+      }
+
+      // For image status filter, we'll need to filter client-side since the API doesn't support it yet
+      const response = await this.api.getProductsWithImageCounts(queryParams);
 
       if (response.success && response.data) {
-        this.renderProductsWithImageCounts(response.data.products);
-        this.log(`Loaded ${response.data.products.length} products with image counts`, 'success');
+        let products = response.data.products;
+
+        // Apply client-side image status filter
+        if (filters.imageStatus && filters.imageStatus !== 'all') {
+          const isActive = filters.imageStatus === 'active';
+          products = products.filter(product => {
+            if (isActive) {
+              return product.image_count > 0;
+            } else {
+              return product.image_count === 0;
+            }
+          });
+        }
+
+        this.renderProductsWithImageCounts(products);
+        this.log(`Loaded ${products.length} products with image counts (filtered)`, 'success');
       } else {
         this.renderProductsWithImageCounts([]);
         this.log('Failed to load products with image counts', 'error');
@@ -764,8 +899,8 @@ export class AdminPanel {
   }
 
   /**
-    * Bind image management events
-    */
+   * Bind image management events
+   */
   private bindImageEvents(): void {
     // Site images buttons
     const changeHeroBtn = document.getElementById('changeHeroImageBtn');
@@ -805,6 +940,13 @@ export class AdminPanel {
       });
     }
 
+    // Product images filters
+    const productStatusFilter = document.getElementById('productStatusFilter');
+    const imageStatusFilter = document.getElementById('imageStatusFilter');
+    const occasionFilter = document.getElementById('productOccasionFilter');
+    const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+    const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+
     // Sorting dropdown for products table
     const sortImagesSelect = document.getElementById('sortImagesSelect') as HTMLSelectElement;
     if (sortImagesSelect) {
@@ -812,6 +954,23 @@ export class AdminPanel {
         void this.handleProductsSort();
       });
     }
+
+    // Apply filters button
+    if (applyFiltersBtn) {
+      applyFiltersBtn.addEventListener('click', () => {
+        void this.handleApplyFilters();
+      });
+    }
+
+    // Reset filters button
+    if (resetFiltersBtn) {
+      resetFiltersBtn.addEventListener('click', () => {
+        void this.handleResetFilters();
+      });
+    }
+
+    // Load occasions for filter dropdown
+    void this.loadOccasionsForImageFilter();
   }
 
   /**
@@ -1159,37 +1318,453 @@ export class AdminPanel {
   }
 
   /**
-   * Render orders table
+   * Render orders table with enhanced features
    */
   private renderOrdersTable(orders: AdminOrder[]): void {
     const tbody = document.getElementById('ordersTableBody');
     if (!tbody) return;
 
     if (orders.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay pedidos</td></tr>';
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" class="orders-empty">
+            <i class="bi bi-receipt"></i>
+            <h5>No hay pedidos</h5>
+            <p>No se encontraron pedidos con los filtros aplicados</p>
+          </td>
+        </tr>
+      `;
       return;
     }
 
     const rows = orders.map(order => `
       <tr>
-        <td>${order.id}</td>
-        <td>${order.customer_name}</td>
-        <td>$${order.total_amount_usd.toFixed(2)}</td>
         <td>
-          <span class="status-badge status-${order.status}">
+          <strong>#${order.id}</strong>
+        </td>
+        <td>
+          <div>
+            <div class="fw-bold">${order.customer_name}</div>
+            <small class="text-muted">${order.customer_email || 'Sin email'}</small>
+          </div>
+        </td>
+        <td>
+          <div class="d-flex align-items-center">
+            <i class="bi bi-basket me-2 text-muted"></i>
+            <span>${order.items_count || 0} producto${(order.items_count || 0) !== 1 ? 's' : ''}</span>
+          </div>
+        </td>
+        <td>
+          <div>
+            <div class="fw-bold">$${order.total_amount_usd.toFixed(2)}</div>
+            ${order.total_amount_ves ? `<small class="text-muted">Bs. ${order.total_amount_ves.toLocaleString()}</small>` : ''}
+          </div>
+        </td>
+        <td>
+          <span class="badge order-status-${order.status} fs-6">
             ${this.getOrderStatusText(order.status)}
           </span>
         </td>
-        <td>${new Date(order.created_at).toLocaleDateString()}</td>
         <td>
-          <button class="btn btn-sm btn-outline-info" onclick="adminPanel.viewOrder(${order.id})">
-            <i class="bi bi-eye"></i>
-          </button>
+          <div>
+            <div>${new Date(order.created_at).toLocaleDateString()}</div>
+            <small class="text-muted">${new Date(order.created_at).toLocaleTimeString()}</small>
+          </div>
+        </td>
+        <td>
+          ${order.delivery_date ? new Date(order.delivery_date).toLocaleDateString() : '<span class="text-muted">No especificada</span>'}
+        </td>
+        <td>
+          <div class="order-actions d-flex gap-1">
+            <button class="btn btn-sm btn-outline-primary" onclick="adminPanel.viewOrderDetails(${order.id})" title="Ver detalles">
+              <i class="bi bi-eye"></i>
+            </button>
+            <div class="dropdown">
+              <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" title="Cambiar estado">
+                <i class="bi bi-arrow-repeat"></i>
+              </button>
+              <ul class="dropdown-menu status-update-dropdown">
+                <li><a class="dropdown-item" href="#" onclick="adminPanel.updateOrderStatus(${order.id}, 'pending')">
+                  <i class="bi bi-clock"></i> Pendiente
+                </a></li>
+                <li><a class="dropdown-item" href="#" onclick="adminPanel.updateOrderStatus(${order.id}, 'confirmed')">
+                  <i class="bi bi-check-circle"></i> Confirmado
+                </a></li>
+                <li><a class="dropdown-item" href="#" onclick="adminPanel.updateOrderStatus(${order.id}, 'preparing')">
+                  <i class="bi bi-gear"></i> Preparando
+                </a></li>
+                <li><a class="dropdown-item" href="#" onclick="adminPanel.updateOrderStatus(${order.id}, 'ready')">
+                  <i class="bi bi-box-seam"></i> Listo
+                </a></li>
+                <li><a class="dropdown-item" href="#" onclick="adminPanel.updateOrderStatus(${order.id}, 'delivered')">
+                  <i class="bi bi-truck"></i> Entregado
+                </a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="#" onclick="adminPanel.updateOrderStatus(${order.id}, 'cancelled')">
+                  <i class="bi bi-x-circle"></i> Cancelar
+                </a></li>
+              </ul>
+            </div>
+          </div>
         </td>
       </tr>
     `).join('');
 
     tbody.innerHTML = rows;
+  }
+
+  /**
+   * Show orders loading state
+   */
+  private showOrdersLoading(): void {
+    const tbody = document.getElementById('ordersTableBody');
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr id="ordersLoadingRow">
+          <td colspan="8" class="orders-loading">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando pedidos...</span>
+            </div>
+            <div class="mt-2">Cargando pedidos...</div>
+          </td>
+        </tr>
+      `;
+    }
+  }
+
+  /**
+   * Hide orders loading state
+   */
+  private hideOrdersLoading(): void {
+    const loadingRow = document.getElementById('ordersLoadingRow');
+    if (loadingRow) {
+      loadingRow.remove();
+    }
+  }
+
+  /**
+   * Show orders error state
+   */
+  private showOrdersError(message: string): void {
+    const tbody = document.getElementById('ordersTableBody');
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" class="text-center text-danger py-4">
+            <i class="bi bi-exclamation-triangle display-4 mb-3"></i>
+            <h5>Error al cargar pedidos</h5>
+            <p>${message}</p>
+            <button class="btn btn-outline-primary" onclick="adminPanel.loadOrdersData()">
+              <i class="bi bi-arrow-clockwise me-2"></i>Reintentar
+            </button>
+          </td>
+        </tr>
+      `;
+    }
+  }
+
+  /**
+   * Update orders statistics
+   */
+  private updateOrdersStats(orders: AdminOrder[]): void {
+    const stats = {
+      pending: 0,
+      confirmed: 0,
+      preparing: 0,
+      ready: 0,
+      delivered: 0,
+      cancelled: 0
+    };
+
+    orders.forEach(order => {
+      if (stats[order.status as keyof typeof stats] !== undefined) {
+        stats[order.status as keyof typeof stats]++;
+      }
+    });
+
+    // Update stat cards
+    const statElements = {
+      pendingOrdersCount: stats.pending,
+      confirmedOrdersCount: stats.confirmed,
+      preparingOrdersCount: stats.preparing,
+      readyOrdersCount: stats.ready,
+      deliveredOrdersCount: stats.delivered,
+      cancelledOrdersCount: stats.cancelled
+    };
+
+    Object.entries(statElements).forEach(([elementId, count]) => {
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.textContent = count.toString();
+      }
+    });
+  }
+
+  /**
+   * Render orders pagination
+   */
+  private renderOrdersPagination(pagination: OrdersPagination): void {
+    const paginationContainer = document.getElementById('ordersPagination');
+    const paginationControls = document.getElementById('ordersPaginationControls');
+    const paginationInfo = document.getElementById('ordersPaginationInfo');
+
+    if (!paginationContainer || !paginationControls || !paginationInfo) return;
+
+    if (pagination.totalPages <= 1) {
+      paginationContainer.style.display = 'none';
+      return;
+    }
+
+    paginationContainer.style.display = 'flex';
+
+    // Update pagination info
+    const start = (pagination.page - 1) * pagination.limit + 1;
+    const end = Math.min(pagination.page * pagination.limit, pagination.total);
+    paginationInfo.textContent = `Mostrando ${start}-${end} de ${pagination.total} pedidos`;
+
+    // Generate pagination controls
+    let paginationHtml = '';
+
+    // Previous button
+    paginationHtml += `
+      <li class="page-item ${pagination.page <= 1 ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="adminPanel.loadOrdersData(${pagination.page - 1})">
+          <i class="bi bi-chevron-left"></i>
+        </a>
+      </li>
+    `;
+
+    // Page numbers
+    const startPage = Math.max(1, pagination.page - 2);
+    const endPage = Math.min(pagination.totalPages, pagination.page + 2);
+
+    if (startPage > 1) {
+      paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="adminPanel.loadOrdersData(1)">1</a></li>`;
+      if (startPage > 2) {
+        paginationHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+      }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      paginationHtml += `
+        <li class="page-item ${i === pagination.page ? 'active' : ''}">
+          <a class="page-link" href="#" onclick="adminPanel.loadOrdersData(${i})">${i}</a>
+        </li>
+      `;
+    }
+
+    if (endPage < pagination.totalPages) {
+      if (endPage < pagination.totalPages - 1) {
+        paginationHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+      }
+      paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="adminPanel.loadOrdersData(${pagination.totalPages})">${pagination.totalPages}</a></li>`;
+    }
+
+    // Next button
+    paginationHtml += `
+      <li class="page-item ${pagination.page >= pagination.totalPages ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="adminPanel.loadOrdersData(${pagination.page + 1})">
+          <i class="bi bi-chevron-right"></i>
+        </a>
+      </li>
+    `;
+
+    paginationControls.innerHTML = paginationHtml;
+  }
+
+  /**
+   * Update orders filter info
+   */
+  private updateOrdersFilterInfo(filters: OrdersFilters, resultCount: number): void {
+    const filterInfo = document.getElementById('ordersFilterInfo');
+    const ordersCount = document.getElementById('ordersCount');
+
+    if (!filterInfo || !ordersCount) return;
+
+    // Update count
+    ordersCount.textContent = `${resultCount} pedido${resultCount !== 1 ? 's' : ''}`;
+
+    // Update filter description
+    let filterText = 'Mostrando todos los pedidos';
+    const activeFilters: string[] = [];
+
+    if (filters.status) {
+      activeFilters.push(`Estado: ${this.getOrderStatusText(filters.status)}`);
+    }
+    if (filters.date_from || filters.date_to) {
+      const dateRange = [];
+      if (filters.date_from) dateRange.push(`desde ${filters.date_from}`);
+      if (filters.date_to) dateRange.push(`hasta ${filters.date_to}`);
+      activeFilters.push(`Fecha: ${dateRange.join(' ')}`);
+    }
+    if (filters.search) {
+      activeFilters.push(`Búsqueda: "${filters.search}"`);
+    }
+
+    if (activeFilters.length > 0) {
+      filterText = `Filtros activos: ${activeFilters.join(', ')}`;
+    }
+
+    filterInfo.textContent = filterText;
+  }
+
+  /**
+   * Get mock orders data for demonstration
+   */
+  private getMockOrdersData(queryParams: OrdersFilters & { page?: number; limit?: number }): OrdersData {
+    const allOrders: AdminOrder[] = [
+      {
+        id: 1001,
+        customer_name: 'María González',
+        customer_email: 'maria@example.com',
+        total_amount_usd: 45.99,
+        total_amount_ves: 1800000,
+        status: 'pending',
+        created_at: '2024-01-15T10:30:00Z',
+        delivery_date: '2024-01-16T14:00:00Z',
+        items_count: 2
+      },
+      {
+        id: 1002,
+        customer_name: 'Juan Pérez',
+        customer_email: 'juan@example.com',
+        total_amount_usd: 78.50,
+        total_amount_ves: 3100000,
+        status: 'confirmed',
+        created_at: '2024-01-14T15:45:00Z',
+        delivery_date: '2024-01-17T10:00:00Z',
+        items_count: 3
+      },
+      {
+        id: 1003,
+        customer_name: 'Ana Rodríguez',
+        customer_email: 'ana@example.com',
+        total_amount_usd: 125.00,
+        total_amount_ves: 4900000,
+        status: 'preparing',
+        created_at: '2024-01-13T09:15:00Z',
+        delivery_date: '2024-01-15T16:30:00Z',
+        items_count: 5
+      },
+      {
+        id: 1004,
+        customer_name: 'Carlos López',
+        customer_email: 'carlos@example.com',
+        total_amount_usd: 32.75,
+        total_amount_ves: 1280000,
+        status: 'ready',
+        created_at: '2024-01-12T14:20:00Z',
+        delivery_date: '2024-01-14T11:00:00Z',
+        items_count: 1
+      },
+      {
+        id: 1005,
+        customer_name: 'Laura Martínez',
+        customer_email: 'laura@example.com',
+        total_amount_usd: 89.99,
+        total_amount_ves: 3520000,
+        status: 'delivered',
+        created_at: '2024-01-11T11:10:00Z',
+        delivery_date: '2024-01-13T13:00:00Z',
+        items_count: 4
+      },
+      {
+        id: 1006,
+        customer_name: 'Pedro Sánchez',
+        customer_email: 'pedro@example.com',
+        total_amount_usd: 67.25,
+        total_amount_ves: 2630000,
+        status: 'cancelled',
+        created_at: '2024-01-10T16:45:00Z',
+        delivery_date: '2024-01-12T15:30:00Z',
+        items_count: 2
+      }
+    ];
+
+    // Apply filters
+    let filteredOrders = [...allOrders];
+
+    if (queryParams.status) {
+      filteredOrders = filteredOrders.filter(order => order.status === queryParams.status);
+    }
+
+    if (queryParams.search) {
+      const search = queryParams.search.toLowerCase();
+      filteredOrders = filteredOrders.filter(order =>
+        order.customer_name.toLowerCase().includes(search) ||
+        order.customer_email?.toLowerCase().includes(search) ||
+        order.id.toString().includes(search)
+      );
+    }
+
+    if (queryParams.date_from) {
+      const dateFrom = new Date(queryParams.date_from);
+      filteredOrders = filteredOrders.filter(order =>
+        new Date(order.created_at) >= dateFrom
+      );
+    }
+
+    if (queryParams.date_to) {
+      const dateTo = new Date(queryParams.date_to);
+      dateTo.setHours(23, 59, 59, 999);
+      filteredOrders = filteredOrders.filter(order =>
+        new Date(order.created_at) <= dateTo
+      );
+    }
+
+    // Apply sorting
+    const sortBy = queryParams.sort_by || 'created_at';
+    const sortDirection = queryParams.sort_direction || 'desc';
+
+    filteredOrders.sort((a, b) => {
+      let aValue: string | number | undefined;
+      let bValue: string | number | undefined;
+
+      switch (sortBy) {
+        case 'created_at':
+          aValue = new Date(a.created_at).getTime();
+          bValue = new Date(b.created_at).getTime();
+          break;
+        case 'total_amount_usd':
+          aValue = a.total_amount_usd;
+          bValue = b.total_amount_usd;
+          break;
+        case 'status':
+          aValue = a.status;
+          bValue = b.status;
+          break;
+        case 'customer_name':
+          aValue = a.customer_name;
+          bValue = b.customer_name;
+          break;
+        default:
+          aValue = a.created_at;
+          bValue = b.created_at;
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    // Apply pagination
+    const page = queryParams.page || 1;
+    const limit = queryParams.limit || 20;
+    const total = filteredOrders.length;
+    const totalPages = Math.ceil(total / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
+
+    return {
+      orders: paginatedOrders,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages
+      }
+    };
   }
 
   /**
@@ -1665,6 +2240,33 @@ export class AdminPanel {
     } catch (error) {
       this.log('Error loading occasions: ' + error, 'error');
       return [];
+    }
+  }
+
+  /**
+   * Load occasions for the image filter dropdown
+   */
+  private async loadOccasionsForImageFilter(): Promise<void> {
+    try {
+      const occasions = await this.loadOccasions();
+      const occasionFilter = document.getElementById('productOccasionFilter') as HTMLSelectElement;
+
+      if (occasionFilter) {
+        // Clear existing options except the first one
+        occasionFilter.innerHTML = '<option value="general">Sin ocasión específica</option>';
+
+        // Add occasions alphabetically
+        occasions.forEach(occasion => {
+          const option = document.createElement('option');
+          option.value = occasion.type; // Use type as value for filtering
+          option.textContent = occasion.name;
+          occasionFilter.appendChild(option);
+        });
+
+        this.log(`Loaded ${occasions.length} occasions for image filter dropdown`, 'info');
+      }
+    } catch (error) {
+      this.log('Error loading occasions for image filter: ' + error, 'error');
     }
   }
 
@@ -3151,7 +3753,59 @@ export class AdminPanel {
       sortDirection = 'asc';
     }
 
-    await this.loadProductsWithImageCounts(sortBy, sortDirection);
+    // Get current filter values
+    const filters = this.getCurrentImageFilters();
+    await this.loadProductsWithImageCounts(sortBy, sortDirection, filters);
+  }
+
+  /**
+   * Get current image filter values from form
+   */
+  private getCurrentImageFilters(): {
+    productStatus?: 'active' | 'inactive' | 'all';
+    imageStatus?: 'active' | 'inactive' | 'all';
+    occasion?: string;
+  } {
+    const productStatusFilter = document.getElementById('productStatusFilter') as HTMLSelectElement;
+    const imageStatusFilter = document.getElementById('imageStatusFilter') as HTMLSelectElement;
+    const occasionFilter = document.getElementById('productOccasionFilter') as HTMLSelectElement;
+
+    return {
+      productStatus: (productStatusFilter?.value as 'active' | 'inactive' | 'all') || 'active',
+      imageStatus: (imageStatusFilter?.value as 'active' | 'inactive' | 'all') || 'active',
+      occasion: occasionFilter?.value || 'general'
+    };
+  }
+
+  /**
+   * Handle apply filters button
+   */
+  private async handleApplyFilters(): Promise<void> {
+    const filters = this.getCurrentImageFilters();
+    await this.loadProductsWithImageCounts('image_count', 'asc', filters);
+  }
+
+  /**
+   * Handle reset filters button
+   */
+  private async handleResetFilters(): Promise<void> {
+    // Reset all filter selects to default values
+    const productStatusFilter = document.getElementById('productStatusFilter') as HTMLSelectElement;
+    const imageStatusFilter = document.getElementById('imageStatusFilter') as HTMLSelectElement;
+    const occasionFilter = document.getElementById('productOccasionFilter') as HTMLSelectElement;
+    const sortSelect = document.getElementById('sortImagesSelect') as HTMLSelectElement;
+
+    if (productStatusFilter) productStatusFilter.value = 'active';
+    if (imageStatusFilter) imageStatusFilter.value = 'active';
+    if (occasionFilter) occasionFilter.value = 'general';
+    if (sortSelect) sortSelect.value = 'image_count';
+
+    // Reload with default filters
+    await this.loadProductsWithImageCounts('image_count', 'asc', {
+      productStatus: 'active',
+      imageStatus: 'active',
+      occasion: 'general'
+    });
   }
 
   /**
@@ -3340,8 +3994,552 @@ export class AdminPanel {
     }
   }
 
+  /**
+   * Bind orders section events
+   */
+  private bindOrdersEvents(): void {
+    this.log('Binding orders events', 'info');
+
+    // Refresh orders button
+    const refreshBtn = document.getElementById('refreshOrdersBtn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        void this.loadOrdersData();
+      });
+    }
+
+    // Export orders button
+    const exportBtn = document.getElementById('exportOrdersBtn');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => {
+        this.exportOrders();
+      });
+    }
+
+    // Status filter
+    const statusFilter = document.getElementById('ordersStatusFilter') as HTMLSelectElement;
+    if (statusFilter) {
+      statusFilter.addEventListener('change', () => {
+        void this.applyOrdersFilters();
+      });
+    }
+
+    // Date filters
+    const dateFrom = document.getElementById('ordersDateFrom') as HTMLInputElement;
+    const dateTo = document.getElementById('ordersDateTo') as HTMLInputElement;
+    if (dateFrom) {
+      dateFrom.addEventListener('change', () => {
+        void this.applyOrdersFilters();
+      });
+    }
+    if (dateTo) {
+      dateTo.addEventListener('change', () => {
+        void this.applyOrdersFilters();
+      });
+    }
+
+    // Search
+    const searchInput = document.getElementById('ordersSearch') as HTMLInputElement;
+    const searchBtn = document.getElementById('ordersSearchBtn');
+    if (searchInput) {
+      searchInput.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') {
+          void this.applyOrdersFilters();
+        }
+      });
+    }
+    if (searchBtn) {
+      searchBtn.addEventListener('click', () => {
+        void this.applyOrdersFilters();
+      });
+    }
+
+    // Sort controls
+    const sortBy = document.getElementById('ordersSortBy') as HTMLSelectElement;
+    const sortDirection = document.getElementById('ordersSortDirection') as HTMLSelectElement;
+    if (sortBy) {
+      sortBy.addEventListener('change', () => {
+        void this.applyOrdersFilters();
+      });
+    }
+    if (sortDirection) {
+      sortDirection.addEventListener('change', () => {
+        void this.applyOrdersFilters();
+      });
+    }
+  }
+
+  /**
+   * Apply orders filters and reload data
+   */
+  private async applyOrdersFilters(): Promise<void> {
+    const statusFilter = document.getElementById('ordersStatusFilter') as HTMLSelectElement;
+    const dateFrom = document.getElementById('ordersDateFrom') as HTMLInputElement;
+    const dateTo = document.getElementById('ordersDateTo') as HTMLInputElement;
+    const searchInput = document.getElementById('ordersSearch') as HTMLInputElement;
+    const sortBy = document.getElementById('ordersSortBy') as HTMLSelectElement;
+    const sortDirection = document.getElementById('ordersSortDirection') as HTMLSelectElement;
+
+    const filters: OrdersFilters = {
+      status: statusFilter?.value || undefined,
+      date_from: dateFrom?.value || undefined,
+      date_to: dateTo?.value || undefined,
+      search: searchInput?.value.trim() || undefined,
+      sort_by: (sortBy?.value as 'created_at' | 'total_amount_usd' | 'status' | 'customer_name') || 'created_at',
+      sort_direction: sortDirection?.value as 'asc' | 'desc' || 'desc'
+    };
+
+    await this.loadOrdersData(1, filters);
+  }
+
+  /**
+   * View order details
+   */
+  public async viewOrderDetails(orderId: number): Promise<void> {
+    try {
+      this.log(`Viewing order details for ID: ${orderId}`, 'info');
+
+      // Show loading in modal
+      this.showOrderDetailsLoading();
+
+      // Show modal
+      const modalElement = document.getElementById('orderDetailsModal');
+      if (modalElement) {
+        const bootstrap = (window as WindowWithBootstrap).bootstrap;
+        if (bootstrap?.Modal) {
+          const modal = new bootstrap.Modal(modalElement);
+          modal.show();
+        }
+      }
+
+      // Load order details
+      await this.loadOrderDetails(orderId);
+
+    } catch (error) {
+      this.log('Error viewing order details: ' + error, 'error');
+      this.showOrderDetailsError('Error al cargar los detalles del pedido');
+    }
+  }
+
+  /**
+   * Load order details for modal
+   */
+  private async loadOrderDetails(orderId: number): Promise<void> {
+    try {
+      // Mock order details for demonstration
+      const mockOrderDetails = this.getMockOrderDetails(orderId);
+
+      // Update modal with order data
+      this.renderOrderDetails(mockOrderDetails);
+
+    } catch (error) {
+      this.log('Error loading order details: ' + error, 'error');
+      throw error;
+    }
+  }
+
+  /**
+   * Render order details in modal
+   */
+  private renderOrderDetails(orderData: OrderDetails): void {
+    // Update modal title
+    const modalTitle = document.getElementById('orderDetailsModalLabel');
+    if (modalTitle) {
+      modalTitle.innerHTML = `<i class="bi bi-receipt me-2"></i>Detalles del Pedido #${orderData.id}`;
+    }
+
+    // Update order info
+    this.updateElement('orderDetailsId', orderData.id.toString());
+    this.updateElement('orderDetailsStatusBadge', this.getOrderStatusText(orderData.status));
+    this.updateElement('orderDetailsCreatedAt', new Date(orderData.created_at).toLocaleString());
+
+    // Update customer info
+    this.updateElement('orderDetailsCustomerName', orderData.customer_name);
+    this.updateElement('orderDetailsCustomerEmail', orderData.customer_email || 'No especificado');
+    this.updateElement('orderDetailsCustomerPhone', orderData.customer_phone || 'No especificado');
+    this.updateElement('orderDetailsUserId', orderData.user_id?.toString() || 'N/A');
+
+    // Update delivery info
+    this.updateElement('orderDetailsDeliveryAddress', orderData.delivery_address);
+    this.updateElement('orderDetailsDeliveryCity', orderData.delivery_city || 'No especificado');
+    this.updateElement('orderDetailsDeliveryDate', orderData.delivery_date ? new Date(orderData.delivery_date).toLocaleDateString() : 'No especificada');
+    this.updateElement('orderDetailsDeliveryTimeSlot', orderData.delivery_time_slot || 'No especificado');
+    this.updateElement('orderDetailsDeliveryNotes', orderData.delivery_notes || 'Sin notas');
+
+    // Update payment info
+    this.updateElement('orderDetailsPaymentStatus', this.getPaymentStatusText(orderData.payment_status || 'pending'));
+    this.updateElement('orderDetailsPaymentMethod', orderData.payment_method || 'No especificado');
+    this.updateElement('orderDetailsPaymentAmountUSD', orderData.total_amount_usd ? `$${orderData.total_amount_usd.toFixed(2)}` : 'N/A');
+    this.updateElement('orderDetailsPaymentAmountVES', orderData.total_amount_ves ? `Bs. ${orderData.total_amount_ves.toLocaleString()}` : 'N/A');
+    this.updateElement('orderDetailsPaymentDate', orderData.payment_date ? new Date(orderData.payment_date).toLocaleString() : 'No pagado');
+
+    // Update admin notes
+    const adminNotes = document.getElementById('orderAdminNotes') as HTMLTextAreaElement;
+    if (adminNotes) {
+      adminNotes.value = orderData.admin_notes || '';
+    }
+
+    // Update status select
+    const statusSelect = document.getElementById('orderStatusSelect') as HTMLSelectElement;
+    if (statusSelect) {
+      statusSelect.value = orderData.status;
+    }
+
+    // Render order items
+    this.renderOrderItems(orderData.items || []);
+
+    // Render status history
+    this.renderOrderStatusHistory(orderData.status_history || []);
+
+    // Update total
+    this.updateElement('orderDetailsTotal', `$${orderData.total_amount_usd?.toFixed(2) || '0.00'}`);
+
+    // Bind modal events
+    this.bindOrderDetailsEvents(orderData.id);
+  }
+
+  /**
+   * Render order items in modal
+   */
+  private renderOrderItems(items: OrderItemDetails[]): void {
+    const tbody = document.getElementById('orderItemsTableBody');
+    if (!tbody) return;
+
+    if (items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No hay productos en este pedido</td></tr>';
+      return;
+    }
+
+    const rows = items.map(item => `
+      <tr>
+        <td>
+          <div class="product-info">
+            <div class="fw-bold">${item.product_name}</div>
+            <small class="text-muted">${item.product_summary || ''}</small>
+          </div>
+        </td>
+        <td class="text-center">${item.quantity}</td>
+        <td class="text-end">$${item.unit_price_usd?.toFixed(2) || '0.00'}</td>
+        <td class="text-end">$${(item.subtotal_usd || 0).toFixed(2)}</td>
+      </tr>
+    `).join('');
+
+    tbody.innerHTML = rows;
+  }
+
+  /**
+   * Render order status history
+   */
+  private renderOrderStatusHistory(history: OrderStatusHistoryItem[]): void {
+    const historyContainer = document.getElementById('orderStatusHistory');
+    if (!historyContainer) return;
+
+    if (history.length === 0) {
+      historyContainer.innerHTML = '<div class="text-center text-muted">No hay historial de estados</div>';
+      return;
+    }
+
+    const historyHtml = history.map((item, index) => `
+      <div class="status-history-item ${index === history.length - 1 ? 'current' : ''}">
+        <div class="status-icon bg-${this.getStatusColor(item.new_status)}">
+          <i class="bi ${this.getStatusIcon(item.new_status)}"></i>
+        </div>
+        <div class="status-content">
+          <div class="fw-bold">${this.getOrderStatusText(item.new_status)}</div>
+          <div class="status-time">
+            ${new Date(item.created_at).toLocaleString()}
+            ${item.notes ? ` - ${item.notes}` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    historyContainer.innerHTML = historyHtml;
+  }
+
+  /**
+   * Bind order details modal events
+   */
+  private bindOrderDetailsEvents(orderId: number): void {
+    // Update status button
+    const updateStatusBtn = document.getElementById('updateOrderStatusBtn');
+    if (updateStatusBtn) {
+      updateStatusBtn.addEventListener('click', () => {
+        void this.updateOrderStatus(orderId);
+      });
+    }
+
+    // Save admin notes button
+    const saveNotesBtn = document.getElementById('saveAdminNotesBtn');
+    if (saveNotesBtn) {
+      saveNotesBtn.addEventListener('click', () => {
+        void this.saveOrderAdminNotes(orderId);
+      });
+    }
+
+    // Print order button
+    const printBtn = document.getElementById('printOrderBtn');
+    if (printBtn) {
+      printBtn.addEventListener('click', () => {
+        this.printOrder(orderId);
+      });
+    }
+
+    // Cancel order button
+    const cancelBtn = document.getElementById('cancelOrderBtn');
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => {
+        void this.cancelOrder(orderId);
+      });
+    }
+  }
+
+  /**
+   * Update order status
+   */
+  public async updateOrderStatus(orderId: number, newStatus?: string): Promise<void> {
+    try {
+      // Get status from select or parameter
+      let status = newStatus;
+      if (!status) {
+        const statusSelect = document.getElementById('orderStatusSelect') as HTMLSelectElement;
+        status = statusSelect?.value;
+      }
+
+      if (!status) {
+        alert('Por favor selecciona un estado');
+        return;
+      }
+
+      this.log(`Updating order ${orderId} status to ${status}`, 'info');
+
+      // Mock API call - in real implementation, call the actual API
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Show success message
+      alert(`Estado del pedido #${orderId} actualizado a ${this.getOrderStatusText(status)}`);
+
+      // Reload orders data
+      await this.loadOrdersData();
+
+      // Close modal if open
+      const modalElement = document.getElementById('orderDetailsModal');
+      if (modalElement) {
+        const bootstrap = (window as WindowWithBootstrap).bootstrap;
+        if (bootstrap?.Modal) {
+          const modal = bootstrap.Modal.getInstance(modalElement);
+          if (modal) {
+            modal.hide();
+          }
+        }
+      }
+
+    } catch (error) {
+      this.log('Error updating order status: ' + error, 'error');
+      alert('Error al actualizar el estado del pedido');
+    }
+  }
+
+  /**
+   * Save order admin notes
+   */
+  private async saveOrderAdminNotes(orderId: number): Promise<void> {
+    try {
+      const notesInput = document.getElementById('orderAdminNotes') as HTMLTextAreaElement;
+      const notes = notesInput?.value || '';
+
+      this.log(`Saving admin notes for order ${orderId}`, 'info');
+
+      // Mock API call
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      alert('Notas administrativas guardadas exitosamente');
+
+    } catch (error) {
+      this.log('Error saving admin notes: ' + error, 'error');
+      alert('Error al guardar las notas');
+    }
+  }
+
+  /**
+   * Print order
+   */
+  private printOrder(orderId: number): void {
+    // Simple print functionality
+    window.print();
+  }
+
+  /**
+   * Cancel order
+   */
+  private async cancelOrder(orderId: number): Promise<void> {
+    if (confirm('¿Está seguro de que desea cancelar este pedido? Esta acción no se puede deshacer.')) {
+      await this.updateOrderStatus(orderId, 'cancelled');
+    }
+  }
+
+  /**
+   * Export orders
+   */
+  private exportOrders(): void {
+    // Simple CSV export for demonstration
+    const csvContent = 'ID,Cliente,Email,Total,Estado,Fecha\n' +
+      '1001,María González,maria@example.com,45.99,pending,2024-01-15\n' +
+      '1002,Juan Pérez,juan@example.com,78.50,confirmed,2024-01-14\n';
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pedidos_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    alert('Pedidos exportados exitosamente');
+  }
+
+  /**
+   * Show order details loading
+   */
+  private showOrderDetailsLoading(): void {
+    // Set loading text in modal elements
+    this.updateElement('orderDetailsId', 'Cargando...');
+    this.updateElement('orderDetailsStatusBadge', 'Cargando...');
+    this.updateElement('orderDetailsCreatedAt', 'Cargando...');
+    // ... set other elements to loading
+  }
+
+  /**
+   * Show order details error
+   */
+  private showOrderDetailsError(message: string): void {
+    const modalBody = document.querySelector('#orderDetailsModal .modal-body');
+    if (modalBody) {
+      modalBody.innerHTML = `
+        <div class="text-center text-danger py-4">
+          <i class="bi bi-exclamation-triangle display-4 mb-3"></i>
+          <h5>Error al cargar detalles</h5>
+          <p>${message}</p>
+        </div>
+      `;
+    }
+  }
+
+  /**
+   * Get mock order details
+   */
+  private getMockOrderDetails(orderId: number): OrderDetails {
+    const mockOrders = this.getMockOrdersData({}).orders;
+    const order = mockOrders.find(o => o.id === orderId);
+
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    return {
+      ...order,
+      customer_phone: '+58 412 123 4567',
+      delivery_address: 'Calle Principal 123, Caracas, Venezuela',
+      delivery_city: 'Caracas',
+      delivery_time_slot: '10:00-12:00',
+      delivery_notes: 'Llamar al timbre dos veces',
+      payment_status: order.status === 'delivered' ? 'confirmed' : 'pending',
+      payment_method: 'Transferencia bancaria',
+      payment_date: order.status === 'delivered' ? order.created_at : undefined,
+      admin_notes: 'Pedido procesado correctamente',
+      items: [
+        {
+          product_name: 'Rosa Roja Premium',
+          product_summary: 'Rosas frescas de alta calidad',
+          quantity: 2,
+          unit_price_usd: 15.99,
+          subtotal_usd: 31.98
+        },
+        {
+          product_name: 'Lirios Blancos',
+          product_summary: 'Lirios frescos importados',
+          quantity: 1,
+          unit_price_usd: 14.01,
+          subtotal_usd: 14.01
+        }
+      ],
+      status_history: [
+        {
+          new_status: 'pending',
+          created_at: order.created_at,
+          notes: 'Pedido creado'
+        },
+        {
+          new_status: 'confirmed',
+          created_at: new Date(Date.parse(order.created_at) + 3600000).toISOString(),
+          notes: 'Pago confirmado'
+        },
+        {
+          new_status: order.status,
+          created_at: new Date(Date.parse(order.created_at) + 7200000).toISOString(),
+          notes: 'Estado actualizado'
+        }
+      ]
+    };
+  }
+
+  /**
+   * Helper method to update element text content
+   */
+  private updateElement(elementId: string, content: string): void {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.textContent = content;
+    }
+  }
+
+  /**
+   * Get payment status text
+   */
+  private getPaymentStatusText(status: string): string {
+    const statusMap: { [key: string]: string } = {
+      pending: 'Pendiente',
+      confirmed: 'Confirmado',
+      failed: 'Fallido',
+      refunded: 'Reembolsado'
+    };
+    return statusMap[status] || status;
+  }
+
+  /**
+   * Get status color for badges
+   */
+  private getStatusColor(status: string): string {
+    const colorMap: { [key: string]: string } = {
+      pending: 'warning',
+      confirmed: 'info',
+      preparing: 'warning',
+      ready: 'primary',
+      delivered: 'success',
+      cancelled: 'danger'
+    };
+    return colorMap[status] || 'secondary';
+  }
+
+  /**
+   * Get status icon
+   */
+  private getStatusIcon(status: string): string {
+    const iconMap: { [key: string]: string } = {
+      pending: 'bi-clock',
+      confirmed: 'bi-check-circle',
+      preparing: 'bi-gear',
+      ready: 'bi-box-seam',
+      delivered: 'bi-truck',
+      cancelled: 'bi-x-circle'
+    };
+    return iconMap[status] || 'bi-circle';
+  }
+
   public viewOrder(id: number): void {
-    alert(`Ver pedido ${id} - Próximamente...`);
+    void this.viewOrderDetails(id);
   }
 
   public editUser(id: number): void {

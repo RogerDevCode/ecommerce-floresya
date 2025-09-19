@@ -332,7 +332,7 @@ h1 {
     height: 400px;
     object-fit: cover;
     object-position: center;
-    will-change: transform; /* Optimize for animations */
+    /* will-change removed to reduce memory consumption */
 }
 
 #heroCarousel .carousel-item:hover img {

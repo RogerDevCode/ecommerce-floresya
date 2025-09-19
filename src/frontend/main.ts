@@ -24,6 +24,19 @@ interface CarouselProduct {
   images?: Array<{url: string, size: string}>; // Para efecto hover
 }
 
+interface CartItem {
+  productId: number;
+  name: string;
+  price: number;
+  image: string;
+  quantity: number;
+}
+
+interface ProductWithOccasion extends ProductWithImages {
+  occasion?: Occasion;
+  price: number; // Alias for price_usd for easier use
+}
+
 // Extend Window interface
 declare global {
   interface Window {
@@ -35,7 +48,7 @@ declare global {
 }
 
 export class FloresYaApp {
-  private products: Product[];
+  private products: ProductWithOccasion[];
   private occasions: Occasion[];
   private currentPage: number;
   private itemsPerPage: number;
@@ -44,6 +57,7 @@ export class FloresYaApp {
   private conversionOptimizer: ConversionOptimizer;
   private hoverIntervals: Map<string, NodeJS.Timeout>;
   private hoverTimeouts: Map<string, NodeJS.Timeout>;
+  private cart: CartItem[];
 
   constructor() {
     this.products = [];
@@ -58,6 +72,10 @@ export class FloresYaApp {
     };
     this.hoverIntervals = new Map<string, NodeJS.Timeout>();
     this.hoverTimeouts = new Map<string, NodeJS.Timeout>();
+    this.cart = [];
+
+    // Initialize cart from session storage
+    this.initializeCart();
 
     // Initialize with logging
     if (window.logger) {
@@ -174,12 +192,25 @@ export class FloresYaApp {
       const response = await window.api.getProducts(params);
 
       if (response.success && response.data) {
-        this.products = (response.data.products ?? []).map((p: Product) => ({ ...p, images: (p as ProductWithImages).images ?? [] }));
+        let products = (response.data.products ?? []).map((p: Product) => {
+          const productWithImages = p as ProductWithImages;
+          return {
+            ...productWithImages,
+            images: productWithImages.images ?? [],
+            price: productWithImages.price_usd,
+            occasion: undefined // Will be populated if needed
+          } as ProductWithOccasion;
+        });
+
+        // Apply custom sorting: group by occasion, then alphabetical by name within each group
+        products = this.sortProductsByOccasionAndName(products);
+
+        this.products = products;
 
         // Clear any existing hover intervals before rendering new products
         this.clearAllHoverIntervals();
 
-        this.renderProducts(this.products as ProductWithImages[]);
+        this.renderProducts(this.products);
 
         if (response.data.pagination) {
           this.renderPagination(response.data.pagination);
@@ -247,7 +278,7 @@ export class FloresYaApp {
     }
   }
 
-  private renderProducts(products: ProductWithImages[]): void {
+  private renderProducts(products: ProductWithOccasion[]): void {
     const container = document.getElementById('productsContainer');
     if (!container) return;
 
@@ -484,6 +515,20 @@ export class FloresYaApp {
         const productId = parseInt((button as HTMLElement)?.dataset?.productId ?? '0');
         if (productId) this.viewProductDetails(productId);
       }
+
+      // Handle click on product card or product image to view details
+      if (target.matches('.product-card') || target.closest('.product-card')) {
+        // Don't trigger if clicking on buttons
+        if (!target.matches('.add-to-cart-btn, .buy-now-btn, .view-details-btn') &&
+            !target.closest('.add-to-cart-btn, .buy-now-btn, .view-details-btn')) {
+
+          const card = target.matches('.product-card') ? target : target.closest('.product-card') as HTMLElement;
+          const productId = parseInt(card?.dataset?.productId ?? '0');
+          if (productId) {
+            this.viewProductDetails(productId);
+          }
+        }
+      }
     });
 
     // Product card hover events will be bound when cards are rendered
@@ -534,20 +579,6 @@ export class FloresYaApp {
     this.log('📄 Página cambiada', { page }, 'info');
   }
 
-  private addToCart(productId: number): void {
-    const product = this.products.find(p => p.id === productId);
-    if (!product) return;
-
-    // Use global cart instance if available
-    if (typeof window !== 'undefined' && (window as WindowWithCart).cart) {
-      (window as WindowWithCart).cart?.addItem({
-        ...product,
-        price_usd: product.price_usd ?? 0
-      });
-    }
-
-    this.log('🛒 Producto agregado al carrito', { productId, productName: product.name }, 'info');
-  }
 
   /**
    * Buy now - add to cart and redirect to payment page
@@ -570,15 +601,57 @@ export class FloresYaApp {
     window.location.href = '/payment';
   }
 
+  private sortProductsByOccasionAndName(products: ProductWithOccasion[]): ProductWithOccasion[] {
+    // Group products by occasion, then sort alphabetically by name within each group
+    const grouped = new Map<string, ProductWithOccasion[]>();
+
+    // Group by occasion
+    products.forEach(product => {
+      const occasionName = product.occasion?.name || 'Sin ocasión';
+      if (!grouped.has(occasionName)) {
+        grouped.set(occasionName, []);
+      }
+      grouped.get(occasionName)!.push(product);
+    });
+
+    // Sort each group alphabetically by name
+    grouped.forEach((groupProducts, occasionName) => {
+      groupProducts.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
+    });
+
+    // Sort occasion groups alphabetically and flatten
+    const sortedOccasions = Array.from(grouped.keys()).sort((a, b) =>
+      a.localeCompare(b, 'es', { sensitivity: 'base' })
+    );
+
+    const result: ProductWithOccasion[] = [];
+    sortedOccasions.forEach(occasionName => {
+      result.push(...grouped.get(occasionName)!);
+    });
+
+    this.log('📋 Productos ordenados por ocasión y nombre', {
+      totalProducts: result.length,
+      occasions: sortedOccasions.length
+    }, 'info');
+
+    return result;
+  }
+
   private viewProductDetails(productId: number): void {
-    // Open product detail modal or navigate to product page
+    // Navigate to product detail page with ID parameter
     const product = this.products.find(p => p.id === productId);
-    if (!product) return;
+    if (!product) {
+      this.log('❌ Producto no encontrado', { productId }, 'error');
+      return;
+    }
 
     // Track conversion event
     this.conversionOptimizer.viewedProducts.add(productId);
 
-    this.log('👁️ Detalles del producto visualizados', { productId, productName: product.name }, 'info');
+    // Navigate to product detail page
+    window.location.href = `/pages/product-detail.html?id=${productId}`;
+
+    this.log('🔗 Navegando a detalles del producto', { productId, productName: product.name }, 'info');
   }
 
   private bindProductCardHoverEvents(): void {
@@ -995,7 +1068,7 @@ private renderCarousel(products: CarouselProduct[]): void {
   const carouselHtml = `
     <div class="carousel-wrapper" style="position: relative; width: 100%; overflow: visible; margin: auto; padding: 0 100px;">
       <div class="carousel-container" style="position: relative; width: 100%; height: 440px; overflow: hidden; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #f8f9fa 100%); border-radius: 25px; box-shadow: 0 8px 40px rgba(0,0,0,0.1); border: 2px solid rgba(255,255,255,0.8);">
-        <div class="image-track" id="imageTrack" style="display: flex; position: relative; width: ${trackWidth}px; height: 100%; will-change: transform; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 10px 0;">
+        <div class="image-track" id="imageTrack" style="display: flex; position: relative; width: ${trackWidth}px; height: 100%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 10px 0;">
           ${[...products, ...products].map((p, i) => createCardHtml(p, i)).join('')}
         </div>
       </div>
@@ -1397,6 +1470,180 @@ private snapToNearest(pos: number): void {
     `;
 
     this.log('✅ Página de pago mostrada', {}, 'success');
+  }
+
+  // Cart management methods
+  private initializeCart(): void {
+    // Load cart from sessionStorage
+    const savedCart = sessionStorage.getItem('floresya_cart');
+    if (savedCart) {
+      try {
+        this.cart = JSON.parse(savedCart);
+        this.updateCartUI();
+      } catch (error) {
+        this.log('❌ Error loading cart from session', { error: String(error) }, 'error');
+        this.cart = [];
+      }
+    }
+  }
+
+  private saveCart(): void {
+    sessionStorage.setItem('floresya_cart', JSON.stringify(this.cart));
+  }
+
+  public addToCart(productId: number): void {
+    const product = this.products.find(p => p.id === productId);
+    if (!product) {
+      this.log('❌ Product not found for cart', { productId }, 'error');
+      return;
+    }
+
+    const existingItem = this.cart.find(item => item.productId === productId);
+
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      const mainImage = product.images?.[0]?.url || '/images/placeholder-product-2.webp';
+      this.cart.push({
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        image: mainImage,
+        quantity: 1
+      });
+    }
+
+    this.saveCart();
+    this.updateCartUI();
+    this.showCartNotification(`${product.name} agregado al carrito`);
+
+    this.log('🛒 Product added to cart', {
+      productId,
+      productName: product.name,
+      cartSize: this.cart.length
+    }, 'info');
+  }
+
+  public removeFromCart(productId: number): void {
+    this.cart = this.cart.filter(item => item.productId !== productId);
+    this.saveCart();
+    this.updateCartUI();
+  }
+
+  public updateQuantity(productId: number, quantity: number): void {
+    const item = this.cart.find(item => item.productId === productId);
+    if (item) {
+      if (quantity > 0) {
+        item.quantity = quantity;
+      } else {
+        this.removeFromCart(productId);
+        return;
+      }
+      this.saveCart();
+      this.updateCartUI();
+    }
+  }
+
+  private updateCartUI(): void {
+    const cartCount = document.getElementById('cartCount');
+    const cartBadge = document.querySelector('.cart-badge') as HTMLElement;
+
+    const totalItems = this.cart.reduce((sum, item) => sum + item.quantity, 0);
+
+    if (cartCount) {
+      cartCount.textContent = totalItems.toString();
+    }
+
+    if (cartBadge) {
+      cartBadge.textContent = totalItems.toString();
+      cartBadge.style.display = totalItems > 0 ? 'inline' : 'none';
+    }
+
+    // Update cart content if offcanvas exists
+    this.updateCartOffcanvas();
+  }
+
+  private updateCartOffcanvas(): void {
+    const cartOffcanvas = document.getElementById('cartOffcanvas');
+    if (!cartOffcanvas) return;
+
+    const cartContent = cartOffcanvas.querySelector('.cart-content');
+    if (!cartContent) return;
+
+    const totalPrice = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    if (this.cart.length === 0) {
+      cartContent.innerHTML = `
+        <div class="empty-cart text-center py-5">
+          <i class="bi bi-cart-x display-1 text-muted mb-3"></i>
+          <h4>Tu carrito está vacío</h4>
+          <p class="text-muted">Agrega algunos productos para comenzar</p>
+          <a href="#productos" class="btn btn-primary-custom" data-bs-dismiss="offcanvas">
+            <i class="bi bi-shop me-2"></i>Explorar Productos
+          </a>
+        </div>
+      `;
+    } else {
+      cartContent.innerHTML = `
+        <div class="cart-items p-3">
+          ${this.cart.map(item => `
+            <div class="cart-item d-flex align-items-center mb-3 p-3 border rounded">
+              <img src="${item.image}" alt="${item.name}" class="cart-item-image me-3"
+                   style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+              <div class="flex-grow-1">
+                <h6 class="mb-1">${item.name}</h6>
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-muted">$${item.price.toFixed(2)}</span>
+                  <div class="quantity-controls d-flex align-items-center">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="floresyaApp.updateQuantity(${item.productId}, ${item.quantity - 1})">-</button>
+                    <span class="mx-2 fw-bold">${item.quantity}</span>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="floresyaApp.updateQuantity(${item.productId}, ${item.quantity + 1})">+</button>
+                  </div>
+                </div>
+              </div>
+              <button class="btn btn-sm btn-outline-danger ms-2" onclick="floresyaApp.removeFromCart(${item.productId})">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          `).join('')}
+        </div>
+        <div class="cart-footer border-top p-3">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <strong>Total: $${totalPrice.toFixed(2)}</strong>
+          </div>
+          <div class="d-grid gap-2">
+            <a href="/pages/payment.html" class="btn btn-success btn-lg">
+              <i class="bi bi-credit-card me-2"></i>
+              Proceder al Pago
+            </a>
+            <button class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">
+              Seguir Comprando
+            </button>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  private showCartNotification(message: string): void {
+    // Create a simple toast notification
+    const toast = document.createElement('div');
+    toast.className = 'position-fixed top-0 end-0 m-3 alert alert-success alert-dismissible fade show';
+    toast.style.zIndex = '9999';
+    toast.innerHTML = `
+      <i class="bi bi-check-circle me-2"></i>
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    document.body.appendChild(toast);
+
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 3000);
   }
 }
 

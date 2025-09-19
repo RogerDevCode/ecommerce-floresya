@@ -1071,6 +1071,241 @@
             opacity: 1 !important;
             z-index: 1055 !important;
         }
+
+        /* 🌸 ENHANCED ORDERS MANAGEMENT STYLES 🌸 */
+
+        /* Orders Stats Cards */
+        #ordersStatsRow .metric-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #ordersStatsRow .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Orders Table Enhancements */
+        #ordersTable {
+            font-size: 0.875rem;
+        }
+
+        #ordersTable thead th {
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            padding: 0.75rem 0.5rem;
+        }
+
+        #ordersTable tbody td {
+            padding: 0.75rem 0.5rem;
+            vertical-align: middle;
+        }
+
+        /* Order Status Badges */
+        .order-status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .order-status-confirmed {
+            background-color: #cce5ff;
+            color: #004085;
+            border: 1px solid #b3d7ff;
+        }
+
+        .order-status-preparing {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .order-status-ready {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .order-status-delivered {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .order-status-cancelled {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Order Actions */
+        .order-actions .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            margin: 0.125rem;
+        }
+
+        /* Quick Status Update */
+        .status-update-dropdown .dropdown-item {
+            padding: 0.5rem 1rem;
+        }
+
+        .status-update-dropdown .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .status-update-dropdown .dropdown-item i {
+            width: 16px;
+            margin-right: 8px;
+        }
+
+        /* Order Details Modal */
+        #orderDetailsModal .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #orderDetailsModal .card {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: none;
+            border-radius: 0.5rem;
+        }
+
+        #orderDetailsModal .card-header {
+            font-weight: 600;
+            border-bottom: 1px solid rgba(0,0,0,0.125);
+        }
+
+        /* Order Items Table */
+        #orderItemsTableBody .product-info {
+            display: flex;
+            align-items: center;
+        }
+
+        #orderItemsTableBody .product-image {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 0.25rem;
+            margin-right: 0.75rem;
+            border: 1px solid #dee2e6;
+        }
+
+        /* Status History */
+        .status-history-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            border-left: 4px solid #dee2e6;
+            margin-bottom: 0.5rem;
+            background-color: #f8f9fa;
+            border-radius: 0.25rem;
+        }
+
+        .status-history-item.current {
+            border-left-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .status-history-item .status-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .status-history-item .status-content {
+            flex: 1;
+        }
+
+        .status-history-item .status-time {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+
+        /* Loading States */
+        .orders-loading {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .orders-loading .spinner-border {
+            width: 2rem;
+            height: 2rem;
+        }
+
+        /* Empty States */
+        .orders-empty {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #6c757d;
+        }
+
+        .orders-empty i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Filters */
+        #ordersFilterInfo {
+            font-size: 0.875rem;
+        }
+
+        /* Pagination */
+        #ordersPagination .pagination .page-link {
+            color: #667eea;
+            border-color: #dee2e6;
+        }
+
+        #ordersPagination .pagination .page-link:hover {
+            color: #764ba2;
+            background-color: #e9ecef;
+            border-color: #adb5bd;
+        }
+
+        #ordersPagination .pagination .page-item.active .page-link {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+
+        /* Responsive adjustments for orders */
+        @media (max-width: 768px) {
+            #ordersStatsRow .col-md-2 {
+                margin-bottom: 1rem;
+            }
+
+            #ordersTable {
+                font-size: 0.75rem;
+            }
+
+            #ordersTable thead th,
+            #ordersTable tbody td {
+                padding: 0.5rem 0.25rem;
+            }
+
+            .order-actions {
+                display: flex;
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+
+            .order-actions .btn {
+                padding: 0.375rem 0.5rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Force order details modal to be visible */
+        #orderDetailsModal.modal.show {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            z-index: 1055 !important;
+        }
     </style>
 </head>
 <body>
@@ -1303,29 +1538,177 @@
 
                     <!-- Orders Section -->
                     <div id="orders-section" class="admin-section" style="display: none;">
-                        <h4>Gestión de Pedidos</h4>
-                        <div class="card admin-card">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <h4 class="mb-1">
+                                    <i class="bi bi-receipt me-2"></i>Gestión de Pedidos
+                                </h4>
+                                <small class="text-muted">Administra órdenes de compra y estados de entrega</small>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-primary btn-sm" id="refreshOrdersBtn">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+                                </button>
+                                <button class="btn btn-primary btn-sm" id="exportOrdersBtn">
+                                    <i class="bi bi-download me-1"></i>Exportar
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Orders Stats Cards -->
+                        <div class="row mb-4" id="ordersStatsRow">
+                            <div class="col-md-2 mb-3">
+                                <div class="card admin-card metric-card">
+                                    <div class="card-body text-center p-3">
+                                        <i class="bi bi-clock display-6 mb-2 text-warning"></i>
+                                        <h6 class="card-title mb-1" id="pendingOrdersCount">0</h6>
+                                        <small class="card-text text-white-50">Pendientes</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <div class="card admin-card metric-card info">
+                                    <div class="card-body text-center p-3">
+                                        <i class="bi bi-check-circle display-6 mb-2 text-info"></i>
+                                        <h6 class="card-title mb-1" id="confirmedOrdersCount">0</h6>
+                                        <small class="card-text text-white-50">Confirmados</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <div class="card admin-card metric-card warning">
+                                    <div class="card-body text-center p-3">
+                                        <i class="bi bi-gear display-6 mb-2 text-warning"></i>
+                                        <h6 class="card-title mb-1" id="preparingOrdersCount">0</h6>
+                                        <small class="card-text text-white-50">Preparando</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <div class="card admin-card metric-card">
+                                    <div class="card-body text-center p-3">
+                                        <i class="bi bi-box-seam display-6 mb-2 text-primary"></i>
+                                        <h6 class="card-title mb-1" id="readyOrdersCount">0</h6>
+                                        <small class="card-text text-white-50">Listos</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <div class="card admin-card metric-card success">
+                                    <div class="card-body text-center p-3">
+                                        <i class="bi bi-truck display-6 mb-2 text-success"></i>
+                                        <h6 class="card-title mb-1" id="deliveredOrdersCount">0</h6>
+                                        <small class="card-text text-white-50">Entregados</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <div class="card admin-card metric-card">
+                                    <div class="card-body text-center p-3">
+                                        <i class="bi bi-x-circle display-6 mb-2 text-danger"></i>
+                                        <h6 class="card-title mb-1" id="cancelledOrdersCount">0</h6>
+                                        <small class="card-text text-white-50">Cancelados</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Filters and Search -->
+                        <div class="card admin-card mb-4">
                             <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label for="ordersStatusFilter" class="form-label">Estado</label>
+                                        <select class="form-select form-select-sm" id="ordersStatusFilter">
+                                            <option value="">Todos los estados</option>
+                                            <option value="pending">Pendiente</option>
+                                            <option value="confirmed">Confirmado</option>
+                                            <option value="preparing">Preparando</option>
+                                            <option value="ready">Listo</option>
+                                            <option value="delivered">Entregado</option>
+                                            <option value="cancelled">Cancelado</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="ordersDateFrom" class="form-label">Desde</label>
+                                        <input type="date" class="form-control form-control-sm" id="ordersDateFrom">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="ordersDateTo" class="form-label">Hasta</label>
+                                        <input type="date" class="form-control form-control-sm" id="ordersDateTo">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="ordersSearch" class="form-label">Buscar</label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="text" class="form-control" id="ordersSearch" placeholder="Cliente, email, ID...">
+                                            <button class="btn btn-outline-secondary" type="button" id="ordersSearchBtn">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <small class="text-muted" id="ordersFilterInfo">Mostrando todos los pedidos</small>
+                                    <div class="d-flex gap-2">
+                                        <select class="form-select form-select-sm" id="ordersSortBy" style="width: auto;">
+                                            <option value="created_at">Fecha</option>
+                                            <option value="total_amount_usd">Total</option>
+                                            <option value="status">Estado</option>
+                                            <option value="customer_name">Cliente</option>
+                                        </select>
+                                        <select class="form-select form-select-sm" id="ordersSortDirection" style="width: auto;">
+                                            <option value="desc">↓ Descendente</option>
+                                            <option value="asc">↑ Ascendente</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Orders Table -->
+                        <div class="card admin-card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-table me-2"></i>Pedidos
+                                </h6>
+                                <small class="text-muted" id="ordersCount">0 pedidos</small>
+                            </div>
+                            <div class="card-body p-0">
                                 <div class="table-responsive">
-                                    <table class="table table-hover" id="ordersTable">
-                                        <thead>
+                                    <table class="table table-hover mb-0" id="ordersTable">
+                                        <thead class="table-light">
                                             <tr>
-                                                <th>ID</th>
-                                                <th>Cliente</th>
-                                                <th>Total</th>
-                                                <th>Estado</th>
-                                                <th>Fecha</th>
-                                                <th>Acciones</th>
+                                                <th class="border-0">#</th>
+                                                <th class="border-0">Cliente</th>
+                                                <th class="border-0">Productos</th>
+                                                <th class="border-0">Total</th>
+                                                <th class="border-0">Estado</th>
+                                                <th class="border-0">Fecha</th>
+                                                <th class="border-0">Entrega</th>
+                                                <th class="border-0">Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody id="ordersTableBody">
-                                            <tr>
-                                                <td colspan="6" class="text-center text-muted">
+                                            <tr id="ordersLoadingRow">
+                                                <td colspan="8" class="text-center py-4">
+                                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
                                                     Cargando pedidos...
                                                 </td>
                                             </tr>
                                         </tbody>
                                     </table>
+                                </div>
+                            </div>
+
+                            <!-- Pagination -->
+                            <div class="card-footer" id="ordersPagination" style="display: none;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted" id="ordersPaginationInfo">Mostrando 1-10 de 50 pedidos</small>
+                                    <nav aria-label="Paginación de pedidos">
+                                        <ul class="pagination pagination-sm mb-0" id="ordersPaginationControls">
+                                            <!-- Pagination controls will be generated here -->
+                                        </ul>
+                                    </nav>
                                 </div>
                             </div>
                         </div>
@@ -1431,15 +1814,48 @@
                             </div>
                         </div>
 
-                        <!-- Sorting Controls -->
+                        <!-- Filters and Sorting Controls -->
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-2">
+                                <label for="productStatusFilter" class="form-label">Estado del Producto:</label>
+                                <select class="form-select" id="productStatusFilter">
+                                    <option value="active">Activos</option>
+                                    <option value="inactive">No Activos</option>
+                                    <option value="all">Todos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="imageStatusFilter" class="form-label">Estado de Imágenes:</label>
+                                <select class="form-select" id="imageStatusFilter">
+                                    <option value="active">Activas</option>
+                                    <option value="inactive">No Activas</option>
+                                    <option value="all">Todas</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="productOccasionFilter" class="form-label">Ocación:</label>
+                                <select class="form-select" id="productOccasionFilter">
+                                    <option value="general">Sin ocasión específica</option>
+                                    <!-- Occasions will be loaded here alphabetically -->
+                                </select>
+                            </div>
+                            <div class="col-md-2">
                                 <label for="sortImagesSelect" class="form-label">Ordenar por:</label>
                                 <select class="form-select" id="sortImagesSelect">
                                     <option value="image_count">Cantidad de imágenes (menor a mayor)</option>
                                     <option value="name_asc">Nombre (A-Z)</option>
                                     <option value="name_desc">Nombre (Z-A)</option>
                                 </select>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button class="btn btn-outline-primary w-100" id="applyFiltersBtn">
+                                    <i class="bi bi-funnel me-1"></i>Aplicar Filtros
+                                </button>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button class="btn btn-outline-secondary w-100" id="resetFiltersBtn">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Reiniciar
+                                </button>
                             </div>
                         </div>
 
@@ -1887,7 +2303,7 @@
                 console.log(`[🌸 Admin] 📊 Attempt ${initializationAttempts}/${MAX_ATTEMPTS}`);
 
                 // Dynamic import with error handling - COMPILED JavaScript FILE
-                const module = await import('/dist/src/frontend/admin.js');
+                const module = await import('/dist/frontend/admin.js');
                 console.log('[🌸 Admin] ✅ Module loaded successfully');
 
                 const AdminPanel = module.AdminPanel;
@@ -1987,7 +2403,7 @@
                 console.log('📦 Intentando cargar módulo admin.js...');
                 const startTime = Date.now();
 
-                const module = await import('/dist/src/frontend/admin.js');
+                const module = await import('/dist/frontend/admin.js');
                 const loadTime = Date.now() - startTime;
 
                 console.log(`✅ Módulo cargado exitosamente en ${loadTime}ms`);
@@ -2726,7 +3142,242 @@
         </div>
     </div>
 
+    <!-- Order Details Modal -->
+    <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="orderDetailsModalLabel">
+                        <i class="bi bi-receipt me-2"></i>Detalles del Pedido #<span id="orderDetailsId"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Order Status and Actions -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center gap-3">
+                                <div>
+                                    <h6 class="mb-1">Estado del Pedido</h6>
+                                    <span class="badge fs-6" id="orderDetailsStatusBadge">Cargando...</span>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Fecha del Pedido</h6>
+                                    <small class="text-muted" id="orderDetailsCreatedAt">Cargando...</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <h6 class="mb-2">Cambiar Estado</h6>
+                            <select class="form-select" id="orderStatusSelect" style="max-width: 200px;">
+                                <option value="pending">Pendiente</option>
+                                <option value="confirmed">Confirmado</option>
+                                <option value="preparing">Preparando</option>
+                                <option value="ready">Listo</option>
+                                <option value="delivered">Entregado</option>
+                                <option value="cancelled">Cancelado</option>
+                            </select>
+                            <button class="btn btn-primary btn-sm mt-2" id="updateOrderStatusBtn">
+                                <i class="bi bi-check-circle me-1"></i>Actualizar Estado
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Customer Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-primary">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-person me-2"></i>Información del Cliente
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <strong>Nombre:</strong><br>
+                                            <span id="orderDetailsCustomerName">Cargando...</span>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <strong>Email:</strong><br>
+                                            <span id="orderDetailsCustomerEmail">Cargando...</span>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <strong>Teléfono:</strong><br>
+                                            <span id="orderDetailsCustomerPhone">Cargando...</span>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <strong>Usuario ID:</strong><br>
+                                            <span id="orderDetailsUserId">Cargando...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Delivery Information -->
+                        <div class="col-md-6">
+                            <div class="card border-success">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-geo-alt me-2"></i>Información de Entrega
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <strong>Dirección:</strong><br>
+                                            <span id="orderDetailsDeliveryAddress">Cargando...</span>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <strong>Ciudad:</strong><br>
+                                            <span id="orderDetailsDeliveryCity">Cargando...</span>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <strong>Fecha de Entrega:</strong><br>
+                                            <span id="orderDetailsDeliveryDate">Cargando...</span>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <strong>Hora:</strong><br>
+                                            <span id="orderDetailsDeliveryTimeSlot">Cargando...</span>
+                                        </div>
+                                        <div class="col-12">
+                                            <strong>Instrucciones:</strong><br>
+                                            <span id="orderDetailsDeliveryNotes">Cargando...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order Items -->
+                    <div class="card border-info mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">
+                                <i class="bi bi-basket me-2"></i>Productos del Pedido
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th class="text-center">Cant.</th>
+                                            <th class="text-end">Precio Unit.</th>
+                                            <th class="text-end">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="orderItemsTableBody">
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted">
+                                                <div class="spinner-border spinner-border-sm" role="status"></div>
+                                                Cargando productos...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-light">
+                                            <th colspan="3" class="text-end">Total del Pedido:</th>
+                                            <th class="text-end" id="orderDetailsTotal">Cargando...</th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-warning">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-credit-card me-2"></i>Información de Pago
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <strong>Estado:</strong><br>
+                                            <span id="orderDetailsPaymentStatus">Cargando...</span>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <strong>Método:</strong><br>
+                                            <span id="orderDetailsPaymentMethod">Cargando...</span>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <strong>Monto USD:</strong><br>
+                                            <span id="orderDetailsPaymentAmountUSD">Cargando...</span>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <strong>Monto VES:</strong><br>
+                                            <span id="orderDetailsPaymentAmountVES">Cargando...</span>
+                                        </div>
+                                        <div class="col-12">
+                                            <strong>Fecha de Pago:</strong><br>
+                                            <span id="orderDetailsPaymentDate">Cargando...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Admin Notes -->
+                        <div class="col-md-6">
+                            <div class="card border-secondary">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-sticky me-2"></i>Notas Administrativas
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="orderAdminNotes" class="form-label">Notas Internas</label>
+                                        <textarea class="form-control" id="orderAdminNotes" rows="3" placeholder="Agregar notas administrativas..."></textarea>
+                                    </div>
+                                    <button class="btn btn-outline-secondary btn-sm" id="saveAdminNotesBtn">
+                                        <i class="bi bi-save me-1"></i>Guardar Notas
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order History -->
+                    <div class="card border-dark">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">
+                                <i class="bi bi-clock-history me-2"></i>Historial de Estados
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="orderStatusHistory">
+                                <div class="text-center text-muted">
+                                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                                    Cargando historial...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-warning" id="printOrderBtn">
+                            <i class="bi bi-printer me-1"></i>Imprimir
+                        </button>
+                        <button type="button" class="btn btn-danger" id="cancelOrderBtn" style="display: none;">
+                            <i class="bi bi-x-circle me-1"></i>Cancelar Pedido
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scroll optimization -->
-    <script src="/frontend/scroll-effects-fix.js" defer></script>
+    <script type="module" src="/dist/frontend/scroll-effects-fix.js"></script>
 </body>
 </html>

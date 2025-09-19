@@ -3,85 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="FloresYa - Detalle del producto. Descubre nuestros hermosos arreglos florales con entrega a domicilio.">
-    <title id="page-title">Producto - FloresYa</title>
-    
-    <!-- Preload critical resources -->
-    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="/css/styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="stylesheet" href="/css/scroll-fix.css">
-    <link rel="modulepreload" href="/js/logger.js">
-    
-    <!-- Critical CSS inline for better FCP -->
-    <style>
-        html { visibility: hidden; opacity: 0; transition: opacity 0.3s ease; }
-        html.loaded { visibility: visible; opacity: 1; }
-        .loading-skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); animation: skeleton-loading 1.5s infinite; }
-        @keyframes skeleton-loading { 0% { background-position: -200px 0; } 100% { background-position: calc(200px + 100%) 0; } }
-        .premium-gradient { background: linear-gradient(135deg, #FF69B4, #FF1493, #FF69B4); }
-        .glass-effect { backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.95); }
-        .pulse-shadow { box-shadow: 0 0 0 0 rgba(255, 105, 180, 0.7); animation: pulse-pink 2s infinite; }
-        @keyframes pulse-pink { 0% { box-shadow: 0 0 0 0 rgba(255, 105, 180, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(255, 105, 180, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 105, 180, 0); } }
-    </style>
-    
-    <!-- Fallback stylesheets -->
-    <noscript>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="/css/styles.css">
-        <link rel="stylesheet" href="/css/scroll-fix.css">
-    </noscript>
-    
-    <!-- Bootstrap Icons -->
+    <title>Detalle del Producto - FloresYa</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/scroll-fix.css">
+    <link rel="stylesheet" href="/css/product-detail.css">
+
+    <!-- Preload critical resources -->
+    <link rel="modulepreload" href="/dist/frontend/utils/logger.js">
+    <link rel="modulepreload" href="/dist/frontend/services/api.js">
+
+    <!-- SEO and Social -->
+    <meta name="description" content="Detalle del producto - FloresYa, tu floristería en línea de confianza">
+    <meta property="og:title" content="Producto - FloresYa">
+    <meta property="og:description" content="Hermosos arreglos florales para toda ocasión">
+    <meta property="og:type" content="product">
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
-    
-    <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="Producto FloresYa">
-    <meta property="og:description" content="Hermosos arreglos florales con entrega a domicilio">
-    <meta property="og:type" content="product">
-    <meta property="og:image" content="/images/og-product.jpg">
+
 </head>
 <body>
-    <!-- Enhanced Navigation with Trust Indicators -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="/">
-                <img src="/images/logoFloresYa.jpeg" alt="FloresYa Logo" class="logo-img me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px;">
-                <div>
-                    <span class="brand-text fw-bold text-primary-custom">FloresYa</span>
-                    <small class="d-block text-muted" style="font-size: 0.75rem;">🌸 Flores que enamoran</small>
-                </div>
-            </a>
-            
-            <div class="d-flex align-items-center">
-                <!-- Trust Badge -->
-                <div class="trust-badge d-none d-md-flex align-items-center me-3">
-                    <i class="bi bi-shield-check text-success me-1"></i>
-                    <small class="text-success fw-medium">Compra Segura</small>
-                </div>
-                
-                <!-- Cart with enhanced visual feedback -->
-                <a class="nav-link position-relative cart-icon-wrapper me-3" href="#" id="cartToggle" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas" title="Ver carrito">
-                    <i class="bi bi-bag-heart cart-icon fs-5 text-primary-custom"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary-custom" id="cart-count" style="display: none;">0</span>
-                    <span class="position-absolute cart-pulse pulse-shadow rounded-circle" style="width: 40px; height: 40px; top: -5px; left: -5px;"></span>
-                </a>
-                
-                <!-- Back to Home -->
-                <a class="btn btn-outline-primary btn-sm" href="/">
-                    <i class="bi bi-house me-1"></i>
-                    Inicio
-                </a>
+    <!-- Product Counter -->
+    <div class="product-counter">
+        <i class="bi bi-list-ol me-2"></i>
+        <span id="product-counter">1/1</span>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="product-navigation nav-btn-left">
+        <button id="prev-product-btn" class="product-nav-btn" title="Producto anterior">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+    </div>
+
+    <div class="product-navigation nav-btn-right">
+        <button id="next-product-btn" class="product-nav-btn" title="Siguiente producto">
+            <i class="bi bi-chevron-right"></i>
+        </button>
+    </div>
+
+    <!-- Cart Overlay -->
+    <div class="cart-overlay" id="cart-overlay" onclick="productDetail.hideCartPanel()"></div>
+
+    <!-- Cart Panel -->
+    <div class="cart-panel" id="cart-panel">
+        <div class="p-3 border-bottom">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-cart3 me-2"></i>
+                    Carrito (<span id="cart-count">0</span>)
+                </h5>
+                <button class="btn btn-sm btn-outline-secondary" onclick="productDetail.hideCartPanel()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
             </div>
         </div>
-    </nav>
+        <div class="p-3" id="cart-items">
+            <p class="text-muted text-center">Tu carrito está vacío</p>
+        </div>
+        <div class="border-top p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <strong>Total: <span id="cart-total">$0.00</span></strong>
+            </div>
+            <div class="d-grid gap-2">
+                <a href="/pages/payment.html" class="btn btn-success">
+                    <i class="bi bi-credit-card me-2"></i>
+                    Proceder al Pago
+                </a>
+                <button class="btn btn-outline-secondary" onclick="productDetail.hideCartPanel()">
+                    Seguir Comprando
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Loading Spinner -->
-    <div id="loading-spinner" class="d-flex justify-content-center align-items-center" style="min-height: 60vh;">
+    <div id="loading-spinner" class="d-flex justify-content-center align-items-center">
         <div class="text-center">
-            <div class="spinner-border text-primary-custom mb-3" role="status">
+            <div class="spinner-border text-success mb-3 loading-spinner-large" role="status">
                 <span class="visually-hidden">Cargando...</span>
             </div>
             <p class="text-muted">Cargando producto...</p>
@@ -89,402 +94,187 @@
     </div>
 
     <!-- Main Product Content -->
-    <div id="product-content" style="display: none;">
-        <!-- Breadcrumb -->
-        <div class="container mt-3">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="/" class="text-primary-custom">Inicio</a></li>
-                    <li class="breadcrumb-item"><a href="/#productos" class="text-primary-custom" id="category-breadcrumb">Productos</a></li>
-                    <li class="breadcrumb-item active" id="product-breadcrumb">Producto</li>
-                </ol>
-            </nav>
+    <div id="product-content">
+        <!-- Top Actions Bar -->
+        <div class="top-actions">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/" class="text-success text-decoration-none">
+                                        <i class="bi bi-house-door me-1"></i>Inicio
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item">
+                                    <a href="/#productos" class="text-success text-decoration-none" id="category-breadcrumb">Productos</a>
+                                </li>
+                                <li class="breadcrumb-item active" id="product-breadcrumb">Producto</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button id="back-btn" class="btn btn-outline-secondary me-2">
+                            <i class="bi bi-arrow-left me-1"></i>Volver
+                        </button>
+                        <button id="home-btn" class="btn btn-outline-success me-2">
+                            <i class="bi bi-house me-1"></i>Inicio
+                        </button>
+                        <button id="cart-toggle" class="btn btn-success position-relative">
+                            <i class="bi bi-cart3 me-1"></i>Carrito
+                            <span id="cart-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-badge-hidden">
+                                0
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Product Detail Section -->
-        <div class="container my-4">
+        <div class="container my-5 product-detail-container">
             <div class="row">
-                <!-- Product Images Column -->
+                <!-- Product Images Column (Left) -->
                 <div class="col-lg-6 mb-4">
                     <div class="product-images-container">
                         <!-- Main Image -->
-                        <div class="main-image-wrapper position-relative mb-3">
-                            <img id="main-image" src="/images/placeholder-product-2.webp" alt="Producto" 
-                                 class="img-fluid rounded-3 shadow-lg cursor-pointer"
-                                 style="width: 100%; height: 400px; object-fit: cover; transition: transform 0.3s ease;"
-                                 onmouseover="this.style.transform='scale(1.05)'"
-                                 onmouseout="this.style.transform='scale(1)'">
-                            
-                            <!-- Image Zoom Indicator -->
-                            <div class="position-absolute top-0 end-0 m-3">
-                                <span class="badge bg-dark bg-opacity-75 text-white">
-                                    <i class="bi bi-zoom-in"></i> Click para ampliar
-                                </span>
-                            </div>
-                            
-                            <!-- Image Counter -->
+                        <div class="text-center mb-3">
+                            <img id="main-image"
+                                 src="/images/placeholder-product-2.webp"
+                                 alt="Producto"
+                                 class="img-fluid main-product-image"
+                                 class="main-product-image">
+
+                            <!-- Image Counter Overlay -->
                             <div class="position-absolute bottom-0 start-0 m-3">
-                                <span class="badge glass-effect text-dark">
+                                <span class="badge bg-dark bg-opacity-75 text-white">
+                                    <i class="bi bi-images me-1"></i>
                                     <span id="current-image">1</span> / <span id="total-images">1</span>
                                 </span>
                             </div>
+
+                            <!-- Zoom Indicator -->
+                            <div class="position-absolute top-0 end-0 m-3">
+                                <span class="badge bg-dark bg-opacity-75 text-white">
+                                    <i class="bi bi-zoom-in me-1"></i>Click para ampliar
+                                </span>
+                            </div>
                         </div>
-                        
-                        <!-- Thumbnails -->
-                        <div class="row g-2" id="thumbnails">
-                            <!-- Thumbnails will be populated by JavaScript -->
+
+                        <!-- Image Thumbnails -->
+                        <div id="image-thumbnails" class="d-flex gap-2 justify-content-center flex-wrap">
+                            <!-- Thumbnails will be populated by JS -->
                         </div>
                     </div>
                 </div>
-                
-                <!-- Product Information Column -->
+
+                <!-- Product Information Column (Right) -->
                 <div class="col-lg-6">
-                    <div class="product-info">
+                    <div class="product-info-section">
                         <!-- Product Title -->
-                        <h1 id="product-title" class="h3 fw-bold mb-3 text-dark">Cargando producto...</h1>
-                        
-                        <!-- Product Summary -->
-                        <p id="product-summary" class="lead text-muted mb-4">Información del producto...</p>
-                        
-                        <!-- Enhanced Price Section with Psychology -->
-                        <div class="price-psychology mb-4">
-                            <div class="row align-items-center">
-                                <div class="col-6">
-                                    <div class="price-main" data-currency="$" id="price-usd">0.00</div>
-                                    <small class="d-block text-muted">Precio en USD</small>
-                                </div>
-                                <div class="col-6">
-                                    <div class="h5 fw-semibold text-success mb-0" id="price-ves">Bs. 0.00</div>
-                                    <small class="d-block text-muted">Precio en Bs.</small>
-                                </div>
-                            </div>
-                            
-                            <!-- Price Benefits -->
-                            <div class="row mt-3">
-                                <div class="col-6">
-                                    <small class="text-success d-flex align-items-center">
-                                        <i class="bi bi-truck me-1"></i>
-                                        Envío gratis
-                                    </small>
-                                </div>
-                                <div class="col-6">
-                                    <small class="text-success d-flex align-items-center">
-                                        <i class="bi bi-shield-check me-1"></i>
-                                        Garantizado
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Stock Status -->
-                        <div class="stock-section mb-4">
-                            <div id="stock-available" style="display: none;">
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                    <span class="fw-medium text-success">En stock</span>
-                                    <span class="badge bg-success ms-2" id="stock-quantity">0</span>
-                                </div>
-                                <small class="text-muted">¡Últimas unidades disponibles!</small>
-                            </div>
-                            <div id="stock-unavailable" style="display: none;">
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="bi bi-x-circle-fill text-danger me-2"></i>
-                                    <span class="fw-medium text-danger">Sin stock</span>
-                                </div>
-                                <small class="text-muted">Contáctanos para disponibilidad</small>
-                            </div>
-                        </div>
-                        
-                        <!-- Quantity Selector -->
-                        <div class="quantity-section mb-4">
-                            <label for="quantity" class="form-label fw-medium">Cantidad:</label>
-                            <div class="d-flex align-items-center">
-                                <button class="btn btn-outline-secondary" type="button" onclick="decreaseQuantity()">
-                                    <i class="bi bi-dash"></i>
-                                </button>
-                                <input type="number" id="quantity" class="form-control text-center mx-2" style="width: 80px;" value="1" min="1" max="10">
-                                <button class="btn btn-outline-secondary" type="button" onclick="increaseQuantity()">
-                                    <i class="bi bi-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Enhanced Call-to-Action Buttons -->
-                        <div class="cta-section mb-4">
-                            <div class="d-grid gap-3">
-                                <!-- Primary CTA: Enhanced with Psychology -->
-                                <button class="cta-primary" id="floresya-express-btn" onclick="floresYaBuyNow()">
-                                    <i class="bi bi-lightning-fill me-2"></i>
-                                    ¡Comprar Ahora!
-                                    <small class="d-block" style="font-size: 0.8rem; opacity: 0.9;">Entrega en 24h - Sin registro</small>
-                                </button>
-                                
-                                <!-- Secondary CTA with Social Proof -->
-                                <button class="btn btn-outline-success btn-lg fw-medium" id="add-to-cart-btn">
-                                    <i class="bi bi-bag-plus me-2"></i>
-                                    Agregar al Carrito
-                                    <small class="d-block" style="font-size: 0.75rem; opacity: 0.8;">Más de 500 personas lo compraron</small>
-                                </button>
-                                
-                                <!-- Trust Indicators Row -->
-                                <div class="text-center mt-2">
-                                    <div class="guarantee-seal d-inline-block me-3">
-                                        <i class="bi bi-shield-check"></i>
-                                    </div>
-                                    <div class="guarantee-seal d-inline-block me-3">
-                                        <i class="bi bi-truck"></i>
-                                    </div>
-                                    <div class="guarantee-seal d-inline-block">
-                                        <i class="bi bi-heart"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Product Details Tabs -->
-            <div class="row mt-5">
-                <div class="col-12">
-                    <ul class="nav nav-tabs" id="productTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description" type="button" role="tab">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Descripción
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab">
-                                <i class="bi bi-list-ul me-1"></i>
-                                Detalles
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="care-tab" data-bs-toggle="tab" data-bs-target="#care" type="button" role="tab">
+                        <h1 id="product-name" class="display-6 fw-bold text-dark mb-3">
+                            Cargando producto...
+                        </h1>
+
+                        <!-- Occasion Badge -->
+                        <div class="mb-3">
+                            <span class="badge-occasion" id="product-occasion-badge">
                                 <i class="bi bi-heart me-1"></i>
-                                Cuidados
-                            </button>
-                        </li>
-                    </ul>
-                    
-                    <div class="tab-content mt-4" id="productTabsContent">
-                        <!-- Description Tab -->
-                        <div class="tab-pane fade show active" id="description" role="tabpanel">
-                            <div class="p-4 bg-light rounded-3">
-                                <div id="product-description">
-                                    <p class="text-muted">Cargando descripción...</p>
+                                <span id="product-occasion">Ocasión especial</span>
+                            </span>
+                        </div>
+
+                        <!-- Price Section -->
+                        <div class="price-section">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="text-muted me-2">Precio:</span>
+                                <h2 id="product-price" class="text-success fw-bold mb-0">$0.00</h2>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <span class="text-muted">Disponible para entrega</span>
+                            </div>
+                            <div class="d-flex align-items-center mt-1">
+                                <i class="bi bi-truck text-success me-2"></i>
+                                <span class="text-muted">Entrega el mismo día disponible</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="action-buttons mb-4">
+                            <div class="row g-3">
+                                <div class="col-12 col-md-6">
+                                    <button id="add-to-cart-btn" class="btn btn-add-cart btn-lg w-100">
+                                        <i class="bi bi-cart-plus me-2"></i>
+                                        Agregar al Carrito
+                                    </button>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <button id="buy-now-btn" class="btn btn-buy-now btn-lg w-100">
+                                        <i class="bi bi-lightning me-2"></i>
+                                        Comprar Ahora
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- Details Tab -->
-                        <div class="tab-pane fade" id="details" role="tabpanel">
-                            <div class="p-4 bg-light rounded-3">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <strong>Categoría:</strong>
-                                        <span id="product-category" class="ms-2 text-muted">No especificada</span>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <strong>Ocasión:</strong>
-                                        <span id="product-occasion" class="ms-2 text-muted">General</span>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <strong>Stock:</strong>
-                                        <span id="stock-info" class="ms-2 text-muted">0 unidades</span>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <strong>SKU:</strong>
-                                        <span id="product-sku" class="ms-2 text-muted">N/A</span>
-                                    </div>
-                                </div>
-                            </div>
+
+                        <!-- Product Description -->
+                        <div class="product-description-section">
+                            <h5 class="fw-bold mb-3">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Descripción del Producto
+                            </h5>
+                            <p id="product-description" class="text-muted lh-lg">
+                                Hermoso arreglo floral perfecto para cualquier ocasión especial.
+                                Elaborado con las flores más frescas y de la mejor calidad.
+                            </p>
                         </div>
-                        
-                        <!-- Care Instructions Tab -->
-                        <div class="tab-pane fade" id="care" role="tabpanel">
-                            <div class="p-4 bg-light rounded-3">
-                                <h5 class="fw-bold mb-3">
-                                    <i class="bi bi-flower1 me-2 text-primary-custom"></i>
-                                    Cuidados para tus flores
-                                </h5>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <div class="d-flex align-items-start">
-                                            <i class="bi bi-droplet text-primary me-2 mt-1"></i>
-                                            <div>
-                                                <strong>Agua fresca</strong>
-                                                <p class="small text-muted mb-0">Cambia el agua cada 2-3 días</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <div class="d-flex align-items-start">
-                                            <i class="bi bi-scissors text-primary me-2 mt-1"></i>
-                                            <div>
-                                                <strong>Corte diagonal</strong>
-                                                <p class="small text-muted mb-0">Recorta los tallos bajo agua</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <div class="d-flex align-items-start">
-                                            <i class="bi bi-sun text-primary me-2 mt-1"></i>
-                                            <div>
-                                                <strong>Luz indirecta</strong>
-                                                <p class="small text-muted mb-0">Evita la luz solar directa</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <div class="d-flex align-items-start">
-                                            <i class="bi bi-thermometer-half text-primary me-2 mt-1"></i>
-                                            <div>
-                                                <strong>Temperatura</strong>
-                                                <p class="small text-muted mb-0">Mantén en lugar fresco</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+
+                        <!-- Product Features -->
+                        <div class="product-features">
+                            <h6 class="fw-bold mb-3">Características:</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="bi bi-flower1 text-success me-2"></i>
+                                    Flores frescas del día
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-award text-success me-2"></i>
+                                    Diseño profesional
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-gift text-success me-2"></i>
+                                    Incluye tarjeta de dedicatoria
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-shield-check text-success me-2"></i>
+                                    Garantía de frescura
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Contact Info -->
+                        <div class="contact-info mt-4 p-3 bg-light rounded">
+                            <h6 class="fw-bold mb-2">
+                                <i class="bi bi-chat-dots me-2"></i>
+                                ¿Necesitas ayuda personalizada?
+                            </h6>
+                            <p class="mb-0 text-muted">
+                                Contáctanos para personalizar tu pedido o resolver cualquier duda.
+                            </p>
+                            <div class="mt-2">
+                                <button class="btn btn-outline-success btn-sm me-2">
+                                    <i class="bi bi-whatsapp me-1"></i>
+                                    WhatsApp
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-telephone me-1"></i>
+                                    Llamar
+                                </button>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Related Products Section -->
-            <div class="row mt-5">
-                <div class="col-12">
-                    <h3 class="fw-bold mb-4 text-center">
-                        <i class="bi bi-flower2 me-2 text-primary-custom"></i>
-                        Productos Relacionados
-                    </h3>
-                    <div id="related-products">
-                        <!-- Related products will be loaded here -->
-                        <div class="text-center py-4">
-                            <div class="spinner-border spinner-border-sm text-primary-custom" role="status">
-                                <span class="visually-hidden">Cargando...</span>
-                            </div>
-                            <p class="text-muted mt-2">Cargando productos relacionados...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- FloresYa Express Modal -->
-    <div class="modal fade" id="floresyaGuestModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header premium-gradient text-white">
-                    <h5 class="modal-title">
-                        <i class="bi bi-cart-check me-2"></i>
-                        FloresYa Express - Compra Directa
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="text-center mb-4">
-                        <h6 class="fw-bold">Compra express sin registro</h6>
-                        <p class="text-muted">Completa tu pedido en menos de 2 minutos</p>
-                    </div>
-                    
-                    <form id="floresyaGuestForm" class="needs-validation" novalidate>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="guestNameDetail" class="form-label">Nombre completo *</label>
-                                <input type="text" class="form-control" id="guestNameDetail" required>
-                                <div class="invalid-feedback">Por favor ingresa tu nombre completo</div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="guestPhoneDetail" class="form-label">Teléfono *</label>
-                                <input type="tel" class="form-control" id="guestPhoneDetail" placeholder="+58414-1234567" required>
-                                <div class="invalid-feedback">Por favor ingresa tu teléfono</div>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="guestEmailDetail" class="form-label">Email *</label>
-                            <input type="email" class="form-control" id="guestEmailDetail" required>
-                            <div class="invalid-feedback">Por favor ingresa un email válido</div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="guestAddressDetail" class="form-label">Dirección de entrega *</label>
-                            <textarea class="form-control" id="guestAddressDetail" rows="3" placeholder="Incluye referencias y puntos de referencia" required></textarea>
-                            <div class="invalid-feedback">Por favor ingresa la dirección de entrega</div>
-                        </div>
-                        
-                        <!-- Order Summary -->
-                        <div class="order-summary p-3 bg-light rounded mb-3">
-                            <h6 class="fw-bold mb-2">Resumen del pedido:</h6>
-                            <div class="d-flex justify-content-between">
-                                <span>Producto:</span>
-                                <span id="modal-product-name">-</span>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span>Cantidad:</span>
-                                <span id="modal-quantity">1</span>
-                            </div>
-                            <div class="d-flex justify-content-between fw-bold">
-                                <span>Total:</span>
-                                <span id="modal-total">$0.00</span>
-                            </div>
-                        </div>
-                        
-                        <button type="submit" class="btn premium-gradient text-white w-100 fw-bold" onclick="submitFloresYaGuest()">
-                            <i class="bi bi-send me-2"></i>
-                            ¡Realizar Pedido Express!
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Image Modal -->
-    <div class="modal fade" id="imageModal" tabindex="-1">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Vista ampliada</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <img id="modal-image" src="" alt="Vista ampliada" class="img-fluid">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- FloresYa Animation (for Express purchases) -->
-    <div id="floresya-detail-animation" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 105, 180, 0.9); z-index: 9999; display: flex; align-items: center; justify-content: center;">
-        <div class="text-center text-white">
-            <div class="spinner-border mb-3" style="width: 3rem; height: 3rem;" role="status">
-                <span class="visually-hidden">Procesando...</span>
-            </div>
-            <h3 class="fw-bold">🌸 ¡Procesando tu FloresYa! Express...</h3>
-            <p>Tu pedido está siendo preparado con amor</p>
-        </div>
-    </div>
-
-    <!-- Cart Offcanvas (Enhanced) -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas" style="width: 400px;">
-        <div class="offcanvas-header premium-gradient text-white">
-            <h5 class="offcanvas-title">
-                <i class="bi bi-bag-heart me-2"></i>
-                Mi Carrito
-            </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
-        </div>
-        <div class="offcanvas-body">
-            <div id="cart-content">
-                <!-- Cart will be populated by JavaScript -->
-                <div class="text-center py-5">
-                    <i class="bi bi-bag display-1 text-muted mb-3"></i>
-                    <h6 class="text-muted">Tu carrito está vacío</h6>
-                    <p class="text-muted small">¡Agrega algunos productos hermosos!</p>
                 </div>
             </div>
         </div>
@@ -492,74 +282,9 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module" src="/js/logger.js"></script>
-    <script src="/js/performance-optimizer.js"></script>
-    <script type="module" src="/js/cart.js"></script>
-    <script src="/js/product-detail.js"></script>
-
-    <script>
-        // Initialize page when DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            document.documentElement.classList.add('loaded');
-            console.log('✅ Product detail page loaded');
-            
-            // Initialize product detail functionality
-            if (typeof ProductDetail !== 'undefined') {
-                new ProductDetail();
-            } else {
-                console.error('❌ ProductDetail class not found');
-            }
-        });
-
-        // Global functions for quantity controls
-        function decreaseQuantity() {
-            const input = document.getElementById('quantity');
-            let value = parseInt(input.value) || 1;
-            if (value > 1) {
-                input.value = value - 1;
-            }
-        }
-
-        function increaseQuantity() {
-            const input = document.getElementById('quantity');
-            let value = parseInt(input.value) || 1;
-            const max = parseInt(input.getAttribute('max')) || 10;
-            if (value < max) {
-                input.value = value + 1;
-            }
-        }
-
-        function floresYaBuyNow() {
-            console.log('🚀 FloresYa Express initiated');
-            const modal = new bootstrap.Modal(document.getElementById('floresyaGuestModal'));
-            
-            // Populate modal with current product info
-            const productName = document.getElementById('product-title').textContent;
-            const quantity = document.getElementById('quantity').value;
-            const price = document.getElementById('price-usd').textContent;
-            
-            document.getElementById('modal-product-name').textContent = productName;
-            document.getElementById('modal-quantity').textContent = quantity;
-            document.getElementById('modal-total').textContent = price;
-            
-            modal.show();
-        }
-
-        function submitFloresYaGuest() {
-            console.log('📤 Submitting FloresYa Express order');
-            // Add form validation and submission logic here
-            // This would connect to your backend API
-            
-            // Show animation
-            document.getElementById('floresya-detail-animation').style.display = 'flex';
-            
-            setTimeout(() => {
-                document.getElementById('floresya-detail-animation').style.display = 'none';
-                alert('¡Gracias! Tu pedido FloresYa Express está siendo procesado. 🌸');
-                bootstrap.Modal.getInstance(document.getElementById('floresyaGuestModal')).hide();
-            }, 2000);
-        }
-    </script>
-    <script src="/frontend/scroll-effects-fix.js" defer></script>
+    <script type="module" src="/dist/frontend/utils/logger.js"></script>
+    <script type="module" src="/dist/frontend/services/api.js"></script>
+    <script type="module" src="/dist/frontend/product-detail.js"></script>
+    <script type="module" src="/dist/frontend/scroll-effects-fix.js"></script>
 </body>
 </html>
