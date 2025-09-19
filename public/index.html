@@ -26,8 +26,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/carousel.css">
+    <link rel="stylesheet" href="/css/simple-carousel.css">
     <link rel="stylesheet" href="/css/product-transitions.css">
     <link rel="stylesheet" href="/css/scroll-fix.css">
+    <link rel="stylesheet" href="/css/inline-styles.css">
     <!-- Preload critical resources -->
     <link rel="preload" href="/images/logoFloresYa.jpeg" as="image" importance="high">
     <link rel="modulepreload" href="/dist/frontend/utils/logger.js">
@@ -93,7 +95,7 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="/">
-                <img src="/images/logoFloresYa.jpeg" alt="FloresYa Logo" class="logo-img me-2" data-critical="true" loading="eager" style="width: 40px; height: 40px; object-fit: cover;">
+                <img src="/images/logoFloresYa.jpeg" alt="FloresYa Logo" class="logo-img me-2 logo-brand" data-critical="true" loading="eager">
                 <span class="brand-text">FloresYa</span>
             </a>
             
@@ -103,10 +105,7 @@
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#productos">Productos</a>
-                    </li>
-                    <li class="nav-item" id="logoutNavItem" style="display: none;">
+                    <li class="nav-item nav-item-hidden" id="logoutNavItem">
                         <a class="nav-link text-danger" href="#" id="mainLogoutBtn" title="Cerrar sesión">
                             <i class="bi bi-box-arrow-right me-1"></i>Cerrar Sesión
                         </a>
@@ -121,21 +120,21 @@
                             <span class="position-absolute cart-pulse" id="cartPulse"></span>
                         </a>
                     </li>
-                    <li class="nav-item dropdown" id="userDropdown" style="display: none;">
+                    <li class="nav-item dropdown nav-item-hidden" id="userDropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" id="userMenu">
                             <i class="bi bi-person-circle"></i>
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="#" id="viewProfile">Mi Perfil</a></li>
                             <li><a class="dropdown-item" href="#" id="viewOrders">Mis Pedidos</a></li>
-                            <li><a class="dropdown-item" href="/pages/admin.html" id="adminPanel" style="display: none;">
+                            <li><a class="dropdown-item nav-item-hidden" href="/pages/admin.html" id="adminPanel">
                                 <i class="bi bi-shield-check me-2"></i>Panel de Administrador
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="#" id="logoutBtn">Cerrar Sesión</a></li>
                         </ul>
                     </li>
-                    <li class="nav-item" id="adminPanelLink" style="display: none;">
+                    <li class="nav-item nav-item-hidden" id="adminPanelLink">
                         <a class="nav-link" href="/pages/admin.html">
                             <i class="bi bi-shield-check me-1"></i>Panel Admin
                         </a>
@@ -149,19 +148,18 @@
     </nav>
 
     <!-- Hero Section - Optimized Height -->
-    <section class="hero-section text-white text-center py-4" style="min-height: 300px;">
+    <section class="hero-section text-white text-center py-2 hero-min-height">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-lg-6">
-                    <h1 class="display-5 fw-bold mb-3">Flores Frescas Para Toda Ocasión</h1>
-                    <p class="lead mb-3">Descubre nuestra hermosa colección de ramos, arreglos florales y plantas. Entrega fresca y puntual en toda Venezuela.</p>
-                    <a href="#productos" class="btn btn-light btn-lg">Ver Productos</a>
+                    <h1 class="display-5 fw-bold mb-2">Flores Frescas Para Toda Ocasión</h1>
+                    <p class="lead mb-0">Descubre nuestra hermosa colección de ramos, arreglos florales y plantas. Entrega fresca y puntual en toda Venezuela.</p>
                 </div>
                 <div class="col-lg-6">
-                    <img src="/images/hero-flowers.webp" alt="Hermosas flores" class="img-fluid rounded shadow hover-lift" style="max-height: 200px; object-fit: cover;" data-critical="true" width="280" height="200" loading="eager">
+                    <img src="/images/hero-flowers.webp" alt="Hermosas flores" class="img-fluid rounded shadow hover-lift hero-image" data-critical="true" width="280" height="200" loading="eager">
                     <!-- Trust indicator overlay -->
-                    <div class="position-absolute" style="bottom: 10px; right: 10px;">
-                        <span class="badge" style="background: rgba(40, 167, 69, 0.9); color: white;">
+                    <div class="position-absolute hero-badge-position">
+                        <span class="badge hero-badge">
                             <i class="bi bi-shield-check me-1"></i>Garantizado
                         </span>
                     </div>
@@ -170,15 +168,35 @@
         </div>
     </section>
 
-    <!-- Dynamic Image Carousel - Industry Standard Section -->
-    <section class="dynamic-carousel py-3">
+    <!-- Bootstrap Carousel - Featured Products -->
+    <section class="py-4">
         <div class="container">
-            <div class="text-center mb-3">
-                <h3 class="fw-bold text-primary-custom" id="carouselSectionTitle">Nuestras Creaciones Destacadas</h3>
-                <p class="text-muted small" id="carouselSectionSubtitle">Descubre nuestros arreglos más populares</p>
+            <div class="text-center mb-4">
+                <h3 class="fw-bold text-primary-custom">Nuestras Creaciones Destacadas</h3>
+                <p class="text-muted">Descubre nuestros arreglos más populares</p>
             </div>
-            <div class="image-carousel" id="dynamicCarousel">
-                <!-- Dynamic images will be loaded here -->
+
+            <!-- Dynamic Bootstrap Carousel - populated by JavaScript -->
+            <div id="featuredCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+                <!-- Indicators will be generated dynamically -->
+                <div class="carousel-indicators" id="carouselIndicators">
+                    <!-- Dynamic indicators -->
+                </div>
+
+                <!-- Slides will be generated dynamically -->
+                <div class="carousel-inner rounded-3 shadow" id="carouselSlides">
+                    <!-- Dynamic slides -->
+                </div>
+
+                <!-- Controls -->
+                <button class="carousel-control-prev" type="button" data-bs-target="#featuredCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                    <span class="visually-hidden">Anterior</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#featuredCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                    <span class="visually-hidden">Siguiente</span>
+                </button>
             </div>
         </div>
     </section>
@@ -211,10 +229,10 @@
                 </div>
                 <div class="col-md-3">
                     <select class="form-select" id="sortFilter">
-                        <option value="created_at:DESC">Más recientes</option>
-                        <option value="price:ASC">Precio: Menor a mayor</option>
-                        <option value="price:DESC">Precio: Mayor a menor</option>
-                        <option value="name:ASC">Nombre: A-Z</option>
+                        <option value="created_at:desc">Más recientes</option>
+                        <option value="price_usd:asc">Precio: Menor a mayor</option>
+                        <option value="price_usd:desc">Precio: Mayor a menor</option>
+                        <option value="name:asc">Nombre: A-Z</option>
                     </select>
                 </div>
             </div>
@@ -237,28 +255,28 @@
             <div class="row text-center">
                 <div class="col-md-3 mb-4">
                     <div class="feature-item">
-                        <i class="bi bi-flower1 text-success mb-3" style="font-size: 3rem;"></i>
+                        <i class="bi bi-flower1 text-success mb-3 feature-icon-large"></i>
                         <h5>Flores Frescas</h5>
                         <p class="text-muted">Garantizamos la frescura y calidad de todas nuestras flores</p>
                     </div>
                 </div>
                 <div class="col-md-3 mb-4">
                     <div class="feature-item">
-                        <i class="bi bi-truck text-success mb-3" style="font-size: 3rem;"></i>
+                        <i class="bi bi-truck text-success mb-3 feature-icon-large"></i>
                         <h5>Entrega Rápida</h5>
                         <p class="text-muted">Entregamos en el día que elijas, puntual y seguro</p>
                     </div>
                 </div>
                 <div class="col-md-3 mb-4">
                     <div class="feature-item">
-                        <i class="bi bi-heart text-success mb-3" style="font-size: 3rem;"></i>
+                        <i class="bi bi-heart text-success mb-3 feature-icon-large"></i>
                         <h5>Hechos con Amor</h5>
                         <p class="text-muted">Cada arreglo es creado con dedicación y cuidado especial</p>
                     </div>
                 </div>
                 <div class="col-md-3 mb-4">
                     <div class="feature-item">
-                        <i class="bi bi-shield-check text-success mb-3" style="font-size: 3rem;"></i>
+                        <i class="bi bi-shield-check text-success mb-3 feature-icon-large"></i>
                         <h5>Garantía Total</h5>
                         <p class="text-muted">Si no estás satisfecho, te devolvemos tu dinero</p>
                     </div>
@@ -279,7 +297,7 @@
                     <a href="#" class="special-link text-decoration-none" onclick="floresyaApp.showFloresNovias()">
                         <div class="special-card p-3 bg-white rounded shadow-lg h-100 d-flex align-items-center justify-content-center hover-lift">
                             <div>
-                                <i class="bi bi-suit-heart-fill text-primary-custom mb-3" style="font-size: 3rem;"></i>
+                                <i class="bi bi-suit-heart-fill text-primary-custom mb-3 feature-icon-large"></i>
                                 <h4 class="text-primary-custom fw-bold mb-2">Flores Ya Novias</h4>
                                 <p class="text-muted mb-3">Arreglos exclusivos para el día más especial de tu vida</p>
                                 <span class="btn btn-outline-primary-custom">Conocer más</span>
@@ -290,7 +308,7 @@
                 <div class="col-md-6 mb-3">
                     <div class="special-card p-3 bg-white rounded shadow-lg h-100 d-flex align-items-center justify-content-center hover-lift">
                         <div>
-                            <i class="bi bi-lightning-fill text-warning mb-3" style="font-size: 3rem;"></i>
+                            <i class="bi bi-lightning-fill text-warning mb-3 feature-icon-large"></i>
                             <h4 class="text-warning fw-bold mb-2">Entrega Express</h4>
                             <p class="text-muted mb-3">¿Necesitas flores urgente? Entregamos en 2 horas</p>
                             <a href="/pages/under-construction.html" class="btn btn-warning text-decoration-none">Próximamente</a>
@@ -367,7 +385,7 @@
     </footer>
 
     <!-- Enhanced Shopping Cart Offcanvas -->
-    <div class="offcanvas offcanvas-end cart-offcanvas" tabindex="-1" id="cartOffcanvas" style="width: 400px;">
+    <div class="offcanvas offcanvas-end cart-offcanvas cart-offcanvas-width" tabindex="-1" id="cartOffcanvas">
         <div class="offcanvas-header bg-gradient-primary text-white">
             <h5 class="offcanvas-title">
                 <i class="bi bi-bag-heart me-2"></i>Mi Carrito
@@ -378,7 +396,7 @@
             <!-- Cart Content -->
             <div class="cart-content">
                 <!-- Guest Info Banner -->
-                <div id="guestBanner" class="alert alert-info mx-3 mt-3" style="display: none;">
+                <div id="guestBanner" class="alert alert-info mx-3 mt-3 cart-guest-banner">
                     <i class="bi bi-person-circle me-2"></i>
                     <strong>Comprando como invitado</strong>
                     <br><small class="text-muted">Puedes registrarte después para un seguimiento completo</small>
@@ -404,7 +422,7 @@
             <div class="cart-footer bg-light mt-auto">
                 <div class="px-3 py-3">
                     <!-- Quick Actions -->
-                    <div id="quickActions" class="mb-3" style="display: none;">
+                    <div id="quickActions" class="mb-3 cart-quick-actions">
                         <div class="d-flex gap-2">
                             <button class="btn btn-outline-secondary btn-sm flex-fill" onclick="cart.clearCart()">
                                 <i class="bi bi-trash"></i> Vaciar
@@ -416,7 +434,7 @@
                     </div>
 
                     <!-- Subtotal -->
-                    <div id="cartSummary" style="display: none;">
+                    <div id="cartSummary" class="cart-summary">
                         <div class="d-flex justify-content-between mb-2">
                             <span>Subtotal:</span>
                             <span id="cartSubtotal">$0.00</span>
@@ -433,7 +451,7 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    <div id="cartActions" style="display: none;">
+                    <div id="cartActions" class="cart-actions">
                         <div class="d-grid gap-2">
                             <button class="btn btn-primary-custom btn-lg" id="floresyaCheckoutBtn">
                                 <i class="bi bi-cart-check me-2"></i>FloresYa Express
@@ -482,7 +500,7 @@
                 </div>
                 <div class="modal-body">
                     <!-- Development Quick Login Buttons -->
-                    <div class="dev-login-buttons mb-3 p-2 bg-light rounded" style="border: 1px dashed #ffc107;">
+                    <div class="dev-login-buttons mb-3 p-2 bg-light rounded form-dev-login">
                         <small class="text-muted d-block mb-2"><i class="bi bi-tools"></i> Desarrollo - Acceso rápido:</small>
                         <div class="d-flex gap-2">
                             <button type="button" class="btn btn-outline-primary btn-sm flex-fill" id="devAdminLogin">
@@ -696,28 +714,28 @@
                                     <div class="row">
                                         <div class="col-md-3 mb-4">
                                             <div class="feature-item">
-                                                <i class="bi bi-award text-primary-custom mb-3" style="font-size: 3rem;"></i>
+                                                <i class="bi bi-award text-primary-custom mb-3 feature-icon-large"></i>
                                                 <h6>10+ Años de Experiencia</h6>
                                                 <p class="text-muted small">Especializados en bodas exclusivas</p>
                                             </div>
                                         </div>
                                         <div class="col-md-3 mb-4">
                                             <div class="feature-item">
-                                                <i class="bi bi-palette text-primary-custom mb-3" style="font-size: 3rem;"></i>
+                                                <i class="bi bi-palette text-primary-custom mb-3 feature-icon-large"></i>
                                                 <h6>Diseño Personalizado</h6>
                                                 <p class="text-muted small">Cada arreglo es único y hecho a medida</p>
                                             </div>
                                         </div>
                                         <div class="col-md-3 mb-4">
                                             <div class="feature-item">
-                                                <i class="bi bi-clock-history text-primary-custom mb-3" style="font-size: 3rem;"></i>
+                                                <i class="bi bi-clock-history text-primary-custom mb-3 feature-icon-large"></i>
                                                 <h6>Puntualidad Garantizada</h6>
                                                 <p class="text-muted small">Entrega perfecta el día de tu boda</p>
                                             </div>
                                         </div>
                                         <div class="col-md-3 mb-4">
                                             <div class="feature-item">
-                                                <i class="bi bi-headset text-primary-custom mb-3" style="font-size: 3rem;"></i>
+                                                <i class="bi bi-headset text-primary-custom mb-3 feature-icon-large"></i>
                                                 <h6>Soporte Completo</h6>
                                                 <p class="text-muted small">Te acompañamos en cada paso</p>
                                             </div>

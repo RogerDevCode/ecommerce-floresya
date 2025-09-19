@@ -1,56 +1,54 @@
-# Plan de Acción: Limpieza de Archivos Duplicados y Estructura del Proyecto
+# Plan de Acción: Limpieza y Verificación de Estructura del Proyecto E-commerce FloresYa
 
-## Finalidad
-Realizar una limpieza meticulosa del proyecto e-commerce para eliminar archivos duplicados, directorios replicados y archivos JS ubicados incorrectamente fuera de `dist`, manteniendo la integridad funcional y la estructura estándar compatible con Vercel.
+## Finalidad del Plan
+Realizar una limpieza minuciosa de la estructura del proyecto, eliminar archivos duplicados o mal ubicados, verificar rutas de importación/exportación, y asegurar que el proyecto siga los estándares establecidos para Vercel y TypeScript. Se enfoca en mantener la separación estricta entre código fuente (src/), archivos compilados (dist/), y archivos estáticos (public/), además de resolver cualquier problema con la funcionalidad del modal de gestión de imágenes.
 
 ## Checklist de Tareas
 
-### Fase 1: Análisis y Diagnóstico
-- [x] Analizar estructura completa del proyecto para identificar duplicados
-- [x] Identificar archivos JS fuera de directorio dist
-- [x] Detectar directorios duplicados en src
-- [x] Verificar importaciones y exportaciones activas
+### ✅ Verificación de Estructura del Proyecto
+- [x] Buscar archivos JavaScript fuera de ubicaciones permitidas (dist/, scripts/, node_modules/)
+- [x] Verificar duplicados de directorios (src/, app/, controllers/, etc.)
+- [x] Confirmar que no existen archivos .js en src/ o public/
+- [x] Validar que archivos estáticos están solo en public/
+- [x] Comprobar que archivos compilados están solo en dist/
 
-### Fase 2: Mapeo y Planificación
-- [x] Crear mapa de dependencias entre archivos
-- [x] Identificar archivos seguros para eliminación
-- [x] Documentar rutas de importación que requieren corrección
+### 🔄 Regeneración de Archivos Compilados
+- [ ] Ejecutar `npm run build` para regenerar dist/ con código TypeScript actual
+- [ ] Verificar que todos los archivos .ts se compilen correctamente
+- [ ] Asegurar que rutas de importación en HTML apunten a /dist/frontend/*.js
 
-### Fase 3: Limpieza Controlada
-- [x] Eliminar archivos duplicados confirmados como seguros
-- [x] Corregir rutas de importación rotas
-- [x] Mantener estructura estándar para Vercel
+### 🔍 Verificación de Rutas de Importación/Exportación
+- [ ] Revisar imports en archivos TypeScript para rutas correctas
+- [ ] Verificar exports en módulos principales (api.ts, main.ts, etc.)
+- [ ] Comprobar consistencia de tipos entre frontend y backend
+- [ ] Validar que todas las dependencias se resuelvan correctamente
 
-### Fase 4: Verificación
-- [x] Verificar funcionalidad del proyecto post-limpieza
-- [x] Ejecutar build y validar compilación
-- [x] Confirmar que todas las rutas funcionan correctamente
+### 🖼️ Diagnóstico y Reparación del Modal de Imágenes
+- [ ] Verificar funcionamiento del endpoint `/api/products/:id/images`
+- [ ] Probar carga de imágenes en el modal de administración
+- [ ] Corregir cualquier problema con la visualización del título del modal
+- [ ] Asegurar que las imágenes se muestren correctamente en la galería
 
-## ✅ LIMPIEZA COMPLETADA EXITOSAMENTE
+### 🧪 Pruebas de Funcionalidad
+- [ ] Ejecutar pruebas unitarias existentes
+- [ ] Verificar que la aplicación se ejecute sin errores
+- [ ] Probar funcionalidades críticas (login, productos, carrito)
+- [ ] Validar responsive design y UX
 
-### Problemas Detectados y Resueltos
-1. **Duplicación masiva**: Se eliminó directorio `public/src/` que duplicaba completamente `src/`
-2. **Archivos JS fuera de dist**: Se eliminaron archivos JS esparcidos en `public/`
-3. **Configuración TypeScript incorrecta**: Se corrigió `rootDir: "."` a `rootDir: "./src"`
-4. **Comandos build con workarounds**: Se eliminaron `build:post` y `build:frontend` innecesarios
-5. **Rutas HTML incorrectas**: Se actualizaron todas las rutas para apuntar a `/dist/frontend/`
-
-### Archivos JS Restantes (Legítimos)
-- `scripts/check-env.js` - Script de configuración
-- `vitest.config.js` - Configuración de testing
-
-### Estructura Final Correcta
-```
-├── src/              # Código fuente TypeScript
-├── dist/             # Código compilado JavaScript
-│   ├── app/
-│   ├── frontend/
-│   ├── controllers/
-│   └── services/
-└── public/           # Solo archivos estáticos (HTML, CSS, imágenes)
-```
+### 📝 Documentación y Limpieza Final
+- [ ] Actualizar documentación si es necesario
+- [ ] Limpiar archivos temporales generados durante el proceso
+- [ ] Verificar que el proyecto esté listo para despliegue en Vercel
+- [ ] Confirmar cumplimiento de estándares de código y mejores prácticas
 
 ## Notas Importantes
-- **Precaución máxima**: Cada eliminación debe ser verificada para evitar romper funcionalidad
-- **Backup implícito**: Git permite recuperar archivos si es necesario
-- **Estructura objetivo**: Mantener TypeScript en `src/` y JavaScript compilado solo en `dist/`
+- **NO modificar** archivos de configuración (tsconfig.json, package.json, vercel.json) sin autorización explícita
+- Mantener separación estricta: src/ (TS) → dist/ (JS compilado) → public/ (estáticos)
+- Priorizar resolución de problemas desde la primera iteración sin stubs o código temporal
+- Aplicar estándares rigurosos de TypeScript y ESLint
+- Verificar compatibilidad con el esquema de Supabase sin modificarlo
+
+## Estado Actual
+- ✅ Estructura del proyecto verificada y limpia
+- ✅ No se encontraron archivos duplicados o mal ubicados
+- 🔄 Pendiente regeneración de dist/ y verificación de funcionalidades

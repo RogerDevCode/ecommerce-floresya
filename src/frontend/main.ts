@@ -161,6 +161,9 @@ export class FloresYaApp {
         this.log('⚠️ No se pudieron cargar las ocasiones', occasionsResponse, 'warn');
       }
 
+      // Initialize default filters from UI state
+      this.initializeDefaultFilters();
+
       // Load products
       await this.loadProducts();
 
@@ -333,15 +336,7 @@ export class FloresYaApp {
           </div>
           <div class="card-body d-flex flex-column">
             <!-- Product name with 2-line text wrapping -->
-            <h5 class="card-title product-name" style="
-              line-height: 1.2;
-              height: 2.4em;
-              overflow: hidden;
-              display: -webkit-box;
-              -webkit-line-clamp: 2;
-              -webkit-box-orient: vertical;
-              margin-bottom: 0.75rem;
-            ">${product.name}</h5>
+            <h5 class="card-title product-name product-name-text">${product.name}</h5>
 
             <p class="card-text flex-grow-1 small">${product.summary}</p>
 
@@ -352,22 +347,9 @@ export class FloresYaApp {
                 <small class="text-muted">USD</small>
               </div>
               <!-- BUY button with gradient and bright design -->
-              <button class="btn buy-now-btn"
+              <button class="btn buy-now-btn product-buy-btn"
                       data-product-id="${product.id}"
-                      ${product.stock === 0 ? 'disabled' : ''}
-                      style="
-                        background: linear-gradient(45deg, #ff6b35, #f7931e, #ffd700);
-                        border: none;
-                        color: #fff;
-                        font-weight: bold;
-                        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
-                        transition: all 0.3s ease;
-                        border-radius: 25px;
-                        padding: 8px 20px;
-                        font-size: 0.9rem;
-                      "
-                      onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(255, 193, 7, 0.6)';"
-                      onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(255, 193, 7, 0.4)';">
+                      ${product.stock === 0 ? 'disabled' : ''}>
                 <i class="bi bi-lightning-charge-fill" style="color: #ffd700; font-size: 1.2em;"></i>
                 <strong>BUY</strong>
               </button>
@@ -376,11 +358,10 @@ export class FloresYaApp {
             <div class="card-actions mt-auto">
               <div class="d-flex gap-2">
                 <!-- Simplified cart button with cart + plus -->
-                <button class="btn btn-primary btn-sm add-to-cart-btn flex-fill"
+                <button class="btn btn-primary btn-sm add-to-cart-btn flex-fill product-cart-btn"
                         data-product-id="${product.id}"
-                        ${product.stock === 0 ? 'disabled' : ''}
-                        style="display: flex; align-items: center; justify-content: center; gap: 4px;">
-                  <i class="bi bi-cart3"></i><span style="font-weight: bold; font-size: 1.2em;">+</span>
+                        ${product.stock === 0 ? 'disabled' : ''}>
+                  <i class="bi bi-cart3"></i><span class="product-cart-plus">+</span>
                 </button>
                 <button class="btn btn-outline-secondary btn-sm view-details-btn flex-fill"
                         data-product-id="${product.id}">
@@ -548,6 +529,34 @@ export class FloresYaApp {
     this.log('🔍 Búsqueda realizada', { query: this.currentFilters.search }, 'info');
   }
 
+  private initializeDefaultFilters(): void {
+    // Initialize filters based on the current UI state
+    const occasionFilter = document.getElementById('occasionFilter') as HTMLSelectElement;
+    const sortFilter = document.getElementById('sortFilter') as HTMLSelectElement;
+
+    if (occasionFilter && occasionFilter.value) {
+      this.currentFilters.occasion = occasionFilter.value;
+    }
+
+    if (sortFilter && sortFilter.value) {
+      // Parse sort format: "field:direction" -> sort_by and sort_direction
+      const [sortBy, sortDirection] = sortFilter.value.split(':');
+
+      // Validate sort_by field
+      const validSortFields = ['name', 'price_usd', 'created_at', 'carousel_order', 'stock'];
+      if (sortBy && validSortFields.includes(sortBy)) {
+        this.currentFilters.sort_by = sortBy as 'name' | 'price_usd' | 'created_at' | 'carousel_order' | 'stock';
+      }
+
+      // Validate sort_direction
+      if (sortDirection && (sortDirection.toLowerCase() === 'asc' || sortDirection.toLowerCase() === 'desc')) {
+        this.currentFilters.sort_direction = sortDirection.toLowerCase() as 'asc' | 'desc';
+      }
+    }
+
+    this.log('🔧 Filtros por defecto inicializados', this.currentFilters, 'info');
+  }
+
   private handleFilter(): void {
     const occasionFilter = document.getElementById('occasionFilter') as HTMLSelectElement;
     const sortFilter = document.getElementById('sortFilter') as HTMLSelectElement;
@@ -556,8 +565,23 @@ export class FloresYaApp {
       this.currentFilters.occasion = occasionFilter.value;
     }
 
-    if (sortFilter) {
-      this.currentFilters.sort = sortFilter.value;
+    if (sortFilter && sortFilter.value) {
+      // Parse sort format: "field:direction" -> sort_by and sort_direction
+      const [sortBy, sortDirection] = sortFilter.value.split(':');
+
+      // Validate sort_by field
+      const validSortFields = ['name', 'price_usd', 'created_at', 'carousel_order', 'stock'];
+      if (sortBy && validSortFields.includes(sortBy)) {
+        this.currentFilters.sort_by = sortBy as 'name' | 'price_usd' | 'created_at' | 'carousel_order' | 'stock';
+      }
+
+      // Validate sort_direction
+      if (sortDirection && (sortDirection.toLowerCase() === 'asc' || sortDirection.toLowerCase() === 'desc')) {
+        this.currentFilters.sort_direction = sortDirection.toLowerCase() as 'asc' | 'desc';
+      }
+
+      // Remove old sort property if it exists
+      delete this.currentFilters.sort;
     }
 
     this.currentPage = 1;
@@ -775,7 +799,7 @@ export class FloresYaApp {
           // Update image indicator
           this.updateImageIndicator(card, currentImageIndex + 1);
         }
-      }, 2535); // Increased by 69% total for optimal comfortable viewing and special effects
+      }, 1500); // Optimal image rotation timing based on UX guidelines
 
       // Guardar el interval para poder limpiarlo después
       this.hoverIntervals.set(productId, rotationInterval);
@@ -945,9 +969,11 @@ export class FloresYaApp {
     }, 'info');
   }
 private renderCarousel(products: CarouselProduct[]): void {
-  const container = document.getElementById('dynamicCarousel');
-  if (!container) {
-    this.log('⚠️ Contenedor del carrusel no encontrado', {}, 'warn');
+  const indicators = document.getElementById('carouselIndicators');
+  const slides = document.getElementById('carouselSlides');
+
+  if (!indicators || !slides) {
+    this.log('⚠️ Contenedores del carrusel Bootstrap no encontrados', {}, 'warn');
     return;
   }
 
@@ -956,209 +982,53 @@ private renderCarousel(products: CarouselProduct[]): void {
     return;
   }
 
-  // Crear tarjeta de producto con efecto hover de imágenes rotativas
-  const createCardHtml = (product: CarouselProduct, index: number): string => {
-    // Obtener imágenes small para el efecto hover
-    const smallImages = product.images ? product.images.filter(img => img.size === 'small') : [];
+  // Generate indicators
+  const indicatorsHtml = products.map((_, index) => `
+    <button type="button"
+            data-bs-target="#featuredCarousel"
+            data-bs-slide-to="${index}"
+            ${index === 0 ? 'class="active" aria-current="true"' : ''}
+            aria-label="Slide ${index + 1}"></button>
+  `).join('');
+
+  // Generate slides using Bootstrap structure
+  const slidesHtml = products.map((product, index) => {
     const primaryImage = product.primary_thumb_url ?? '/images/placeholder-product.webp';
-
-    // Si no hay imágenes small, usar la principal
-    const rotationImages = smallImages.length > 0
-      ? smallImages.map(img => img.url)
-      : [primaryImage];
-
-    // Crear data attribute con las imágenes para JavaScript
-    const imagesData = JSON.stringify(rotationImages).replace(/"/g, '&quot;');
+    const isActive = index === 0 ? 'active' : '';
 
     return `
-    <div class="carousel-card"
-         style="flex: 0 0 340px; height: 420px; margin: 0 12px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%); border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); overflow: hidden; position: relative; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; border: 1px solid rgba(0,0,0,0.08);"
-         data-product-id="${product.id}"
-         data-index="${index}"
-         data-images="${imagesData}">
-
-      <!-- Image container with indicator -->
-      <div class="image-container" style="padding: 20px 20px 15px 20px; text-align: center; position: relative;">
-
-        <!-- Image indicator in top-left corner -->
-        <div class="image-indicator position-absolute top-0 start-0 m-2 px-2 py-1 bg-dark bg-opacity-75 text-white rounded-pill small"
-             style="font-size: 0.75rem; z-index: 10; margin-top: 25px !important; margin-left: 25px !important;">
-          <span class="current-image">1</span>/<span class="total-images">${Math.max(1, rotationImages.length)}</span>
-        </div>
-
-        <img class="product-image"
-             src="${primaryImage}"
-             style="width: 200px; height: 200px; object-fit: cover; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); border: 3px solid rgba(255,255,255,0.9); transition: all 0.4s ease;"
-             alt="${product.name}"
-             loading="${index < 3 ? 'eager' : 'lazy'}"
-             onerror="this.src='/images/placeholder-product.webp'">
-      </div>
-
-      <!-- Product info with new layout -->
-      <div style="padding: 0 20px 20px 20px;">
-        <!-- Product name with 2-line wrapping -->
-        <h5 class="product-name" style="
-          font-size: 1.1rem;
-          font-weight: 700;
-          color: #2c3e50;
-          margin-bottom: 12px;
-          line-height: 1.2;
-          height: 2.4em;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-        ">${product.name}</h5>
-
-        <!-- Price and BUY button row -->
-        <div class="price-buy-row d-flex align-items-center justify-content-between mb-3">
-          <div class="price">
-            <strong style="font-size: 1.2rem; color: #2c3e50;">$${product.price_usd.toFixed(2)}</strong>
-            <small class="text-muted"> USD</small>
+      <div class="carousel-item ${isActive}">
+        <div class="row g-0">
+          <div class="col-md-8">
+            <img src="${primaryImage}"
+                 class="d-block"
+                 alt="${product.name}"
+                 style="height: 150px; width: 150px; object-fit: cover; margin: 0 auto;"
+                 onerror="this.src='/images/placeholder-product.webp'">
           </div>
-          <!-- BUY button with gradient -->
-          <button class="btn buy-now-btn"
-                  data-product-id="${product.id}"
-                  style="
-                    background: linear-gradient(45deg, #ff6b35, #f7931e, #ffd700);
-                    border: none;
-                    color: #fff;
-                    font-weight: bold;
-                    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
-                    transition: all 0.3s ease;
-                    border-radius: 20px;
-                    padding: 6px 16px;
-                    font-size: 0.85rem;
-                  "
-                  onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(255, 193, 7, 0.6)';"
-                  onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(255, 193, 7, 0.4)';">
-            <i class="bi bi-lightning-charge-fill" style="color: #ffd700; font-size: 1.1em;"></i>
-            <strong>BUY</strong>
-          </button>
-        </div>
-
-        <!-- Action buttons -->
-        <div class="d-flex gap-2">
-          <!-- Simplified cart button -->
-          <button class="btn btn-primary btn-sm add-to-cart-btn flex-fill"
-                  data-product-id="${product.id}"
-                  style="display: flex; align-items: center; justify-content: center; gap: 4px; border-radius: 12px;">
-            <i class="bi bi-cart3"></i><span style="font-weight: bold; font-size: 1.1em;">+</span>
-          </button>
-          <button class="btn btn-outline-secondary btn-sm view-details-btn flex-fill"
-                  data-product-id="${product.id}"
-                  style="border-radius: 12px;">
-            <i class="bi bi-eye"></i> Ver
-          </button>
+          <div class="col-md-4 d-flex align-items-center bg-light">
+            <div class="p-4 text-center w-100">
+              <h5 class="card-title fw-bold mb-3">${product.name}</h5>
+              <p class="card-text text-muted mb-3">${product.summary || 'Hermoso arreglo floral'}</p>
+              <p class="h4 text-primary mb-3">$${product.price_usd.toFixed(2)}</p>
+              <button class="btn btn-primary btn-lg add-to-cart-btn" data-product-id="${product.id}">
+                <i class="bi bi-cart-plus me-2"></i>Comprar Ahora
+              </button>
+            </div>
+          </div>
         </div>
       </div>
+    `;
+  }).join('');
 
-      <!-- Enhanced hover overlay -->
-      <div class="card-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.02); opacity: 0; transition: all 0.3s ease; border-radius: 20px;"></div>
-    </div>
-  `;
-  };
+  // Update DOM
+  indicators.innerHTML = indicatorsHtml;
+  slides.innerHTML = slidesHtml;
 
-  // Calcular ancho total del track (duplicado) - ajustado para nuevas tarjetas
-  const imgWidth = 364; // 340px width + 24px margin (12px each side)
-  const totalProducts = products.length;
-  const trackWidth = imgWidth * totalProducts * 2; // Duplicado para loop
+  // Bootstrap carousel will initialize automatically via data-bs-ride="carousel"
+  // Manual initialization can be added later if needed
 
-  // Generar HTML del carrusel con diseño mejorado
-  const carouselHtml = `
-    <div class="carousel-wrapper" style="position: relative; width: 100%; overflow: visible; margin: auto; padding: 0 100px;">
-      <div class="carousel-container" style="position: relative; width: 100%; height: 440px; overflow: hidden; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #f8f9fa 100%); border-radius: 25px; box-shadow: 0 8px 40px rgba(0,0,0,0.1); border: 2px solid rgba(255,255,255,0.8);">
-        <div class="image-track" id="imageTrack" style="display: flex; position: relative; width: ${trackWidth}px; height: 100%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 10px 0;">
-          ${[...products, ...products].map((p, i) => createCardHtml(p, i)).join('')}
-        </div>
-      </div>
-
-      <!-- Enhanced Left Arrow -->
-      <button class="arrow-btn" id="arrow-left"
-              style="
-                position: absolute;
-                top: 50%;
-                left: 20px;
-                transform: translateY(-50%);
-                background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-                border: 3px solid #007bff;
-                border-radius: 50%;
-                width: 60px;
-                height: 60px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 15;
-                box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
-                cursor: pointer;
-                opacity: 0.95;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                font-size: 20px;
-                color: #007bff;
-                font-weight: bold;
-              "
-              onmouseover="
-                this.style.transform='translateY(-50%) scale(1.1)';
-                this.style.boxShadow='0 8px 30px rgba(0, 123, 255, 0.5)';
-                this.style.background='linear-gradient(135deg, #007bff 0%, #0056b3 100%)';
-                this.style.color='#ffffff';
-              "
-              onmouseout="
-                this.style.transform='translateY(-50%) scale(1)';
-                this.style.boxShadow='0 6px 20px rgba(0, 123, 255, 0.3)';
-                this.style.background='linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)';
-                this.style.color='#007bff';
-              ">
-        <i class="bi bi-chevron-left"></i>
-      </button>
-
-      <!-- Enhanced Right Arrow -->
-      <button class="arrow-btn" id="arrow-right"
-              style="
-                position: absolute;
-                top: 50%;
-                right: 20px;
-                transform: translateY(-50%);
-                background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-                border: 3px solid #007bff;
-                border-radius: 50%;
-                width: 60px;
-                height: 60px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 15;
-                box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
-                cursor: pointer;
-                opacity: 0.95;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                font-size: 20px;
-                color: #007bff;
-                font-weight: bold;
-              "
-              onmouseover="
-                this.style.transform='translateY(-50%) scale(1.1)';
-                this.style.boxShadow='0 8px 30px rgba(0, 123, 255, 0.5)';
-                this.style.background='linear-gradient(135deg, #007bff 0%, #0056b3 100%)';
-                this.style.color='#ffffff';
-              "
-              onmouseout="
-                this.style.transform='translateY(-50%) scale(1)';
-                this.style.boxShadow='0 6px 20px rgba(0, 123, 255, 0.3)';
-                this.style.background='linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)';
-                this.style.color='#007bff';
-              ">
-        <i class="bi bi-chevron-right"></i>
-      </button>
-    </div>
-  `;
-
-  container.innerHTML = carouselHtml;
-
-  // Inicializar carrusel infinito
-  this.initializeInfiniteCarousel(products);
-
-  this.log('✅ Carrusel infinito de productos renderizado', { productCount: products.length }, 'success');
+  this.log('✅ Carrusel Bootstrap renderizado', { productCount: products.length }, 'success');
 }
 
 private initializeInfiniteCarousel(products: CarouselProduct[]): void {
@@ -1168,7 +1038,7 @@ private initializeInfiniteCarousel(products: CarouselProduct[]): void {
 
   if (!track || !arrowLeft || !arrowRight || products.length === 0) return;
 
-  const imgWidth = 300;
+  const imgWidth = 312;
   const totalProducts = products.length;
   const singleTrackWidth = imgWidth * totalProducts; // Ancho de un set
   const _fullTrackWidth = singleTrackWidth * 2; // Ancho total con duplicado (unused in current implementation)
@@ -1257,7 +1127,7 @@ private initializeInfiniteCarousel(products: CarouselProduct[]): void {
             // Update image indicator for carousel card
             this.updateImageIndicator(element, currentImageIndex + 1);
           }
-        }, 2535); // Increased by 69% total for optimal comfortable viewing and special effects
+        }, 1500); // Optimal image rotation timing based on UX guidelines
       }
 
       this.log('🖼️ Hover iniciado - Rotación de imágenes', {
@@ -1556,7 +1426,11 @@ private snapToNearest(pos: number): void {
 
     if (cartBadge) {
       cartBadge.textContent = totalItems.toString();
-      cartBadge.style.display = totalItems > 0 ? 'inline' : 'none';
+      if (totalItems > 0) {
+        cartBadge.classList.remove('cart-badge');
+      } else {
+        cartBadge.classList.add('cart-badge');
+      }
     }
 
     // Update cart content if offcanvas exists
@@ -1588,8 +1462,7 @@ private snapToNearest(pos: number): void {
         <div class="cart-items p-3">
           ${this.cart.map(item => `
             <div class="cart-item d-flex align-items-center mb-3 p-3 border rounded">
-              <img src="${item.image}" alt="${item.name}" class="cart-item-image me-3"
-                   style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+              <img src="${item.image}" alt="${item.name}" class="cart-item-image me-3">
               <div class="flex-grow-1">
                 <h6 class="mb-1">${item.name}</h6>
                 <div class="d-flex justify-content-between align-items-center">

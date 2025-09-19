@@ -246,8 +246,9 @@ export class ProductService {
         const sortedImages = (product.product_images ?? []).sort((a: ProductImage, b: ProductImage) => a.image_index - b.image_index);
         const mediumImages = mediumImagesByProduct[product.id] ?? [];
 
+        const { product_images, ...productWithoutImages } = product;
         return {
-          ...product,
+          ...productWithoutImages,
           images: sortedImages,
           primary_image: sortedImages.find((img) => img.is_primary),
           medium_images: mediumImages // Agregar imágenes medium para hover
@@ -308,8 +309,9 @@ export class ProductService {
       const rawProduct = data as RawProductWithImages;
       const sortedImages = (rawProduct.product_images ?? []).sort((a: ProductImage, b: ProductImage) => a.image_index - b.image_index);
 
+      const { product_images, ...productWithoutImages } = rawProduct;
       const productWithImages: ProductWithImages = {
-        ...rawProduct,
+        ...productWithoutImages,
         images: sortedImages,
         primary_image: sortedImages.find((img) => img.is_primary)
       };

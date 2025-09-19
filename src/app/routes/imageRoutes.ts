@@ -17,6 +17,12 @@ export function createImageRoutes(): Router {
     imageController.uploadProductImage.bind(imageController)
   );
 
+  // GET /api/images/product/:productId - Get images for a specific product
+  router.get('/product/:productId',
+    imageValidators.getProductImages,
+    imageController.getProductImages.bind(imageController)
+  );
+
   // DELETE /api/images/product/:productId - Delete all images for a product
   router.delete('/product/:productId',
     imageValidators.deleteProductImages,

@@ -1072,6 +1072,250 @@
             z-index: 1055 !important;
         }
 
+        /* 🖼️ NEW IMAGE MANAGEMENT INTERFACE STYLES 🖼️ */
+
+        /* Upload Area Styling */
+        .upload-area {
+            background: linear-gradient(145deg, #f8fffa 0%, #ffffff 100%);
+            border-color: #d1ecf1 !important;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            background: linear-gradient(145deg, #e8f5e8 0%, #f8fffa 100%);
+            border-color: #198754 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(25, 135, 84, 0.15);
+        }
+
+        .upload-area.dragover {
+            background: linear-gradient(145deg, #d4edda 0%, #e8f5e8 100%);
+            border-color: #28a745 !important;
+            border-style: solid !important;
+        }
+
+        /* Images Grid */
+        .images-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            min-height: 300px;
+        }
+
+        @media (max-width: 1200px) {
+            .images-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 992px) {
+            .images-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .images-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 576px) {
+            .images-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Image Card Styling */
+        .image-card {
+            position: relative;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: grab;
+            aspect-ratio: 1;
+        }
+
+        .image-card:hover {
+            border-color: #198754;
+            box-shadow: 0 4px 15px rgba(25, 135, 84, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .image-card.dragging {
+            opacity: 0.7;
+            cursor: grabbing;
+            transform: rotate(5deg) scale(1.05);
+            z-index: 1000;
+        }
+
+        .image-card.primary {
+            border-color: #ffc107;
+            background: linear-gradient(145deg, #fff3cd 0%, #ffffff 100%);
+        }
+
+        .image-card.primary::before {
+            content: "Principal";
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: #ffc107;
+            color: #212529;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            z-index: 10;
+        }
+
+        .image-card.pending {
+            border-color: #17a2b8;
+            border-style: dashed;
+            background: linear-gradient(145deg, #d1ecf1 0%, #ffffff 100%);
+        }
+
+        .image-card.pending::after {
+            content: "Nuevo";
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #17a2b8;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            z-index: 10;
+        }
+
+        .image-card.to-delete {
+            border-color: #dc3545;
+            background: linear-gradient(145deg, #f8d7da 0%, #ffffff 100%);
+            opacity: 0.7;
+        }
+
+        .image-card.to-delete::after {
+            content: "Eliminar";
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #dc3545;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            z-index: 10;
+        }
+
+        /* Image */
+        .image-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .image-card:hover img {
+            transform: scale(1.05);
+        }
+
+        /* Image Controls */
+        .image-controls {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            right: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .image-card:hover .image-controls {
+            opacity: 1;
+        }
+
+        .star-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .star-btn:hover {
+            background: #ffc107;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .star-btn.active {
+            background: #ffc107;
+            color: white;
+        }
+
+        .delete-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #dc3545;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        /* Order indicator */
+        .order-indicator {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 5;
+        }
+
+        /* Drop zone indicator */
+        .drop-zone {
+            border: 3px dashed #198754;
+            background: rgba(25, 135, 84, 0.1);
+        }
+
+        /* Changes indicator badge */
+        .changes-badge {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
         /* 🌸 ENHANCED ORDERS MANAGEMENT STYLES 🌸 */
 
         /* Orders Stats Cards */
@@ -1500,7 +1744,7 @@
                     </div>
 
                     <!-- Products Section -->
-                    <div id="products-section" class="admin-section" style="display: none;">
+                    <div id="products-section" class="admin-section admin-section-hidden">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h4>Gestión de Productos</h4>
                             <button class="btn btn-primary btn-admin" id="addProductBtn">
@@ -1537,7 +1781,7 @@
                     </div>
 
                     <!-- Orders Section -->
-                    <div id="orders-section" class="admin-section" style="display: none;">
+                    <div id="orders-section" class="admin-section admin-section-hidden">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div>
                                 <h4 class="mb-1">
@@ -1802,16 +2046,6 @@
                     <div id="images-section" class="admin-section" style="display: none;">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h4>Gestión de Imágenes de Productos</h4>
-                            <div class="btn-group">
-                                <button class="btn btn-primary btn-admin" id="uploadSiteImagesBtn">
-                                    <i class="bi bi-cloud-upload me-2"></i>
-                                    Subir Imágenes del Sitio
-                                </button>
-                                <button class="btn btn-success btn-admin" id="manageProductImagesBtn">
-                                    <i class="bi bi-images me-2"></i>
-                                    Ver Galería de Imágenes
-                                </button>
-                            </div>
                         </div>
 
                         <!-- Filters and Sorting Controls -->
@@ -1933,29 +2167,6 @@
                             </div>
                         </div>
 
-                        <!-- Product Images Gallery -->
-                        <div class="card admin-card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0">
-                                    <i class="bi bi-grid-3x3-gap text-info me-2"></i>
-                                    Galería de Imágenes de Productos
-                                </h6>
-                                <div class="btn-group btn-group-sm">
-                                    <button class="btn btn-outline-secondary" id="filterAllImages">Todas</button>
-                                    <button class="btn btn-outline-secondary" id="filterUnusedImages">Sin usar</button>
-                                    <button class="btn btn-outline-secondary" id="filterProductImages">En uso</button>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div id="imagesGallery" class="row">
-                                    <!-- Images will be loaded here -->
-                                    <div class="col-12 text-center text-muted py-5">
-                                        <i class="bi bi-images display-1 mb-3"></i>
-                                        <p>Cargando galería de imágenes...</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Logs Section -->
@@ -2176,6 +2387,9 @@
         console.log('   - forceShowProductsSection() - Forzar mostrar productos');
         console.log('   - adminPanel.diagnose() - Diagnóstico completo (después de carga)');
     </script>
+
+    <!-- Load Admin Module -->
+    <script type="module" src="/dist/frontend/admin.js"></script>
 
     <!-- Custom Admin JavaScript with Robust Fallback System -->
     <script type="module">
@@ -2898,144 +3112,119 @@
             <div class="modal-content">
                 <div class="modal-header bg-success text-white">
                     <h5 class="modal-title" id="productImagesModalLabel">
-                        <i class="bi bi-images me-2"></i>Gestionar Imágenes de Productos
+                        <i class="bi bi-images me-2"></i><span id="selectedProductName">Gestionar Imágenes</span>
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Message Area -->
-                    <div id="productImagesMessageArea" class="alert-container mb-3" style="display: none;">
-                        <div id="productImagesMessage" class="alert" role="alert"></div>
+                    <!-- Unsaved Changes Warning -->
+                    <div id="unsavedChangesAlert" class="alert alert-warning alert-dismissible d-none" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Cambios sin guardar</strong> - Recuerda aplicar los cambios antes de cerrar.
+                        <button type="button" class="btn-close" aria-label="Close" onclick="hideUnsavedChangesAlert()"></button>
                     </div>
 
-                    <!-- Filter Controls -->
-                    <div class="row mb-4">
-                        <div class="col-md-4">
-                            <label for="productFilter" class="form-label">Filtrar por Producto</label>
-                            <select class="form-select" id="productFilter">
-                                <option value="">Todos los productos</option>
-                                <!-- Products will be loaded here -->
-                            </select>
+                    <!-- Images Management Section -->
+                    <div id="imagesManagementSection">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <span class="badge bg-secondary" id="imageCount">0/5 imágenes</span>
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <label for="sizeFilter" class="form-label">Tamaño de Imagen</label>
-                            <select class="form-select" id="sizeFilter">
-                                <option value="">Todos los tamaños</option>
-                                <option value="large">Grande (1200x1200)</option>
-                                <option value="medium">Mediana (600x600)</option>
-                                <option value="small">Pequeña (300x300)</option>
-                                <option value="thumb">Miniatura (150x150)</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="statusFilter" class="form-label">Estado</label>
-                            <select class="form-select" id="statusFilter">
-                                <option value="">Todas</option>
-                                <option value="primary">Imagen Principal</option>
-                                <option value="secondary">Imagen Secundaria</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button class="btn btn-outline-primary w-100" id="refreshImagesBtn">
-                                <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
-                            </button>
-                        </div>
-                    </div>
 
-                    <!-- Upload New Image Section -->
-                    <div class="card mb-4">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0">
-                                <i class="bi bi-cloud-upload me-2"></i>Subir Nueva Imagen
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <label for="uploadProductSelect" class="form-label">Producto *</label>
-                                    <select class="form-select" id="uploadProductSelect" required>
-                                        <option value="">Seleccionar producto...</option>
-                                        <!-- Products will be loaded here -->
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <label for="imageIndex" class="form-label">Índice</label>
-                                    <input type="number" class="form-control" id="imageIndex" min="1" max="10" value="1">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="imageFile" class="form-label">Archivo de Imagen *</label>
-                                    <input type="file" class="form-control" id="imageFile" accept="image/*" required>
-                                    <div class="form-text">Máximo 5MB. Formatos: JPG, PNG, WebP</div>
-                                </div>
-                                <div class="col-md-2 d-flex align-items-end">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="setPrimaryImage">
-                                        <label class="form-check-label" for="setPrimaryImage">
-                                            Principal
-                                        </label>
+                        <!-- Upload Area -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <!-- File Upload Button -->
+                                        <div class="upload-area text-center p-4 border-2 border-dashed rounded">
+                                            <i class="bi bi-cloud-upload display-4 text-muted mb-3"></i>
+                                            <p class="mb-2"><strong>Subir nuevas imágenes</strong></p>
+                                            <p class="text-muted small mb-3">Arrastra archivos aquí o haz clic para seleccionar</p>
+                                            <input type="file" id="imageUpload" multiple accept="image/*" class="d-none">
+                                            <button class="btn btn-outline-primary" onclick="document.getElementById('imageUpload').click()">
+                                                <i class="bi bi-plus-circle me-2"></i>Seleccionar Imágenes
+                                            </button>
+                                            <div class="mt-2">
+                                                <small class="text-muted">Máximo 5 imágenes • JPG, PNG, WebP • Máx. 5MB cada una</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <!-- Instructions -->
+                                        <div class="h-100 d-flex flex-column justify-content-center">
+                                            <h6 class="text-muted mb-3">Instrucciones:</h6>
+                                            <ul class="list-unstyled text-muted">
+                                                <li class="mb-2"><i class="bi bi-arrow-up-down text-primary me-2"></i>Arrastra para reordenar</li>
+                                                <li class="mb-2"><i class="bi bi-star text-warning me-2"></i>Clic en estrella para marcar principal</li>
+                                                <li class="mb-2"><i class="bi bi-trash text-danger me-2"></i>Clic en papelera para eliminar</li>
+                                                <li><i class="bi bi-check-circle text-success me-2"></i>Aplica cambios al finalizar</li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="row mt-3">
-                                <div class="col-12">
-                                    <button class="btn btn-success" id="uploadImageBtn">
-                                        <i class="bi bi-upload me-2"></i>Subir Imagen
-                                    </button>
-                                    <div class="progress mt-2" id="uploadProgress" style="display: none;">
-                                        <div class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+
+                        <!-- Images Grid -->
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-grid-3x3-gap me-2"></i>Imágenes del Producto
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <!-- Images Grid Container -->
+                                <div id="imagesGrid" class="images-grid">
+                                    <!-- Images will be loaded here dynamically -->
+                                    <div class="text-center py-5">
+                                        <i class="bi bi-images display-1 text-muted mb-3"></i>
+                                        <h6 class="text-muted">No hay imágenes</h6>
+                                        <p class="text-muted small">Sube las primeras imágenes para este producto</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Images Gallery -->
-                    <div class="card">
-                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0">
-                                <i class="bi bi-grid-3x3-gap me-2"></i>Galería de Imágenes
-                            </h6>
-                            <div class="d-flex align-items-center">
-                                <small class="text-muted me-3" id="imagesCount">0 imágenes</small>
-                                <div class="btn-group btn-group-sm">
-                                    <button class="btn btn-outline-secondary" id="viewModeGrid" title="Vista de Cuadrícula">
-                                        <i class="bi bi-grid-3x3-gap"></i>
-                                    </button>
-                                    <button class="btn btn-outline-secondary" id="viewModeList" title="Vista de Lista">
-                                        <i class="bi bi-list"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <!-- Loading indicator -->
-                            <div id="imagesLoading" class="text-center py-4">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Cargando imágenes...</span>
-                                </div>
-                                <p class="mt-2 text-muted">Cargando galería de imágenes...</p>
-                            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="applyChangesBtn" disabled>
+                        <i class="bi bi-check-circle me-2"></i>Aplicar Cambios y Salir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                            <!-- Images container -->
-                            <div id="imagesContainer" class="row" style="display: none;">
-                                <!-- Images will be loaded here dynamically -->
-                            </div>
-
-                            <!-- Empty state -->
-                            <div id="imagesEmpty" class="text-center py-5" style="display: none;">
-                                <i class="bi bi-images display-1 text-muted mb-3"></i>
-                                <h5 class="text-muted">No hay imágenes</h5>
-                                <p class="text-muted">No se encontraron imágenes con los filtros aplicados</p>
-                            </div>
-
-                            <!-- Pagination -->
-                            <div id="imagesPagination" class="d-flex justify-content-center mt-4" style="display: none;">
-                                <nav aria-label="Paginación de imágenes">
-                                    <ul class="pagination">
-                                        <!-- Pagination will be generated here -->
-                                    </ul>
-                                </nav>
-                            </div>
+    <!-- Confirmation Modal for Changes -->
+    <div class="modal fade" id="confirmChangesModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-question-circle text-warning me-2"></i>Confirmar Cambios
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">Se aplicarán los siguientes cambios:</p>
+                    <div id="changesSummary" class="bg-light p-3 rounded">
+                        <!-- Changes summary will be displayed here -->
+                    </div>
+                    <p class="text-muted small mt-3">Esta acción no se puede deshacer.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">No guardar y retornar</button>
+                    <button type="button" class="btn btn-danger" onclick="discardChanges()">Cancelar y retornar</button>
+                    <button type="button" class="btn btn-success" id="confirmApplyBtn">
+                        <i class="bi bi-check-circle me-2"></i>Aplicar cambios y salir
+                    </button>
+                </div>
+            </div>
+        </div>
                         </div>
                     </div>
                 </div>
@@ -3376,6 +3565,347 @@
             </div>
         </div>
     </div>
+
+    <!-- Image Management JavaScript -->
+    <script>
+        // 🖼️ IMAGE MANAGEMENT FUNCTIONS 🖼️
+
+        // Global variables for image management
+        let currentProductId = null;
+        let currentImages = [];
+        let pendingChanges = {
+            newImages: [],
+            deletedImages: [],
+            reorderedImages: [],
+            newPrimaryImage: null
+        };
+        let hasUnsavedChanges = false;
+
+        // Initialize drag and drop functionality
+        function initializeDragAndDrop() {
+            const uploadArea = document.querySelector('.upload-area');
+            if (!uploadArea) return;
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
+            });
+
+            uploadArea.addEventListener('drop', handleDrop, false);
+            uploadArea.addEventListener('click', () => document.getElementById('imageUpload').click());
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            ([...files]).forEach(uploadFile);
+        }
+
+        function uploadFile(file) {
+            // Validate file
+            if (!file.type.startsWith('image/')) {
+                alert('Solo se permiten archivos de imagen');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert('El archivo es demasiado grande. Máximo 5MB.');
+                return;
+            }
+
+            if (currentImages.length + pendingChanges.newImages.length >= 5) {
+                alert('Máximo 5 imágenes por producto');
+                return;
+            }
+
+            // Create preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const newImage = {
+                    id: 'temp_' + Date.now(),
+                    file: file,
+                    url: e.target.result,
+                    isPrimary: currentImages.length === 0 && pendingChanges.newImages.length === 0,
+                    order: currentImages.length + pendingChanges.newImages.length + 1
+                };
+
+                pendingChanges.newImages.push(newImage);
+                renderImagesGrid();
+                markAsUnsaved();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function renderImagesGrid() {
+            const grid = document.getElementById('imagesGrid');
+            if (!grid) return;
+
+            // Combine current and pending images
+            const allImages = [...currentImages, ...pendingChanges.newImages]
+                .filter(img => !pendingChanges.deletedImages.includes(img.id))
+                .sort((a, b) => a.order - b.order);
+
+            if (allImages.length === 0) {
+                grid.innerHTML = `
+                    <div class="text-center py-5" style="grid-column: 1 / -1;">
+                        <i class="bi bi-images display-1 text-muted mb-3"></i>
+                        <h6 class="text-muted">No hay imágenes</h6>
+                        <p class="text-muted small">Sube las primeras imágenes para este producto</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = allImages.map((image, index) => `
+                <div class="image-card ${image.isPrimary ? 'primary' : ''} ${String(image.id).startsWith('temp_') ? 'pending' : ''} ${pendingChanges.deletedImages.includes(image.id) ? 'to-delete' : ''}"
+                     data-image-id="${image.id}" data-order="${index + 1}">
+                    <div class="order-indicator">${index + 1}</div>
+                    <img src="${image.url}" alt="Imagen ${index + 1}">
+                    <div class="image-controls">
+                        <button class="star-btn ${image.isPrimary ? 'active' : ''}" onclick="setPrimaryImage('${image.id}')">
+                            <i class="bi bi-star-fill"></i>
+                        </button>
+                        <button class="delete-btn" onclick="deleteImage('${image.id}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            updateImageCount();
+        }
+
+        function setPrimaryImage(imageId) {
+            // Update primary status
+            currentImages.forEach(img => img.isPrimary = img.id === imageId);
+            pendingChanges.newImages.forEach(img => img.isPrimary = img.id === imageId);
+            pendingChanges.newPrimaryImage = imageId;
+
+            renderImagesGrid();
+            markAsUnsaved();
+        }
+
+        function deleteImage(imageId) {
+            if (String(imageId).startsWith('temp_')) {
+                // Remove from new images
+                pendingChanges.newImages = pendingChanges.newImages.filter(img => img.id !== imageId);
+            } else {
+                // Mark for deletion
+                pendingChanges.deletedImages.push(imageId);
+            }
+
+            renderImagesGrid();
+            markAsUnsaved();
+        }
+
+        function updateImageCount() {
+            const totalImages = currentImages.length + pendingChanges.newImages.length - pendingChanges.deletedImages.length;
+            const countElement = document.getElementById('imageCount');
+            if (countElement) {
+                countElement.textContent = `${totalImages}/5 imágenes`;
+                countElement.className = `badge ${totalImages === 0 ? 'bg-secondary' : totalImages === 5 ? 'bg-success' : 'bg-primary'}`;
+            }
+        }
+
+        function markAsUnsaved() {
+            hasUnsavedChanges = true;
+            const alert = document.getElementById('unsavedChangesAlert');
+            const button = document.getElementById('applyChangesBtn');
+
+            if (alert) alert.classList.remove('d-none');
+            if (button) button.disabled = false;
+        }
+
+        function hideUnsavedChangesAlert() {
+            const alert = document.getElementById('unsavedChangesAlert');
+            if (alert) alert.classList.add('d-none');
+        }
+
+        async function loadProductImages(productId) {
+            try {
+                // Show loading state
+                const imagesGrid = document.getElementById('imagesGrid');
+                if (imagesGrid) {
+                    imagesGrid.innerHTML = `
+                        <div class="col-12 text-center py-4">
+                            <div class="spinner-border text-success" role="status">
+                                <span class="visually-hidden">Cargando imágenes...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Cargando imágenes del producto...</p>
+                        </div>
+                    `;
+                }
+
+                // Make API call to get product images
+                const response = await fetch(`/api/images/product/${productId}`);
+
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                // Process and deduplicate images - only keep one size per image_index
+                const imageMap = new Map();
+                if (data.images) {
+                    data.images.forEach(image => {
+                        // Use medium size for display, or thumb if medium not available
+                        if (image.size === 'medium' || !imageMap.has(image.image_index)) {
+                            imageMap.set(image.image_index, {
+                                id: image.id,
+                                url: image.url,
+                                isPrimary: image.is_primary,
+                                order: image.image_index,
+                                originalData: image // Keep original for reference
+                            });
+                        }
+                    });
+                }
+
+                // Convert map to array and sort by order
+                currentImages = Array.from(imageMap.values()).sort((a, b) => a.order - b.order);
+
+                // Reset pending changes
+                pendingChanges = {
+                    newImages: [],
+                    deletedImages: [],
+                    reorderedImages: [],
+                    newPrimaryImage: null
+                };
+
+                // Render the images
+                renderImagesGrid();
+                updateImageCount();
+
+            } catch (error) {
+                console.error('Error loading product images:', error);
+
+                // Show error state
+                const imagesGrid = document.getElementById('imagesGrid');
+                if (imagesGrid) {
+                    imagesGrid.innerHTML = `
+                        <div class="col-12 text-center py-4">
+                            <i class="bi bi-exclamation-triangle text-warning display-1 mb-3"></i>
+                            <h5 class="text-muted">Error al cargar imágenes</h5>
+                            <p class="text-muted">No se pudieron cargar las imágenes del producto.</p>
+                            <button class="btn btn-outline-primary btn-sm" onclick="loadProductImages(${productId})">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Reintentar
+                            </button>
+                        </div>
+                    `;
+                }
+
+                // Set empty state for safety
+                currentImages = [];
+                pendingChanges = {
+                    newImages: [],
+                    deletedImages: [],
+                    reorderedImages: [],
+                    newPrimaryImage: null
+                };
+                updateImageCount();
+            }
+        }
+
+        // Function to open image management modal for a specific product
+        function openImageManagement(productId, productName) {
+            currentProductId = productId;
+            document.getElementById('selectedProductName').textContent = `Gestionar Imágenes: ${productName}`;
+
+            // Load product images
+            loadProductImages(productId);
+
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('productImagesModal'));
+            modal.show();
+        }
+
+        function discardChanges() {
+            const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmChangesModal'));
+            if (confirmModal) confirmModal.hide();
+
+            const mainModal = bootstrap.Modal.getInstance(document.getElementById('productImagesModal'));
+            if (mainModal) mainModal.hide();
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // File input change
+            document.getElementById('imageUpload')?.addEventListener('change', function(e) {
+                handleFiles(e.target.files);
+            });
+
+            // Apply changes button
+            document.getElementById('applyChangesBtn')?.addEventListener('click', function() {
+                if (!hasUnsavedChanges) return;
+
+                // Show confirmation modal
+                const modal = new bootstrap.Modal(document.getElementById('confirmChangesModal'));
+                modal.show();
+
+                // Generate summary
+                const summary = document.getElementById('changesSummary');
+                if (summary) {
+                    let summaryText = '<ul>';
+                    if (pendingChanges.newImages.length) {
+                        summaryText += `<li>${pendingChanges.newImages.length} imagen(es) nueva(s)</li>`;
+                    }
+                    if (pendingChanges.deletedImages.length) {
+                        summaryText += `<li>${pendingChanges.deletedImages.length} imagen(es) eliminada(s)</li>`;
+                    }
+                    if (pendingChanges.newPrimaryImage) {
+                        summaryText += `<li>Nueva imagen principal seleccionada</li>`;
+                    }
+                    summaryText += '</ul>';
+                    summary.innerHTML = summaryText;
+                }
+            });
+
+            // Confirm apply button
+            document.getElementById('confirmApplyBtn')?.addEventListener('click', function() {
+                // Here you would make the actual API calls
+                console.log('Applying changes:', pendingChanges);
+
+                alert('Cambios aplicados exitosamente!');
+
+                // Close modals
+                const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmChangesModal'));
+                const mainModal = bootstrap.Modal.getInstance(document.getElementById('productImagesModal'));
+
+                if (confirmModal) confirmModal.hide();
+                if (mainModal) mainModal.hide();
+
+                // Reset state
+                hasUnsavedChanges = false;
+            });
+
+            // Initialize drag and drop
+            initializeDragAndDrop();
+        });
+
+        // Make functions available globally
+        window.setPrimaryImage = setPrimaryImage;
+        window.deleteImage = deleteImage;
+        window.hideUnsavedChangesAlert = hideUnsavedChangesAlert;
+        window.discardChanges = discardChanges;
+    </script>
 
     <!-- Scroll optimization -->
     <script type="module" src="/dist/frontend/scroll-effects-fix.js"></script>

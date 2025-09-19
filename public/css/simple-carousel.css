@@ -1,0 +1,72 @@
+/**
+ * Simple Carousel Styles - Bootstrap Basic Enhancement
+ */
+
+/* Mejoras básicas para el carrusel */
+#featuredCarousel .carousel-inner {
+    border-radius: 0.5rem;
+}
+
+#featuredCarousel .carousel-item img {
+    border-top-left-radius: 0.5rem;
+    border-bottom-left-radius: 0.5rem;
+}
+
+/* Responsivo para móviles */
+@media (max-width: 768px) {
+    #featuredCarousel .row {
+        flex-direction: column-reverse;
+    }
+
+    #featuredCarousel .col-md-8,
+    #featuredCarousel .col-md-4 {
+        max-width: 100%;
+        flex: 0 0 100%;
+    }
+
+    #featuredCarousel .carousel-item img {
+        height: 120px !important;
+        width: 120px !important;
+        border-radius: 0.5rem;
+        margin: 0 auto !important;
+    }
+
+    #featuredCarousel .bg-light {
+        border-top-left-radius: 0.5rem;
+        border-top-right-radius: 0.5rem;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    #featuredCarousel .p-4 {
+        padding: 1.5rem !important;
+    }
+}
+
+/* Mejorar visibilidad de controles */
+#featuredCarousel .carousel-control-prev,
+#featuredCarousel .carousel-control-next {
+    width: 5%;
+    background: rgba(0,0,0,0.3);
+    border-radius: 0.25rem;
+}
+
+#featuredCarousel .carousel-control-prev {
+    left: 10px;
+}
+
+#featuredCarousel .carousel-control-next {
+    right: 10px;
+}
+
+/* Indicadores más visibles */
+#featuredCarousel .carousel-indicators {
+    margin-bottom: 1rem;
+}
+
+#featuredCarousel .carousel-indicators button {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin: 0 4px;
+}

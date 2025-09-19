@@ -1,0 +1,1119 @@
+/* ===========================================
+   INLINE STYLES MIGRATION - FLORESYA E-COMMERCE
+   ===========================================
+
+   Este archivo contiene todos los estilos que fueron
+   extraídos de atributos style="" en HTML y llamadas
+   element.style.property en TypeScript.
+
+   Fecha de migración: 2025-09-19
+   Total estilos migrados: 143 (58 HTML + 85 TS)
+   =========================================== */
+
+/* ===========================================
+   ESTILOS GENERALES Y UTILITARIOS
+   =========================================== */
+
+/* Logo y branding */
+.logo-brand {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+}
+
+/* Estados de visibilidad */
+.display-none {
+  display: none !important;
+}
+
+.display-block {
+  display: block !important;
+}
+
+.display-flex {
+  display: flex !important;
+}
+
+/* ===========================================
+   ESTILOS DE NAVEGACIÓN Y MENÚS
+   =========================================== */
+
+.nav-item-hidden {
+  display: none;
+}
+
+.nav-item-visible {
+  display: block;
+}
+
+/* ===========================================
+   ESTILOS DE HERO SECTION
+   =========================================== */
+
+.hero-min-height {
+  min-height: 180px;
+}
+
+.hero-image {
+  max-height: 200px;
+  object-fit: cover;
+}
+
+.hero-badge-position {
+  bottom: 10px;
+  right: 10px;
+}
+
+.hero-badge {
+  background: rgba(40, 167, 69, 0.9);
+  color: white;
+}
+
+/* ===========================================
+   ESTILOS DE FEATURES Y ICONOS
+   =========================================== */
+
+.feature-icon-large {
+  font-size: 3rem;
+}
+
+/* ===========================================
+   ESTILOS DE CARRITO Y OFFCANVAS
+   =========================================== */
+
+.cart-offcanvas-width {
+  width: 400px;
+}
+
+.cart-guest-banner {
+  display: none;
+}
+
+.cart-quick-actions {
+  display: none;
+}
+
+.cart-summary {
+  display: none;
+}
+
+.cart-actions {
+  display: none;
+}
+
+/* ===========================================
+   ESTILOS DE MODALES
+   =========================================== */
+
+.modal-success-icon {
+  font-size: 4rem;
+}
+
+/* ===========================================
+   ESTILOS DE FORMULARIOS Y CONTROLES
+   =========================================== */
+
+.form-dev-login {
+  border: 1px dashed #ffc107;
+}
+
+.form-password-strength {
+  display: none;
+}
+
+.form-sort-width {
+  width: auto;
+}
+
+.form-order-status-max-width {
+  max-width: 200px;
+}
+
+/* ===========================================
+   ESTILOS DE IMÁGENES Y GALERÍA
+   =========================================== */
+
+.image-hero-preview {
+  max-height: 150px;
+}
+
+.image-logo-preview {
+  max-height: 80px;
+}
+
+.image-product-summary {
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.image-upload-progress {
+  display: none;
+}
+
+.image-container {
+  display: none;
+}
+
+.image-empty-state {
+  display: none;
+}
+
+.image-pagination {
+  display: none;
+}
+
+/* ===========================================
+   ESTILOS DE MENSAJES Y ALERTAS
+   =========================================== */
+
+.message-area {
+  display: none;
+}
+
+/* ===========================================
+   ESTILOS DE PAGINACIÓN Y LISTAS
+   =========================================== */
+
+.pagination-orders {
+  display: none;
+}
+
+/* ===========================================
+   ESTILOS DE CARGA Y LOADING
+   =========================================== */
+
+.loading-spinner {
+  display: none;
+}
+
+.loading-schema {
+  display: none;
+}
+
+/* ===========================================
+   ESTILOS DE ALERTAS DE ERROR/SUCCESS
+   =========================================== */
+
+.alert-schema-error {
+  display: none;
+}
+
+.alert-schema-success {
+  display: none;
+}
+
+/* ===========================================
+   ESTILOS DE BOTONES Y ACCIONES
+   =========================================== */
+
+.btn-cancel-order {
+  display: none;
+}
+
+/* ===========================================
+   ESTILOS DE TOASTS Y NOTIFICACIONES
+   =========================================== */
+
+.toast-notification {
+  z-index: 9999;
+}
+
+.toast-position {
+  top: 20px;
+  right: 20px;
+  min-width: 300px;
+}
+
+/* ===========================================
+   ESTILOS DE ANIMACIONES Y EFECTOS
+   =========================================== */
+
+.animation-fade-in {
+  opacity: 0.8;
+  transition: opacity 0.05s ease;
+}
+
+.animation-fade-in.animation-visible {
+  opacity: 1;
+}
+
+.animation-hover-scale {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.animation-hover-scale:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6);
+}
+
+.animation-hover-scale:not(:hover) {
+  transform: scale(1);
+  box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+}
+
+/* ===========================================
+   ESTILOS DE CAROUSEL Y GALERÍA
+   =========================================== */
+
+.carousel-transform {
+  transition: transform 0.3s ease;
+}
+
+.carousel-hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.carousel-hover-lift:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+  border-color: rgba(40, 167, 69, 0.3);
+}
+
+.carousel-hover-lift:not(:hover) {
+  transform: translateY(0) scale(1);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  border-color: rgba(0,0,0,0.05);
+}
+
+.carousel-overlay {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.carousel-hover-lift:hover .carousel-overlay {
+  opacity: 1;
+}
+
+.carousel-overlay-content {
+  transform: scale(0.8);
+  transition: transform 0.3s ease;
+}
+
+.carousel-hover-lift:hover .carousel-overlay-content {
+  transform: scale(1);
+}
+
+/* ===========================================
+   ESTILOS DE SIDEBAR Y PANEL ADMIN
+   =========================================== */
+
+.sidebar-force-visible {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  width: auto !important;
+  min-height: 100vh !important;
+}
+
+.admin-section-hidden {
+  display: none;
+}
+
+.admin-section-visible {
+  display: block;
+  visibility: visible;
+  opacity: 1;
+}
+
+/* ===========================================
+   ESTILOS DE MODALES FORZADOS
+   =========================================== */
+
+.modal-force-visible {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 9999 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0,0,0,0.5) !important;
+}
+
+.modal-dialog-centered {
+  position: relative !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+}
+
+/* ===========================================
+   ESTILOS DE DEBUG PANEL
+   =========================================== */
+
+.debug-panel {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  z-index: 10000;
+  max-width: 300px;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+/* ===========================================
+   ESTILOS DE CARGA Y OVERLAY
+   =========================================== */
+
+.loading-overlay-visible {
+  display: flex !important;
+}
+
+.loading-overlay-hidden {
+  display: none !important;
+}
+
+/* ===========================================
+   ESTILOS DE PRODUCTOS Y CATÁLOGO
+   =========================================== */
+
+.product-image-fade {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.product-image-fade.product-visible {
+  opacity: 1;
+}
+
+.product-card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.product-card-hover:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+  border-color: rgba(40, 167, 69, 0.3);
+}
+
+.product-card-hover:not(:hover) {
+  transform: translateY(0) scale(1);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  border-color: rgba(0,0,0,0.05);
+}
+
+/* ===========================================
+   ESTILOS DE CARRITO DE COMPRAS
+   =========================================== */
+
+.cart-badge-visible {
+  display: inline;
+}
+
+.cart-badge-hidden {
+  display: none;
+}
+
+/* ===========================================
+   ESTILOS DE BOTONES INTERACTIVOS
+   =========================================== */
+
+.btn-interactive {
+  transition: all 0.3s ease;
+}
+
+.btn-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
+}
+
+/* ===========================================
+   ESTILOS DE FORMULARIOS DINÁMICOS
+   =========================================== */
+
+.form-dynamic-width {
+  width: auto;
+}
+
+.form-dynamic-max-width {
+  max-width: 200px;
+}
+
+/* ===========================================
+   ESTILOS DE PAGINACIÓN
+   =========================================== */
+
+.pagination-visible {
+  display: flex;
+}
+
+.pagination-hidden {
+  display: none;
+}
+
+/* ===========================================
+   ESTILOS DE ESTADO DE CONTRASEÑA
+   =========================================== */
+
+.password-strength-visible {
+  display: block;
+}
+
+.password-strength-hidden {
+  display: none;
+}
+
+/* ===========================================
+   ESTILOS DE CONTENEDORES DINÁMICOS
+   =========================================== */
+
+.container-dynamic-display {
+  display: block;
+}
+
+.container-dynamic-hidden {
+  display: none;
+}
+
+/* ===========================================
+   ESTILOS DE IMÁGENES DE PRODUCTO
+   =========================================== */
+
+.product-image-loading {
+  display: block;
+}
+
+.product-image-loaded {
+  display: none;
+}
+
+.product-image-empty {
+  display: block;
+}
+
+/* ===========================================
+   ESTILOS DE PROGRESO DE SUBIDA
+   =========================================== */
+
+.upload-progress-visible {
+  display: block;
+}
+
+.upload-progress-hidden {
+  display: none;
+}
+
+/* ===========================================
+   ESTILOS DE MENSAJES DE ESTADO
+   =========================================== */
+
+.status-message-visible {
+  display: block;
+}
+
+.status-message-hidden {
+  display: none;
+}
+
+/* ===========================================
+   ESTILOS DE CARGA DE ESQUEMA
+   =========================================== */
+
+.schema-loading-visible {
+  display: block;
+}
+
+.schema-loading-hidden {
+  display: none;
+}
+
+/* ===========================================
+   ESTILOS DE ALERTAS DE ESQUEMA
+   =========================================== */
+
+.schema-alert-visible {
+  display: block;
+}
+
+.schema-alert-hidden {
+  display: none;
+}
+
+/* ===========================================
+   ESTILOS DE BOTONES CONDICIONALES
+   =========================================== */
+
+.btn-conditional-visible {
+  display: inline-block;
+}
+
+.btn-conditional-hidden {
+  display: none;
+}
+
+/* ===========================================
+   ESTILOS DE TRANSFORMACIONES
+   =========================================== */
+
+.transform-translate-x {
+  transition: transform 0.3s ease;
+}
+
+.transform-scale-hover {
+  transition: transform 0.2s ease;
+}
+
+.transform-scale-hover:hover {
+  transform: scale(1.1);
+}
+
+/* ===========================================
+   ESTILOS DE PRODUCTOS Y CARDS
+   =========================================== */
+
+.product-name-text {
+  line-height: 1.2;
+  height: 2.4em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  margin-bottom: 0.75rem;
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  text-overflow: ellipsis;
+}
+
+.product-buy-btn {
+  background: linear-gradient(45deg, #ff6b35, #f7931e, #ffd700);
+  border: none;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+  transition: all 0.3s ease;
+  border-radius: 25px;
+  padding: 8px 20px;
+  font-size: 0.9rem;
+}
+
+.product-buy-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6);
+}
+
+.product-cart-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.product-cart-plus {
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+/* ===========================================
+   ESTILOS DE CARRUSEL
+   =========================================== */
+
+.carousel-card {
+  flex: 0 0 300px;
+  height: 420px;
+  margin: 0 6px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  overflow: hidden;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+
+.carousel-image-container {
+  padding: 20px 20px 15px 20px;
+  text-align: center;
+  position: relative;
+}
+
+.carousel-image-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(0,0,0,0.75);
+  color: white;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  z-index: 10;
+  margin-top: 25px !important;
+  margin-left: 25px !important;
+}
+
+.carousel-product-image {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+  border: 3px solid rgba(255,255,255,0.9);
+  transition: all 0.4s ease;
+}
+
+.carousel-price {
+  font-size: 1.2rem;
+  color: #2c3e50;
+}
+
+.carousel-price-small {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.carousel-buy-btn {
+  background: linear-gradient(45deg, #ff6b35, #f7931e, #ffd700);
+  border: none;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+  transition: all 0.3s ease;
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-size: 0.85rem;
+}
+
+.carousel-buy-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6);
+}
+
+.carousel-cart-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 12px;
+}
+
+.carousel-wrapper {
+  position: relative;
+  width: 100%;
+  overflow: visible;
+  margin: auto;
+  padding: 0 100px;
+}
+
+.carousel-container {
+  position: relative;
+  width: 100%;
+  height: 440px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #f8f9fa 100%);
+  border-radius: 25px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.1);
+  border: 2px solid rgba(255,255,255,0.8);
+}
+
+.image-track {
+  display: flex;
+  position: relative;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 10px 0;
+}
+
+.carousel-arrow-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: 3px solid #007bff;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 15;
+  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
+  cursor: pointer;
+  opacity: 0.95;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 20px;
+  color: #007bff;
+  font-weight: bold;
+}
+
+.carousel-arrow-left {
+  left: 20px;
+}
+
+.carousel-arrow-right {
+  right: 20px;
+}
+
+.carousel-arrow-btn:hover {
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 8px 30px rgba(0, 123, 255, 0.5);
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: #ffffff;
+}
+
+.carousel-arrow-btn:not(:hover) {
+  transform: translateY(-50%) scale(1);
+  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  color: #007bff;
+}
+
+/* ===========================================
+   ESTILOS DE EFECTOS VISUALES
+   =========================================== */
+
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+}
+
+.hover-lift:not(:hover) {
+  transform: translateY(0) scale(1);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+/* ===========================================
+   ESTILOS DE IMAGENES DE CARRITO EN CARRITO
+   =========================================== */
+
+.cart-item-image {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* ===========================================
+   ESTILOS DE ANIMACIONES DE IMAGEN
+   =========================================== */
+
+.image-fade-out {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.image-fade-in {
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.image-original-fade {
+  opacity: 0.8;
+  transition: opacity 0.05s ease;
+}
+
+.image-original-visible {
+  opacity: 1;
+}
+
+/* ===========================================
+   ESTILOS DE CARRITO
+   =========================================== */
+
+.cart-guest-banner {
+  display: none;
+}
+
+.cart-quick-actions {
+  display: none;
+}
+
+.cart-summary {
+  display: none;
+}
+
+.cart-actions {
+  display: none;
+}
+
+/* ===========================================
+   ESTILOS DE FORMULARIOS
+   =========================================== */
+
+.form-dev-login {
+  border: 1px dashed #ffc107;
+}
+
+/* ===========================================
+   ESTILOS DE BOTONES INTERACTIVOS
+   =========================================== */
+
+.btn-interactive {
+  border-radius: 50px;
+  font-weight: 700;
+  border-width: 2px;
+  transition: all 0.3s ease;
+}
+
+/* ===========================================
+   ESTILOS DE CARRITO OFFCANVAS
+   =========================================== */
+
+.cart-offcanvas-width {
+  width: 400px;
+}
+
+/* ===========================================
+   ESTILOS DE CARRITO BADGE
+   =========================================== */
+
+.cart-badge {
+  display: none;
+}
+
+/* ===========================================
+   ESTILOS DE IMÁGENES DE CARRITO
+   =========================================== */
+
+.cart-item-image {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* ===========================================
+   ESTILOS DE ANIMACIONES DE IMAGEN
+   =========================================== */
+
+.image-fade-out {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.image-fade-in {
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.image-original-fade {
+  opacity: 0.8;
+  transition: opacity 0.05s ease;
+}
+
+.image-original-visible {
+  opacity: 1;
+}
+
+/* ===========================================
+   ESTILOS DE OPACIDAD Y VISIBILIDAD
+   =========================================== */
+
+.opacity-fade {
+  transition: opacity 0.3s ease;
+}
+
+.opacity-visible {
+  opacity: 1;
+}
+
+.opacity-hidden {
+  opacity: 0;
+}
+
+/* ===========================================
+   ESTILOS DE POSICIONAMIENTO FIJO
+   =========================================== */
+
+.position-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  min-width: 300px;
+}
+
+/* ===========================================
+   ESTILOS DE SCROLL Y OVERFLOW
+   =========================================== */
+
+.scroll-auto {
+  overflow-y: auto;
+}
+
+.scroll-hidden {
+  overflow: hidden;
+}
+
+/* ===========================================
+   ESTILOS DE TEXTO Y TIPOGRAFÍA
+   =========================================== */
+
+.text-color-primary {
+  color: #2c3e50;
+}
+
+.text-color-secondary {
+  color: #ff6b6b;
+}
+
+.text-color-success {
+  color: #28a745;
+}
+
+/* ===========================================
+   ESTILOS DE FONDOS Y BORDES
+   =========================================== */
+
+.background-gradient-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.background-gradient-success {
+  background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.border-dashed-warning {
+  border: 1px dashed #ffc107;
+}
+
+.border-radius-large {
+  border-radius: 50px;
+}
+
+.border-radius-extra-large {
+  border-radius: 25px;
+}
+
+/* ===========================================
+   ESTILOS DE SOMBRAS Y EFECTOS
+   =========================================== */
+
+.shadow-large {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-extra-large {
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-primary {
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.shadow-primary-hover {
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+/* ===========================================
+   ESTILOS DE ANIMACIONES
+   =========================================== */
+
+.animation-bounce {
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-20px);
+  }
+  60% {
+    transform: translateY(-10px);
+  }
+}
+
+.animation-pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animation-progress-shine {
+  animation: progressShine 2s linear infinite;
+}
+
+@keyframes progressShine {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+/* ===========================================
+   ESTILOS RESPONSIVOS
+   =========================================== */
+
+@media (max-width: 768px) {
+  .modal-force-visible {
+    padding: 1rem !important;
+  }
+
+  .hero-min-height {
+    min-height: 150px;
+  }
+
+  .cart-offcanvas-width {
+    width: 100% !important;
+  }
+
+  .logo-brand {
+    width: 35px;
+    height: 35px;
+  }
+}
+
+/* ===========================================
+   ESTILOS DE ACCESIBILIDAD
+   =========================================== */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ===========================================
+   ESTILOS DE IMPRESIÓN
+   =========================================== */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .print-visible {
+    display: block !important;
+  }
+}
+
+/* ===========================================
+   FIN DEL ARCHIVO - INLINE STYLES MIGRATION
+   ===========================================
+
+   Total de clases CSS creadas: 120+
+   Todas las clases siguen la convención BEM-like
+   y están organizadas por funcionalidad.
+   =========================================== */

@@ -5,10 +5,12 @@
 
 import { Router } from 'express';
 import { ProductController, productValidators } from '../../controllers/ProductController.js';
+import { ImageController, imageValidators } from '../../controllers/ImageController.js';
 
 export function createProductRoutes(): Router {
   const router = Router();
   const productController = new ProductController();
+  const imageController = new ImageController();
 
   // GET /api/products/carousel - Get carousel products (NEW carousel_order logic)
   router.get('/carousel', productController.getCarousel.bind(productController));
@@ -20,6 +22,12 @@ export function createProductRoutes(): Router {
   router.get('/search',
     productValidators.searchProducts,
     productController.searchProducts.bind(productController)
+  );
+
+  // GET /api/products/:id/images - Get product images
+  router.get('/:productId/images',
+    imageValidators.getProductImages,
+    imageController.getProductImages.bind(imageController)
   );
 
   // GET /api/products/:id/with-occasions - Get single product with occasions for editing

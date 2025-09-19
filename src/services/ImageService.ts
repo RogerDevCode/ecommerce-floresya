@@ -260,6 +260,29 @@ export class ImageService {
   }
 
   /**
+   * Obtener imágenes de un producto específico
+   */
+  public async getProductImages(productId: number): Promise<any[]> {
+    try {
+      const { data, error } = await supabaseService
+        .from('product_images')
+        .select('*')
+        .eq('product_id', productId)
+        .order('image_index', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching product images:', error);
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('ImageService.getProductImages error:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Redimensiona una imagen usando Sharp
    */
   private async resizeImage(

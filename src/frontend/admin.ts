@@ -226,23 +226,41 @@ export class AdminPanel {
       }, 100);
 
       // CRITICAL: Final state verification before completing initialization
+      // Helper function to check if element is truly visible
+      const isElementVisible = (id: string): boolean => {
+        const element = document.getElementById(id);
+        if (!element) return false;
+        const style = window.getComputedStyle(element);
+        return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+      };
+
       const finalState = {
-        loadingOverlayVisible: document.getElementById('loadingOverlay')?.style.display !== 'none',
-        mainContentVisible: document.getElementById('main-content')?.style.display !== 'none',
-        dashboardVisible: document.getElementById('dashboard-section')?.style.display !== 'none',
+        loadingOverlayVisible: isElementVisible('loadingOverlay'),
+        mainContentVisible: isElementVisible('main-content'),
+        dashboardVisible: isElementVisible('dashboard-section'),
         adminPanelExists: !!window.adminPanel
       };
-      this.log('🔍 CRITICAL: Final state before hideLoading() ' + JSON.stringify(finalState), 'warn');
+      // Only log warning if there's actually a problem (overlay still visible when it shouldn't be)
+      if (finalState.loadingOverlayVisible && finalState.mainContentVisible) {
+        this.log('🔍 CRITICAL: Loading overlay still visible when main content is shown! ' + JSON.stringify(finalState), 'warn');
+      } else {
+        this.log('✅ Final state before hideLoading() is correct: ' + JSON.stringify(finalState), 'info');
+      }
 
       this.hideLoading();
 
       // Verify state immediately after hideLoading
       const postHideState = {
-        loadingOverlayVisible: document.getElementById('loadingOverlay')?.style.display !== 'none',
-        mainContentVisible: document.getElementById('main-content')?.style.display !== 'none',
-        dashboardVisible: document.getElementById('dashboard-section')?.style.display !== 'none'
+        loadingOverlayVisible: isElementVisible('loadingOverlay'),
+        mainContentVisible: isElementVisible('main-content'),
+        dashboardVisible: isElementVisible('dashboard-section')
       };
-      this.log('🔍 CRITICAL: State after hideLoading() ' + JSON.stringify(postHideState), 'warn');
+      // Only log warning if overlay is still visible after hiding
+      if (postHideState.loadingOverlayVisible) {
+        this.log('🔍 CRITICAL: Loading overlay still visible after hideLoading()! ' + JSON.stringify(postHideState), 'warn');
+      } else {
+        this.log('✅ State after hideLoading() is correct: ' + JSON.stringify(postHideState), 'info');
+      }
 
       this.log('Admin panel initialized successfully', 'success');
 
@@ -3808,15 +3826,6 @@ export class AdminPanel {
     });
   }
 
-  /**
-    * Edit product images - opens modal for managing images of a specific product
-    */
-  public editProductImages(productId: number, productName: string): void {
-    this.log(`Editing images for product: ${productName} (ID: ${productId})`, 'info');
-    // For now, show the existing product images modal
-    // Later this will be replaced with a dedicated modal for editing images per product
-    void this.showProductImagesModal();
-  }
 
   /**
    * Upload a new product image
@@ -4760,6 +4769,132 @@ export class AdminPanel {
   public deleteOccasion(id: number): void {
     if (confirm(`¿Eliminar ocasión ${id}?`)) {
       alert('Funcionalidad de eliminar ocasión próximamente...');
+    }
+  }
+
+  public editProductImages(productId: number, productName: string): void {
+    this.log(`Opening image management for product ${productId}: ${productName}`, 'info');
+
+    // Update modal title
+    const titleElement = document.getElementById('selectedProductName');
+    if (titleElement) {
+      titleElement.textContent = `Gestionar Imágenes: ${productName}`;
+    }
+
+    // Set current product ID
+    (window as any).currentProductId = productId;
+
+    // Load product images
+    void this.loadProductImagesForModal(productId);
+
+    // Show modal
+    const modalElement = document.getElementById('productImagesModal');
+    if (modalElement && window.bootstrap?.Modal) {
+      const Modal = window.bootstrap.Modal as any;
+      const modal = new Modal(modalElement);
+      modal.show();
+
+      // Force visibility
+      setTimeout(() => {
+        if (modalElement) {
+          modalElement.style.visibility = 'visible';
+          modalElement.style.opacity = '1';
+          modalElement.style.display = 'block';
+          modalElement.classList.add('show');
+        }
+      }, 50);
+    } else {
+      this.log('Bootstrap Modal not available for product images', 'error');
+    }
+  }
+
+  private async loadProductImagesForModal(productId: number): Promise<void> {
+    try {
+      this.log(`Loading images for product ${productId}`, 'info');
+
+      // Show loading state
+      const imagesGrid = document.getElementById('imagesGrid');
+      if (imagesGrid) {
+        imagesGrid.innerHTML = `
+          <div class="text-center py-5" style="grid-column: 1 / -1;">
+            <div class="spinner-border text-success" role="status">
+              <span class="visually-hidden">Cargando imágenes...</span>
+            </div>
+            <p class="mt-2 text-muted">Cargando imágenes del producto...</p>
+          </div>
+        `;
+      }
+
+      // Make API call to get product images
+      const response = await this.api.request<{
+        images: Array<{
+          id: number;
+          url: string;
+          size: string;
+          is_primary: boolean;
+          image_index: number;
+        }>;
+      }>(`/images/product/${productId}`);
+
+      if (response.success && response.data?.images) {
+        // Process and deduplicate images - only keep one size per image_index
+        const imageMap = new Map();
+        if (response.data.images) {
+          response.data.images.forEach(image => {
+            // Use medium size for display, or thumb if medium not available
+            if (image.size === 'medium' || !imageMap.has(image.image_index)) {
+              imageMap.set(image.image_index, {
+                id: image.id,
+                url: image.url,
+                isPrimary: image.is_primary,
+                order: image.image_index,
+                originalData: image // Keep original for reference
+              });
+            }
+          });
+        }
+
+        // Convert map to array and sort by order
+        const currentImages = Array.from(imageMap.values()).sort((a: any, b: any) => a.order - b.order);
+
+        // Set global currentImages for the script functions
+        (window as any).currentImages = currentImages;
+
+        // Reset pending changes
+        (window as any).pendingChanges = {
+          newImages: [],
+          deletedImages: [],
+          reorderedImages: [],
+          newPrimaryImage: null
+        };
+
+        // Render the images using the script function
+        if ((window as any).renderImagesGrid) {
+          (window as any).renderImagesGrid();
+        }
+
+        this.log(`Loaded ${currentImages.length} images for product ${productId}`, 'success');
+      } else {
+        throw new Error(response.message || 'Error desconocido');
+      }
+
+    } catch (error) {
+      this.log('Error loading product images: ' + error, 'error');
+
+      // Show error state
+      const imagesGrid = document.getElementById('imagesGrid');
+      if (imagesGrid) {
+        imagesGrid.innerHTML = `
+          <div class="text-center py-5" style="grid-column: 1 / -1;">
+            <i class="bi bi-exclamation-triangle text-warning display-1 mb-3"></i>
+            <h5 class="text-muted">Error al cargar imágenes</h5>
+            <p class="text-muted">No se pudieron cargar las imágenes del producto.</p>
+            <button class="btn btn-outline-primary btn-sm" onclick="adminPanel.loadProductImagesForModal(${productId})">
+              <i class="bi bi-arrow-clockwise me-1"></i>Reintentar
+            </button>
+          </div>
+        `;
+      }
     }
   }
 

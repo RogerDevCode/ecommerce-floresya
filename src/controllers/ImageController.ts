@@ -233,6 +233,87 @@ export class ImageController {
 
   /**
    * @swagger
+   * /api/products/{productId}/images:
+   *   get:
+   *     summary: Get images for a specific product
+   *     description: Retrieves all images associated with a specific product
+   *     tags: [Images]
+   *     parameters:
+   *       - in: path
+   *         name: productId
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *         description: ID of the product to get images for
+   *     responses:
+   *       200:
+   *         description: Product images retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 images:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *                     properties:
+   *                       id:
+   *                         type: integer
+   *                       product_id:
+   *                         type: integer
+   *                       url:
+   *                         type: string
+   *                       is_primary:
+   *                         type: boolean
+   *                       display_order:
+   *                         type: integer
+   *                       created_at:
+   *                         type: string
+   *       404:
+   *         description: Product not found
+   *       500:
+   *         description: Internal server error
+   */
+  public async getProductImages(req: Request, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({
+          success: false,
+          message: 'Validation errors',
+          errors: errors.array()
+        });
+        return;
+      }
+
+      const productId = parseInt(req.params.productId || '0');
+
+      const images = await imageService.getProductImages(productId);
+
+      res.status(200).json({
+        success: true,
+        data: {
+          images: images
+        },
+        message: 'Product images retrieved successfully'
+      });
+
+    } catch (error) {
+      console.error('ImageController.getProductImages error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to get product images'
+      });
+    }
+  }
+
+  /**
+   * @swagger
    * /api/images/gallery:
    *   get:
    *     summary: Get all product images for gallery
@@ -575,6 +656,10 @@ export const imageValidators = {
   ],
 
   deleteProductImages: [
+    param('productId').isInt({ min: 1 }).withMessage('Product ID must be a positive integer')
+  ],
+
+  getProductImages: [
     param('productId').isInt({ min: 1 }).withMessage('Product ID must be a positive integer')
   ],
 

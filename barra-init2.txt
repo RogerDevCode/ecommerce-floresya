@@ -66,6 +66,10 @@ Additional rules:
   - **Archivos estáticos**: SOLO en `public/` (HTML, CSS, imágenes)
   - **Scripts de utilidad**: SOLO en `scripts/` (archivos .js específicos)
 
+  ### 5. Evita hardcodear codigo css dentroe de html y ts, crea un archivo css para ambos html y ts.
+
+  ### 6. Debes kill todos los procesos que inicies, una vez que termines la tarea.
+
   ## ✅ ACCIONES PERMITIDAS
 
   ### Modificaciones de código:
@@ -90,24 +94,3 @@ Additional rules:
   - Solicitudes para "copiar archivos de src a public"
   - Solicitudes para "crear archivos .js manualmente"
   - Referencias HTML que no apuntan a `/dist/`
-
-  ## Verificación rápida antes de cualquier modificación:
-  1. ¿Estoy creando archivos duplicados? → NO PROCEDER
-  2. ¿Estoy modificando `dist/` manualmente? → NO PROCEDER
-  3. ¿Las rutas HTML apuntan a `/dist/frontend/`? → VERIFICAR
-  4. ¿Mantengo la separación src/ (TS) vs public/ (estáticos)? → VERIFICAR
-
-  Comando de Verificación
-
-  Puedes usar este comando para verificar la integridad del proyecto:
-
-  # Verificar que no hay archivos JS fuera de ubicaciones legítimas
-  find . -name "*.js" -not -path "./node_modules/*" -not -path "./dist/*" -not -path "./scripts/*" -not -name
-  "vitest.config.js" | grep -v "package-lock.json"
-
-  Si este comando devuelve algún resultado, significa que hay archivos JS en ubicaciones incorrectas que deben ser
-  investigados.
-
-
-
-
