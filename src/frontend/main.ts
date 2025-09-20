@@ -249,10 +249,20 @@ export class FloresYaApp {
       const response = await window.api.getCarousel();
 
       if (response.success && response.data) {
-        this.renderCarousel(response.data.carousel_products);
-        this.log('✅ Carrusel cargado', {
-          count: response.data.carousel_products.length
-        }, 'success');
+        // Check if carousel_products exists and is an array
+        const carouselProducts = response.data.carousel_products || [];
+
+        if (Array.isArray(carouselProducts) && carouselProducts.length > 0) {
+          this.renderCarousel(carouselProducts);
+          this.log('✅ Carrusel cargado', {
+            count: carouselProducts.length
+          }, 'success');
+        } else {
+          this.log('ℹ️ No hay productos para mostrar en el carrusel', {
+            count: 0
+          }, 'info');
+          this.showCarouselFallback();
+        }
       } else {
         // Check if it's a network/connectivity issue
         const errorMessage = response.message ?? 'Unknown error';

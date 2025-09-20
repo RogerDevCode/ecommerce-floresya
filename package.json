@@ -3,10 +3,14 @@
   "version": "2.0.0",
   "description": "FloresYa E-commerce - TypeScript Enterprise Edition",
   "type": "module",
-  "main": "api/index.ts",
+  "main": "dist/app/server.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "build": "npm run clean && npx tsc --project tsconfig.prod.json",
-    "start": "npm run build && node dist/app/server.js",
+    "start": "node dist/app/server.js",
+    "vercel-build": "npm run build",
     "dev": "npx tsc --watch & nodemon --delay 2 dist/app/server.js",
     "dev:build": "npx tsc && node dist/app/server.js",
     "ts:watch": "npx tsc --watch",

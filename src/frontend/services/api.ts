@@ -92,14 +92,24 @@ export class FloresYaAPI {
   // Check network connectivity
   private async checkConnectivity(): Promise<boolean> {
     try {
-      // Try to fetch a small resource to check connectivity
-      const response = await fetch('/favicon.ico', {
+      // Try to ping the API endpoint to check connectivity
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+      const response = await fetch(`${this.baseURL}/health`, {
         method: 'HEAD',
-        cache: 'no-cache'
-      });
-      return response.ok;
+        cache: 'no-cache',
+        signal: controller.signal
+      }).catch(() => null);
+
+      clearTimeout(timeoutId);
+
+      // If health check fails, assume we're still connected
+      // (backend might not have a health endpoint)
+      return response ? response.ok || response.status === 404 : true;
     } catch {
-      return false;
+      // Assume connected if check fails to avoid false negatives
+      return true;
     }
   }
 

@@ -303,12 +303,16 @@ export class FloresYaLogger implements Logger {
   }
 
   public success(module: string, message: string, data?: LogData): void {
+    // Skip SUCCESS logs when log level is WARN or ERROR to reduce verbosity
+    if ((this.logLevel === 'WARN' || this.logLevel === 'ERROR') && !this.isDevMode) return;
     const entry = this.createLogEntry('SUCCESS', module, message, data);
     this.addLog(entry);
     this.logToConsole('SUCCESS', module, message, data);
   }
 
   public api(module: string, message: string, data?: LogData): void {
+    // Skip API logs when log level is WARN or ERROR to reduce verbosity
+    if ((this.logLevel === 'WARN' || this.logLevel === 'ERROR') && !this.isDevMode) return;
     const entry = this.createLogEntry('API', module, message, data);
     this.addLog(entry);
     this.logToConsole('API', module, message, data);
