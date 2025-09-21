@@ -93,29 +93,31 @@ class AdminPanel implements AdminPanelLogger {
    */
   private checkAuthentication(): boolean {
     try {
-      // Check for authentication token
-      const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-      if (!token) {
-        this.log('No authentication token found', 'warn');
+      // Check for user session data
+      const userData = localStorage.getItem('floresya_user');
+      const sessionTime = localStorage.getItem('floresya_session');
+
+      if (!userData || !sessionTime) {
+        this.log('No user session found', 'warn');
         return false;
       }
 
-      // Validate token format (basic check)
-      if (token.length < 10) {
-        this.log('Invalid token format', 'warn');
+      // Check if session is still valid (24 hours)
+      const sessionAge = Date.now() - parseInt(sessionTime);
+      const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+
+      if (sessionAge > maxAge) {
+        this.log('Session expired', 'warn');
         return false;
       }
 
-      // Get user info from token or storage
-      const userInfo = localStorage.getItem('userInfo');
-      if (userInfo) {
-        try {
-          this.currentUser = JSON.parse(userInfo);
-          this.log(`Authenticated as: ${this.currentUser?.email}`, 'info');
-        } catch {
-          this.log('Failed to parse user info', 'warn');
-          return false;
-        }
+      // Parse user info
+      try {
+        this.currentUser = JSON.parse(userData);
+        this.log(`Authenticated as: ${this.currentUser?.email}`, 'info');
+      } catch {
+        this.log('Failed to parse user data', 'warn');
+        return false;
       }
 
       return true;
@@ -369,9 +371,9 @@ class AdminPanel implements AdminPanelLogger {
    * Show modal (Bootstrap implementation)
    */
   public showModal(element: Element): void {
-    if ((window as WindowWithBootstrap).bootstrap?.Modal) {
-      const Modal = (window as WindowWithBootstrap).bootstrap.Modal;
-      const modal = new Modal(element);
+    if ((window as unknown as WindowWithBootstrap).bootstrap?.Modal) {
+      const Modal = (window as unknown as WindowWithBootstrap).bootstrap.Modal;
+      const modal = new Modal(element as HTMLElement);
       modal.show();
     } else {
       this.log('Bootstrap Modal not available', 'error');
@@ -382,8 +384,8 @@ class AdminPanel implements AdminPanelLogger {
    * Hide modal (Bootstrap implementation)
    */
   public hideModal(element: Element): void {
-    if ((window as WindowWithBootstrap).bootstrap?.Modal?.getInstance) {
-      const modal = (window as WindowWithBootstrap).bootstrap.Modal.getInstance(element as HTMLElement);
+    if ((window as unknown as WindowWithBootstrap).bootstrap?.Modal?.getInstance) {
+      const modal = (window as unknown as WindowWithBootstrap).bootstrap.Modal.getInstance(element as HTMLElement);
       if (modal) {
         modal.hide();
       }

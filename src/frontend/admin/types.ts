@@ -90,6 +90,11 @@ export interface Product {
   created_at: string;
   updated_at: string;
   image_url?: string;
+  images?: Array<{
+    id: number;
+    url: string;
+    is_primary: boolean;
+  }>;
 }
 
 export interface DashboardMetrics {
@@ -125,25 +130,16 @@ export interface AdminPanelLogger {
   log(message: string, level: 'info' | 'error' | 'success' | 'warn'): void;
 }
 
-interface BootstrapModal {
-  show(): void;
-  hide(): void;
-}
-
-interface BootstrapTooltip {
-  show(): void;
-  hide(): void;
-}
-
-export interface WindowWithBootstrap extends Window {
+// Bootstrap types imported from globals
+export interface WindowWithBootstrap {
   bootstrap?: {
     Modal: {
-      new (element: Element, options?: unknown): BootstrapModal;
-      getInstance(element: Element | null): BootstrapModal | null;
+      new (element: HTMLElement): { show(): void; hide(): void; };
+      getInstance(element: HTMLElement | null): { show(): void; hide(): void; } | null;
     };
-    Tooltip: {
-      new (element: Element, options?: unknown): BootstrapTooltip;
-      getInstance(element: Element): BootstrapTooltip | null;
+    Toast: {
+      new (element: HTMLElement, options?: { delay?: number; }): { show(): void; hide(): void; };
+      getInstance(element: HTMLElement): { show(): void; hide(): void; } | null;
     };
   };
 }

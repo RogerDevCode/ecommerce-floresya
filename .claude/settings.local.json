@@ -72,7 +72,11 @@
       "Bash(PORT=3001 node dist/backend/app/server.js)",
       "Read(//home/manager/Sync/bash/**)",
       "Bash(/home/manager/Sync/bash/qs.sh:*)",
-      "Bash(PORT=3002 node dist/backend/app/server.js)"
+      "Bash(PORT=3002 node dist/backend/app/server.js)",
+      "Bash(PORT=3003 node dist/backend/app/server.js)",
+      "Bash(for:*)",
+      "Bash(do echo \"Checking $file:\")",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

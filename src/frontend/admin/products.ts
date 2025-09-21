@@ -32,7 +32,7 @@ export class AdminProducts {
 
       if (response.success && response.data) {
         this.logger.log(`Loaded ${response.data.products.length} products from API`, 'success');
-        this.renderProductsTable(response.data.products);
+        this.renderProductsTable(response.data.products as unknown as Product[]);
 
         // Bind product management buttons after DOM is ready
         this.bindProductButtons();

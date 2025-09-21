@@ -1277,9 +1277,9 @@ private snapToNearest(pos: number): void {
 
   public showFloresNovias(): void {
     const modal = document.getElementById('floresNoviasModal');
-    const bootstrap = (window as WindowWithBootstrap).bootstrap;
+    const bootstrap = (window as unknown as WindowWithBootstrap).bootstrap;
     if (modal && bootstrap?.Modal) {
-      const modalInstance = bootstrap.Modal.getInstance(modal);
+      const modalInstance = bootstrap.Modal.getInstance(modal as HTMLElement);
       if (modalInstance) {
         modalInstance.hide(); // Note: This should be show() but using hide() for consistency with interface
       }

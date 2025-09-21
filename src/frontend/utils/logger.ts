@@ -4,7 +4,7 @@
  * Sin distracciones. Solo información útil, cuando es útil.
  */
 
-import type { LogData, WindowWithFloresyaLogger, Logger } from '../../types/globals.js';
+import type { LogData, WindowWithFloresyaLogger, Logger, SafeError } from '../../types/globals.js';
 import { formatError } from '../../types/globals.js';
 
 // Type definitions
@@ -183,10 +183,10 @@ export class FloresYaLogger implements Logger {
         }
 
         return response;
-      } catch (error: SafeError) {
+      } catch (error: unknown) {
         const endTime = performance.now();
         this.error('FETCH', `${method} ${url} - Failed`, {
-          error: error instanceof Error ? error.message : formatError(error),
+          error: error instanceof Error ? error.message : String(error),
           duration: Math.round(endTime - startTime)
         });
         throw error;

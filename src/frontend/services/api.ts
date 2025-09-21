@@ -154,9 +154,9 @@ export class FloresYaAPI {
             endpoint,
             contentType,
             status: response.status,
-            error: jsonError instanceof Error ? jsonError.message : formatError(jsonError)
+            error: jsonError instanceof Error ? jsonError.message : String(jsonError)
           }, 'error');
-          throw new Error(`Invalid JSON response from server: ${jsonError instanceof Error ? jsonError.message : formatError(jsonError)}`);
+          throw new Error(`Invalid JSON response from server: ${jsonError instanceof Error ? jsonError.message : String(jsonError)}`);
         }
       } else {
         // If not JSON, read as text and create error response
@@ -190,7 +190,7 @@ export class FloresYaAPI {
       this.log('✅ Data fetched successfully', { endpoint, dataKeys: Object.keys(data) }, 'success');
       return data;
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : formatError(error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
       const isNetworkError = errorMessage.includes('NetworkError') || errorMessage.includes('fetch') || errorMessage.includes('Failed to fetch');
 
       // Use appropriate log level based on error type
@@ -458,10 +458,10 @@ export class FloresYaAPI {
       const decodedPayload = atob(parts[1]);
       if (!decodedPayload) return null;
 
-      const payload = JSON.parse(decodedPayload) as { user?: unknown };
+      const payload = JSON.parse(decodedPayload) as { user?: User };
       return payload.user || null;
     } catch (error: unknown) {
-      this.log('❌ Error decoding token', { error: error instanceof Error ? error.message : formatError(error) }, 'error');
+      this.log('❌ Error decoding token', { error: error instanceof Error ? error.message : String(error) }, 'error');
       return null;
     }
   }

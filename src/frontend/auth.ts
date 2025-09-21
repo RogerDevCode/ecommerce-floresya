@@ -95,8 +95,8 @@ export class AuthManager {
 
         // Close login modal
         const loginModal = document.getElementById('loginModal');
-        if (loginModal && (window as WindowWithBootstrap).bootstrap?.Modal?.getInstance) {
-          const modal = (window as WindowWithBootstrap).bootstrap.Modal.getInstance(loginModal);
+        if (loginModal && (window as unknown as WindowWithBootstrap).bootstrap?.Modal?.getInstance) {
+          const modal = (window as unknown as WindowWithBootstrap).bootstrap.Modal.getInstance(loginModal as HTMLElement);
           if (modal) {
             modal.hide();
           }

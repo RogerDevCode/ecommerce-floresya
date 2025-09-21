@@ -14,7 +14,7 @@ interface ProductWithImagesAndOccasion extends Product {
 }
 
 interface APIProductResponse {
-  product: Product;
+  product: Product & { images?: Array<{ id: number; url: string; alt_text?: string; display_order?: number; }> };
 }
 
 declare global {
@@ -170,7 +170,7 @@ class ProductDetailManager {
 
       if (response.success && response.data) {
         // The API returns data wrapped in { product: ... }
-        const productData = (response.data as APIProductResponse).product;
+        const productData = response.data as unknown as (Product & { images?: Array<{ id: number; url: string; alt_text?: string; display_order?: number; }> });
         if (!productData) {
           throw new Error('Product data not found in response');
         }
@@ -708,9 +708,9 @@ class ProductDetailManager {
     document.body.appendChild(modal);
 
     // Show modal
-    const bootstrap = (window as WindowWithBootstrap).bootstrap;
+    const bootstrap = (window as unknown as WindowWithBootstrap).bootstrap;
     if (bootstrap) {
-      const modalInstance = new bootstrap.Modal(modal);
+      const modalInstance = new bootstrap.Modal(modal as HTMLElement);
       modalInstance.show();
 
       // Remove modal from DOM when hidden

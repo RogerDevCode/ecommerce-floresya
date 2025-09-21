@@ -19,6 +19,7 @@ import { createLogsRoutes } from './routes/logsRoutes.js';
 import { createImageRoutes } from './routes/imageRoutes.js';
 import { createUserRoutes } from './routes/userRoutes.js';
 import { createSchemaRoutes } from './routes/schemaRoutes.js';
+import { createDashboardRoutes } from './routes/dashboardRoutes.js';
 import { supabaseManager } from '../config/supabase.js';
 
 // Import comprehensive logging system
@@ -235,6 +236,9 @@ class FloresYaServer {
 
     serverLogger.info('SYSTEM', 'Setting up schema routes');
     this.app.use('/api/admin/schema', createSchemaRoutes());
+
+    serverLogger.info('SYSTEM', 'Setting up dashboard routes');
+    this.app.use('/api/admin/dashboard', createDashboardRoutes());
 
     // Swagger API documentation
     serverLogger.info('SYSTEM', 'Setting up Swagger API documentation');

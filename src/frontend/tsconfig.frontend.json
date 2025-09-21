@@ -3,17 +3,20 @@
   "compilerOptions": {
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": [],
-    "rootDir": ".",
+    "rootDir": "..",
     "outDir": "../../dist/frontend",
     "jsx": "preserve",
     "moduleResolution": "node",
     "declaration": true,
     "sourceMap": false,
-    "composite": true
+    "composite": true,
+    "skipLibCheck": true
   },
   "include": [
     "./**/*.ts",
-    "./**/*.tsx"
+    "./**/*.tsx",
+    "../types/globals.ts",
+    "../config/supabase.ts"
   ],
   "exclude": [
     "node_modules",

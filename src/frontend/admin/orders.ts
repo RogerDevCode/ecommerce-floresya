@@ -373,9 +373,9 @@ export class AdminOrders {
    */
   private showOrderModal(): void {
     const modalElement = document.getElementById('orderDetailsModal');
-    if (modalElement && (window as WindowWithBootstrap).bootstrap?.Modal) {
-      const Modal = (window as WindowWithBootstrap).bootstrap.Modal;
-      const modal = new Modal(modalElement);
+    if (modalElement && (window as unknown as WindowWithBootstrap).bootstrap?.Modal) {
+      const Modal = (window as unknown as WindowWithBootstrap).bootstrap.Modal;
+      const modal = new Modal(modalElement as HTMLElement);
       modal.show();
     }
   }
