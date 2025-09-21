@@ -30,7 +30,7 @@ export async function authenticate(req: AuthenticatedRequest, res: Response, nex
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader?.startsWith('Bearer ')) {
       res.status(401).json({
         success: false,
         message: 'No valid authorization token provided',
@@ -187,7 +187,7 @@ export async function optionalAuthenticate(req: AuthenticatedRequest, res: Respo
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader?.startsWith('Bearer ')) {
       // No token provided, continue without authentication
       next();
       return;

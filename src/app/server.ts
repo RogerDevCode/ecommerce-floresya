@@ -3,7 +3,7 @@
  * Clean architecture with zero technical debt
  */
 
-import express, { Application, Request, Response, NextFunction } from 'express';
+import express, { Application, NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
@@ -25,7 +25,7 @@ import { supabaseManager } from '../config/supabase.js';
 import { serverLogger } from '../utils/serverLogger.js';
 
 // Import Swagger configuration
-import { swaggerUi, swaggerSpec } from '../config/swagger.js';
+import { swaggerSpec, swaggerUi } from '../config/swagger.js';
 
 // Load environment variables
 config();
@@ -58,10 +58,10 @@ class FloresYaServer {
           scriptSrcAttr: ["'self'", "'unsafe-inline'"],
           imgSrc: ["'self'", "data:", "https:", "blob:"],
           connectSrc: ["'self'", "https://*.supabase.co"],
-          fontSrc: ["'self'", "https://cdn.jsdelivr.net"],
-        },
+          fontSrc: ["'self'", "https://cdn.jsdelivr.net"]
+        }
       },
-      crossOriginEmbedderPolicy: false,
+      crossOriginEmbedderPolicy: false
     }));
 
     // CORS configuration
@@ -92,7 +92,7 @@ class FloresYaServer {
         message: 'Too many requests, please try again later.'
       },
       standardHeaders: true,
-      legacyHeaders: false,
+      legacyHeaders: false
     });
     this.app.use('/api', limiter);
 
@@ -253,8 +253,9 @@ class FloresYaServer {
       res.send(swaggerSpec);
     });
 
-    // Serve index.html for all non-API routes (SPA support) - exclude /dist/ routes
-    this.app.get(/^\/(?!dist\/)(.*)/, (req: Request, res: Response) => {
+    // Serve index.html for all non-API routes (SPA support)
+    // Exclude: /api/, /dist/, files with extensions, and common asset paths
+    this.app.get(/^\/(?!api\/|dist\/|.*\.[^\/]+$)(.*)/, (req: Request, res: Response) => {
       const indexPath = path.join(process.cwd(), 'public/index.html');
 
       // Log static file serving for debugging

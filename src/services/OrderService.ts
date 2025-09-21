@@ -3,20 +3,20 @@
  * Complete order management with cart calculation and status tracking
  */
 
-import { supabaseService } from '../config/supabase.js';
-import type {
-  Order,
-  OrderWithItems,
-  OrderWithItemsAndPayments,
-  OrderStatusHistory,
-  OrderCreateRequest,
-  OrderUpdateRequest,
-  OrderStatus,
-  OrderResponse,
-  Product,
-  RawOrderWithItemsAndUser,
-  RawOrderWithItemsPaymentsHistory,
-  RawOrderStatusHistoryWithUser
+import {
+  supabaseService,
+  type Order,
+  type OrderCreateRequest,
+  type OrderResponse,
+  type OrderStatus,
+  type OrderStatusHistory,
+  type OrderUpdateRequest,
+  type OrderWithItems,
+  type OrderWithItemsAndPayments,
+  type Product,
+  type RawOrderStatusHistoryWithUser,
+  type RawOrderWithItemsAndUser,
+  type RawOrderWithItemsPaymentsHistory
 } from '../config/supabase.js';
 
 interface OrderQuery {

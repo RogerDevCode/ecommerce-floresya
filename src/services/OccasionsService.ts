@@ -3,12 +3,7 @@
  * Business logic for occasions management
  */
 
-import { supabaseService } from '../config/supabase.js';
-import type {
-  Occasion,
-  OccasionCreateRequest,
-  OccasionUpdateRequest
-} from '../config/supabase.js';
+import { supabaseService, type Occasion, type OccasionCreateRequest, type OccasionUpdateRequest } from '../config/supabase.js';
 
 // Helper function to generate slug from name
 function generateSlug(name: string): string {

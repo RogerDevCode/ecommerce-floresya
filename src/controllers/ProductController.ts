@@ -4,10 +4,9 @@
  */
 
 import { Request, Response } from 'express';
-import { body, query, param, validationResult } from 'express-validator';
+import { body, param, query, validationResult } from 'express-validator';
 import { ProductService } from '../services/ProductService.js';
-import { supabaseService } from '../config/supabase.js';
-import type { ProductQuery, ProductCreateRequest, ProductUpdateRequest } from '../config/supabase.js';
+import { type ProductCreateRequest, ProductQuery, ProductUpdateRequest, supabaseService } from '../config/supabase.js';
 
 const productService = new ProductService();
 
@@ -188,10 +187,10 @@ export class ProductController {
       }
 
       const query: ProductQuery = {
-        page: parseInt(req.query.page as string) || 1,
-        limit: Math.min(parseInt(req.query.limit as string) || 20, 100), // Max 100 items
-        search: req.query.search as string || undefined,
-        occasion: req.query.occasion as string || undefined, // Support slug-based filtering
+        page: parseInt(req.query.page as string) ?? 1,
+        limit: Math.min(parseInt(req.query.limit as string) ?? 20, 100), // Max 100 items
+        search: req.query.search as string ?? undefined,
+        occasion: req.query.occasion as string ?? undefined, // Support slug-based filtering
         featured: req.query.featured === 'true' ? true : req.query.featured === 'false' ? false : undefined,
         has_carousel_order: req.query.has_carousel_order === 'true' ? true : req.query.has_carousel_order === 'false' ? false : undefined,
         sort_by,
@@ -260,7 +259,7 @@ export class ProductController {
    */
   public async getFeatured(req: Request, res: Response): Promise<void> {
     try {
-      const limit = Math.min(parseInt(req.query.limit as string) || 8, 20);
+      const limit = Math.min(parseInt(req.query.limit as string) ?? 8, 20);
       const products = await productService.getFeaturedProducts(limit);
 
       res.status(200).json({
@@ -331,7 +330,7 @@ export class ProductController {
         return;
       }
 
-      const productId = parseInt(req.params.id as string);
+      const productId = parseInt(req.params.id);
       const product = await productService.getProductById(productId);
 
       if (!product) {
@@ -373,7 +372,7 @@ export class ProductController {
         return;
       }
 
-      const productId = parseInt(req.params.id as string);
+      const productId = parseInt(req.params.id);
       const product = await productService.getProductByIdWithOccasions(productId);
 
       if (!product) {
@@ -473,7 +472,7 @@ export class ProductController {
         });
         return;
       }
-      const limit = Math.min(parseInt(req.query.limit as string) || 20, 50);
+      const limit = Math.min(parseInt(req.query.limit as string) ?? 20, 50);
 
       const products = await productService.searchProducts(searchTerm, limit);
 
@@ -739,7 +738,7 @@ export class ProductController {
         return;
       }
 
-      const productId = parseInt(req.params.id as string);
+      const productId = parseInt(req.params.id);
       const updateData: ProductUpdateRequest = { ...req.body, id: productId };
 
       if (Object.keys(req.body).length === 0) {
@@ -783,7 +782,7 @@ export class ProductController {
         return;
       }
 
-      const productId = parseInt(req.params.id as string);
+      const productId = parseInt(req.params.id);
       const { carousel_order } = req.body;
 
       if (carousel_order !== null && (!Number.isInteger(carousel_order) || carousel_order < 1)) {
@@ -876,7 +875,7 @@ export class ProductController {
         return;
       }
 
-      const productId = parseInt(req.params.id as string);
+      const productId = parseInt(req.params.id);
 
       // Get current product data
       const product = await productService.getProductById(productId);
@@ -1024,7 +1023,7 @@ export const productValidators = {
     body('sku').optional().isLength({ max: 100 }).withMessage('SKU must not exceed 100 characters'),
     body('active').optional().isBoolean().withMessage('active must be boolean'),
     body('featured').optional().isBoolean().withMessage('featured must be boolean'),
-    body('carousel_order').optional().isInt({ min: 1 }).withMessage('Carousel order must be a positive integer'),
+    body('carousel_order').optional().isInt({ min: 1 }).withMessage('Carousel order must be a positive integer')
   ],
 
   updateProduct: [

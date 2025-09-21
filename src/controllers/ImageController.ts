@@ -113,7 +113,7 @@ export class ImageController {
         return;
       }
 
-      const productId = parseInt(req.params.productId as string);
+      const productId = parseInt(req.params.productId);
       const imageIndex = parseInt(req.body.imageIndex ?? '0');
       const isPrimary = req.body.isPrimary === 'true';
 
@@ -206,7 +206,7 @@ export class ImageController {
         return;
       }
 
-      const productId = parseInt(req.params.productId as string);
+      const productId = parseInt(req.params.productId);
 
       const success = await imageService.deleteProductImages(productId);
 
@@ -291,7 +291,7 @@ export class ImageController {
         return;
       }
 
-      const productId = parseInt(req.params.productId || '0');
+      const productId = parseInt(req.params.productId ?? '0');
 
       const images = await imageService.getProductImages(productId);
 
@@ -390,8 +390,8 @@ export class ImageController {
   public async getImagesGallery(req: Request, res: Response): Promise<void> {
     try {
       const filter = req.query.filter as 'all' | 'used' | 'unused' ?? 'all';
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
+      const page = parseInt(req.query.page as string) ?? 1;
+      const limit = Math.min(parseInt(req.query.limit as string) ?? 20, 100);
 
       const result = await imageService.getImagesGallery(filter, page, limit);
 
@@ -550,9 +550,9 @@ export class ImageController {
     *       500:
     *         description: Server error
     */
-  public async getCurrentSiteImages(req: Request, res: Response): Promise<void> {
+  public getCurrentSiteImages(req: Request, res: Response): void {
     try {
-      const result = await imageService.getCurrentSiteImages();
+      const result = imageService.getCurrentSiteImages();
 
       res.status(200).json({
         success: true,

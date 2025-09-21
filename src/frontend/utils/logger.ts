@@ -5,6 +5,7 @@
  */
 
 import type { LogData, WindowWithFloresyaLogger, Logger } from '../../types/globals.js';
+import { formatError } from '../../types/globals.js';
 
 // Type definitions
 interface LogLevel {
@@ -152,7 +153,7 @@ export class FloresYaLogger implements Logger {
         url: window.location.href,
         timestamp: new Date().toISOString()
       });
-      this.sendLogs();
+      void this.sendLogs();
     });
   }
 
@@ -182,10 +183,10 @@ export class FloresYaLogger implements Logger {
         }
 
         return response;
-      } catch (error) {
+      } catch (error: SafeError) {
         const endTime = performance.now();
         this.error('FETCH', `${method} ${url} - Failed`, {
-          error: error instanceof Error ? error.message : String(error),
+          error: error instanceof Error ? error.message : formatError(error),
           duration: Math.round(endTime - startTime)
         });
         throw error;
@@ -260,9 +261,9 @@ export class FloresYaLogger implements Logger {
     const style = `color: ${levelInfo.color}; font-weight: bold;`;
 
     if (data && Object.keys(data).length > 0) {
-      console[levelInfo.method](`%c${prefix} ${message}`, style, data);
+      console.warn(`%c${prefix} ${message}`, style, data);
     } else {
-      console[levelInfo.method](`%c${prefix} ${message}`, style);
+      console.warn(`%c${prefix} ${message}`, style);
     }
 
     // Update debug panel if exists
@@ -355,23 +356,23 @@ export class FloresYaLogger implements Logger {
   }
 
   // Send logs to server
-  public async sendLogs(): Promise<void> {
-    if (this.logs.length === 0 || !this.isDevMode) return;
+  public sendLogs(): Promise<void> {
+    if (this.logs.length === 0 || !this.isDevMode) return Promise.resolve();
 
     // Check if endpoint exists (cache for performance)
-    if (this.endpointExists === false) return;
+    if (this.endpointExists === false) return Promise.resolve();
 
     // Temporary fix: Skip sending logs to avoid NetworkError spam
     // TODO: Debug and fix the CORS/connection issue
-    console.log(`[🌸 Logger] Would send ${this.logs.length} logs to server (temporarily disabled)`);
-    return;
+    console.warn(`[🌸 Logger] Would send ${this.logs.length} logs to server (temporarily disabled)`);
+    return Promise.resolve();
   }
 
   // Start auto-sending logs
   public startAutoSend(intervalMinutes = 5): void {
     this.stopAutoSend(); // Clear any existing interval
     this.autoSendInterval = setInterval(() => {
-      this.sendLogs();
+      void this.sendLogs();
     }, intervalMinutes * 60 * 1000);
   }
 
@@ -403,6 +404,6 @@ if (typeof window.floresyaLogger === 'undefined') {
     (window as WindowWithFloresyaLogger).floresyaLogger?.startAutoSend(5);
   }
 
-  console.log('%c[✅] FloresYaLogger TypeScript initialized - Experiencia limpia, sin distracciones',
+  console.warn('%c[✅] FloresYaLogger TypeScript initialized - Experiencia limpia, sin distracciones',
     'color: #ff6b9d; font-weight: bold;');
 }

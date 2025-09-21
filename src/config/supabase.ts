@@ -3,7 +3,7 @@
  * Type-safe Supabase client with performance monitoring
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient, createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -325,19 +325,6 @@ export interface OrderUpdateRequest {
   delivery_time_slot?: string;
   delivery_notes?: string;
   admin_notes?: string;
-}
-
-export interface OccasionCreateRequest {
-  name: string;
-  type?: OccasionType;
-  description?: string;
-  display_order?: number;
-  slug?: string;
-}
-
-export interface OccasionUpdateRequest extends Partial<OccasionCreateRequest> {
-  id: number;
-  is_active?: boolean;
 }
 
 export interface PaymentCreateRequest {

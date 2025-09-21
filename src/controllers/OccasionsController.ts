@@ -4,7 +4,7 @@
  */
 
 import { Request, Response } from 'express';
-import { query, param, body, validationResult } from 'express-validator';
+import { body, param, query, validationResult } from 'express-validator';
 import { supabaseService } from '../config/supabase.js';
 // Import removed - ApiResponse unused
 
@@ -41,7 +41,7 @@ export class OccasionsController {
    * Capitalize first letter of a word while preserving accents
    */
   private capitalizeWord(word: string): string {
-    if (word.length === 0) return word;
+    if (word.length === 0) {return word;}
     return word.charAt(0).toUpperCase() + word.slice(1);
   }
 
@@ -222,7 +222,7 @@ export class OccasionsController {
         return;
       }
 
-      const occasionId = parseInt(req.params.id as string);
+      const occasionId = parseInt(req.params.id);
       const { data, error } = await supabaseService
         .from('occasions')
         .select('*')
@@ -330,7 +330,7 @@ export class OccasionsController {
       };
 
       // Apply default AFTER validation passes
-      const finalType = type || 'general';
+      const finalType = type ?? 'general';
 
       // Apply smart capitalization to the name
       const capitalizedName = this.capitalizeOccasionName(name);
@@ -473,7 +473,7 @@ export class OccasionsController {
         return;
       }
 
-      const occasionId = parseInt(req.params.id as string);
+      const occasionId = parseInt(req.params.id);
       const { name, type, description, is_active = true } = req.body as {
         name?: string;
         type?: string;
@@ -558,7 +558,7 @@ export class OccasionsController {
             let counter = 1;
             let uniqueSlug = `${newSlug}-${counter}`;
 
-            // eslint-disable-next-line no-constant-condition
+             
             while (true) {
               const { data: conflictCheck, error: conflictError } = await supabaseService
                 .from('occasions')
@@ -597,7 +597,7 @@ export class OccasionsController {
 
       // Handle description change
       if (description !== undefined) {
-        updateData.description = description || null;
+        updateData.description = description ?? null;
       }
 
       // Update the occasion
@@ -695,10 +695,10 @@ export class OccasionsController {
         return;
       }
 
-      const occasionId = parseInt(req.params.id as string);
+      const occasionId = parseInt(req.params.id);
 
       // Get current occasion data
-      const { data: occasion, error: fetchError } = await supabaseService
+      const { data: _occasion, error: fetchError } = await supabaseService
         .from('occasions')
         .select('*')
         .eq('id', occasionId)

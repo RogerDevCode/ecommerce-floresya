@@ -259,49 +259,49 @@ export class ImageService {
     }
   }
 
-  /**
-   * Obtener imágenes de un producto específico
-   */
-  public async getProductImages(productId: number): Promise<any[]> {
-    try {
-      const { data, error } = await supabaseService
-        .from('product_images')
-        .select('*')
-        .eq('product_id', productId)
-        .order('image_index', { ascending: true });
+/**
+ * Obtener imágenes de un producto específico
+ */
+public async getProductImages(productId: number): Promise<ProductImage[]> {
+  try {
+    const { data, error } = await supabaseService
+      .from('product_images')
+      .select('*')
+      .eq('product_id', productId)
+      .order('image_index', { ascending: true });
 
-      if (error) {
-        console.error('Error fetching product images:', error);
-        throw error;
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('ImageService.getProductImages error:', error);
+    if (error) {
+      console.error('Error fetching product images:', error);
       throw error;
     }
-  }
 
-  /**
-   * Redimensiona una imagen usando Sharp
-   */
-  private async resizeImage(
-    buffer: Buffer,
-    width: number,
-    height: number
-  ): Promise<Buffer> {
-    return await sharp(buffer)
-      .resize(width, height, {
-        fit: 'cover',
-        position: 'center',
-        withoutEnlargement: true
-      })
-      .webp({
-        quality: 85,
-        effort: 6
-      })
-      .toBuffer();
+    return (data ?? []) as ProductImage[];
+  } catch (error) {
+    console.error('ImageService.getProductImages error:', error);
+    throw error;
   }
+}
+
+/**
+ * Redimensiona una imagen usando Sharp
+ */
+private async resizeImage(
+  buffer: Buffer,
+  width: number,
+  height: number
+): Promise<Buffer> {
+  return await sharp(buffer)
+    .resize(width, height, {
+      fit: 'cover',
+      position: 'center',
+      withoutEnlargement: true
+    })
+    .webp({
+      quality: 85,
+      effort: 6
+    })
+    .toBuffer();
+}
 
   /**
    * Genera un nombre de archivo único
@@ -402,7 +402,7 @@ export class ImageService {
         throw new Error(`Failed to fetch images gallery: ${error.message}`);
       }
 
-      const images = (data || []).map(image => ({
+      const images = (data ?? []).map(image => ({
         id: image.id,
         product_id: image.product_id,
         product_name: Array.isArray(image.products) && image.products.length > 0
@@ -494,29 +494,26 @@ export class ImageService {
     }
   }
 
-  /**
-    * Obtiene las imágenes actuales del sitio
-    */
-  public async getCurrentSiteImages(): Promise<{
-    hero: string;
-    logo: string;
-  }> {
-    try {
-      // Por ahora, devolver valores por defecto
-      // En el futuro, esto podría venir de una tabla settings
-      return {
-        hero: '/images/hero-flowers.webp',
-        logo: '/images/logoFloresYa.jpeg'
-      };
-    } catch (error) {
-      console.error('ImageService.getCurrentSiteImages error:', error);
-      // Devolver valores por defecto en caso de error
-      return {
-        hero: '/images/hero-flowers.webp',
-        logo: '/images/logoFloresYa.jpeg'
-      };
-    }
+/**
+ * Obtiene las imágenes actuales del sitio
+ */
+public getCurrentSiteImages(): { hero: string; logo: string; } {
+  try {
+    // Por ahora, devolver valores por defecto
+    // En el futuro, esto podría venir de una tabla settings
+    return {
+      hero: '/images/hero-flowers.webp',
+      logo: '/images/logoFloresYa.jpeg'
+    };
+  } catch (error) {
+    console.error('ImageService.getCurrentSiteImages error:', error);
+    // Devolver valores por defecto en caso de error
+    return {
+      hero: '/images/hero-flowers.webp',
+      logo: '/images/logoFloresYa.jpeg'
+    };
   }
+}
 
   /**
     * Obtiene productos con conteo de imágenes para gestión administrativa
@@ -559,7 +556,7 @@ export class ImageService {
       }
 
       // Si hay filtro de ocasión, necesitamos obtener productos que tengan esa ocasión
-      let filteredProductIds = allProducts.map(p => p.id);
+      let filteredProductIds = (allProducts as { id: number }[]).map(p => p.id);
 
       if (occasionFilter && occasionFilter !== 'general') {
         const { data: occasionProducts, error: occasionError } = await supabaseService
@@ -570,7 +567,7 @@ export class ImageService {
         if (occasionError) {
           console.warn('Error fetching products by occasion, ignoring filter:', occasionError.message);
         } else if (occasionProducts) {
-          const occasionProductIds = occasionProducts.map(op => op.product_id);
+          const occasionProductIds = (occasionProducts as { product_id: number }[]).map(op => op.product_id);
           filteredProductIds = filteredProductIds.filter(id => occasionProductIds.includes(id));
         }
       }
@@ -595,7 +592,7 @@ export class ImageService {
           if (!uniqueImages.has(image.product_id)) {
             uniqueImages.set(image.product_id, new Set());
           }
-          uniqueImages.get(image.product_id)!.add(image.image_index);
+          uniqueImages.get(image.product_id)?.add(image.image_index);
         });
 
         // Contar los sets únicos
@@ -620,9 +617,9 @@ export class ImageService {
         let comparison = 0;
 
         if (sortBy === 'name') {
-          comparison = a.name.localeCompare(b.name);
+          comparison = (a as { name: string }).name.localeCompare((b as { name: string }).name);
         } else if (sortBy === 'image_count') {
-          comparison = a.image_count - b.image_count;
+          comparison = (a as { image_count: number }).image_count - (b as { image_count: number }).image_count;
         }
 
         return sortDirection === 'desc' ? -comparison : comparison;

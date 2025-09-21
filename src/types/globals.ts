@@ -71,17 +71,27 @@ export interface RegisterData {
 // FRONTEND WINDOW EXTENSIONS
 // ============================================
 
+interface BootstrapModal {
+  show(): void;
+  hide(): void;
+}
+
+interface BootstrapToast {
+  show(): void;
+  hide(): void;
+}
+
 export interface WindowWithBootstrap extends Window {
   bootstrap?: {
     Modal: {
-      new (element: Element): { show(): void; hide(): void };
-      getInstance(element: Element): { hide(): void } | null;
+      new (element: HTMLElement): BootstrapModal;
+      getInstance(element: HTMLElement | null): BootstrapModal | null;
     };
     Toast: {
-      new (element: Element, options?: { delay?: number }): { show(): void; hide(): void };
-      getInstance(element: Element): { hide(): void } | null;
+      new (element: HTMLElement, options?: { delay?: number }): BootstrapToast;
+      getInstance(element: HTMLElement): BootstrapToast | null;
     };
-    Carousel?: new (element: Element, options?: unknown) => {
+    Carousel?: new (element: HTMLElement, options?: unknown) => {
       cycle(): void;
     };
   };
@@ -200,3 +210,173 @@ export type DebounceFunction<T extends (...args: Parameters<T>) => ReturnType<T>
   (...args: Parameters<T>): void;
   cancel(): void;
 };
+
+// ============================================
+// ADMIN PANEL SPECIFIC TYPES
+// ============================================
+
+export interface Product {
+  id: number;
+  name: string;
+  description?: string;
+  price: number;
+  price_usd: number;
+  is_featured: boolean;
+  carousel_order?: number;
+  occasion_ids?: number[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface AdminOrder {
+  id: number;
+  customer_name: string;
+  customer_email?: string;
+  customer_phone?: string;
+  total_amount_usd: number;
+  total_amount_ves?: number;
+  status: string;
+  created_at: string;
+  delivery_date?: string;
+  items_count?: number;
+}
+
+export interface AdminUser {
+  id: number;
+  email: string;
+  full_name: string;
+  phone?: string;
+  role: 'user' | 'admin' | 'support';
+  is_active: boolean;
+  email_verified: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminOccasion {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  color: string;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ProductCreateRequest {
+  name: string;
+  description?: string;
+  price: number;
+  price_usd: number;
+  is_featured?: boolean;
+  carousel_order?: number;
+  occasion_ids?: number[];
+}
+
+export interface ProductUpdateRequest extends ProductCreateRequest {
+  id: number;
+}
+
+export interface OccasionCreateRequest {
+  name: string;
+  slug: string;
+  description?: string;
+  color: string;
+  is_active?: boolean;
+}
+
+export interface OccasionUpdateRequest extends OccasionCreateRequest {
+  id: number;
+}
+
+// ============================================
+// API RESPONSE TYPES
+// ============================================
+
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: string;
+  errors?: ValidationError[];
+}
+
+export interface ValidationError {
+  field: string;
+  message: string;
+  code?: string;
+}
+
+// ============================================
+// GLOBAL WINDOW EXTENSIONS
+// ============================================
+
+export interface AdminPanelInstance {
+  productModal: {
+    showEditProductModal(product: Product): void;
+  };
+  productImagesModal: {
+    show?(productId: number, productName: string): void;
+  };
+  userModal: {
+    showEditUserModal(user: AdminUser): void;
+  };
+  occasionModal: {
+    showEditOccasionModal(occasion: AdminOccasion): void;
+  };
+  orderDetailsModal: {
+    show?(orderId: number): void;
+  };
+  editProductImages(productId: number, productName: string): void;
+  viewOrderDetails(orderId: number): void;
+  deleteUser(userId: number): void;
+  deleteOccasion(occasionId: number): void;
+}
+
+export type AdminPanelWindow = Window & {
+  adminPanel?: AdminPanelInstance;
+  __adminPanelInstance?: unknown;
+}
+
+// ============================================
+// ERROR HANDLING TYPES
+// ============================================
+
+export type SafeError = Error | string;
+
+export function formatError(error: SafeError): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  return String(error);
+}
+
+// ============================================
+// ADDITIONAL GLOBAL TYPE EXTENSIONS
+// ============================================
+
+// Global declarations for frontend compatibility
+declare global {
+  // Node.js/Browser timer compatibility
+  var NodeJS: {
+    Timeout: ReturnType<typeof setTimeout>;
+  };
+
+  // Browser timer functions are already defined in lib types
+
+  interface Window {
+    adminPanel?: AdminPanelInstance;
+    floresyaLogger?: Logger;
+    bootstrap?: {
+      Modal: new (element: HTMLElement) => { show(): void; hide(): void };
+      Toast: new (element: HTMLElement, options?: { delay?: number }) => { show(): void; hide(): void };
+    };
+  }
+}
+
+// Export empty object to make this a module
+export {};

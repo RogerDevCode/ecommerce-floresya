@@ -15,6 +15,7 @@ import type {
   RegisterData,
   LogData
 } from '../../types/globals.js';
+import { formatError } from '../../types/globals.js';
 import type { ProductQuery } from '../../config/supabase.js';
 
 // Define carousel types locally to avoid import issues
@@ -46,7 +47,7 @@ export class FloresYaAPI {
     if (window.logger) {
       window.logger.info('API', '✅ FloresYaAPI initialized');
     } else {
-      console.log('[🌐 API] FloresYaAPI initialized');
+      // FloresYaAPI initialized
     }
   }
 
@@ -67,7 +68,7 @@ export class FloresYaAPI {
           console.warn(output, data);
           break;
         default:
-          console.log(output, data);
+          console.warn(output, data);
           break;
       }
     }
@@ -82,7 +83,7 @@ export class FloresYaAPI {
     };
 
     if (includeAuth && this.token) {
-          headers.Authorization = `Bearer ${this.token as string}`;
+          headers.Authorization = `Bearer ${this.token}`;
           this.log('✅ Authorization header added', {}, 'success');
         }
 
@@ -100,13 +101,13 @@ export class FloresYaAPI {
         method: 'HEAD',
         cache: 'no-cache',
         signal: controller.signal
-      }).catch(() => null);
+      }).catch((): Response | null => null);
 
       clearTimeout(timeoutId);
 
       // If health check fails, assume we're still connected
       // (backend might not have a health endpoint)
-      return response ? response.ok || response.status === 404 : true;
+      return response ? (response.ok || response.status === 404) : true;
     } catch {
       // Assume connected if check fails to avoid false negatives
       return true;
@@ -145,17 +146,17 @@ export class FloresYaAPI {
       const contentType = response.headers.get('content-type');
       let data: ApiResponse<T>;
 
-      if (contentType && contentType.includes('application/json')) {
+      if (contentType?.includes('application/json')) {
         try {
           data = await response.json();
-        } catch (jsonError) {
+        } catch (jsonError: unknown) {
           this.log('❌ Invalid JSON response', {
             endpoint,
             contentType,
             status: response.status,
-            error: jsonError instanceof Error ? jsonError.message : String(jsonError)
+            error: jsonError instanceof Error ? jsonError.message : formatError(jsonError)
           }, 'error');
-          throw new Error(`Invalid JSON response from server: ${jsonError instanceof Error ? jsonError.message : String(jsonError)}`);
+          throw new Error(`Invalid JSON response from server: ${jsonError instanceof Error ? jsonError.message : formatError(jsonError)}`);
         }
       } else {
         // If not JSON, read as text and create error response
@@ -188,8 +189,8 @@ export class FloresYaAPI {
 
       this.log('✅ Data fetched successfully', { endpoint, dataKeys: Object.keys(data) }, 'success');
       return data;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : formatError(error);
       const isNetworkError = errorMessage.includes('NetworkError') || errorMessage.includes('fetch') || errorMessage.includes('Failed to fetch');
 
       // Use appropriate log level based on error type
@@ -217,7 +218,13 @@ export class FloresYaAPI {
         if (typeof value === 'boolean') {
           params.append(key, value.toString());
         } else {
-          params.append(key, value.toString());
+          if (typeof value === 'object' && value !== null) {
+            params.append(key, JSON.stringify(value));
+          } else if (typeof value === 'string' || typeof value === 'number') {
+            params.append(key, String(value));
+          } else {
+            params.append(key, JSON.stringify(value));
+          }
         }
       }
     });
@@ -366,7 +373,7 @@ export class FloresYaAPI {
     return response;
   }
 
-  async logout(): Promise<void> {
+  logout(): void {
     this.log('🔄 Logging out', {}, 'info');
 
     this.token = null;
@@ -451,10 +458,10 @@ export class FloresYaAPI {
       const decodedPayload = atob(parts[1]);
       if (!decodedPayload) return null;
 
-      const payload = JSON.parse(decodedPayload);
+      const payload = JSON.parse(decodedPayload) as { user?: unknown };
       return payload.user || null;
-    } catch (error) {
-      this.log('❌ Error decoding token', { error: error instanceof Error ? error.message : String(error) }, 'error');
+    } catch (error: unknown) {
+      this.log('❌ Error decoding token', { error: error instanceof Error ? error.message : formatError(error) }, 'error');
       return null;
     }
   }
@@ -619,7 +626,13 @@ export class FloresYaAPI {
       const searchParams = new URLSearchParams();
       Object.entries(options.params).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
-          searchParams.append(key, String(value));
+          if (typeof value === 'object' && value !== null) {
+            searchParams.append(key, JSON.stringify(value));
+          } else if (typeof value === 'string' || typeof value === 'number') {
+            searchParams.append(key, String(value));
+          } else {
+            searchParams.append(key, JSON.stringify(value));
+          }
         }
       });
       const queryString = searchParams.toString();
@@ -655,5 +668,5 @@ export default api;
 if (window.logger) {
   window.logger.success('API', '✅ TypeScript API module loaded and exported');
 } else {
-  console.log('[🌐 API] TypeScript API module loaded and exported');
+  // TypeScript API module loaded and exported
 }

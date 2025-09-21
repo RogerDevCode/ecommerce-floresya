@@ -4,7 +4,7 @@
  */
 
 // Import the pre-configured Express app instance
-import app from '../dist/app/server.js';
+import app from '../dist/backend/app/server.js';
 
 // Export the default handler for Vercel Functions
 export default function handler(req, res) {

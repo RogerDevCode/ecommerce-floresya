@@ -8,25 +8,15 @@ import path from 'path';
 
 export default defineConfig({
   test: {
-    // Environment
     environment: 'node',
-
-    // Test files patterns
     include: [
       'tests/unit/**/*.test.{js,ts}',
-      '!tests/unit-es6/**/*.test.js' // Exclude legacy ES6 tests
+      '!tests/unit-es6/**/*.test.js'
     ],
-
-    // Global test setup
     globals: true,
-
-    // Test timeout
     testTimeout: 15000,
-
-    // Setup files
-    // setupFiles: ['./tests/unit/vitest.setup.js'],
-
-    // Coverage configuration
+    clearMocks: true,
+    restoreMocks: true,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
@@ -38,20 +28,12 @@ export default defineConfig({
         '*.config.*'
       ]
     },
-
-    // Mock configuration
-    clearMocks: true,
-    restoreMocks: true,
-
-    // Alias for imports
     alias: {
       '@': path.resolve(__dirname, './'),
-      '@backend': path.resolve(__dirname, './backend/src'),
+      '@backend': path.resolve(__dirname, './src'), // ✅ Ruta corregida — no "backend/src"
       '@tests': path.resolve(__dirname, './tests')
     }
   },
-
-  // ESbuild configuration for ES6 modules
   esbuild: {
     target: 'node18'
   }

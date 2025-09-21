@@ -4,14 +4,14 @@
  */
 
 import bcrypt from 'bcryptjs';
-import { supabaseService } from '../config/supabase.js';
-import type {
-  UserCreateRequest,
-  UserUpdateRequest,
-  UserResponse,
-  UserListResponse,
-  UserQuery,
-  ApiResponse
+import {
+  supabaseService,
+  type ApiResponse,
+  type UserCreateRequest,
+  type UserListResponse,
+  type UserQuery,
+  type UserResponse,
+  type UserUpdateRequest
 } from '../config/supabase.js';
 
 export class UserService {
@@ -67,8 +67,8 @@ export class UserService {
         throw new Error(`Database error: ${error.message}`);
       }
 
-      const users = data || [];
-      const totalItems = count || 0;
+      const users = data ?? [];
+      const totalItems = count ?? 0;
       const totalPages = Math.ceil(totalItems / limit);
 
       const response: UserListResponse = {
@@ -213,7 +213,7 @@ export class UserService {
         email: userData.email.trim().toLowerCase(),
         password_hash,
         full_name: userData.full_name.trim(),
-        phone: userData.phone?.trim() || null,
+        phone: userData.phone?.trim() ?? null,
         role: userData.role,
         is_active: userData.is_active ?? true,
         email_verified: userData.email_verified ?? false
@@ -230,8 +230,8 @@ export class UserService {
       if (!data?.success) {
         return {
           success: false,
-          message: data?.message || 'Failed to create user',
-          error: data?.error_code || 'CREATE_USER_ERROR'
+          message: data?.message ?? 'Failed to create user',
+          error: data?.error_code ?? 'CREATE_USER_ERROR'
         };
       }
 
@@ -304,7 +304,7 @@ export class UserService {
         updateData.full_name = userData.full_name.trim();
       }
       if (userData.phone !== undefined) {
-        updateData.phone = userData.phone?.trim() || null;
+        updateData.phone = userData.phone?.trim() ?? null;
       }
       if (userData.role !== undefined) {
         updateData.role = userData.role;
@@ -333,8 +333,8 @@ export class UserService {
       if (!data?.success) {
         return {
           success: false,
-          message: data?.message || 'Failed to update user',
-          error: data?.error_code || 'UPDATE_USER_ERROR'
+          message: data?.message ?? 'Failed to update user',
+          error: data?.error_code ?? 'UPDATE_USER_ERROR'
         };
       }
 
@@ -397,15 +397,15 @@ export class UserService {
       if (!data?.success) {
         return {
           success: false,
-          message: data?.message || 'Failed to toggle user status',
-          error: data?.error_code || 'TOGGLE_USER_ERROR'
+          message: data?.message ?? 'Failed to toggle user status',
+          error: data?.error_code ?? 'TOGGLE_USER_ERROR'
         };
       }
 
       return {
         success: true,
         data: data.user as UserResponse,
-        message: data.message || 'User status changed successfully'
+        message: data.message ?? 'User status changed successfully'
       };
 
     } catch (error) {
@@ -442,15 +442,15 @@ export class UserService {
       if (!data?.success) {
         return {
           success: false,
-          message: data?.message || 'Failed to delete user',
-          error: data?.error_code || 'DELETE_USER_ERROR'
+          message: data?.message ?? 'Failed to delete user',
+          error: data?.error_code ?? 'DELETE_USER_ERROR'
         };
       }
 
       return {
         success: true,
         data: { deleted_user: data.deleted_user },
-        message: data.message || 'User deleted successfully'
+        message: data.message ?? 'User deleted successfully'
       };
 
     } catch (error) {
@@ -474,7 +474,8 @@ export class UserService {
 
     // Email validation
     if (isCreate || userData.email !== undefined) {
-      if (!userData.email?.trim()) {
+       
+      if (!userData.email?.trim()) { // ✅ Lógica correcta — string vacío es inválido
         errors.push({ field: 'email', message: 'Email is required', code: 'REQUIRED' });
       } else {
         // Email validation that rejects consecutive dots and other common invalid patterns
@@ -484,7 +485,7 @@ export class UserService {
         }
       }
     }
-
+    
     // Full name validation
     if (isCreate || userData.full_name !== undefined) {
       if (!userData.full_name?.trim()) {
@@ -496,7 +497,7 @@ export class UserService {
 
     // Password validation (for create or when password is provided)
     if (isCreate || (userData as UserUpdateRequest).password) {
-      const password = (userData as UserCreateRequest).password || (userData as UserUpdateRequest).password;
+      const password = (userData as UserCreateRequest).password ?? (userData as UserUpdateRequest).password;
       if (!password?.trim()) {
         if (isCreate) {
           errors.push({ field: 'password', message: 'Password is required', code: 'REQUIRED' });
@@ -530,13 +531,13 @@ export class UserService {
     }
 
     // Phone validation (optional but must be valid if provided)
-    if (userData.phone !== undefined && userData.phone?.trim()) {
-      const phoneRegex = /^\+?\d{10,15}$/;
-      if (!phoneRegex.test(userData.phone.replace(/\s/g, ''))) {
-        errors.push({ field: 'phone', message: 'Invalid phone format (10-15 digits)', code: 'INVALID_FORMAT' });
-      }
+    if (userData.phone !== undefined && userData.phone.trim() !== '') {
+        const phoneRegex = /^\+?\d{10,15}$/;
+        if (!phoneRegex.test(userData.phone.replace(/\s/g, ''))) {
+            errors.push({ field: 'phone', message: 'Invalid phone format (10-15 digits)', code: 'INVALID_FORMAT' });
+        }
     }
-
+    
     return {
       isValid: errors.length === 0,
       errors

@@ -3,6 +3,7 @@
  * Basic authentication handling for login/logout with full type safety
  */
 
+
 // Define types for authentication
 interface AuthUser {
   id: number;
@@ -10,6 +11,7 @@ interface AuthUser {
   name?: string;
   role: 'admin' | 'user';
 }
+
 
 interface LoginCredentials {
   email: string;
@@ -22,15 +24,12 @@ interface AuthResponse {
   message?: string;
 }
 
-// Extend Window interface for Bootstrap
+import type { WindowWithBootstrap } from '../types/globals.js';
+
+// Extend Window interface
 declare global {
   interface Window {
     authManager?: AuthManager;
-    bootstrap?: {
-      Modal: {
-        getInstance(element: Element): { hide(): void } | null;
-      };
-    };
     floresyaApp?: import('./main.js').FloresYaApp;
   }
 }
@@ -80,7 +79,8 @@ export class AuthManager {
 
     try {
       // Show loading state
-      const submitBtn = document.querySelector('#loginForm button[type="submit"]') as HTMLButtonElement;
+      const submitBtn = document.querySelector('#loginForm button[type="submit"]');
+      if (!(submitBtn instanceof HTMLButtonElement)) return;
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Cargando...';
@@ -95,11 +95,10 @@ export class AuthManager {
 
         // Close login modal
         const loginModal = document.getElementById('loginModal');
-        if (loginModal && window.bootstrap) {
-          const Modal = window.bootstrap.Modal;
-          if (Modal?.getInstance) {
-            const modal = Modal.getInstance(loginModal);
-            if (modal) modal.hide();
+        if (loginModal && (window as WindowWithBootstrap).bootstrap?.Modal?.getInstance) {
+          const modal = (window as WindowWithBootstrap).bootstrap.Modal.getInstance(loginModal);
+          if (modal) {
+            modal.hide();
           }
         }
 
@@ -111,12 +110,13 @@ export class AuthManager {
         this.showAlert(response.message ?? 'Credenciales incorrectas', 'danger');
       }
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Login error:', error);
       this.showAlert('Error al iniciar sesión. Inténtalo de nuevo.', 'danger');
     } finally {
       // Reset button state
-      const submitBtn = document.querySelector('#loginForm button[type="submit"]') as HTMLButtonElement;
+      const submitBtn = document.querySelector('#loginForm button[type="submit"]');
+      if (!(submitBtn instanceof HTMLButtonElement)) return;
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.innerHTML = 'Iniciar Sesión';
@@ -189,7 +189,7 @@ export class AuthManager {
         if (sessionAge > maxAge) {
           // Session expired
           this.logout();
-          return;
+          
         }
       }
     }
@@ -199,7 +199,7 @@ export class AuthManager {
    * SECURE LOGOUT - Complete session cleanup
    */
   private logout(): void {
-    console.log('[🔐 AUTH] Iniciando proceso seguro de logout');
+    // Starting secure logout process
 
     try {
       // 1. Clear current user state
@@ -211,12 +211,12 @@ export class AuthManager {
       // 3. Clear any cached data
       this.clearCache();
 
-      console.log('[✅ AUTH] Sesión cerrada completamente - Todos los datos eliminados');
+      // Session fully closed - All data cleared
 
       // 4. Redirect to home page
       window.location.href = '/';
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('[❌ AUTH] Error durante logout:', error);
       // Even if there's an error, redirect to ensure security
       window.location.href = '/';
@@ -244,17 +244,17 @@ export class AuthManager {
 
       keysToRemove.forEach(key => {
         localStorage.removeItem(key);
-        console.log(`[🗑️ AUTH] Eliminado: ${key}`);
+        // Removed session key: ${key}
       });
 
-      console.log(`[🧹 AUTH] Limpiados ${keysToRemove.length + 3} elementos de localStorage`);
+      // Cleared ${keysToRemove.length + 3} localStorage items
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('[❌ AUTH] Error limpiando localStorage:', error);
       // Try to clear everything as fallback
       try {
         localStorage.clear();
-        console.warn('[🧹 AUTH] localStorage completamente limpiado como fallback');
+        console.warn('localStorage completely cleared as fallback');
       } catch (fallbackError) {
         console.error('[❌ AUTH] Error en fallback de limpieza:', fallbackError);
       }
@@ -269,15 +269,15 @@ export class AuthManager {
       // Clear sessionStorage if used
       if (typeof sessionStorage !== 'undefined') {
         sessionStorage.clear();
-        console.log('[🗂️ AUTH] sessionStorage limpiado');
+        // sessionStorage cleared
       }
 
       // Clear any global variables or cached state
       if (window.floresyaApp) {
-        console.log('[🔄 AUTH] Estado global de aplicación reseteado');
+        // Global application state reset
       }
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('[❌ AUTH] Error limpiando cache:', error);
     }
   }
@@ -305,7 +305,7 @@ export class AuthManager {
 
     if (user) {
       // User is logged in
-      if (loginBtn) loginBtn.style.display = 'none';
+      if (loginBtn) {loginBtn.style.display = 'none';}
       if (userDropdown) {
         userDropdown.style.display = 'block';
         // Update user name in dropdown if available
@@ -321,7 +321,7 @@ export class AuthManager {
       }
 
       // Show main logout button for all logged-in users
-      if (logoutNavItem) logoutNavItem.style.display = 'block';
+      if (logoutNavItem) {logoutNavItem.style.display = 'block';}
       if (mainLogoutBtn) {
         mainLogoutBtn.addEventListener('click', (e) => {
           e.preventDefault();
@@ -331,10 +331,10 @@ export class AuthManager {
 
     } else {
       // User is not logged in
-      if (loginBtn) loginBtn.style.display = 'block';
-      if (userDropdown) userDropdown.style.display = 'none';
-      if (adminPanelLink) adminPanelLink.style.display = 'none';
-      if (logoutNavItem) logoutNavItem.style.display = 'none';
+      if (loginBtn) {loginBtn.style.display = 'block';}
+      if (userDropdown) {userDropdown.style.display = 'none';}
+      if (adminPanelLink) {adminPanelLink.style.display = 'none';}
+      if (logoutNavItem) {logoutNavItem.style.display = 'none';}
     }
   }
 

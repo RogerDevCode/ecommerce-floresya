@@ -8,20 +8,9 @@
  * - Actualización automática: npm run schema:update
  */
 
-import { writeFileSync, existsSync } from 'fs';
+import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { supabaseService } from '../config/supabase.js';
-
-import type {
-  Product,
-  Occasion,
-  User,
-  ProductImage,
-  Order,
-  OrderItem,
-  Payment,
-  Setting
-} from '../config/supabase.js';
 
 // Configuración del extractor
 interface ExtractorConfig {
@@ -112,7 +101,7 @@ class SupabaseSchemaExtractor {
     error?: string;
   }> {
     try {
-      console.log('🌸 FloresYa Schema Extractor - Iniciando extracción...');
+      console.warn('🌸 FloresYa Schema Extractor - Iniciando extracción...');
 
       // Verificar conexión
       const isConnected = await this.testConnection();
@@ -124,15 +113,15 @@ class SupabaseSchemaExtractor {
       const tablesInfo = await this.extractTablesInfo();
 
       // Generar SQL schema
-      const schemaSQL = await this.generateSchemaSQL(tablesInfo);
+      const schemaSQL = this.generateSchemaSQL(tablesInfo);
 
       // Guardar archivo si se especifica
       if (this.config.outputFile) {
         this.saveSchemaToFile(schemaSQL);
       }
 
-      console.log('✅ Extracción completada exitosamente');
-      console.log(`📊 Estadísticas:`, this.stats);
+      console.warn('✅ Extracción completada exitosamente');
+      console.warn(`📊 Estadísticas:`, this.stats);
 
       return {
         success: true,
@@ -180,7 +169,7 @@ class SupabaseSchemaExtractor {
     const tablesInfo: TableInfo[] = [];
 
     for (const tableName of knownTables) {
-      console.log(`🔍 Analizando tabla: ${tableName}`);
+      console.warn(`🔍 Analizando tabla: ${tableName}`);
 
       try {
         const tableInfo = await this.extractTableInfo(tableName);
@@ -213,7 +202,7 @@ class SupabaseSchemaExtractor {
       .limit(3);
 
     // Inferir columnas desde los datos de muestra
-    const columns = this.inferColumnsFromData(sampleData || [], tableName);
+    const columns = this.inferColumnsFromData(sampleData ?? [], tableName);
 
     // Generar índices basados en conocimiento del esquema
     const indexes = this.generateKnownIndexes(tableName);
@@ -223,7 +212,7 @@ class SupabaseSchemaExtractor {
 
     return {
       name: tableName,
-      recordCount: count || 0,
+      recordCount: count ?? 0,
       columns,
       indexes,
       constraints,
@@ -262,8 +251,8 @@ class SupabaseSchemaExtractor {
     }
 
     return columns.sort((a, b) => {
-      if (a.isPrimaryKey) return -1;
-      if (b.isPrimaryKey) return 1;
+      if (a.isPrimaryKey) {return -1;}
+      if (b.isPrimaryKey) {return 1;}
       return a.name.localeCompare(b.name);
     });
   }
@@ -272,24 +261,24 @@ class SupabaseSchemaExtractor {
    * Infiere el tipo de columna basado en el valor
    */
   private inferColumnType(value: unknown, columnName: string): string {
-    if (columnName === 'id') return 'SERIAL PRIMARY KEY';
-    if (columnName.includes('_at')) return 'TIMESTAMPTZ DEFAULT NOW()';
-    if (columnName.includes('price_usd')) return 'DECIMAL(10,2)';
-    if (columnName.includes('price_ves') || columnName.includes('amount_ves')) return 'DECIMAL(15,2)';
-    if (columnName === 'email') return 'VARCHAR(255) UNIQUE';
-    if (columnName.includes('password')) return 'VARCHAR(255)';
-    if (columnName.includes('phone')) return 'VARCHAR(50)';
-    if (columnName === 'stock' || columnName === 'quantity') return 'INTEGER DEFAULT 0';
-    if (columnName.includes('active') || columnName.includes('is_') || columnName.includes('featured')) return 'BOOLEAN DEFAULT';
+    if (columnName === 'id') {return 'SERIAL PRIMARY KEY';}
+    if (columnName.includes('_at')) {return 'TIMESTAMPTZ DEFAULT NOW()';}
+    if (columnName.includes('price_usd')) {return 'DECIMAL(10,2)';}
+    if (columnName.includes('price_ves') || columnName.includes('amount_ves')) {return 'DECIMAL(15,2)';}
+    if (columnName === 'email') {return 'VARCHAR(255) UNIQUE';}
+    if (columnName.includes('password')) {return 'VARCHAR(255)';}
+    if (columnName.includes('phone')) {return 'VARCHAR(50)';}
+    if (columnName === 'stock' || columnName === 'quantity') {return 'INTEGER DEFAULT 0';}
+    if (columnName.includes('active') || columnName.includes('is_') || columnName.includes('featured')) {return 'BOOLEAN DEFAULT';}
 
     if (typeof value === 'string') {
-      if (value.length > 255) return 'TEXT';
+      if (value.length > 255) {return 'TEXT';}
       return 'VARCHAR(255)';
     }
     if (typeof value === 'number') {
       return Number.isInteger(value) ? 'INTEGER' : 'DECIMAL(10,2)';
     }
-    if (typeof value === 'boolean') return 'BOOLEAN';
+    if (typeof value === 'boolean') {return 'BOOLEAN';}
     if (value instanceof Date || typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
       return 'TIMESTAMPTZ';
     }
@@ -309,7 +298,7 @@ class SupabaseSchemaExtractor {
       'payment_method_id': 'payment_methods(id)'
     };
 
-    return tableMap[columnName] || '';
+    return tableMap[columnName] ?? '';
   }
 
   /**
@@ -331,7 +320,7 @@ class SupabaseSchemaExtractor {
       ]
     };
 
-    return knownSchemas[tableName] || [];
+    return knownSchemas[tableName] ?? [];
   }
 
   /**
@@ -359,7 +348,7 @@ class SupabaseSchemaExtractor {
       ]
     };
 
-    return knownIndexes[tableName] || [];
+    return knownIndexes[tableName] ?? [];
   }
 
   /**
@@ -379,13 +368,13 @@ class SupabaseSchemaExtractor {
       ]
     };
 
-    return knownConstraints[tableName] || [];
+    return knownConstraints[tableName] ?? [];
   }
 
   /**
    * Genera el SQL schema completo
    */
-  private async generateSchemaSQL(tablesInfo: TableInfo[]): Promise<string> {
+  private generateSchemaSQL(tablesInfo: TableInfo[]): string {
     let sql = this.generateHeader();
 
     if (this.config.includeData) {
@@ -730,7 +719,7 @@ ON CONFLICT (key) DO NOTHING;
   private saveSchemaToFile(schema: string): void {
     const outputPath = join(process.cwd(), this.config.outputFile);
     writeFileSync(outputPath, schema, 'utf8');
-    console.log(`💾 Esquema guardado en: ${outputPath}`);
+    console.warn(`💾 Esquema guardado en: ${outputPath}`);
   }
 
   /**
@@ -744,7 +733,7 @@ ON CONFLICT (key) DO NOTHING;
       throw new Error(result.error || 'Error desconocido durante la extracción');
     }
 
-    return result.schema!;
+    return result.schema ?? '';
   }
 
   /**
@@ -763,8 +752,15 @@ ON CONFLICT (key) DO NOTHING;
     }
 
     return {
-      schema: result.schema!,
-      stats: result.stats!,
+      schema: result.schema ?? '',
+      stats: result.stats ?? {
+        totalTables: 0,
+        totalRecords: 0,
+        totalIndexes: 0,
+        totalConstraints: 0,
+        extractionDate: new Date().toISOString(),
+        version: '1.0.0'
+      },
       lastUpdate: new Date().toISOString()
     };
   }
@@ -778,7 +774,7 @@ export type { ExtractorConfig, TableInfo, SchemaStats };
 if (import.meta.url === `file://${process.argv[1]}`) {
   SupabaseSchemaExtractor.quickExtract()
     .then(() => {
-      console.log('✅ Extracción de esquema completada');
+      console.warn('✅ Extracción de esquema completada');
       process.exit(0);
     })
     .catch((error) => {

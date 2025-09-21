@@ -4,7 +4,7 @@
  */
 
 import { Request, Response } from 'express';
-import { body, query, param, validationResult } from 'express-validator';
+import { body, param, query, validationResult } from 'express-validator';
 
 // Extend Express Request to include user property
 interface AuthenticatedRequest extends Request {
@@ -17,8 +17,8 @@ interface AuthenticatedRequest extends Request {
 import { OrderService } from '../services/OrderService.js';
 import type {
   OrderCreateRequest,
-  OrderUpdateRequest,
-  OrderStatus
+  OrderStatus,
+  OrderUpdateRequest
 } from '../config/supabase.js';
 
 const orderService = new OrderService();
@@ -139,14 +139,14 @@ export class OrderController {
       }
 
       const query = {
-        page: parseInt(req.query.page as string) || 1,
-        limit: Math.min(parseInt(req.query.limit as string) || 20, 100),
+        page: parseInt(req.query.page as string) ?? 1,
+        limit: Math.min(parseInt(req.query.limit as string) ?? 20, 100),
         status: req.query.status as OrderStatus,
         customer_email: req.query.customer_email as string,
         date_from: req.query.date_from as string,
         date_to: req.query.date_to as string,
-        sort_by: (req.query.sort_by as 'created_at' | 'total_amount_usd' | 'status') || 'created_at',
-        sort_direction: (req.query.sort_direction as 'asc' | 'desc') || 'desc'
+        sort_by: (req.query.sort_by as 'created_at' | 'total_amount_usd' | 'status') ?? 'created_at',
+        sort_direction: (req.query.sort_direction as 'asc' | 'desc') ?? 'desc'
       };
 
       const result = await orderService.getOrders(query);
@@ -223,7 +223,7 @@ export class OrderController {
         return;
       }
 
-      const orderId = parseInt(req.params.id as string);
+      const orderId = parseInt(req.params.id);
       const order = await orderService.getOrderById(orderId);
 
       if (!order) {
@@ -479,7 +479,7 @@ export class OrderController {
         return;
       }
 
-      const orderId = parseInt(req.params.id as string);
+      const orderId = parseInt(req.params.id);
       const updateData: OrderUpdateRequest = { ...req.body, id: orderId };
 
       if (Object.keys(req.body).length === 0) {
@@ -583,7 +583,7 @@ export class OrderController {
         return;
       }
 
-      const orderId = parseInt(req.params.id as string);
+      const orderId = parseInt(req.params.id);
       const { status, notes } = req.body;
       const userId = (req as AuthenticatedRequest).user?.id; // From auth middleware
 
@@ -674,7 +674,7 @@ export class OrderController {
    */
   public async getOrderStatusHistory(req: Request, res: Response): Promise<void> {
     try {
-      const orderId = parseInt(req.params.id as string);
+      const orderId = parseInt(req.params.id);
       const history = await orderService.getOrderStatusHistory(orderId);
 
       res.status(200).json({

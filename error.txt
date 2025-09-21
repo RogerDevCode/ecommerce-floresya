@@ -1,0 +1,26 @@
+[0;34m🔧 FloresYa E-commerce Build Script[0m
+[0;36m======================================[0m
+
+[0;35mℹ️ Checking Node.js version...[0m
+[0;32m✅ Node.js version: v20.19.4[0m
+[0;32m✅ Dependencies already installed[0m
+[0;35mℹ️ Cleaning previous build...[0m
+
+> floresya-ecommerce@2.0.0 clean
+> rm -rf dist/
+
+[0;32m✅ Previous build cleaned[0m
+[0;35mℹ️ Running ESLint...[0m
+
+> floresya-ecommerce@2.0.0 lint
+> eslint src/ --ext .ts
+
+[0;32m✅ ESLint passed[0m
+[0;35mℹ️ Building TypeScript project...[0m
+[0;35mℹ️ Running development build...[0m
+
+> floresya-ecommerce@2.0.0 build:dev
+> tsc -p tsconfig.node.json && tsc -p src/frontend/tsconfig.frontend.json
+
+src/utils/schema-extractor.ts(756,32): error TS2322: Type 'SchemaStats | { tablesCount: number; columnsCount: number; constraintsCount: number; }' is not assignable to type 'SchemaStats'.
+  Object literal may only specify known properties, and 'tablesCount' does not exist in type 'SchemaStats'.

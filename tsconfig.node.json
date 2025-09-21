@@ -4,23 +4,26 @@
     "lib": ["ES2022", "DOM"],
     "types": ["node"],
     "rootDir": "./src",
-    "outDir": "./dist",
+    "outDir": "./dist/backend",
     "moduleResolution": "node",
-    "declaration": false,
+    "declaration": true,
     "sourceMap": false,
-    "composite": false,
-    "incremental": false
+    "composite": true
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
+    "src/app/**/*.ts",
+    "src/config/**/*.ts",
+    "src/controllers/**/*.ts",
+    "src/models/**/*.ts",
+    "src/services/**/*.ts",
+    "src/utils/**/*.ts",
+    "src/types/**/*.ts",
     "src/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "tests",
-    "**/*.test.ts",
-    "**/*.spec.ts"
+    "src/frontend"
   ]
 }

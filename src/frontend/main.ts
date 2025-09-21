@@ -4,8 +4,8 @@
  */
 
 // Import types and utilities
-import type { Product, ProductWithImages, Occasion, ProductQuery, PaginationInfo as Pagination } from '../config/supabase.js';
-import type { LogData, WindowWithBootstrap, WindowWithCart, Logger } from '../types/globals.js';
+import type { Occasion, PaginationInfo as Pagination, Product, ProductQuery, ProductWithImages } from '../config/supabase.js';
+import type { LogData, Logger, WindowWithBootstrap, WindowWithCart } from '../types/globals.js';
 import { FloresYaAPI } from './services/api.js';
 
 // Type definitions
@@ -81,7 +81,7 @@ export class FloresYaApp {
     if (window.logger) {
       window.logger.info('APP', '✅ FloresYaApp initialized');
     } else {
-      console.log('[🌸 FloresYa] App initialized');
+      // FloresYa App initialized
     }
 
     // Wait for DOM to be ready before initializing
@@ -112,7 +112,7 @@ export class FloresYaApp {
           console.warn(output, data);
           break;
         default:
-          console.log(output, data);
+          console.warn(output, data);
           break;
       }
     }
@@ -293,7 +293,7 @@ export class FloresYaApp {
 
   private renderProducts(products: ProductWithOccasion[]): void {
     const container = document.getElementById('productsContainer');
-    if (!container) return;
+    if (!container) {return;}
 
     if (products.length === 0) {
       this.showEmptyState();
@@ -387,7 +387,7 @@ export class FloresYaApp {
 
   private renderPagination(pagination: Pagination): void {
     const container = document.getElementById('pagination');
-    if (!container) return;
+    if (!container) {return;}
 
     let html = '';
 
@@ -426,7 +426,7 @@ export class FloresYaApp {
 
   private populateOccasionFilter(): void {
     const select = document.getElementById('occasionFilter') as HTMLSelectElement;
-    if (!select) return;
+    if (!select) {return;}
 
     select.innerHTML = '<option value="">Todas las ocasiones</option>';
 
@@ -489,22 +489,25 @@ export class FloresYaApp {
       const target = e.target as HTMLElement;
 
       if (target.matches('.add-to-cart-btn') || target.closest('.add-to-cart-btn')) {
-        const button = target.matches('.add-to-cart-btn') ? target : target.closest('.add-to-cart-btn') as HTMLElement;
-        const productId = parseInt((button as HTMLElement)?.dataset?.productId ?? '0');
-        if (productId) this.addToCart(productId);
+        const button = target.matches('.add-to-cart-btn') ? target : target.closest('.add-to-cart-btn');
+        if (!(button instanceof HTMLElement)) return;
+        const productId = parseInt((button)?.dataset?.productId ?? '0');
+        if (productId) {this.addToCart(productId);}
       }
 
       // Handle BUY button for direct purchase
       if (target.matches('.buy-now-btn') || target.closest('.buy-now-btn')) {
-        const button = target.matches('.buy-now-btn') ? target : target.closest('.buy-now-btn') as HTMLElement;
-        const productId = parseInt((button as HTMLElement)?.dataset?.productId ?? '0');
-        if (productId) this.buyNow(productId);
+        const button = target.matches('.buy-now-btn') ? target : target.closest('.buy-now-btn');
+        if (!(button instanceof HTMLElement)) return;
+        const productId = parseInt((button)?.dataset?.productId ?? '0');
+        if (productId) {this.buyNow(productId);}
       }
 
       if (target.matches('.view-details-btn') || target.closest('.view-details-btn')) {
-        const button = target.matches('.view-details-btn') ? target : target.closest('.view-details-btn') as HTMLElement;
-        const productId = parseInt((button as HTMLElement)?.dataset?.productId ?? '0');
-        if (productId) this.viewProductDetails(productId);
+        const button = target.matches('.view-details-btn') ? target : target.closest('.view-details-btn');
+        if (!(button instanceof HTMLElement)) return;
+        const productId = parseInt((button)?.dataset?.productId ?? '0');
+        if (productId) {this.viewProductDetails(productId);}
       }
 
       // Handle click on product card or product image to view details
@@ -513,7 +516,8 @@ export class FloresYaApp {
         if (!target.matches('.add-to-cart-btn, .buy-now-btn, .view-details-btn') &&
             !target.closest('.add-to-cart-btn, .buy-now-btn, .view-details-btn')) {
 
-          const card = target.matches('.product-card') ? target : target.closest('.product-card') as HTMLElement;
+          const card = target.matches('.product-card') ? target : target.closest('.product-card');
+          if (!(card instanceof HTMLElement)) return;
           const productId = parseInt(card?.dataset?.productId ?? '0');
           if (productId) {
             this.viewProductDetails(productId);
@@ -530,7 +534,7 @@ export class FloresYaApp {
 
   private handleSearch(): void {
     const searchInput = document.getElementById('searchInput') as HTMLInputElement;
-    if (!searchInput) return;
+    if (!searchInput) {return;}
 
     this.currentFilters.search = searchInput.value.trim();
     this.currentPage = 1;
@@ -544,11 +548,11 @@ export class FloresYaApp {
     const occasionFilter = document.getElementById('occasionFilter') as HTMLSelectElement;
     const sortFilter = document.getElementById('sortFilter') as HTMLSelectElement;
 
-    if (occasionFilter && occasionFilter.value) {
+    if (occasionFilter?.value) {
       this.currentFilters.occasion = occasionFilter.value;
     }
 
-    if (sortFilter && sortFilter.value) {
+    if (sortFilter?.value) {
       // Parse sort format: "field:direction" -> sort_by and sort_direction
       const [sortBy, sortDirection] = sortFilter.value.split(':');
 
@@ -575,7 +579,7 @@ export class FloresYaApp {
       this.currentFilters.occasion = occasionFilter.value;
     }
 
-    if (sortFilter && sortFilter.value) {
+    if (sortFilter?.value) {
       // Parse sort format: "field:direction" -> sort_by and sort_direction
       const [sortBy, sortDirection] = sortFilter.value.split(':');
 
@@ -619,7 +623,7 @@ export class FloresYaApp {
    */
   private buyNow(productId: number): void {
     const product = this.products.find(p => p.id === productId);
-    if (!product) return;
+    if (!product) {return;}
 
     // Add to cart first
     if (typeof window !== 'undefined' && (window as WindowWithCart).cart) {
@@ -645,11 +649,14 @@ export class FloresYaApp {
       if (!grouped.has(occasionName)) {
         grouped.set(occasionName, []);
       }
-      grouped.get(occasionName)!.push(product);
+      const group = grouped.get(occasionName);
+      if (group) {
+        group.push(product);
+      }
     });
 
     // Sort each group alphabetically by name
-    grouped.forEach((groupProducts, occasionName) => {
+    grouped.forEach((groupProducts, _occasionName) => {
       groupProducts.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
     });
 
@@ -660,7 +667,10 @@ export class FloresYaApp {
 
     const result: ProductWithOccasion[] = [];
     sortedOccasions.forEach(occasionName => {
-      result.push(...grouped.get(occasionName)!);
+      const group = grouped.get(occasionName);
+      if (group) {
+        result.push(...group);
+      }
     });
 
     this.log('📋 Productos ordenados por ocasión y nombre', {
@@ -702,7 +712,7 @@ export class FloresYaApp {
 
       cardElement.addEventListener('mouseleave', (e) => {
         // Check if mouse is actually leaving the card
-        const relatedTarget = (e as MouseEvent).relatedTarget as HTMLElement;
+        const relatedTarget = (e).relatedTarget as HTMLElement;
         // Only continue hover if relatedTarget exists AND is contained within the card
         if (!relatedTarget || !cardElement.contains(relatedTarget)) {
           this.handleProductCardHover(cardElement, false);
@@ -726,10 +736,11 @@ export class FloresYaApp {
   }
 
   private handleProductCardHover(card: HTMLElement, isEntering: boolean): void {
-    const productImage = card.querySelector('.card-img-top') as HTMLImageElement;
+    const productImage = card.querySelector('.card-img-top');
+    if (!(productImage instanceof HTMLImageElement)) return;
     const productId = card.dataset.productId ?? 'unknown';
 
-    if (!productImage) return;
+    if (!productImage) {return;}
 
     // Obtener las imágenes medium del data attribute
     let mediumImages: string[] = [];
@@ -844,7 +855,7 @@ export class FloresYaApp {
    */
   private luxuryCrossfadeToImage(imageElement: HTMLImageElement, newImageUrl: string): void {
     // Evitar transición innecesaria a la misma imagen
-    if (imageElement.src === newImageUrl) return;
+    if (imageElement.src === newImageUrl) {return;}
 
     // Marcar elemento como en transición
     imageElement.dataset.transitioning = 'true';
@@ -933,7 +944,7 @@ export class FloresYaApp {
 
   private showEmptyState(): void {
     const container = document.getElementById('productsContainer');
-    if (!container) return;
+    if (!container) {return;}
 
     container.innerHTML = `
       <div class="col-12 text-center py-5">
@@ -949,7 +960,7 @@ export class FloresYaApp {
 
   private showErrorState(): void {
     const container = document.getElementById('productsContainer');
-    if (!container) return;
+    if (!container) {return;}
 
     container.innerHTML = `
       <div class="col-12 text-center py-5">
@@ -1042,11 +1053,15 @@ private renderCarousel(products: CarouselProduct[]): void {
 }
 
 private initializeInfiniteCarousel(products: CarouselProduct[]): void {
-  const track = document.getElementById('imageTrack') as HTMLElement;
-  const arrowLeft = document.getElementById('arrow-left') as HTMLButtonElement;
-  const arrowRight = document.getElementById('arrow-right') as HTMLButtonElement;
+  const track = document.getElementById('imageTrack');
+  const arrowLeft = document.getElementById('arrow-left');
+  const arrowRight = document.getElementById('arrow-right');
 
-  if (!track || !arrowLeft || !arrowRight || products.length === 0) return;
+  if (!(track instanceof HTMLElement) || !(arrowLeft instanceof HTMLButtonElement) || !(arrowRight instanceof HTMLButtonElement)) {
+    return;
+  }
+
+  if (!track || !arrowLeft || !arrowRight || products.length === 0) {return;}
 
   const imgWidth = 312;
   const totalProducts = products.length;
@@ -1082,9 +1097,14 @@ private initializeInfiniteCarousel(products: CarouselProduct[]): void {
   // Hover y click en tarjetas con rotación de imágenes
   const cards = Array.from(track.querySelectorAll('.carousel-card'));
   cards.forEach(card => {
-    const element = card as HTMLElement;
-    const overlay = element.querySelector('.card-overlay') as HTMLElement;
-    const productImage = element.querySelector('.product-image') as HTMLImageElement;
+    const element = card;
+    if (!(element instanceof HTMLElement)) return;
+
+    const overlay = element.querySelector('.card-overlay');
+    if (!(overlay instanceof HTMLElement)) return;
+
+    const productImage = element.querySelector('.product-image');
+    if (!(productImage instanceof HTMLImageElement)) return;
     const imagesData = element.dataset.images;
 
     let hoverInterval: NodeJS.Timeout | null = null;
@@ -1100,7 +1120,7 @@ private initializeInfiniteCarousel(products: CarouselProduct[]): void {
 
     // Función para cambiar imagen con efecto de desvanecimiento
     const changeImage = (newSrc: string) => {
-      if (productImage.src === newSrc) return; // No cambiar si es la misma imagen
+      if (productImage.src === newSrc) {return;} // No cambiar si es la misma imagen
 
       // Efecto de desvanecimiento
       productImage.style.opacity = '0';
@@ -1119,7 +1139,7 @@ private initializeInfiniteCarousel(products: CarouselProduct[]): void {
       if (overlay) {
         overlay.style.opacity = '1';
         const overlayContent = overlay.querySelector('div') as HTMLElement;
-        if (overlayContent) overlayContent.style.transform = 'scale(1)';
+        if (overlayContent) {overlayContent.style.transform = 'scale(1)';}
       }
 
       // Inicializar indicador de imagen al comenzar hover
@@ -1154,7 +1174,7 @@ private initializeInfiniteCarousel(products: CarouselProduct[]): void {
       if (overlay) {
         overlay.style.opacity = '0';
         const overlayContent = overlay.querySelector('div') as HTMLElement;
-        if (overlayContent) overlayContent.style.transform = 'scale(0.8)';
+        if (overlayContent) {overlayContent.style.transform = 'scale(0.8)';}
       }
 
       // Detener rotación de imágenes
@@ -1184,7 +1204,7 @@ private initializeInfiniteCarousel(products: CarouselProduct[]): void {
 
     element.addEventListener('click', () => {
       const productId = parseInt(element.dataset.productId ?? '0');
-      if (productId) this.viewProductDetails(productId);
+      if (productId) {this.viewProductDetails(productId);}
     });
   });
 
@@ -1230,7 +1250,7 @@ private snapToNearest(pos: number): void {
 */
   private showCarouselFallback(): void {
     const container = document.getElementById('dynamicCarousel');
-    if (!container) return;
+    if (!container) {return;}
 
     const fallbackHtml = `
       <div class="carousel-fallback">
@@ -1426,7 +1446,8 @@ private snapToNearest(pos: number): void {
 
   private updateCartUI(): void {
     const cartCount = document.getElementById('cartCount');
-    const cartBadge = document.querySelector('.cart-badge') as HTMLElement;
+    const cartBadge = document.querySelector('.cart-badge');
+    if (!(cartBadge instanceof HTMLElement)) return;
 
     const totalItems = this.cart.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -1449,10 +1470,10 @@ private snapToNearest(pos: number): void {
 
   private updateCartOffcanvas(): void {
     const cartOffcanvas = document.getElementById('cartOffcanvas');
-    if (!cartOffcanvas) return;
+    if (!cartOffcanvas) {return;}
 
     const cartContent = cartOffcanvas.querySelector('.cart-content');
-    if (!cartContent) return;
+    if (!cartContent) {return;}
 
     const totalPrice = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
@@ -1542,5 +1563,5 @@ export default floresyaApp;
 if (window.logger) {
   window.logger.success('APP', '✅ TypeScript FloresYa App loaded and ready');
 } else {
-  console.log('[🌸 FloresYa] TypeScript App loaded and ready');
+  // TypeScript FloresYa App loaded and ready
 }

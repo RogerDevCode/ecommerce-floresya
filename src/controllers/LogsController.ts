@@ -75,7 +75,7 @@ export class LogsController {
    *       500:
    *         description: Server error processing logs
    */
-  public async receiveFrontendLogs(req: Request, res: Response): Promise<void> {
+  public receiveFrontendLogs(req: Request, res: Response): void {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -98,17 +98,8 @@ export class LogsController {
         return;
       }
 
-      // Process logs (in production, you might want to store them in a database)
-      console.log(`📊 Received ${logs.length} logs from frontend session: ${sessionId ?? 'unknown'}`);
-
       // Log a summary of the received logs
       if (logs.length > 0) {
-        const logLevels = logs.reduce((acc: Record<string, number>, log) => {
-          acc[log.level] = (acc[log.level] ?? 0) + 1;
-          return acc;
-        }, {});
-
-        console.log(`📈 Log summary:`, logLevels);
 
         // Log any errors or warnings
         const errorsAndWarnings = logs.filter((log) =>
@@ -116,10 +107,10 @@ export class LogsController {
         );
 
         if (errorsAndWarnings.length > 0) {
-          console.log(`⚠️ Issues detected: ${errorsAndWarnings.length} errors/warnings`);
-          errorsAndWarnings.forEach((log) => {
-            console.log(`[${log.level}] ${log.module}: ${log.message}`, log.data ?? {});
-          });
+            console.warn(`⚠️ Issues detected: ${errorsAndWarnings.length} errors/warnings`);
+            errorsAndWarnings.forEach((log) => {
+              console.warn(`[${log.level}] ${log.module}: ${log.message}`, log.data ?? {});
+            });
         }
       }
 

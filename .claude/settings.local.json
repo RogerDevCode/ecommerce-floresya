@@ -60,7 +60,19 @@
       "WebFetch(domain:ecommerce-floresya-7-nw1pa7e7s-floresyas-projects.vercel.app)",
       "WebFetch(domain:ecommerce-floresya-7-3ujmckc6o-floresyas-projects.vercel.app)",
       "WebFetch(domain:ecommerce-floresya-7-9m15k6wab-floresyas-projects.vercel.app)",
-      "WebFetch(domain:ecommerce-floresya-7-nofnwk9w6-floresyas-projects.vercel.app)"
+      "WebFetch(domain:ecommerce-floresya-7-nofnwk9w6-floresyas-projects.vercel.app)",
+      "Bash(git restore:*)",
+      "Bash(npm update:*)",
+      "Bash(npx eslint:*)",
+      "Read(///**)",
+      "Bash(tsc:*)",
+      "Bash(cat:*)",
+      "Bash(chmod:*)",
+      "Bash(npm run build:dev:*)",
+      "Bash(PORT=3001 node dist/backend/app/server.js)",
+      "Read(//home/manager/Sync/bash/**)",
+      "Bash(/home/manager/Sync/bash/qs.sh:*)",
+      "Bash(PORT=3002 node dist/backend/app/server.js)"
     ],
     "deny": [],
     "ask": []

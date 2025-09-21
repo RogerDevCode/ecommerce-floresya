@@ -1,27 +1,22 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@frontend-types/*": ["./types/index.ts"],
-      "@shared-types/*": ["../types/globals.ts"],
-      "@database-types/*": ["../models/Database.ts"]
-    },
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": [],
+    "rootDir": ".",
     "outDir": "../../dist/frontend",
-    "moduleResolution": "bundler",
-    "jsx": "react-jsx", // Assuming React or similar for frontend
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "types": ["node", "vitest/globals"]
+    "jsx": "preserve",
+    "moduleResolution": "node",
+    "declaration": true,
+    "sourceMap": false,
+    "composite": true
   },
   "include": [
-    "**/*.ts",
-    "**/*.d.ts",
-    "**/*.tsx"
+    "./**/*.ts",
+    "./**/*.tsx"
   ],
   "exclude": [
     "node_modules",
-    "dist",
-    "**/*.spec.ts",
-    "**/*.test.ts"
+    "../../dist"
   ]
 }

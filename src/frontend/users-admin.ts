@@ -5,11 +5,11 @@
 
 import { api } from './services/api.js';
 import type {
-  UserResponse,
   UserCreateRequest,
-  UserUpdateRequest,
-  UserQuery,
   UserFormData,
+  UserQuery,
+  UserResponse,
+  UserUpdateRequest,
   WindowWithBootstrap,
   WindowWithFloresyaLogger
 } from '../types/globals.js';
@@ -41,7 +41,7 @@ class UsersAdminManager {
   private isEditing = false;
   private currentPage = 1;
   private currentQuery: UserQuery = {};
-  private searchTimeout: number | null = null;
+  private searchTimeout: NodeJS.Timeout | number | null = null;
 
   constructor() {
     this.initialize();
@@ -136,7 +136,7 @@ class UsersAdminManager {
 
   private async loadUsers(): Promise<void> {
     const tableBody = document.getElementById('usersTableBody');
-    if (!tableBody) return;
+    if (!tableBody) {return;}
 
     // Show loading state
     tableBody.innerHTML = `
@@ -180,7 +180,7 @@ class UsersAdminManager {
 
   private renderUsersTable(users: UserResponse[]): void {
     const tableBody = document.getElementById('usersTableBody');
-    if (!tableBody) return;
+    if (!tableBody) {return;}
 
     if (users.length === 0) {
       tableBody.innerHTML = `
@@ -270,7 +270,7 @@ class UsersAdminManager {
     document.querySelectorAll('.edit-btn').forEach(button => {
       button.addEventListener('click', (e) => {
         const userId = parseInt((e.currentTarget as HTMLElement).dataset.userId || '0');
-        if (userId) this.editUser(userId);
+        if (userId) {void this.editUser(userId);}
       });
     });
 
@@ -278,7 +278,7 @@ class UsersAdminManager {
     document.querySelectorAll('.toggle-btn').forEach(button => {
       button.addEventListener('click', (e) => {
         const userId = parseInt((e.currentTarget as HTMLElement).dataset.userId || '0');
-        if (userId) this.toggleUserActive(userId);
+        if (userId) {void this.toggleUserActive(userId);}
       });
     });
 
@@ -286,7 +286,7 @@ class UsersAdminManager {
     document.querySelectorAll('.delete-btn').forEach(button => {
       button.addEventListener('click', (e) => {
         const userId = parseInt((e.currentTarget as HTMLElement).dataset.userId || '0');
-        if (userId) this.deleteUser(userId);
+        if (userId) {void this.deleteUser(userId);}
       });
     });
   }
@@ -295,7 +295,7 @@ class UsersAdminManager {
     const paginationInfo = document.getElementById('paginationInfo');
     const paginationControls = document.getElementById('paginationControls');
 
-    if (!paginationInfo || !paginationControls || !pagination) return;
+    if (!paginationInfo || !paginationControls || !pagination) {return;}
 
     // Update info
     const start = ((pagination.current_page - 1) * pagination.items_per_page) + 1;
@@ -351,7 +351,7 @@ class UsersAdminManager {
 
   private renderErrorState(): void {
     const tableBody = document.getElementById('usersTableBody');
-    if (!tableBody) return;
+    if (!tableBody) {return;}
 
     tableBody.innerHTML = `
       <tr>
@@ -374,7 +374,7 @@ class UsersAdminManager {
     this.resetForm();
 
     const modalElement = document.getElementById('userModal');
-    if (!modalElement) return;
+    if (!modalElement) {return;}
 
     if (!window.bootstrap) {
       this.showError('Bootstrap no está cargado correctamente');
@@ -402,7 +402,7 @@ class UsersAdminManager {
 
   private resetForm(): void {
     const form = document.getElementById('userForm') as HTMLFormElement;
-    if (form) form.reset();
+    if (form) {form.reset();}
 
     // Reset hidden fields
     (document.getElementById('userId') as HTMLInputElement).value = '';
@@ -497,7 +497,7 @@ class UsersAdminManager {
       'Esta acción no se puede deshacer. Solo se puede eliminar usuarios que no tengan órdenes o pagos asociados.'
     );
 
-    if (!confirmed) return;
+    if (!confirmed) {return;}
 
     try {
       this.log('api', 'Deleting user', { userId });
@@ -520,7 +520,7 @@ class UsersAdminManager {
   }
 
   private async saveUser(): Promise<void> {
-    if (!this.validateForm()) return;
+    if (!this.validateForm()) {return;}
 
     const formData = this.getFormData();
     const userId = parseInt((document.getElementById('userId') as HTMLInputElement).value || '0');
@@ -560,7 +560,7 @@ class UsersAdminManager {
         // Create user
         const createData: UserCreateRequest = {
           email: formData.email,
-          password: formData.password!,
+          password: formData.password,
           full_name: formData.full_name,
           phone: formData.phone || undefined,
           role: formData.role as 'user' | 'admin' | 'support',
@@ -690,15 +690,15 @@ class UsersAdminManager {
 
   private togglePasswordVisibility(button: HTMLElement): void {
     const passwordInput = document.getElementById('password') as HTMLInputElement;
-    if (!passwordInput) return;
+    if (!passwordInput) {return;}
 
     const icon = button.querySelector('i');
     if (passwordInput.type === 'password') {
       passwordInput.type = 'text';
-      if (icon) icon.className = 'bi bi-eye-slash';
+      if (icon) {icon.className = 'bi bi-eye-slash';}
     } else {
       passwordInput.type = 'password';
-      if (icon) icon.className = 'bi bi-eye';
+      if (icon) {icon.className = 'bi bi-eye';}
     }
   }
 
@@ -769,7 +769,7 @@ class UsersAdminManager {
 
   private showToast(message: string, type: 'success' | 'danger' | 'warning' | 'info'): void {
     const toastContainer = document.getElementById('toastContainer');
-    if (!toastContainer) return;
+    if (!toastContainer) {return;}
 
     const toastId = `toast-${Date.now()}`;
     const toastElement = document.createElement('div');
@@ -815,7 +815,15 @@ class UsersAdminManager {
     } else if (logger && level === 'api') {
       logger.info('UsersAdmin', `[API] ${message}`, data as never);
     } else {
-      console[level === 'success' ? 'log' : level === 'api' ? 'log' : level](`[UsersAdmin] ${message}`, data);
+      if (level === 'success' || level === 'api') {
+        console.warn(`[UsersAdmin] ${message}`, data);
+      } else if (level === 'error') {
+        console.error(`[UsersAdmin] ${message}`, data);
+      } else if (level === 'warn') {
+        console.warn(`[UsersAdmin] ${message}`, data);
+      } else {
+        console.warn(`[UsersAdmin] ${message}`, data);
+      }
     }
   }
 }

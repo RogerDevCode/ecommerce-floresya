@@ -5,13 +5,8 @@
 
 import { Request, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
-import { supabaseService } from '../config/supabase.js';
+import { type UserCreateRequest, UserQuery, UserUpdateRequest, supabaseService } from '../config/supabase.js';
 import { userService } from '../services/UserService.js';
-import type {
-  UserCreateRequest,
-  UserUpdateRequest,
-  UserQuery
-} from '../config/supabase.js';
 
 export class UserController {
 
@@ -214,14 +209,14 @@ export class UserController {
       }
 
       const query: UserQuery = {
-        page: parseInt(req.query.page as string) || 1,
-        limit: parseInt(req.query.limit as string) || 20,
+        page: parseInt(req.query.page as string) ?? 1,
+        limit: parseInt(req.query.limit as string) ?? 20,
         search: req.query.search as string,
         role: req.query.role as 'user' | 'admin' | 'support',
         is_active: req.query.is_active ? req.query.is_active === 'true' : undefined,
         email_verified: req.query.email_verified ? req.query.email_verified === 'true' : undefined,
-        sort_by: req.query.sort_by as 'email' | 'full_name' | 'role' | 'created_at' | 'updated_at' || 'created_at',
-        sort_direction: req.query.sort_direction as 'asc' | 'desc' || 'desc'
+        sort_by: req.query.sort_by as 'email' | 'full_name' | 'role' | 'created_at' | 'updated_at' ?? 'created_at',
+        sort_direction: req.query.sort_direction as 'asc' | 'desc' ?? 'desc'
       };
 
       const result = await userService.getAllUsers(query);
@@ -292,7 +287,7 @@ export class UserController {
         return;
       }
 
-      const id = parseInt(req.params.id || '0');
+      const id = parseInt(req.params.id ?? '0');
       if (isNaN(id) || id <= 0) {
         res.status(400).json({
           success: false,
@@ -374,8 +369,8 @@ export class UserController {
 
       if (!result.success) {
         let statusCode = 500;
-        if (result.error === 'EMAIL_EXISTS') statusCode = 409;
-        if (result.error === 'VALIDATION_ERROR') statusCode = 400;
+        if (result.error === 'EMAIL_EXISTS') {statusCode = 409;}
+        if (result.error === 'VALIDATION_ERROR') {statusCode = 400;}
 
         res.status(statusCode).json(result);
         return;
@@ -464,9 +459,9 @@ export class UserController {
 
       if (!result.success) {
         let statusCode = 500;
-        if (result.error === 'USER_NOT_FOUND') statusCode = 404;
-        if (result.error === 'EMAIL_EXISTS') statusCode = 409;
-        if (result.error === 'VALIDATION_ERROR') statusCode = 400;
+        if (result.error === 'USER_NOT_FOUND') {statusCode = 404;}
+        if (result.error === 'EMAIL_EXISTS') {statusCode = 409;}
+        if (result.error === 'VALIDATION_ERROR') {statusCode = 400;}
 
         res.status(statusCode).json(result);
         return;
@@ -676,7 +671,7 @@ export class UserController {
 
         if (!result.success) {
           let statusCode = 500;
-          if (result.error === 'USER_NOT_FOUND') statusCode = 404;
+          if (result.error === 'USER_NOT_FOUND') {statusCode = 404;}
 
           res.status(statusCode).json(result);
           return;

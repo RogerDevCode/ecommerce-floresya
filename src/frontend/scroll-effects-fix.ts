@@ -37,7 +37,7 @@ export class ScrollEffectsFixer {
     }
 
     private init(): void {
-        if (typeof window === 'undefined') return;
+        if (typeof window === 'undefined') {return;}
 
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.applyFixes());
@@ -47,12 +47,12 @@ export class ScrollEffectsFixer {
     }
 
     private applyFixes(): void {
-        console.log('[🌸 ScrollFix] Applying performance optimizations for scroll-linked effects...');
+        // Applying performance optimizations for scroll-linked effects
 
         this.fixStickyElements();
         this.fixScrollSnapping();
 
-        console.log('[🌸 ScrollFix] ✅ Scroll performance optimizations applied successfully.');
+        // Scroll performance optimizations applied successfully
     }
 
     private fixStickyElements(): void {
@@ -65,7 +65,7 @@ export class ScrollEffectsFixer {
                     element.style.transform = '';
                     element.style.marginTop = '';
 
-                    console.log(`[🌸 ScrollFix] Fixed sticky element: ${selector}`);
+                    // Fixed sticky element: ${selector}
                 }
             });
         });
@@ -90,7 +90,7 @@ export class ScrollEffectsFixer {
                     });
                 });
 
-                console.log(`[🌸 ScrollFix] Applied scroll snapping to: ${containerSelector}`);
+                // Applied scroll snapping to: ${containerSelector}
             });
         });
     }
@@ -102,4 +102,4 @@ if (typeof window !== 'undefined') {
     (window as WindowWithScrollEffectsFixer).ScrollEffectsFixer = ScrollEffectsFixer;
 }
 
-console.log('[🌸 ScrollFix] Scroll performance optimization class loaded and exported.');
+// Scroll performance optimization class loaded and exported

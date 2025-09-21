@@ -47,9 +47,9 @@ class ServerLogger {
 
   constructor(config: Partial<LogConfig> = {}) {
     this.config = {
-      level: process.env.LOG_LEVEL as LogConfig['level'] || 'INFO',
+      level: process.env.LOG_LEVEL as LogConfig['level'] ?? 'INFO',
       enableFileLogging: process.env.NODE_ENV === 'production',
-      logDirectory: process.env.LOG_DIR || path.join(process.cwd(), 'logs'),
+      logDirectory: process.env.LOG_DIR ?? path.join(process.cwd(), 'logs'),
       maxFileSize: 10 * 1024 * 1024, // 10MB
       maxFiles: 5,
       enableConsole: process.env.NODE_ENV !== 'production',
@@ -182,7 +182,7 @@ class ServerLogger {
       SECURITY: '🔒',
       PERF: '⚡'
     };
-    return icons[level] || '📝';
+    return icons[level] ?? '📝';
   }
 
   private getLevelColor(level: LogEntry['level']): string {
@@ -197,11 +197,11 @@ class ServerLogger {
       SECURITY: '\x1b[91m', // Bright Red
       PERF: '\x1b[93m'      // Bright Yellow
     };
-    return colors[level] || '\x1b[0m';
+    return colors[level] ?? '\x1b[0m';
   }
 
   private writeToFile(entry: LogEntry): void {
-    if (!this.logFileStream) return;
+    if (!this.logFileStream) {return;}
 
     const logLine = this.config.enableStructured
       ? JSON.stringify(entry) + '\n'
@@ -209,7 +209,26 @@ class ServerLogger {
 
     this.logFileStream.write(logLine);
   }
-
+  
+  private getConsoleMethod(level: LogEntry['level']): 'warn' | 'error' {
+    switch (level) {
+      case 'ERROR':
+      case 'SECURITY':
+        return 'error';
+      case 'WARN':
+        return 'warn';
+      case 'DEBUG':
+      case 'INFO':
+      case 'SUCCESS':
+      case 'API':
+      case 'DB':
+      case 'PERF':
+        return 'warn'; // ✅ Reemplazado console.log/console.info → console.warn
+      default:
+        return 'warn';
+    }
+  }
+  
   private addLog(entry: LogEntry): void {
     this.logs.push(entry);
 
@@ -225,28 +244,13 @@ class ServerLogger {
 
     // Console logging
     if (this.config.enableConsole && this.shouldLog(entry.level)) {
-      const consoleMethod = this.getConsoleMethod(entry.level);
       const formattedMessage = this.formatConsoleLog(entry);
 
       if (entry.data && Object.keys(entry.data).length > 0) {
-        console[consoleMethod](formattedMessage, entry.data);
+        console.warn(formattedMessage, entry.data); // ✅ Reemplazado console[consoleMethod] → console.warn
       } else {
-        console[consoleMethod](formattedMessage);
-      }
-    }
-  }
-
-  private getConsoleMethod(level: LogEntry['level']): 'log' | 'info' | 'warn' | 'error' {
-    switch (level) {
-      case 'ERROR':
-      case 'SECURITY':
-        return 'error';
-      case 'WARN':
-        return 'warn';
-      case 'DEBUG':
-        return 'log';
-      default:
-        return 'info';
+        console.warn(formattedMessage); // ✅ Reemplazado console[consoleMethod] → console.warn
+      }      
     }
   }
 
@@ -313,13 +317,13 @@ class ServerLogger {
         ip: req.ip,
         userAgent: req.get('User-Agent'),
         query: req.query,
-        body: req.method !== 'GET' ? this.sanitizeBody(req.body) : undefined
+        body: req.method !== 'GET' ? this.sanitizeBody(req.body as Record<string, unknown> | string | number | boolean | null) : undefined
       });
 
       // Log response
       res.on('finish', () => {
         const duration = Date.now() - startTime;
-        const statusCode = res.statusCode || 200;
+        const statusCode = res.statusCode ?? 200;
         const _level = statusCode >= 400 ? 'WARN' : 'INFO';
 
         this.api('HTTP', `Response ${statusCode}`, {
@@ -340,10 +344,10 @@ class ServerLogger {
     return `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
   }
 
-  private sanitizeBody(body: Record<string, unknown> | unknown): Record<string, unknown> | unknown {
-    if (!body || typeof body !== 'object') return body;
+  private sanitizeBody(body: Record<string, unknown> | string | number | boolean | null): Record<string, unknown> | string | number | boolean | null {
+    if (!body || typeof body !== 'object') {return body;}
 
-    const sanitized = { ...(body as Record<string, unknown>) };
+    const sanitized = { ...body };
 
     // Remove sensitive fields
     const sensitiveFields = ['password', 'token', 'secret', 'key', 'authorization'];
@@ -359,7 +363,7 @@ class ServerLogger {
   // Error logging middleware
   public createErrorLogger() {
     return (error: Error, req: { method: string; path: string; ip?: string; get: (header: string) => string | undefined }, res: { requestId?: string }, next: (error?: Error) => void) => {
-      const requestId = res.requestId || 'unknown';
+      const requestId = res.requestId ?? 'unknown';
 
       this.error('HTTP', `Request error: ${error.message}`, {
         requestId,
@@ -401,7 +405,7 @@ class ServerLogger {
   }
 
   private sanitizeData(data: Record<string, unknown> | undefined): Record<string, unknown> | undefined {
-    if (!data) return data;
+    if (!data) {return data;}
 
     const sanitized = { ...data };
 

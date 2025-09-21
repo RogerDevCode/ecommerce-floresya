@@ -4,13 +4,23 @@
  */
 
 import { FloresYaAPI } from './services/api.js';
-import type { Product, Occasion } from '../config/supabase.js';
+import type { Occasion, Product } from '../config/supabase.js';
 import type { WindowWithBootstrap } from '../types/globals.js';
 
 interface ProductWithImagesAndOccasion extends Product {
   images?: Array<{ id: number; url: string; alt_text?: string; display_order?: number; }>;
   occasion?: Occasion;
   price: number; // Alias for price_usd
+}
+
+interface APIProductResponse {
+  product: Product;
+}
+
+declare global {
+  interface Window {
+    productDetail?: ProductDetailManager;
+  }
 }
 
 interface CartItem {
@@ -54,7 +64,7 @@ class ProductDetailManager {
       this.bindEvents();
       this.updateCartUI();
 
-      console.log('✅ Product Detail initialized', { productId, productName: this.product?.name });
+      // Product Detail initialized successfully
     } catch (error) {
       console.error('❌ Error initializing product detail:', error);
       this.showError('Error al cargar el producto');
@@ -67,7 +77,7 @@ class ProductDetailManager {
     const productId = idParam ? parseInt(idParam, 10) : null;
 
     if (!productId || isNaN(productId)) {
-      console.error('❌ Invalid product ID in URL:', idParam);
+      console.error('Invalid product ID in URL:', idParam);
       return null;
     }
 
@@ -77,7 +87,7 @@ class ProductDetailManager {
   private async loadAllProducts(): Promise<void> {
     try {
       // Load products in batches since API limits to 100 per request
-      let allProducts: ProductWithImagesAndOccasion[] = [];
+      const allProducts: ProductWithImagesAndOccasion[] = [];
       let page = 1;
       let hasMore = true;
 
@@ -86,7 +96,7 @@ class ProductDetailManager {
 
         if (response.success && response.data?.products) {
           const batchProducts = response.data.products.map((p: Product) => {
-            const productWithImages = p as any; // Cast to access images
+            const productWithImages = p as Product & { images?: Array<{ id: number; url: string; alt_text?: string; display_order?: number; }> };
             return {
               ...p,
               images: productWithImages.images ?? [],
@@ -105,16 +115,16 @@ class ProductDetailManager {
             hasMore = false;
           }
         } else {
-          throw new Error(response.message || 'Failed to load products');
+          throw new Error(response.message ?? 'Failed to load products');
         }
       }
 
       // Apply same sorting as main page: group by occasion, then alphabetical
       this.allProducts = this.sortProductsByOccasionAndName(allProducts);
 
-      console.log('✅ All products loaded via pagination', { count: this.allProducts.length, pages: page });
+      // All products loaded via pagination
     } catch (error) {
-      console.error('❌ Error loading all products:', error);
+      console.error('Error loading all products:', error);
     }
   }
 
@@ -123,11 +133,14 @@ class ProductDetailManager {
 
     // Group by occasion
     products.forEach(product => {
-      const occasionName = product.occasion?.name || 'Sin ocasión';
+      const occasionName = product.occasion?.name ?? 'Sin ocasión';
       if (!grouped.has(occasionName)) {
         grouped.set(occasionName, []);
       }
-      grouped.get(occasionName)!.push(product);
+      const group = grouped.get(occasionName);
+      if (group) {
+        group.push(product);
+      }
     });
 
     // Sort each group alphabetically by name
@@ -142,7 +155,10 @@ class ProductDetailManager {
 
     const result: ProductWithImagesAndOccasion[] = [];
     sortedOccasions.forEach(occasionName => {
-      result.push(...grouped.get(occasionName)!);
+      const group = grouped.get(occasionName);
+      if (group) {
+        result.push(...group);
+      }
     });
 
     return result;
@@ -154,7 +170,7 @@ class ProductDetailManager {
 
       if (response.success && response.data) {
         // The API returns data wrapped in { product: ... }
-        const productData = (response.data as any).product;
+        const productData = (response.data as APIProductResponse).product;
         if (!productData) {
           throw new Error('Product data not found in response');
         }
@@ -172,82 +188,70 @@ class ProductDetailManager {
           this.currentProductIndex = 0;
         }
 
-        console.log('✅ Product loaded', {
-          productId,
-          productName: this.product?.name || 'Unknown',
-          currentIndex: this.currentProductIndex,
-          totalProducts: this.allProducts.length
-        });
+        // Product loaded successfully
       } else {
         throw new Error('Product not found');
       }
     } catch (error) {
-      console.error('❌ Error loading product:', error);
+      console.error('Error loading product:', error);
       throw error;
     }
   }
 
   private setupUI(): void {
     if (!this.product) {
-      console.error('❌ setupUI: No product data available');
+      console.error('setupUI: No product data available');
       return;
     }
 
-    console.log('🔄 setupUI: Starting UI setup', { productName: this.product.name });
+    // Starting UI setup
 
     try {
       // Update page title
       document.title = `${this.product.name} - FloresYa`;
-      console.log('✅ setupUI: Page title updated');
+      // Page title updated
 
       // Update breadcrumb
       this.updateBreadcrumb();
-      console.log('✅ setupUI: Breadcrumb updated');
+      // Breadcrumb updated
 
       // Update product info
       this.updateProductInfo();
-      console.log('✅ setupUI: Product info updated');
+      // Product info updated
 
       // Update images
       this.updateProductImages();
-      console.log('✅ setupUI: Product images updated');
+      // Product images updated
 
       // Update navigation counter
       this.updateNavigationCounter();
-      console.log('✅ setupUI: Navigation counter updated');
+      // Navigation counter updated
 
       // Hide loading spinner and show content
       const spinner = document.getElementById('loading-spinner');
       const content = document.getElementById('product-content');
 
-      console.log('🔄 setupUI: DOM elements found', {
-        spinner: !!spinner,
-        content: !!content
-      });
+      // DOM elements found and validated
 
       if (spinner) {
         spinner.classList.add('d-none');
-        console.log('✅ setupUI: Loading spinner hidden');
+        // Loading spinner hidden
       } else {
-        console.warn('⚠️ setupUI: Loading spinner element not found');
+        console.warn('Loading spinner element not found');
       }
 
       if (content) {
         content.classList.add('show');
 
         // Force a reflow to ensure the change takes effect
-        content.offsetHeight;
+        void content.offsetHeight;
 
-        console.log('✅ setupUI: Product content shown', {
-          classList: content.className,
-          offsetHeight: content.offsetHeight,
-          offsetWidth: content.offsetWidth
-        });
+        // Product content shown successfully
       } else {
-        console.error('❌ setupUI: Product content element not found');
+        console.error('Product content element not found');
       }
 
-      console.log('✅ setupUI: UI setup completed successfully');
+      // UI setup completed successfully
 
       // Final fallback: Force visibility after a short delay (similar to main products page)
       setTimeout(() => {
@@ -257,22 +261,22 @@ class ProductDetailManager {
         if (finalContent) {
           finalContent.classList.add('show');
           finalContent.classList.remove('d-none');
-          console.log('🔧 Final fallback: Content forced visible');
+          // Final fallback: Content forced visible
         }
 
         if (finalSpinner) {
           finalSpinner.classList.add('d-none');
-          console.log('🔧 Final fallback: Spinner hidden');
+          // Final fallback: Spinner hidden
         }
       }, 100);
 
     } catch (error) {
-      console.error('❌ setupUI: Error during UI setup', error);
+      console.error('Error during UI setup:', error);
     }
   }
 
   private updateBreadcrumb(): void {
-    if (!this.product) return;
+    if (!this.product) {return;}
 
     const productBreadcrumb = document.getElementById('product-breadcrumb');
     const categoryBreadcrumb = document.getElementById('category-breadcrumb');
@@ -288,11 +292,11 @@ class ProductDetailManager {
   }
 
   private updateProductInfo(): void {
-    if (!this.product) return;
+    if (!this.product) {return;}
 
     // Product name
     const nameElement = document.getElementById('product-name');
-    if (nameElement) nameElement.textContent = this.product.name;
+    if (nameElement) {nameElement.textContent = this.product.name;}
 
     // Product price
     const priceElement = document.getElementById('product-price');
@@ -307,7 +311,7 @@ class ProductDetailManager {
     // Product description
     const descriptionElement = document.getElementById('product-description');
     if (descriptionElement) {
-      descriptionElement.textContent = this.product.description || 'Hermoso arreglo floral perfecto para cualquier ocasión especial.';
+      descriptionElement.textContent = this.product.description ?? 'Hermoso arreglo floral perfecto para cualquier ocasión especial.';
     }
 
     // Product occasion
@@ -318,14 +322,15 @@ class ProductDetailManager {
   }
 
   private updateProductImages(): void {
-    if (!this.product) return;
+    if (!this.product) {return;}
 
-    const mainImage = document.getElementById('main-image') as HTMLImageElement;
+    const mainImage = document.getElementById('main-image');
+    if (!(mainImage instanceof HTMLImageElement)) return;
     const thumbnailContainer = document.getElementById('image-thumbnails');
     const imageCounter = document.getElementById('current-image');
     const totalImages = document.getElementById('total-images');
 
-    const images = this.product.images || [];
+    const images = this.product.images ?? [];
     const hasImages = images.length > 0;
 
     if (mainImage) {
@@ -333,7 +338,7 @@ class ProductDetailManager {
         const primaryImage = images[0];
         if (primaryImage) {
           mainImage.src = primaryImage.url;
-          mainImage.alt = primaryImage.alt_text || this.product.name;
+          mainImage.alt = primaryImage.alt_text ?? this.product.name;
         }
       } else {
         mainImage.src = '/images/placeholder-product-2.webp';
@@ -342,15 +347,15 @@ class ProductDetailManager {
     }
 
     // Update image counter
-    if (imageCounter) imageCounter.textContent = '1';
-    if (totalImages) totalImages.textContent = Math.max(1, images.length).toString();
+    if (imageCounter) {imageCounter.textContent = '1';}
+    if (totalImages) {totalImages.textContent = Math.max(1, images.length).toString();}
 
     // Update thumbnails
     if (thumbnailContainer) {
       if (hasImages && images.length > 1) {
         thumbnailContainer.innerHTML = images.map((image, index) => `
           <div class="thumbnail-wrapper ${index === 0 ? 'active' : ''}" data-index="${index}">
-            <img src="${image.url}" alt="${image.alt_text || this.product!.name}"
+            <img src="${image.url}" alt="${image.alt_text ?? (this.product ? this.product.name : 'Product image')}"
                  class="img-fluid rounded cursor-pointer thumbnail-image"
                  style="width: 80px; height: 80px; object-fit: cover;">
           </div>
@@ -380,25 +385,25 @@ class ProductDetailManager {
     const backBtn = document.getElementById('back-btn');
     const homeBtn = document.getElementById('home-btn');
 
-    if (prevBtn) prevBtn.addEventListener('click', () => this.navigateToPrevious());
-    if (nextBtn) nextBtn.addEventListener('click', () => this.navigateToNext());
-    if (backBtn) backBtn.addEventListener('click', () => history.back());
-    if (homeBtn) homeBtn.addEventListener('click', () => window.location.href = '/');
+    if (prevBtn) {prevBtn.addEventListener('click', () => this.navigateToPrevious());}
+    if (nextBtn) {nextBtn.addEventListener('click', () => this.navigateToNext());}
+    if (backBtn) {backBtn.addEventListener('click', () => history.back());}
+    if (homeBtn) {homeBtn.addEventListener('click', () => window.location.href = '/');}
 
     // Cart buttons
     const addToCartBtn = document.getElementById('add-to-cart-btn');
     const buyNowBtn = document.getElementById('buy-now-btn');
 
-    if (addToCartBtn) addToCartBtn.addEventListener('click', () => this.addToCart());
-    if (buyNowBtn) buyNowBtn.addEventListener('click', () => this.buyNow());
+    if (addToCartBtn) {addToCartBtn.addEventListener('click', () => this.addToCart());}
+    if (buyNowBtn) {buyNowBtn.addEventListener('click', () => this.buyNow());}
 
     // Cart toggle
     const cartToggle = document.getElementById('cart-toggle');
-    if (cartToggle) cartToggle.addEventListener('click', () => this.toggleCartPanel());
+    if (cartToggle) {cartToggle.addEventListener('click', () => this.toggleCartPanel());}
 
     // Image zoom
     const mainImage = document.getElementById('main-image');
-    if (mainImage) mainImage.addEventListener('click', () => this.zoomImage());
+    if (mainImage) {mainImage.addEventListener('click', () => this.zoomImage());}
   }
 
   private bindThumbnailEvents(): void {
@@ -411,9 +416,10 @@ class ProductDetailManager {
   }
 
   private changeMainImage(index: number): void {
-    if (!this.product?.images || index >= this.product.images.length) return;
+    if (!this.product?.images || index >= this.product.images.length) {return;}
 
-    const mainImage = document.getElementById('main-image') as HTMLImageElement;
+    const mainImage = document.getElementById('main-image');
+    if (!(mainImage instanceof HTMLImageElement)) return;
     const currentCounter = document.getElementById('current-image');
     const thumbnails = document.querySelectorAll('.thumbnail-wrapper');
 
@@ -421,7 +427,7 @@ class ProductDetailManager {
       const image = this.product.images[index];
       if (image) {
         mainImage.src = image.url;
-        mainImage.alt = image.alt_text || this.product.name;
+        mainImage.alt = image.alt_text ?? this.product.name;
       }
     }
 
@@ -438,7 +444,7 @@ class ProductDetailManager {
   }
 
   private navigateToPrevious(): void {
-    if (this.allProducts.length === 0) return;
+    if (this.allProducts.length === 0) {return;}
 
     let newIndex = this.currentProductIndex - 1;
     if (newIndex < 0) {
@@ -453,7 +459,7 @@ class ProductDetailManager {
   }
 
   private navigateToNext(): void {
-    if (this.allProducts.length === 0) return;
+    if (this.allProducts.length === 0) {return;}
 
     let newIndex = this.currentProductIndex + 1;
     if (newIndex >= this.allProducts.length) {
@@ -488,14 +494,14 @@ class ProductDetailManager {
   }
 
   private addToCart(): void {
-    if (!this.product) return;
+    if (!this.product) {return;}
 
-    const existingItem = this.cart.find(item => item.productId === this.product!.id);
+    const existingItem = this.cart.find(item => item.productId === (this.product ? this.product.id : 0));
 
     if (existingItem) {
       existingItem.quantity += 1;
     } else {
-      const mainImage = this.product.images?.[0]?.url || '/images/placeholder-product-2.webp';
+      const mainImage = this.product.images?.[0]?.url ?? '/images/placeholder-product-2.webp';
       this.cart.push({
         productId: this.product.id,
         name: this.product.name,
@@ -510,14 +516,14 @@ class ProductDetailManager {
     this.showCartPanel();
     this.showAddToCartMessage();
 
-    console.log('🛒 Product added to cart', {
+    console.warn('🛒 Product added to cart', {
       productId: this.product.id,
       cartSize: this.cart.length
     });
   }
 
   private buyNow(): void {
-    if (!this.product) return;
+    if (!this.product) {return;}
 
     // Add to cart first
     this.addToCart();
@@ -678,8 +684,9 @@ class ProductDetailManager {
 
   private zoomImage(): void {
     // Simple image zoom implementation
-    const mainImage = document.getElementById('main-image') as HTMLImageElement;
-    if (!mainImage) return;
+    const mainImage = document.getElementById('main-image');
+    if (!(mainImage instanceof HTMLImageElement)) return;
+    if (!mainImage) {return;}
 
     // Create modal for zoomed image
     const modal = document.createElement('div');
@@ -688,7 +695,7 @@ class ProductDetailManager {
       <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">${this.product?.name || 'Imagen del producto'}</h5>
+            <h5 class="modal-title">${this.product?.name ?? 'Imagen del producto'}</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body text-center">
@@ -733,18 +740,20 @@ class ProductDetailManager {
     }
 
     const spinner = document.getElementById('loading-spinner');
-    if (spinner) spinner.classList.add('d-none');
+    if (spinner) {spinner.classList.add('d-none');}
   }
 }
 
 // Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
+  void (async () => {
   try {
-    (window as any).productDetail = new ProductDetailManager();
-    await (window as any).productDetail.init();
+    window.productDetail = new ProductDetailManager();
+    await window.productDetail.init();
   } catch (error) {
-    console.error('❌ Failed to initialize product detail:', error);
+    console.error('Failed to initialize product detail:', error);
   }
+  })();
 });
 
 // Export for module usage

@@ -3,20 +3,23 @@
  * Implements new carousel_order logic with optimal performance
  */
 
-import { supabaseService } from '../config/supabase.js';
-import type {
-  Product,
-  ProductWithImages,
-  CarouselProduct,
-  ProductQuery,
-  ProductResponse,
-  CarouselResponse,
-  ProductCreateRequest,
-  ProductUpdateRequest,
-  ImageSize,
-  ProductImage,
-  RawProductWithImages
+import {
+  supabaseService,
+  type CarouselProduct,
+  type CarouselResponse,
+  type ImageSize,
+  type Product,
+  type ProductCreateRequest,
+  type ProductImage,
+  type ProductQuery,
+  type ProductResponse,
+  type ProductUpdateRequest,
+  type ProductWithImages,
+  type RawProductWithImages
 } from '../config/supabase.js';
+
+import lodash from 'lodash';
+const { omit } = lodash;
 
 export class ProductService {
   /**
@@ -45,7 +48,7 @@ export class ProductService {
       }
 
       // Get primary thumb images AND all small images for these products
-      const productIds = productsData.map(p => p.id);
+      const productIds = (productsData as { id: number }[]).map(p => p.id);
 
       // Get primary thumb for carousel display
       const { data: thumbData, error: thumbError } = await supabaseService
@@ -189,7 +192,7 @@ export class ProductService {
         }
 
         if (productIds && productIds.length > 0) {
-          const ids = productIds.map(row => row.product_id);
+          const ids = (productIds as { product_id: number }[]).map(row => row.product_id);
           queryBuilder = queryBuilder.in('id', ids);
         } else {
           // No products for this occasion - return empty result
@@ -246,7 +249,7 @@ export class ProductService {
         const sortedImages = (product.product_images ?? []).sort((a: ProductImage, b: ProductImage) => a.image_index - b.image_index);
         const mediumImages = mediumImagesByProduct[product.id] ?? [];
 
-        const { product_images, ...productWithoutImages } = product;
+        const productWithoutImages = omit(product, 'product_images');
         return {
           ...productWithoutImages,
           images: sortedImages,
@@ -309,7 +312,7 @@ export class ProductService {
       const rawProduct = data as RawProductWithImages;
       const sortedImages = (rawProduct.product_images ?? []).sort((a: ProductImage, b: ProductImage) => a.image_index - b.image_index);
 
-      const { product_images, ...productWithoutImages } = rawProduct;
+      const productWithoutImages = omit(rawProduct, 'product_images');
       const productWithImages: ProductWithImages = {
         ...productWithoutImages,
         images: sortedImages,
@@ -344,7 +347,7 @@ export class ProductService {
         throw new Error(`Failed to fetch product occasions: ${occasionError.message}`);
       }
 
-      const occasionIds = (occasionData ?? []).map(row => row.occasion_id);
+      const occasionIds = ((occasionData ?? []) as { occasion_id: number }[]).map(row => row.occasion_id);
 
       return {
         ...product,
@@ -361,11 +364,12 @@ export class ProductService {
    * Note: This method is now handled by the PostgreSQL function update_carousel_order_atomic
    * Keeping for backward compatibility but it now delegates to the atomic function
    */
-  private async reorganizeCarouselOrder(desiredOrder: number, _excludeProductId?: number): Promise<void> {
+  private reorganizeCarouselOrder(desiredOrder: number, _excludeProductId?: number): Promise<void> {
     // This method is now deprecated - carousel reorganization is handled
     // atomically by the PostgreSQL function update_carousel_order_atomic
-    console.log(`🔄 Carousel reorganization delegated to PostgreSQL function for position ${desiredOrder}`);
+    console.warn(`🔄 Carousel reorganization delegated to PostgreSQL function for position ${desiredOrder}`);
     // _excludeProductId is kept for backward compatibility but not used
+    return Promise.resolve();
   }
 
   /**
@@ -376,11 +380,11 @@ export class ProductService {
       const { stock, featured, carousel_order, price_ves, sku, occasion_ids, ...restData } = productData;
 
       // Debug log to see what we're receiving
-      console.log('ProductService.createProduct received data:', JSON.stringify(productData, null, 2));
+      console.warn('ProductService.createProduct received data:', JSON.stringify(productData, null, 2));
 
       // Handle carousel reorganization if carousel_order is provided
       if (carousel_order && carousel_order > 0) {
-        console.log(`🔄 Reorganizing carousel for new product at position ${carousel_order}`);
+        console.warn(`🔄 Reorganizing carousel for new product at position ${carousel_order}`);
         await this.reorganizeCarouselOrder(carousel_order);
       }
 
@@ -399,7 +403,7 @@ export class ProductService {
       let createdProduct: Product;
 
       if (occasion_ids && occasion_ids.length > 0) {
-        console.log(`🔄 Using transaction for product creation with ${occasion_ids.length} occasion associations`);
+        console.warn(`🔄 Using transaction for product creation with ${occasion_ids.length} occasion associations`);
 
         // Execute within a single transaction
         const { data, error } = await supabaseService.rpc('create_product_with_occasions', {
@@ -416,10 +420,10 @@ export class ProductService {
         }
 
         createdProduct = data[0] as Product;
-        console.log(`✅ Successfully created product ${createdProduct.id} with occasion associations via transaction`);
+        console.warn(`✅ Successfully created product ${createdProduct.id} with occasion associations via transaction`);
       } else {
         // Simple product creation without occasions
-        console.log('🔄 Creating product without occasion associations');
+        console.warn('🔄 Creating product without occasion associations');
 
         const { data, error } = await supabaseService
           .from('products')
@@ -436,7 +440,7 @@ export class ProductService {
         }
 
         createdProduct = data as Product;
-        console.log(`✅ Successfully created product ${createdProduct.id} without occasions`);
+        console.warn(`✅ Successfully created product ${createdProduct.id} without occasions`);
       }
 
       return createdProduct;
@@ -456,13 +460,13 @@ export class ProductService {
       // Handle carousel reorganization if carousel_order is being changed
       if (carousel_order !== undefined) {
         if (carousel_order && carousel_order > 0) {
-          console.log(`🔄 Reorganizing carousel for product ${id} to position ${carousel_order}`);
+          console.warn(`🔄 Reorganizing carousel for product ${id} to position ${carousel_order}`);
           await this.reorganizeCarouselOrder(carousel_order, id);
         }
       }
 
       const updatePayload: Partial<Omit<Product, 'id' | 'created_at' | 'updated_at'>> = {
-        ...updates,
+        ...updates
       };
 
       if (stock !== undefined) {
@@ -594,7 +598,7 @@ export class ProductService {
           throw new Error(`Failed to deactivate product: ${error.message}`);
         }
 
-        console.log(`✅ Product ${productId} deactivated (has references)`);
+        console.warn(`✅ Product ${productId} deactivated (has references)`);
       } else {
         // Physical deletion - safe to delete
         const { error } = await supabaseService
@@ -606,7 +610,7 @@ export class ProductService {
           throw new Error(`Failed to delete product: ${error.message}`);
         }
 
-        console.log(`✅ Product ${productId} physically deleted (no references)`);
+        console.warn(`✅ Product ${productId} physically deleted (no references)`);
       }
     } catch (error) {
       console.error('ProductService.deleteProduct error:', error);
