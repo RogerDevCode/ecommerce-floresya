@@ -10,14 +10,14 @@
     "declaration": true,
     "sourceMap": false,
     "composite": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": false
   },
   "include": [
     "./**/*.ts",
     "./**/*.tsx",
-    "../types/**/*",
-    "../config/**/*",
-    "../shared/**/*"
+    "../shared/**/*",
+    "../config/**/*"
   ],
   "exclude": [
     "node_modules",

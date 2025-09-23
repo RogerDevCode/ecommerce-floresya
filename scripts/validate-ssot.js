@@ -188,9 +188,9 @@ function checkFileNameDuplicates() {
       const fileName = path.basename(filePath);
       const relativePath = path.relative(PROJECT_ROOT, filePath);
 
-      // Allow index.ts files in different directories (standard module pattern)
-      if (fileName === 'index.ts') {
-        return; // Skip index.ts files - they are allowed to be duplicated
+      // Allow index.ts and index.js files in different directories (standard module pattern)
+      if (fileName === 'index.ts' || fileName === 'index.js') {
+        return; // Skip index.ts/js files - they are allowed to be duplicated
       }
 
       if (fileNameMap.has(fileName)) {
