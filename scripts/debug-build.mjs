@@ -33,7 +33,7 @@ try {
   const backendFiles = execSync('find src -name "*.ts" -not -path "*/frontend/*" -not -path "*/node_modules/*" | head -5', { encoding: 'utf8' });
   if (backendFiles.trim()) {
     console.log('Found backend files, compiling...');
-    execSync('./node_modules/.bin/tsc -p tsconfig.node.json --listFiles', {
+    execSync('npx tsc -p tsconfig.node.json --listFiles', {
       encoding: 'utf8',
       stdio: 'inherit'
     });
