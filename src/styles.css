@@ -35,6 +35,10 @@
     @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
   }
 
+  .btn-outline-primary {
+    @apply border border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white focus:ring-primary-500;
+  }
+
   .btn-secondary {
     @apply bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500;
   }
@@ -221,5 +225,13 @@
 
   .transition-smooth {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hover-lift {
+    transition: transform 0.2s ease-in-out;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
   }
 }
