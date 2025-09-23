@@ -100,7 +100,8 @@
       "Bash(./scripts/robust-build.mjs)",
       "Bash(gitp -q -m \"Despues de avanzar en los test, y correr claude y Supernova\")",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

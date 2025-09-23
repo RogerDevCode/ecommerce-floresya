@@ -1,42 +1,45 @@
-# Ignore source code and development files, Vercel will use the build output
+# FloresYa Vercel Ignore File
+# Exclude files from deployment
 
-# Don't ignore source code as serverless function needs it
-# src/
-# Don't ignore TypeScript files as they are needed for Vercel serverless functions
-# *.ts
+# Development files
+.env.local
+.env.example
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Dependencies (Vercel installs them based on package-lock.json)
+# Source files (we deploy compiled dist/)
+src/
+!src/shared/
+tests/
+scripts/
+docs/
+
+# Node modules
 node_modules/
 
 # Git
 .git/
 .gitignore
 
-# Environment files (use Vercel's environment variables)
-.env
-.env.*
-!/.env.production.example
-!/.env.example
-
-# Tests and configuration
-tests/
-*.config.js
-*.config.ts
-vitest.*.ts
-.eslintrc.json
-.prettierrc
-
-# Documentation and temporary files
-*.md
-*.log
-*.lock
-.DS_Store
+# IDE files
 .vscode/
 .idea/
-coverage/
+*.swp
+*.swo
 
-# Crucially, DO NOT ignore the dist/ folder, as Vercel needs it.
-# Also, do not ignore package.json and package-lock.json
+# OS files
+.DS_Store
+Thumbs.db
 
-# Ignore the old project version
-old_ecommerce-floresya/
+# Legacy files that might cause security warnings
+api/chat/
+legacy/
+old/
+deprecated/
+
+# Build artifacts that shouldn't be scanned
+*.map
+*.d.ts.map
