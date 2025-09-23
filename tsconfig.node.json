@@ -17,6 +17,7 @@
     "src/models/**/*.ts",
     "src/services/**/*.ts",
     "src/utils/**/*.ts",
+    "src/shared/**/*.ts",
     "src/types/**/*.ts",
     "src/**/*.d.ts"
   ],

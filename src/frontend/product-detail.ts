@@ -3,9 +3,8 @@
  * Handles product detail page functionality including navigation, cart operations, and UI management
  */
 
-import { FloresYaAPI } from './services/api.js';
-import type { Occasion, Product } from '../config/supabase.js';
-import type { WindowWithBootstrap } from '../types/globals.js';
+import { FloresYaAPI } from './services/apiClient.js';
+import type { Occasion, Product, WindowWithBootstrap, CartItem } from '../shared/types/index.js';
 
 interface ProductWithImagesAndOccasion extends Product {
   images?: Array<{ id: number; url: string; alt_text?: string; display_order?: number; }>;
@@ -13,23 +12,6 @@ interface ProductWithImagesAndOccasion extends Product {
   price: number; // Alias for price_usd
 }
 
-interface APIProductResponse {
-  product: Product & { images?: Array<{ id: number; url: string; alt_text?: string; display_order?: number; }> };
-}
-
-declare global {
-  interface Window {
-    productDetail?: ProductDetailManager;
-  }
-}
-
-interface CartItem {
-  productId: number;
-  name: string;
-  price: number;
-  image: string;
-  quantity: number;
-}
 
 class ProductDetailManager {
   private product: ProductWithImagesAndOccasion | null = null;
@@ -71,7 +53,7 @@ class ProductDetailManager {
     }
   }
 
-  private getProductIdFromURL(): number | null {
+  public getProductIdFromURL(): number | null {
     const urlParams = new URLSearchParams(window.location.search);
     const idParam = urlParams.get('id');
     const productId = idParam ? parseInt(idParam, 10) : null;
@@ -394,7 +376,7 @@ class ProductDetailManager {
     const addToCartBtn = document.getElementById('add-to-cart-btn');
     const buyNowBtn = document.getElementById('buy-now-btn');
 
-    if (addToCartBtn) {addToCartBtn.addEventListener('click', () => this.addToCart());}
+    if (addToCartBtn) {addToCartBtn.addEventListener('click', () => void this.addToCart());}
     if (buyNowBtn) {buyNowBtn.addEventListener('click', () => this.buyNow());}
 
     // Cart toggle
@@ -493,7 +475,17 @@ class ProductDetailManager {
     }, 3000);
   }
 
-  private addToCart(): void {
+  public addToCart(productId?: number, quantity = 1): Promise<boolean> {
+    if (productId && productId !== this.product?.id) {
+      // If different product ID, load that product first
+      return this.loadProduct(productId).then(() => {
+        return this.addToCartInternal(quantity);
+      });
+    }
+    return Promise.resolve(this.addToCartInternal(quantity));
+  }
+
+  private addToCartInternal(_quantity = 1): boolean {
     if (!this.product) {return;}
 
     const existingItem = this.cart.find(item => item.productId === (this.product ? this.product.id : 0));
@@ -526,7 +518,7 @@ class ProductDetailManager {
     if (!this.product) {return;}
 
     // Add to cart first
-    this.addToCart();
+    void this.addToCart();
 
     // Redirect to checkout
     setTimeout(() => {
@@ -720,6 +712,12 @@ class ProductDetailManager {
     }
   }
 
+  // Public method required by global interface
+  public showImages(productId: number): void {
+    // Navigate to product detail page to show images
+    window.location.href = `/pages/product-detail.html?id=${productId}`;
+  }
+
   private showError(message: string): void {
     const container = document.getElementById('product-content');
     if (container) {
@@ -748,8 +746,14 @@ class ProductDetailManager {
 document.addEventListener('DOMContentLoaded', () => {
   void (async () => {
   try {
-    window.productDetail = new ProductDetailManager();
-    await window.productDetail.init();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    window.productDetail = new ProductDetailManager() as any;
+    const productId = window.productDetail.getProductIdFromURL();
+    if (productId) {
+      await window.productDetail.init(productId);
+    } else {
+      console.error('No product ID found in URL');
+    }
   } catch (error) {
     console.error('Failed to initialize product detail:', error);
   }

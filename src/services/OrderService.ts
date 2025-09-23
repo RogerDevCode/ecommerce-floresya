@@ -3,8 +3,8 @@
  * Complete order management with cart calculation and status tracking
  */
 
+import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
 import {
-  supabaseService,
   type Order,
   type OrderCreateRequest,
   type OrderResponse,
@@ -17,7 +17,9 @@ import {
   type RawOrderStatusHistoryWithUser,
   type RawOrderWithItemsAndUser,
   type RawOrderWithItemsPaymentsHistory
-} from '../config/supabase.js';
+} from '../shared/types/index.js';
+
+const db = typeSafeDatabaseService.getClient();
 
 interface OrderQuery {
   page?: number;
@@ -51,7 +53,7 @@ export class OrderService {
 
       const offset = (page - 1) * limit;
 
-      let queryBuilder = supabaseService
+      let queryBuilder = db
         .from('orders')
         .select(`
           *,
@@ -111,7 +113,7 @@ export class OrderService {
    */
   public async getOrderById(id: number): Promise<OrderWithItemsAndPayments | null> {
     try {
-      const { data, error } = await supabaseService
+      const { data, error } = await db
         .from('orders')
         .select(`
           *,
@@ -161,7 +163,7 @@ export class OrderService {
       void _items; // Silence unused variable warning
 
       // Use PostgreSQL function for atomic transaction
-      const { data, error } = await supabaseService.rpc('create_order_with_items', {
+      const data = await typeSafeDatabaseService.executeRpc('create_order_with_items', {
         order_data: {
           ...orderFields,
           status: 'pending',
@@ -177,9 +179,6 @@ export class OrderService {
         }))
       });
 
-      if (error) {
-        throw new Error(`Failed to create order transaction: ${error.message}`);
-      }
 
       if (!data) {
         throw new Error('No data returned from order creation transaction');
@@ -200,7 +199,7 @@ export class OrderService {
     try {
       const { id, ...updates } = updateData;
 
-      const { data, error } = await supabaseService
+      const { data, error } = await db
         .from('orders')
         .update(updates)
         .eq('id', id)
@@ -228,16 +227,12 @@ export class OrderService {
   public async updateOrderStatus(orderId: number, newStatus: OrderStatus, notes?: string, changedBy?: number): Promise<Order> {
     try {
       // Use PostgreSQL function for atomic status update with history
-      const { data, error } = await supabaseService.rpc('update_order_status_with_history', {
+      const data = await typeSafeDatabaseService.executeRpc('update_order_status_with_history', {
         order_id: orderId,
         new_status: newStatus,
         notes: notes ?? null,
         changed_by: changedBy ?? null
       });
-
-      if (error) {
-        throw new Error(`Failed to update order status transaction: ${error.message}`);
-      }
 
       if (!data) {
         throw new Error('No data returned from order status update transaction');
@@ -255,7 +250,7 @@ export class OrderService {
    */
   public async getOrderStatusHistory(orderId: number): Promise<OrderStatusHistory[]> {
     try {
-      const { data, error } = await supabaseService
+      const { data, error } = await db
         .from('order_status_history')
         .select(`*, users(full_name)`)
         .eq('order_id', orderId)
@@ -278,7 +273,7 @@ export class OrderService {
   private async calculateOrderTotals(items: Array<{ product_id: number; quantity: number }>) {
     const productIds = items.map(item => item.product_id);
 
-    const { data: products, error } = await supabaseService
+    const { data: products, error } = await db
       .from('products')
       .select('id, name, summary, price_usd, stock')
       .in('id', productIds)
@@ -288,7 +283,11 @@ export class OrderService {
       throw new Error(`Failed to fetch product details: ${error?.message ?? 'No products returned'}`);
     }
 
-    const productMap = new Map<number, Product>(products.map((p) => [p.id, p as Product]));
+    // Create type for the limited product data we need
+    type ProductForCalculation = Pick<Product, 'id' | 'name' | 'summary' | 'price_usd' | 'stock'>;
+    const productMap = new Map<number, ProductForCalculation>(
+      products.map((p: ProductForCalculation) => [p.id, p])
+    );
     let total_amount_usd = 0;
 
     const calculatedItems = items.map(item => {

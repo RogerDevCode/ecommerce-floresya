@@ -3,16 +3,31 @@
  * Business logic for user management with atomic operations
  */
 
-import bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcryptjs';
+import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
 import {
-  supabaseService,
   type ApiResponse,
   type UserCreateRequest,
   type UserListResponse,
   type UserQuery,
   type UserResponse,
   type UserUpdateRequest
-} from '../config/supabase.js';
+} from '../shared/types/index.js';
+
+// Using TypeSafeDatabaseService for type-safe operations
+
+// Type guards for RPC responses
+interface RpcUserResponse {
+  success: boolean;
+  message?: string;
+  error_code?: string;
+  user?: UserResponse;
+  deleted_user?: { id: number; email: string; full_name?: string };
+}
+
+function isRpcUserResponse(data: unknown): data is RpcUserResponse {
+  return typeof data === 'object' && data !== null && 'success' in data;
+}
 
 export class UserService {
   private readonly SALT_ROUNDS = 12;
@@ -33,7 +48,7 @@ export class UserService {
         sort_direction = 'desc'
       } = query;
 
-      let supabaseQuery = supabaseService
+      let supabaseQuery = typeSafeDatabaseService.getClient()
         .from('users')
         .select('id, email, full_name, phone, role, is_active, email_verified, created_at, updated_at', { count: 'exact' });
 
@@ -110,7 +125,7 @@ export class UserService {
         };
       }
 
-      const { data, error } = await supabaseService
+      const { data, error } = await typeSafeDatabaseService.getClient()
         .from('users')
         .select('id, email, full_name, phone, role, is_active, email_verified, created_at, updated_at')
         .eq('id', id)
@@ -156,7 +171,7 @@ export class UserService {
         };
       }
 
-      const { data, error } = await supabaseService
+      const { data, error } = await typeSafeDatabaseService.getClient()
         .from('users')
         .select('id, email, full_name, phone, role, is_active, email_verified, created_at, updated_at')
         .eq('email', email.trim().toLowerCase())
@@ -220,24 +235,19 @@ export class UserService {
       };
 
       // Call atomic function
-      const { data, error } = await supabaseService
-        .rpc('create_user_atomic', { user_data: userDataForDb });
+      const data = await typeSafeDatabaseService.executeRpc('create_user_atomic', { user_data: userDataForDb });
 
-      if (error) {
-        throw new Error(`Database error: ${error.message}`);
-      }
-
-      if (!data?.success) {
+      if (!isRpcUserResponse(data) || !data.success) {
         return {
           success: false,
-          message: data?.message ?? 'Failed to create user',
-          error: data?.error_code ?? 'CREATE_USER_ERROR'
+          message: isRpcUserResponse(data) ? data.message ?? 'Failed to create user' : 'Failed to create user',
+          error: isRpcUserResponse(data) ? data.error_code ?? 'CREATE_USER_ERROR' : 'CREATE_USER_ERROR'
         };
       }
 
       return {
         success: true,
-        data: data.user as UserResponse,
+        data: data.user,
         message: 'User created successfully'
       };
 
@@ -320,27 +330,22 @@ export class UserService {
       }
 
       // Call atomic function
-      const { data, error } = await supabaseService
-        .rpc('update_user_atomic', {
-          user_id: id,
-          user_data: updateData
-        });
+      const data = await typeSafeDatabaseService.executeRpc('update_user_atomic', {
+        user_id: id,
+        user_data: updateData
+      });
 
-      if (error) {
-        throw new Error(`Database error: ${error.message}`);
-      }
-
-      if (!data?.success) {
+      if (!isRpcUserResponse(data) || !data.success) {
         return {
           success: false,
-          message: data?.message ?? 'Failed to update user',
-          error: data?.error_code ?? 'UPDATE_USER_ERROR'
+          message: isRpcUserResponse(data) ? data.message ?? 'Failed to update user' : 'Failed to update user',
+          error: isRpcUserResponse(data) ? data.error_code ?? 'UPDATE_USER_ERROR' : 'UPDATE_USER_ERROR'
         };
       }
 
       return {
         success: true,
-        data: data.user as UserResponse,
+        data: data.user,
         message: 'User updated successfully'
       };
 
@@ -387,25 +392,20 @@ export class UserService {
       }
 
       // Call atomic function
-      const { data, error } = await supabaseService
-        .rpc('toggle_user_active_atomic', { user_id: id });
+      const data = await typeSafeDatabaseService.executeRpc('toggle_user_active_atomic', { user_id: id });
 
-      if (error) {
-        throw new Error(`Database error: ${error.message}`);
-      }
-
-      if (!data?.success) {
+      if (!isRpcUserResponse(data) || !data.success) {
         return {
           success: false,
-          message: data?.message ?? 'Failed to toggle user status',
-          error: data?.error_code ?? 'TOGGLE_USER_ERROR'
+          message: isRpcUserResponse(data) ? data.message ?? 'Failed to toggle user status' : 'Failed to toggle user status',
+          error: isRpcUserResponse(data) ? data.error_code ?? 'TOGGLE_USER_ERROR' : 'TOGGLE_USER_ERROR'
         };
       }
 
       return {
         success: true,
-        data: data.user as UserResponse,
-        message: data.message ?? 'User status changed successfully'
+        data: data.user,
+        message: isRpcUserResponse(data) ? data.message ?? 'User status changed successfully' : 'User status changed successfully'
       };
 
     } catch (error) {
@@ -432,25 +432,20 @@ export class UserService {
       }
 
       // Call atomic function
-      const { data, error } = await supabaseService
-        .rpc('delete_user_atomic', { user_id: id });
+      const data = await typeSafeDatabaseService.executeRpc('delete_user_atomic', { user_id: id });
 
-      if (error) {
-        throw new Error(`Database error: ${error.message}`);
-      }
-
-      if (!data?.success) {
+      if (!isRpcUserResponse(data) || !data.success) {
         return {
           success: false,
-          message: data?.message ?? 'Failed to delete user',
-          error: data?.error_code ?? 'DELETE_USER_ERROR'
+          message: isRpcUserResponse(data) ? data.message ?? 'Failed to delete user' : 'Failed to delete user',
+          error: isRpcUserResponse(data) ? data.error_code ?? 'DELETE_USER_ERROR' : 'DELETE_USER_ERROR'
         };
       }
 
       return {
         success: true,
-        data: { deleted_user: data.deleted_user },
-        message: data.message ?? 'User deleted successfully'
+        data: { deleted_user: data.deleted_user as { id: number; email: string; full_name?: string } },
+        message: isRpcUserResponse(data) ? data.message ?? 'User deleted successfully' : 'User deleted successfully'
       };
 
     } catch (error) {

@@ -3,8 +3,8 @@
  * Implements new carousel_order logic with optimal performance
  */
 
+import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
 import {
-  supabaseService,
   type CarouselProduct,
   type CarouselResponse,
   type ImageSize,
@@ -16,10 +16,12 @@ import {
   type ProductUpdateRequest,
   type ProductWithImages,
   type RawProductWithImages
-} from '../config/supabase.js';
+} from '../shared/types/index.js';
 
-import lodash from 'lodash';
-const { omit } = lodash;
+// Import consolidated utility function
+import { omitFunction as _omitFunction } from '../shared/utils/index.js';
+
+// Using TypeSafeDatabaseService for type-safe operations
 
 export class ProductService {
   /**
@@ -29,7 +31,7 @@ export class ProductService {
   public async getCarouselProducts(): Promise<CarouselResponse> {
     try {
       // Get products with carousel_order
-      const { data: productsData, error: productsError } = await supabaseService
+      const { data: productsData, error: productsError } = await typeSafeDatabaseService.getClient()
         .from('products')
         .select('id, name, summary, price_usd, carousel_order')
         .not('carousel_order', 'is', null)
@@ -42,7 +44,7 @@ export class ProductService {
 
       if (!productsData || productsData.length === 0) {
         return {
-          carousel_products: [],
+          products: [],
           total_count: 0
         };
       }
@@ -51,7 +53,7 @@ export class ProductService {
       const productIds = (productsData as { id: number }[]).map(p => p.id);
 
       // Get primary thumb for carousel display
-      const { data: thumbData, error: thumbError } = await supabaseService
+      const { data: thumbData, error: thumbError } = await typeSafeDatabaseService.getClient()
         .from('product_images')
         .select('product_id, url')
         .in('product_id', productIds)
@@ -63,7 +65,7 @@ export class ProductService {
       }
 
       // Get all small images for hover effect
-      const { data: smallImagesData, error: smallImagesError } = await supabaseService
+      const { data: smallImagesData, error: smallImagesError } = await typeSafeDatabaseService.getClient()
         .from('product_images')
         .select('product_id, url, image_index')
         .in('product_id', productIds)
@@ -76,12 +78,12 @@ export class ProductService {
 
       // Create maps for primary thumbs and small images
       const thumbMap = new Map<number, string>();
-      (thumbData ?? []).forEach(img => {
+      (thumbData as Array<{product_id: number, url: string}> ?? []).forEach(img => {
         thumbMap.set(img.product_id, img.url);
       });
 
       const smallImagesMap = new Map<number, Array<{url: string, image_index: number}>>();
-      (smallImagesData ?? []).forEach(img => {
+      (smallImagesData as Array<{product_id: number, url: string, image_index: number}> ?? []).forEach(img => {
         if (!smallImagesMap.has(img.product_id)) {
           smallImagesMap.set(img.product_id, []);
         }
@@ -95,7 +97,7 @@ export class ProductService {
       });
 
       // Build carousel products with images for hover effect
-      const carouselProducts: CarouselProduct[] = productsData.map((product) => {
+      const carouselProducts: CarouselProduct[] = (productsData as Array<{id: number, name: string, summary?: string, price_usd: number, carousel_order: number}>).map((product) => {
         const thumbUrl = thumbMap.get(product.id);
         const smallImages = smallImagesMap.get(product.id) ?? [];
 
@@ -112,16 +114,16 @@ export class ProductService {
           name: product.name,
           summary: product.summary ?? undefined,
           price_usd: product.price_usd,
-          carousel_order: product.carousel_order as number,
+          carousel_order: product.carousel_order,
           primary_thumb_url: finalThumbUrl,
           images: sortedSmallImages // Agregar imágenes small para hover
         };
       });
 
       return {
-        carousel_products: carouselProducts,
+        products: carouselProducts,
         total_count: carouselProducts.length
-      };
+      } as CarouselResponse;
     } catch (error) {
       console.error('ProductService.getCarouselProducts error:', error);
       throw error;
@@ -147,7 +149,7 @@ export class ProductService {
 
       const offset = (page - 1) * limit;
 
-      let queryBuilder = supabaseService
+      let queryBuilder = typeSafeDatabaseService.getClient()
         .from('products')
         .select(`
           *,
@@ -171,7 +173,7 @@ export class ProductService {
       // Filter by occasion using N:N relationship through product_occasions
       if (occasion) {
         // Filter by occasion slug - resolve slug to ID first
-        const { data: occasionData, error: occasionError } = await supabaseService
+        const { data: occasionData, error: occasionError } = await typeSafeDatabaseService.getClient()
           .from('occasions')
           .select('id')
           .eq('slug', occasion)
@@ -182,7 +184,7 @@ export class ProductService {
         }
 
         // Get product IDs for this occasion
-        const { data: productIds, error: productIdsError } = await supabaseService
+        const { data: productIds, error: productIdsError } = await typeSafeDatabaseService.getClient()
           .from('product_occasions')
           .select('product_id')
           .eq('occasion_id', occasionData.id);
@@ -192,7 +194,7 @@ export class ProductService {
         }
 
         if (productIds && productIds.length > 0) {
-          const ids = (productIds as { product_id: number }[]).map(row => row.product_id);
+          const ids = (productIds as any[]).map((row: any) => row.product_id);
           queryBuilder = queryBuilder.in('id', ids);
         } else {
           // No products for this occasion - return empty result
@@ -227,7 +229,7 @@ export class ProductService {
       const productIds = (data as RawProductWithImages[] ?? []).map(p => p.id);
 
       // Get all medium images for hover effect
-      const { data: mediumImagesData, error: mediumImagesError } = await supabaseService
+      const { data: mediumImagesData, error: mediumImagesError } = await typeSafeDatabaseService.getClient()
         .from('product_images')
         .select('product_id, url, image_index')
         .in('product_id', productIds)
@@ -239,7 +241,7 @@ export class ProductService {
       }
 
       // Group medium images by product_id
-      const mediumImagesByProduct = (mediumImagesData ?? []).reduce((acc, img) => {
+      const mediumImagesByProduct: Record<number, string[]> = (mediumImagesData as Array<{product_id: number, url: string, image_index: number}> ?? []).reduce((acc: Record<number, string[]>, img) => {
         acc[img.product_id] ??= [];
         acc[img.product_id]?.push(img.url);
         return acc;
@@ -249,11 +251,11 @@ export class ProductService {
         const sortedImages = (product.product_images ?? []).sort((a: ProductImage, b: ProductImage) => a.image_index - b.image_index);
         const mediumImages = mediumImagesByProduct[product.id] ?? [];
 
-        const productWithoutImages = omit(product, 'product_images');
+        const { product_images: _product_images, ...productWithoutImages } = product;
         return {
           ...productWithoutImages,
           images: sortedImages,
-          primary_image: sortedImages.find((img) => img.is_primary),
+          primary_image_url: sortedImages.find((img) => img.is_primary)?.url,
           medium_images: mediumImages // Agregar imágenes medium para hover
         } as ProductWithImages & { medium_images: string[] };
       });
@@ -280,7 +282,7 @@ export class ProductService {
    */
   public async getProductById(id: number): Promise<ProductWithImages | null> {
     try {
-      const { data, error } = await supabaseService
+      const { data, error } = await typeSafeDatabaseService.getClient()
         .from('products')
         .select(`
           *,
@@ -312,11 +314,11 @@ export class ProductService {
       const rawProduct = data as RawProductWithImages;
       const sortedImages = (rawProduct.product_images ?? []).sort((a: ProductImage, b: ProductImage) => a.image_index - b.image_index);
 
-      const productWithoutImages = omit(rawProduct, 'product_images');
+      const { product_images: _product_images, ...productWithoutImages } = rawProduct;
       const productWithImages: ProductWithImages = {
         ...productWithoutImages,
         images: sortedImages,
-        primary_image: sortedImages.find((img) => img.is_primary)
+        primary_image_url: sortedImages.find((img) => img.is_primary)?.url
       };
 
       return productWithImages;
@@ -338,7 +340,7 @@ export class ProductService {
       }
 
       // Get associated occasion IDs
-      const { data: occasionData, error: occasionError } = await supabaseService
+      const { data: occasionData, error: occasionError } = await typeSafeDatabaseService.getClient()
         .from('product_occasions')
         .select('occasion_id')
         .eq('product_id', id);
@@ -377,7 +379,7 @@ export class ProductService {
    */
   public async createProduct(productData: ProductCreateRequest): Promise<Product> {
     try {
-      const { stock, featured, carousel_order, price_ves, sku, occasion_ids, ...restData } = productData;
+      const { stock, featured, carousel_order, sku, occasion_ids, ...restData } = productData;
 
       // Debug log to see what we're receiving
       console.warn('ProductService.createProduct received data:', JSON.stringify(productData, null, 2));
@@ -391,7 +393,6 @@ export class ProductService {
       // Prepare insert data according to actual schema (excluding occasion_ids)
       const insertData = {
         ...restData,
-        price_ves: price_ves ?? undefined,
         stock: stock,
         sku: sku ?? undefined,
         featured: featured ?? false,
@@ -406,16 +407,12 @@ export class ProductService {
         console.warn(`🔄 Using transaction for product creation with ${occasion_ids.length} occasion associations`);
 
         // Execute within a single transaction
-        const { data, error } = await supabaseService.rpc('create_product_with_occasions', {
+        const data = await typeSafeDatabaseService.executeRpc('create_product_with_occasions', {
           product_data: insertData,
           occasion_ids: occasion_ids
         });
 
-        if (error) {
-          throw new Error(`Transaction failed: ${error.message}`);
-        }
-
-        if (!data || data.length === 0) {
+        if (!data || (data as any)?.length === 0) {
           throw new Error('No data returned from transaction');
         }
 
@@ -425,9 +422,9 @@ export class ProductService {
         // Simple product creation without occasions
         console.warn('🔄 Creating product without occasion associations');
 
-        const { data, error } = await supabaseService
+        const { data, error } = await typeSafeDatabaseService.getClient()
           .from('products')
-          .insert(insertData)
+          .insert(insertData as any)
           .select()
           .single();
 
@@ -482,9 +479,9 @@ export class ProductService {
         updatePayload.carousel_order = carousel_order ?? undefined;
       }
 
-      const { data, error } = await supabaseService
+      const { data, error } = await typeSafeDatabaseService.getClient()
         .from('products')
-        .update(updatePayload)
+        .update(updatePayload as any)
         .eq('id', id)
         .select()
         .single();
@@ -511,14 +508,10 @@ export class ProductService {
   public async updateCarouselOrder(productId: number, carouselOrder: number | null): Promise<Product> {
     try {
       // Use PostgreSQL function for atomic carousel order update
-      const { data, error } = await supabaseService.rpc('update_carousel_order_atomic', {
+      const data = await typeSafeDatabaseService.executeRpc('update_carousel_order_atomic', {
         product_id: productId,
         new_order: carouselOrder
       });
-
-      if (error) {
-        throw new Error(`Failed to update carousel order transaction: ${error.message}`);
-      }
 
       if (!data) {
         throw new Error('No data returned from carousel order update transaction');
@@ -586,12 +579,12 @@ export class ProductService {
 
       if (hasReferences) {
         // Logical deletion - just deactivate
-        const { error } = await supabaseService
+        const { error } = await typeSafeDatabaseService.getClient()
           .from('products')
           .update({
             active: false,
             updated_at: new Date().toISOString()
-          })
+          } as any)
           .eq('id', productId);
 
         if (error) {
@@ -601,7 +594,7 @@ export class ProductService {
         console.warn(`✅ Product ${productId} deactivated (has references)`);
       } else {
         // Physical deletion - safe to delete
-        const { error } = await supabaseService
+        const { error } = await typeSafeDatabaseService.getClient()
           .from('products')
           .delete()
           .eq('id', productId);
@@ -624,7 +617,7 @@ export class ProductService {
   private async checkProductReferences(productId: number): Promise<boolean> {
     try {
       // Check product_images table
-      const { data: images, error: imagesError } = await supabaseService
+      const { data: images, error: imagesError } = await typeSafeDatabaseService.getClient()
         .from('product_images')
         .select('id')
         .eq('product_id', productId)
@@ -639,7 +632,7 @@ export class ProductService {
       }
 
       // Check product_occasions table
-      const { data: occasions, error: occasionsError } = await supabaseService
+      const { data: occasions, error: occasionsError } = await typeSafeDatabaseService.getClient()
         .from('product_occasions')
         .select('id')
         .eq('product_id', productId)
@@ -654,7 +647,7 @@ export class ProductService {
       }
 
       // Check order_items table (if orders exist)
-      const { data: orderItems, error: orderItemsError } = await supabaseService
+      const { data: orderItems, error: orderItemsError } = await typeSafeDatabaseService.getClient()
         .from('order_items')
         .select('id')
         .eq('product_id', productId)

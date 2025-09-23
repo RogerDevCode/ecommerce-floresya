@@ -4,48 +4,23 @@
  */
 
 // Import types and utilities
-import type { Occasion, PaginationInfo as Pagination, Product, ProductQuery, ProductWithImages } from '../config/supabase.js';
-import type { LogData, Logger, WindowWithBootstrap, WindowWithCart } from '../types/globals.js';
-import { FloresYaAPI } from './services/api.js';
+import type {
+  ApiResponse,
+  CarouselProduct,
+  CarouselResponse,
+  CartItem,
+  ConversionOptimizer,
+  Occasion,
+  PaginationInfo as Pagination,
+  Product,
+  ProductQuery,
+  ProductResponse,
+  ProductWithImages,
+  ProductWithOccasion,
+  WindowWithBootstrap
+} from '../shared/types/index.js';
 
-// Type definitions
-interface ConversionOptimizer {
-  sessionStartTime: number;
-  viewedProducts: Set<number>;
-}
-
-interface CarouselProduct {
-  id: number;
-  name: string;
-  summary?: string;
-  price_usd: number;
-  carousel_order: number;
-  primary_thumb_url: string;
-  images?: Array<{url: string, size: string}>; // Para efecto hover
-}
-
-interface CartItem {
-  productId: number;
-  name: string;
-  price: number;
-  image: string;
-  quantity: number;
-}
-
-interface ProductWithOccasion extends ProductWithImages {
-  occasion?: Occasion;
-  price: number; // Alias for price_usd for easier use
-}
-
-// Extend Window interface
-declare global {
-  interface Window {
-    logger?: Logger;
-    floresyaLogger?: Logger;
-    api?: FloresYaAPI;
-    floresyaApp?: FloresYaApp | undefined;
-  }
-}
+// Window interface extensions are now centralized in src/types/globals.ts
 
 export class FloresYaApp {
   private products: ProductWithOccasion[];
@@ -87,18 +62,18 @@ export class FloresYaApp {
     // Wait for DOM to be ready before initializing
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => {
-        this.init();
+        void this.init().catch(error => this.log('Error en inicialización', { error }, 'error'));
       });
     } else {
       // DOM is already ready
-      this.init();
+      void this.init().catch(error => this.log('Error en inicialización', { error }, 'error'));
     }
   }
 
-  private log(message: string, data: LogData | null = null, level: 'info' | 'success' | 'error' | 'warn' = 'info'): void {
+  private log(message: string, data: unknown = null, level: 'info' | 'success' | 'error' | 'warn' = 'info'): void {
     // Use window.logger if available
     if (window.logger) {
-      window.logger[level]('APP', message, data);
+      window.logger[level]('APP', message, data as Record<string, unknown> | null);
     } else {
       const prefix = '[🌸 FloresYa]';
       const timestamp = new Date().toISOString();
@@ -118,7 +93,7 @@ export class FloresYaApp {
     }
   }
 
-  private init(): void {
+  public async init(): Promise<void> {
     this.log('🔄 Inicializando aplicación', {}, 'info');
 
     try {
@@ -130,7 +105,7 @@ export class FloresYaApp {
 
       // Normal initialization for main page
       this.bindEvents();
-      void this.loadInitialData();
+      await this.loadInitialData();
       this.initializeConversionOptimizer();
       this.log('✅ Aplicación inicializada correctamente', {}, 'success');
     } catch (error) {
@@ -152,7 +127,7 @@ export class FloresYaApp {
       const api = window.api;
 
       // Load occasions for filtering
-      const occasionsResponse = await api.getOccasions();
+      const occasionsResponse = await api.getOccasions() as ApiResponse<Occasion[]>;
       if (occasionsResponse.success && occasionsResponse.data) {
         this.occasions = occasionsResponse.data;
         this.populateOccasionFilter();
@@ -192,9 +167,10 @@ export class FloresYaApp {
         ...this.currentFilters
       };
 
-      const response = await window.api.getProducts(params);
+      const response = await window.api.getProducts(params) as ApiResponse<ProductResponse>;
 
       if (response.success && response.data) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         let products = (response.data.products ?? []).map((p: Product) => {
           const productWithImages = p as ProductWithImages;
           return {
@@ -246,7 +222,7 @@ export class FloresYaApp {
         throw new Error('API not available');
       }
 
-      const response = await window.api.getCarousel();
+      const response = await window.api.getCarousel() as ApiResponse<CarouselResponse>;
 
       if (response.success && response.data) {
         // Check if carousel_products exists and is an array
@@ -265,10 +241,13 @@ export class FloresYaApp {
         }
       } else {
         // Check if it's a network/connectivity issue
-        const errorMessage = response.message ?? 'Unknown error';
-        const isConnectivityIssue = errorMessage.includes('NetworkError') ||
-                                   errorMessage.includes('fetch') ||
-                                   errorMessage.includes('connectivity');
+        const responseWithMessage = response as { message?: unknown };
+        const errorMessage = typeof responseWithMessage.message === 'string' ? responseWithMessage.message : 'Unknown error';
+        const isConnectivityIssue = typeof errorMessage === 'string' && (
+          errorMessage.includes('NetworkError') ||
+          errorMessage.includes('fetch') ||
+          errorMessage.includes('connectivity')
+        );
 
         this.log(`${isConnectivityIssue ? '🌐' : '⚠️'} No se pudieron cargar productos del carrusel`, {
           message: errorMessage,
@@ -310,11 +289,13 @@ export class FloresYaApp {
   private createProductCard(product: ProductWithImages): string {
     // Prefer small size image for product cards, fallback to primary, then any available
     const smallImage = product.images?.find(img => img.size === 'small');
-    const primaryImage = product.primary_image;
+    const primaryImage = product.primary_image_url;
     const fallbackImage = product.images?.[0];
 
     const imageToUse = smallImage ?? primaryImage ?? fallbackImage;
-    const imageUrl = imageToUse?.url ?? '/images/placeholder-product.webp';
+    const imageUrl = (typeof imageToUse === 'object' && imageToUse !== null && 'url' in imageToUse)
+      ? imageToUse.url
+      : (typeof imageToUse === 'string' ? imageToUse : '/images/placeholder-product.webp');
 
     // Obtener imágenes medium para el efecto hover
     const mediumImages = (product as ProductWithImages & {medium_images?: string[]}).medium_images ?? [];
@@ -549,7 +530,7 @@ export class FloresYaApp {
     const sortFilter = document.getElementById('sortFilter') as HTMLSelectElement;
 
     if (occasionFilter?.value) {
-      this.currentFilters.occasion = occasionFilter.value;
+      this.currentFilters.occasion = parseInt(occasionFilter.value);
     }
 
     if (sortFilter?.value) {
@@ -576,7 +557,7 @@ export class FloresYaApp {
     const sortFilter = document.getElementById('sortFilter') as HTMLSelectElement;
 
     if (occasionFilter) {
-      this.currentFilters.occasion = occasionFilter.value;
+      this.currentFilters.occasion = parseInt(occasionFilter.value);
     }
 
     if (sortFilter?.value) {
@@ -621,16 +602,21 @@ export class FloresYaApp {
   /**
    * Buy now - add to cart and redirect to payment page
    */
-  private buyNow(productId: number): void {
+  public buyNow(productId: number): void {
     const product = this.products.find(p => p.id === productId);
     if (!product) {return;}
 
     // Add to cart first
-    if (typeof window !== 'undefined' && (window as WindowWithCart).cart) {
-      (window as WindowWithCart).cart?.addItem({
-        ...product,
-        price_usd: product.price_usd ?? 0
-      });
+    if (typeof window !== 'undefined' && window.cart) {
+      const cart = window.cart;
+      if (cart && typeof cart.addItem === 'function') {
+        cart.addItem({
+          id: product.id,
+          name: product.name,
+          price_usd: product.price_usd ?? 0,
+          quantity: 1
+        });
+      }
     }
 
     this.log('⚡ Compra directa iniciada', { productId, productName: product.name }, 'info');
@@ -681,7 +667,7 @@ export class FloresYaApp {
     return result;
   }
 
-  private viewProductDetails(productId: number): void {
+  public viewProductDetails(productId: number): void {
     // Navigate to product detail page with ID parameter
     const product = this.products.find(p => p.id === productId);
     if (!product) {
@@ -1279,14 +1265,26 @@ private snapToNearest(pos: number): void {
     const modal = document.getElementById('floresNoviasModal');
     const bootstrap = (window as unknown as WindowWithBootstrap).bootstrap;
     if (modal && bootstrap?.Modal) {
-      const modalInstance = bootstrap.Modal.getInstance(modal as HTMLElement);
-      if (modalInstance) {
-        modalInstance.hide(); // Note: This should be show() but using hide() for consistency with interface
+      const modalInstance = bootstrap.Modal.getInstance(modal);
+      if (modalInstance && typeof modalInstance.hide === 'function') {
+        modalInstance.hide();
       }
     }
   }
 
-  public getStats(): object {
+  public showError(message: string): void {
+    this.log(`❌ ${message}`, {}, 'error');
+  }
+
+  public showSuccess(message: string): void {
+    this.log(`✅ ${message}`, {}, 'success');
+  }
+
+  public navigate(path: string): void {
+    window.location.href = path;
+  }
+
+  public getStats(): Record<string, unknown> {
     return {
       products: this.products.length,
       occasions: this.occasions.length,

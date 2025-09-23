@@ -8,7 +8,8 @@ import { body, param, query, validationResult } from 'express-validator';
 import { ImageService } from '../services/ImageService.js';
 import multer from 'multer';
 
-const imageService = new ImageService();
+// Factory function for dependency injection
+const createImageService = () => new ImageService();
 
 // Configuración de Multer para memoria (no archivos temporales)
 const upload = multer({
@@ -29,6 +30,12 @@ const upload = multer({
 });
 
 export class ImageController {
+  private imageService: ImageService;
+
+  constructor(imageServiceFactory: () => ImageService = createImageService) {
+    this.imageService = imageServiceFactory();
+  }
+
   /**
    * @swagger
    * /api/images/upload/{productId}:
@@ -118,17 +125,17 @@ export class ImageController {
       const isPrimary = req.body.isPrimary === 'true';
 
       // Validar el archivo de imagen
-      const validation = imageService.validateImageFile(req.file);
-      if (!validation.valid) {
-        res.status(400).json({
-          success: false,
-          message: validation.error ?? 'Invalid image file'
-        });
-        return;
-      }
+       const validation = this.imageService.validateImageFile(req.file);
+       if (!validation.valid) {
+         res.status(400).json({
+           success: false,
+           message: validation.error ?? 'Invalid image file'
+         });
+         return;
+       }
 
-      // Procesar y subir la imagen
-      const result = await imageService.uploadProductImage({
+       // Procesar y subir la imagen
+       const result = await this.imageService.uploadProductImage({
         productId,
         imageIndex,
         file: req.file,
@@ -208,7 +215,7 @@ export class ImageController {
 
       const productId = parseInt(req.params.productId);
 
-      const success = await imageService.deleteProductImages(productId);
+      const success = await this.imageService.deleteProductImages(productId);
 
       if (success) {
         res.status(200).json({
@@ -293,7 +300,7 @@ export class ImageController {
 
       const productId = parseInt(req.params.productId ?? '0');
 
-      const images = await imageService.getProductImages(productId);
+      const images = await this.imageService.getProductImages(productId);
 
       res.status(200).json({
         success: true,
@@ -393,7 +400,7 @@ export class ImageController {
       const page = parseInt(req.query.page as string) ?? 1;
       const limit = Math.min(parseInt(req.query.limit as string) ?? 20, 100);
 
-      const result = await imageService.getImagesGallery(filter, page, limit);
+      const result = await this.imageService.getImagesGallery(filter, page, limit);
 
       res.status(200).json({
         success: true,
@@ -484,16 +491,16 @@ export class ImageController {
         return;
       }
 
-      const validation = imageService.validateImageFile(req.file);
-      if (!validation.valid) {
-        res.status(400).json({
-          success: false,
-          message: validation.error ?? 'Invalid image file'
-        });
-        return;
-      }
+      const validation = this.imageService.validateImageFile(req.file);
+       if (!validation.valid) {
+         res.status(400).json({
+           success: false,
+           message: validation.error ?? 'Invalid image file'
+         });
+         return;
+       }
 
-      const result = await imageService.uploadSiteImage(req.file, type);
+       const result = await this.imageService.uploadSiteImage(req.file, type);
 
       if (result.success) {
         res.status(201).json({
@@ -552,7 +559,7 @@ export class ImageController {
     */
   public getCurrentSiteImages(req: Request, res: Response): void {
     try {
-      const result = imageService.getCurrentSiteImages();
+      const result = this.imageService.getCurrentSiteImages();
 
       res.status(200).json({
         success: true,
@@ -624,7 +631,7 @@ export class ImageController {
       const sortBy = req.query.sort_by as 'name' | 'image_count' ?? 'image_count';
       const sortDirection = req.query.sort_direction as 'asc' | 'desc' ?? 'asc';
 
-      const result = await imageService.getProductsWithImageCounts(sortBy, sortDirection);
+      const result = await this.imageService.getProductsWithImageCounts(sortBy, sortDirection);
 
       res.status(200).json({
         success: true,

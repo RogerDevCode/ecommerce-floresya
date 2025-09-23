@@ -3,7 +3,10 @@
  * Business logic for occasions management
  */
 
-import { supabaseService, type Occasion, type OccasionCreateRequest, type OccasionUpdateRequest } from '../config/supabase.js';
+import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
+import { type Occasion, type OccasionCreateRequest, type OccasionUpdateRequest, type OccasionType } from '../shared/types/index.js';
+
+// Using TypeSafeDatabaseService for type-safe operations
 
 // Helper function to generate slug from name
 function generateSlug(name: string): string {
@@ -24,7 +27,7 @@ export class OccasionsService {
    */
   public async getActiveOccasions(): Promise<Occasion[]> {
     try {
-      const { data, error } = await supabaseService
+      const { data, error } = await typeSafeDatabaseService.getClient()
         .from('occasions')
         .select('*')
         .eq('is_active', true)
@@ -46,7 +49,7 @@ export class OccasionsService {
    */
   public async getAllOccasions(): Promise<Occasion[]> {
     try {
-      const { data, error } = await supabaseService
+      const { data, error } = await typeSafeDatabaseService.getClient()
         .from('occasions')
         .select('*')
         .order('display_order', { ascending: true });
@@ -67,7 +70,7 @@ export class OccasionsService {
    */
   public async getOccasionById(id: number): Promise<Occasion | null> {
     try {
-      const { data, error } = await supabaseService
+      const { data, error } = await typeSafeDatabaseService.getClient()
         .from('occasions')
         .select('*')
         .eq('id', id)
@@ -92,7 +95,7 @@ export class OccasionsService {
    */
   public async getOccasionBySlug(slug: string): Promise<Occasion | null> {
     try {
-      const { data, error } = await supabaseService
+      const { data, error } = await typeSafeDatabaseService.getClient()
         .from('occasions')
         .select('*')
         .eq('slug', slug)
@@ -130,26 +133,19 @@ export class OccasionsService {
       const insertData = {
         ...occasionData,
         slug,
-        type: occasionData.type ?? 'general',
+        type: (occasionData.type ?? 'general') as OccasionType,
         is_active: true,
         display_order: occasionData.display_order ?? 0
       };
 
-      const { data, error } = await supabaseService
-        .from('occasions')
-        .insert(insertData)
-        .select()
-        .single();
-
-      if (error) {
-        throw new Error(`Failed to create occasion: ${error.message}`);
-      }
+      // Use TypeSafe service method instead of direct insert
+      const data = await typeSafeDatabaseService.createOccasion(insertData);
 
       if (!data) {
         throw new Error('No data returned from occasion creation');
       }
 
-      return data as Occasion;
+      return data;
     } catch (error) {
       console.error('OccasionsService.createOccasion error:', error);
       throw error;
@@ -176,22 +172,10 @@ export class OccasionsService {
         updates.slug = newSlug;
       }
 
-      const { data, error } = await supabaseService
-        .from('occasions')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      // Use TypeSafe service method instead of direct update
+      const data = await typeSafeDatabaseService.updateOccasion(id, updates as Partial<Occasion>);
 
-      if (error) {
-        throw new Error(`Failed to update occasion: ${error.message}`);
-      }
-
-      if (!data) {
-        throw new Error('No data returned from occasion update');
-      }
-
-      return data as Occasion;
+      return data;
     } catch (error) {
       console.error('OccasionsService.updateOccasion error:', error);
       throw error;
@@ -210,7 +194,7 @@ export class OccasionsService {
       }
 
       // Soft delete by setting is_active = false
-      const { error } = await supabaseService
+      const { error } = await typeSafeDatabaseService.getClient()
         .from('occasions')
         .update({ is_active: false })
         .eq('id', id);
@@ -229,7 +213,7 @@ export class OccasionsService {
    */
   public async getOccasionsByType(type: string): Promise<Occasion[]> {
     try {
-      const { data, error } = await supabaseService
+      const { data, error } = await typeSafeDatabaseService.getClient()
         .from('occasions')
         .select('*')
         .eq('type', type)
@@ -254,7 +238,7 @@ export class OccasionsService {
     try {
       // Update each occasion's display order
       const promises = updates.map(({ id, display_order }) =>
-        supabaseService
+        typeSafeDatabaseService.getClient()
           .from('occasions')
           .update({ display_order })
           .eq('id', id)

@@ -5,15 +5,7 @@
 
 import { Request, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
-
-// Extend Express Request to include user property
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: number;
-    email: string;
-    role: string;
-  };
-}
+import type { AuthenticatedRequest } from '../shared/types/index.js';
 import { OrderService } from '../services/OrderService.js';
 import type {
   OrderCreateRequest,
@@ -21,9 +13,15 @@ import type {
   OrderUpdateRequest
 } from '../config/supabase.js';
 
-const orderService = new OrderService();
+// Factory function for dependency injection
+const createOrderService = () => new OrderService();
 
 export class OrderController {
+  private orderService: OrderService;
+
+  constructor(orderServiceFactory: () => OrderService = createOrderService) {
+    this.orderService = orderServiceFactory();
+  }
   /**
    * @swagger
    * /api/orders:
@@ -139,8 +137,8 @@ export class OrderController {
       }
 
       const query = {
-        page: parseInt(req.query.page as string) ?? 1,
-        limit: Math.min(parseInt(req.query.limit as string) ?? 20, 100),
+        page: req.query.page ? parseInt(req.query.page as string) : 1,
+        limit: req.query.limit ? Math.min(parseInt(req.query.limit as string), 100) : 20,
         status: req.query.status as OrderStatus,
         customer_email: req.query.customer_email as string,
         date_from: req.query.date_from as string,
@@ -149,7 +147,7 @@ export class OrderController {
         sort_direction: (req.query.sort_direction as 'asc' | 'desc') ?? 'desc'
       };
 
-      const result = await orderService.getOrders(query);
+      const result = await this.orderService.getOrders(query);
 
       res.status(200).json({
         success: true,
@@ -224,7 +222,7 @@ export class OrderController {
       }
 
       const orderId = parseInt(req.params.id);
-      const order = await orderService.getOrderById(orderId);
+      const order = await this.orderService.getOrderById(orderId);
 
       if (!order) {
         res.status(404).json({
@@ -375,7 +373,7 @@ export class OrderController {
       }
 
       const orderData: OrderCreateRequest = req.body;
-      const order = await orderService.createOrder(orderData);
+      const order = await this.orderService.createOrder(orderData);
 
       res.status(201).json({
         success: true,
@@ -490,7 +488,7 @@ export class OrderController {
         return;
       }
 
-      const order = await orderService.updateOrder(updateData);
+      const order = await this.orderService.updateOrder(updateData);
 
       res.status(200).json({
         success: true,
@@ -585,9 +583,9 @@ export class OrderController {
 
       const orderId = parseInt(req.params.id);
       const { status, notes } = req.body;
-      const userId = (req as AuthenticatedRequest).user?.id; // From auth middleware
+      const userId = (req as unknown as AuthenticatedRequest).user?.id; // From auth middleware
 
-      const order = await orderService.updateOrderStatus(orderId, status, notes, userId);
+      const order = await this.orderService.updateOrderStatus(orderId, status, notes, userId);
 
       res.status(200).json({
         success: true,
@@ -675,7 +673,7 @@ export class OrderController {
   public async getOrderStatusHistory(req: Request, res: Response): Promise<void> {
     try {
       const orderId = parseInt(req.params.id);
-      const history = await orderService.getOrderStatusHistory(orderId);
+      const history = await this.orderService.getOrderStatusHistory(orderId);
 
       res.status(200).json({
         success: true,

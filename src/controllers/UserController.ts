@@ -5,8 +5,9 @@
 
 import { Request, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
-import { type UserCreateRequest, UserQuery, UserUpdateRequest, supabaseService } from '../config/supabase.js';
+import { type UserCreateRequest, UserQuery, UserUpdateRequest } from '../config/supabase.js';
 import { userService } from '../services/UserService.js';
+import { typeSafeDatabaseService } from '../services/TypeSafeDatabaseService.js';
 
 export class UserController {
 
@@ -696,30 +697,41 @@ export class UserController {
    */
   private async checkUserReferences(userId: number): Promise<boolean> {
     try {
-      // Check orders table
-      const { data: orders, error: ordersError } = await supabaseService
-        .from('orders')
-        .select('id')
-        .eq('user_id', userId)
-        .limit(1);
+      // Use TypeSafe database service client for direct table access
+      const client = typeSafeDatabaseService.getClient();
 
-      if (ordersError) {
-        console.warn('Error checking user orders:', ordersError.message);
-      } else if (orders && orders.length > 0) {
-        return true;
+      // Check orders table
+      try {
+        const { data: orders, error: ordersError } = await client
+          .from('orders')
+          .select('id')
+          .eq('user_id', userId)
+          .limit(1);
+
+        if (ordersError) {
+          console.warn('Error checking user orders:', ordersError.message);
+        } else if (orders && orders.length > 0) {
+          return true;
+        }
+      } catch (orderError) {
+        console.warn('Could not check user orders:', orderError);
       }
 
       // Check payments table
-      const { data: payments, error: paymentsError } = await supabaseService
-        .from('payments')
-        .select('id')
-        .eq('user_id', userId)
-        .limit(1);
+      try {
+        const { data: payments, error: paymentsError } = await client
+          .from('payments')
+          .select('id')
+          .eq('user_id', userId)
+          .limit(1);
 
-      if (paymentsError) {
-        console.warn('Error checking user payments:', paymentsError.message);
-      } else if (payments && payments.length > 0) {
-        return true;
+        if (paymentsError) {
+          console.warn('Error checking user payments:', paymentsError.message);
+        } else if (payments && payments.length > 0) {
+          return true;
+        }
+      } catch (paymentError) {
+        console.warn('Could not check user payments:', paymentError);
       }
 
       return false;

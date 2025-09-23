@@ -3,40 +3,11 @@
  * Comprehensive server-side logging with structured output and critical process tracking
  */
 
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 
-interface LogEntry {
-  timestamp: string;
-  level: 'ERROR' | 'WARN' | 'INFO' | 'DEBUG' | 'SUCCESS' | 'API' | 'DB' | 'SECURITY' | 'PERF';
-  module: string;
-  message: string;
-  data?: Record<string, unknown>;
-  requestId?: string;
-  userId?: string;
-  sessionId?: string;
-  ip?: string;
-  userAgent?: string;
-  url?: string;
-  method?: string;
-  statusCode?: number;
-  duration?: number;
-  error?: {
-    name: string;
-    message: string;
-    stack?: string;
-  };
-}
-
-interface LogConfig {
-  level: 'ERROR' | 'WARN' | 'INFO' | 'DEBUG';
-  enableFileLogging: boolean;
-  logDirectory: string;
-  maxFileSize: number; // in bytes
-  maxFiles: number;
-  enableConsole: boolean;
-  enableStructured: boolean;
-}
+// Import consolidated logging types
+import type { LogEntry, LogConfig } from '../shared/types/index.js';
 
 class ServerLogger {
   private config: LogConfig;
@@ -143,8 +114,8 @@ class ServerLogger {
       message,
       data,
       requestId: this.getRequestId(),
-      userId: this.getUserId(),
-      sessionId: this.getSessionId()
+      user_id: this.getUserId(),
+      session_id: this.getSessionId()
     };
   }
 
@@ -171,7 +142,7 @@ class ServerLogger {
   }
 
   private getLevelIcon(level: LogEntry['level']): string {
-    const icons = {
+    const icons: Record<LogEntry['level'], string> = {
       ERROR: '❌',
       WARN: '⚠️',
       INFO: 'ℹ️',
@@ -180,13 +151,23 @@ class ServerLogger {
       API: '🌐',
       DB: '🗄️',
       SECURITY: '🔒',
-      PERF: '⚡'
+      PERF: '⚡',
+      // Lowercase variants
+      error: '❌',
+      warn: '⚠️',
+      info: 'ℹ️',
+      debug: '🐛',
+      success: '✅',
+      api: '🌐',
+      user: '👤',
+      cart: '🛒',
+      perf: '⚡'
     };
-    return icons[level] ?? '📝';
+    return icons[level] || '📝';
   }
 
   private getLevelColor(level: LogEntry['level']): string {
-    const colors = {
+    const colors: Record<LogEntry['level'], string> = {
       ERROR: '\x1b[31m',    // Red
       WARN: '\x1b[33m',     // Yellow
       INFO: '\x1b[36m',     // Cyan
@@ -195,9 +176,19 @@ class ServerLogger {
       API: '\x1b[34m',      // Blue
       DB: '\x1b[37m',       // White
       SECURITY: '\x1b[91m', // Bright Red
-      PERF: '\x1b[93m'      // Bright Yellow
+      PERF: '\x1b[93m',     // Bright Yellow
+      // Lowercase variants
+      error: '\x1b[31m',    // Red
+      warn: '\x1b[33m',     // Yellow
+      info: '\x1b[36m',     // Cyan
+      debug: '\x1b[35m',    // Magenta
+      success: '\x1b[32m',  // Green
+      api: '\x1b[34m',      // Blue
+      user: '\x1b[95m',     // Bright Magenta
+      cart: '\x1b[96m',     // Bright Cyan
+      perf: '\x1b[93m'      // Bright Yellow
     };
-    return colors[level] ?? '\x1b[0m';
+    return colors[level] || '\x1b[0m';
   }
 
   private writeToFile(entry: LogEntry): void {

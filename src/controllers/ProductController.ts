@@ -6,11 +6,15 @@
 import { Request, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
 import { ProductService } from '../services/ProductService.js';
-import { type ProductCreateRequest, ProductQuery, ProductUpdateRequest, supabaseService } from '../config/supabase.js';
-
-const productService = new ProductService();
+import { type ProductCreateRequest, ProductQuery, ProductUpdateRequest } from '../config/supabase.js';
+import { typeSafeDatabaseService } from '../services/TypeSafeDatabaseService.js';
 
 export class ProductController {
+  private productService: ProductService;
+
+  constructor() {
+    this.productService = new ProductService();
+  }
   /**
    * @swagger
    * /api/products/carousel:
@@ -47,7 +51,7 @@ export class ProductController {
    */
   public async getCarousel(req: Request, res: Response): Promise<void> {
     try {
-      const result = await productService.getCarouselProducts();
+      const result = await this.productService.getCarouselProducts();
 
       res.status(200).json({
         success: true,
@@ -190,14 +194,14 @@ export class ProductController {
         page: parseInt(req.query.page as string) ?? 1,
         limit: Math.min(parseInt(req.query.limit as string) ?? 20, 100), // Max 100 items
         search: req.query.search as string ?? undefined,
-        occasion: req.query.occasion as string ?? undefined, // Support slug-based filtering
+        occasion: req.query.occasion ? parseInt(req.query.occasion as string) : undefined, // Support slug-based filtering
         featured: req.query.featured === 'true' ? true : req.query.featured === 'false' ? false : undefined,
         has_carousel_order: req.query.has_carousel_order === 'true' ? true : req.query.has_carousel_order === 'false' ? false : undefined,
         sort_by,
         sort_direction
       };
 
-      const result = await productService.getProducts(query);
+      const result = await this.productService.getProducts(query);
 
       res.status(200).json({
         success: true,
@@ -260,7 +264,7 @@ export class ProductController {
   public async getFeatured(req: Request, res: Response): Promise<void> {
     try {
       const limit = Math.min(parseInt(req.query.limit as string) ?? 8, 20);
-      const products = await productService.getFeaturedProducts(limit);
+      const products = await this.productService.getFeaturedProducts(limit);
 
       res.status(200).json({
         success: true,
@@ -331,7 +335,7 @@ export class ProductController {
       }
 
       const productId = parseInt(req.params.id);
-      const product = await productService.getProductById(productId);
+      const product = await this.productService.getProductById(productId);
 
       if (!product) {
         res.status(404).json({
@@ -373,7 +377,7 @@ export class ProductController {
       }
 
       const productId = parseInt(req.params.id);
-      const product = await productService.getProductByIdWithOccasions(productId);
+      const product = await this.productService.getProductByIdWithOccasions(productId);
 
       if (!product) {
         res.status(404).json({
@@ -474,7 +478,7 @@ export class ProductController {
       }
       const limit = Math.min(parseInt(req.query.limit as string) ?? 20, 50);
 
-      const products = await productService.searchProducts(searchTerm, limit);
+      const products = await this.productService.searchProducts(searchTerm, limit);
 
       res.status(200).json({
         success: true,
@@ -605,7 +609,7 @@ export class ProductController {
       }
 
       const productData: ProductCreateRequest = req.body;
-      const product = await productService.createProduct(productData);
+      const product = await this.productService.createProduct(productData);
 
       res.status(201).json({
         success: true,
@@ -749,7 +753,7 @@ export class ProductController {
         return;
       }
 
-      const product = await productService.updateProduct(updateData);
+      const product = await this.productService.updateProduct(updateData);
 
       res.status(200).json({
         success: true,
@@ -793,7 +797,7 @@ export class ProductController {
         return;
       }
 
-      const product = await productService.updateCarouselOrder(productId, carousel_order);
+      const product = await this.productService.updateCarouselOrder(productId, carousel_order);
 
       res.status(200).json({
         success: true,
@@ -878,7 +882,7 @@ export class ProductController {
       const productId = parseInt(req.params.id);
 
       // Get current product data
-      const product = await productService.getProductById(productId);
+      const product = await this.productService.getProductById(productId);
       if (!product) {
         res.status(404).json({
           success: false,
@@ -892,7 +896,7 @@ export class ProductController {
 
       if (hasReferences) {
         // Logical deletion - just deactivate
-        const updatedProduct = await productService.updateProduct({
+        const updatedProduct = await this.productService.updateProduct({
           id: productId,
           active: false
         });
@@ -908,7 +912,7 @@ export class ProductController {
         });
       } else {
         // Physical deletion - no references, safe to delete
-        await productService.deleteProduct(productId);
+        await this.productService.deleteProduct(productId);
 
         // Return 204 No Content for successful physical deletion
         res.status(204).send();
@@ -928,48 +932,35 @@ export class ProductController {
    */
   private async checkProductReferences(productId: number): Promise<boolean> {
     try {
-      // Check product_images table
-      const { data: images, error: imagesError } = await supabaseService
-        .from('product_images')
-        .select('id')
-        .eq('product_id', productId)
-        .limit(1);
-
-      if (imagesError) {
-        throw new Error(`Failed to check product images: ${imagesError.message}`);
-      }
-
+      // Check product_images table using TypeSafe service
+      const images = await typeSafeDatabaseService.getProductImages(productId);
       if (images && images.length > 0) {
         return true;
       }
 
-      // Check product_occasions table
-      const { data: occasions, error: occasionsError } = await supabaseService
-        .from('product_occasions')
-        .select('id')
-        .eq('product_id', productId)
-        .limit(1);
-
-      if (occasionsError) {
-        throw new Error(`Failed to check product occasions: ${occasionsError.message}`);
-      }
-
-      if (occasions && occasions.length > 0) {
+      // Check product_occasions table using TypeSafe service
+      const occasionRefs = await typeSafeDatabaseService.getProductOccasionReferences(productId);
+      if (occasionRefs && occasionRefs.length > 0) {
         return true;
       }
 
-      // Check order_items table (if orders exist)
-      const { data: orderItems, error: orderItemsError } = await supabaseService
-        .from('order_items')
-        .select('id')
-        .eq('product_id', productId)
-        .limit(1);
+      // Check order_items table using direct client access
+      try {
+        const client = typeSafeDatabaseService.getClient();
+        const { data: orderItems, error: orderItemsError } = await client
+          .from('order_items')
+          .select('id')
+          .eq('product_id', productId)
+          .limit(1);
 
-      if (orderItemsError) {
-        // If order_items table doesn't exist yet, continue
-        console.warn('Order items table may not exist yet:', orderItemsError.message);
-      } else if (orderItems && orderItems.length > 0) {
-        return true;
+        if (orderItemsError) {
+          // If order_items table doesn't exist yet, continue
+          console.warn('Order items table may not exist yet:', orderItemsError.message);
+        } else if (orderItems && orderItems.length > 0) {
+          return true;
+        }
+      } catch (orderError) {
+        console.warn('Could not check order items:', orderError);
       }
 
       return false;

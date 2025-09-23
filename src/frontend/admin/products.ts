@@ -4,7 +4,7 @@
  */
 
 import type { Product, AdminOccasion, AdminPanelLogger } from './types.js';
-import type { FloresYaAPI } from '../services/api.js';
+import type { FloresYaAPI } from '../services/apiClient.js';
 
 export class AdminProducts {
   private logger: AdminPanelLogger;

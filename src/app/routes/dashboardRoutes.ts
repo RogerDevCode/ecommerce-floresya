@@ -4,8 +4,9 @@
  */
 
 import { Router } from 'express';
-import { supabaseManager } from '../../config/supabase.js';
+import { typeSafeDatabaseService } from '../../services/TypeSafeDatabaseService.js';
 import { serverLogger } from '../../utils/serverLogger.js';
+import { getTimeAgo } from '../../shared/utils/index.js';
 
 export function createDashboardRoutes(): Router {
   const router = Router();
@@ -46,30 +47,17 @@ export function createDashboardRoutes(): Router {
       serverLogger.info('DASHBOARD', 'Fetching dashboard metrics');
 
       // Get total products
-      const { count: totalProducts } = await supabaseManager
-        .client
-        .from('products')
-        .select('*', { count: 'exact', head: true });
+      const totalProducts = await typeSafeDatabaseService.getTableCount('products');
 
       // Get total orders
-      const { count: totalOrders } = await supabaseManager
-        .client
-        .from('orders')
-        .select('*', { count: 'exact', head: true });
+      const totalOrders = await typeSafeDatabaseService.getTableCount('orders');
 
       // Get total users
-      const { count: totalUsers } = await supabaseManager
-        .client
-        .from('users')
-        .select('*', { count: 'exact', head: true });
+      const totalUsers = await typeSafeDatabaseService.getTableCount('users');
 
       // Get total revenue (sum of all order totals)
-      const { data: revenueData } = await supabaseManager
-        .client
-        .from('orders')
-        .select('total_amount_usd');
-
-      const totalRevenue = revenueData?.reduce((sum, order) => sum + (order.total_amount_usd || 0), 0) || 0;
+      const orders = await typeSafeDatabaseService.getOrders();
+      const totalRevenue = orders.reduce((sum, order) => sum + (order.total_amount_usd || 0), 0);
 
       const metrics = {
         totalProducts: totalProducts || 0,
@@ -82,8 +70,9 @@ export function createDashboardRoutes(): Router {
       res.json(metrics);
 
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       serverLogger.error('DASHBOARD', 'Failed to fetch dashboard metrics', {
-        error: error instanceof Error ? error.message : String(error)
+        error: errorMessage || 'Unknown error'
       });
       res.status(500).json({
         success: false,
@@ -129,12 +118,7 @@ export function createDashboardRoutes(): Router {
       const alerts = [];
 
       // Check for low stock products
-      const { data: lowStockProducts } = await supabaseManager
-        .client
-        .from('products')
-        .select('name')
-        .eq('is_available', true)
-        .limit(5); // Just get a few for demo
+      const lowStockProducts = await typeSafeDatabaseService.getActiveProducts();
 
       if (lowStockProducts && lowStockProducts.length > 0) {
         alerts.push({
@@ -144,16 +128,12 @@ export function createDashboardRoutes(): Router {
       }
 
       // Check for pending orders
-      const { count: pendingOrders } = await supabaseManager
-        .client
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending');
+      const pendingOrders = await typeSafeDatabaseService.getOrdersByStatus('pending');
 
-      if (pendingOrders && pendingOrders > 0) {
+      if (pendingOrders && pendingOrders.length > 0) {
         alerts.push({
           type: 'info',
-          message: `${pendingOrders} pedidos pendientes de confirmación`
+          message: `${pendingOrders.length} pedidos pendientes de confirmación`
         });
       }
 
@@ -169,8 +149,9 @@ export function createDashboardRoutes(): Router {
       res.json({ alerts });
 
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       serverLogger.error('DASHBOARD', 'Failed to fetch dashboard alerts', {
-        error: error instanceof Error ? error.message : String(error)
+        error: errorMessage || 'Unknown error'
       });
       res.status(500).json({
         success: false,
@@ -218,15 +199,10 @@ export function createDashboardRoutes(): Router {
       const activity = [];
 
       // Get recent orders
-      const { data: recentOrders } = await supabaseManager
-        .client
-        .from('orders')
-        .select('id, created_at, customer_name')
-        .order('created_at', { ascending: false })
-        .limit(3);
+      const recentOrders = await typeSafeDatabaseService.getRecentOrders(3);
 
       if (recentOrders) {
-        recentOrders.forEach(order => {
+        recentOrders.forEach((order) => {
           const timeAgo = getTimeAgo(new Date(order.created_at));
           activity.push({
             icon: 'cart-plus',
@@ -237,15 +213,10 @@ export function createDashboardRoutes(): Router {
       }
 
       // Get recent products
-      const { data: recentProducts } = await supabaseManager
-        .client
-        .from('products')
-        .select('name, created_at')
-        .order('created_at', { ascending: false })
-        .limit(2);
+      const recentProducts = await typeSafeDatabaseService.getRecentProducts(2);
 
       if (recentProducts) {
-        recentProducts.forEach(product => {
+        recentProducts.forEach((product) => {
           const timeAgo = getTimeAgo(new Date(product.created_at));
           activity.push({
             icon: 'box-seam',
@@ -275,8 +246,9 @@ export function createDashboardRoutes(): Router {
       res.json({ activity });
 
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       serverLogger.error('DASHBOARD', 'Failed to fetch recent activity', {
-        error: error instanceof Error ? error.message : String(error)
+        error: errorMessage || 'Unknown error'
       });
       res.status(500).json({
         success: false,
@@ -286,20 +258,4 @@ export function createDashboardRoutes(): Router {
   });
 
   return router;
-}
-
-/**
- * Helper function to get time ago string
- */
-function getTimeAgo(date: Date): string {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffMins < 1) return 'recién';
-  if (diffMins < 60) return `hace ${diffMins} minutos`;
-  if (diffHours < 24) return `hace ${diffHours} horas`;
-  return `hace ${diffDays} días`;
 }

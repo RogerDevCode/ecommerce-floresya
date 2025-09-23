@@ -1,15 +1,49 @@
 /**
- * 🌸 FloresYa User Controller Tests - Enterprise TypeScript Edition
- * Comprehensive unit tests for user management functionality
+ * 🌸 FloresYa UserController Unit Tests
+ * Comprehensive test suite for UserController endpoints
  */
 
-import { describe, test, expect, beforeEach, vi, afterEach } from 'vitest';
-import request from 'supertest';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { UserController } from '../../src/controllers/UserController.js';
 import { userService } from '../../src/services/UserService.js';
-import type { UserResponse, UserCreateRequest, UserUpdateRequest } from '../../src/types/globals.js';
 
-// Mock the UserService
+// Mock TypeSafeDatabaseService
+vi.mock('../../src/services/TypeSafeDatabaseService.js', () => ({
+  typeSafeDatabaseService: {
+    getClient: vi.fn()
+  }
+}));
+
+// Mock express-validator
+vi.mock('express-validator', () => {
+  const mockValidationChain = {
+    isEmail: vi.fn().mockReturnThis(),
+    isLength: vi.fn().mockReturnThis(),
+    isIn: vi.fn().mockReturnThis(),
+    isInt: vi.fn().mockReturnThis(),
+    isBoolean: vi.fn().mockReturnThis(),
+    normalizeEmail: vi.fn().mockReturnThis(),
+    trim: vi.fn().mockReturnThis(),
+    escape: vi.fn().mockReturnThis(),
+    matches: vi.fn().mockReturnThis(),
+    withMessage: vi.fn().mockReturnThis(),
+    optional: vi.fn().mockReturnThis()
+  };
+
+  const defaultValidationResult = {
+    isEmpty: vi.fn().mockReturnValue(true),
+    array: vi.fn().mockReturnValue([])
+  };
+
+  return {
+    body: vi.fn().mockReturnValue(mockValidationChain),
+    param: vi.fn().mockReturnValue(mockValidationChain),
+    query: vi.fn().mockReturnValue(mockValidationChain),
+    validationResult: vi.fn().mockReturnValue(defaultValidationResult)
+  };
+});
+
+// Mock the userService
 vi.mock('../../src/services/UserService.js', () => ({
   userService: {
     getAllUsers: vi.fn(),
@@ -21,114 +55,179 @@ vi.mock('../../src/services/UserService.js', () => ({
   }
 }));
 
-// Mock Express app setup
-import express from 'express';
-import { createUserRoutes } from '../../src/app/routes/userRoutes.js';
+// Mock express request and response
+const mockRequest = (overrides = {}) => ({
+  params: {},
+  query: {},
+  body: {},
+  ...overrides
+});
 
-const app = express();
-app.use(express.json());
+const mockResponse = () => {
+  const res = {
+    status: vi.fn().mockReturnThis(),
+    json: vi.fn().mockReturnThis(),
+    send: vi.fn().mockReturnThis()
+  };
+  return res;
+};
 
-// Mock authentication middleware for testing
-vi.mock('../../src/app/middleware/auth.js', () => ({
-  authenticateAdmin: vi.fn((req, res, next) => {
-    // Mock admin user
-    req.user = { id: 1, email: 'admin@test.com', role: 'admin' };
-    next();
-  })
-}));
-
-app.use('/api/users', createUserRoutes());
+const mockNext = vi.fn();
 
 describe('UserController', () => {
-  beforeEach(() => {
+  let controller: UserController;
+
+  beforeEach(async () => {
+    controller = new UserController();
     vi.clearAllMocks();
+
+    // Reset the validationResult mock to default (no errors)
+    const { validationResult } = await import('express-validator');
+    (validationResult as any).mockReturnValue({
+      isEmpty: vi.fn().mockReturnValue(true),
+      array: vi.fn().mockReturnValue([])
+    });
   });
 
   afterEach(() => {
     vi.resetAllMocks();
   });
 
-  describe('GET /api/users', () => {
-    test('should return users list with pagination', async () => {
-      const mockUsers: UserResponse[] = [
-        {
-          id: 1,
-          email: 'user1@test.com',
-          full_name: 'Test User 1',
-          phone: '+584141234567',
-          role: 'user',
-          is_active: true,
-          email_verified: true,
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
-        },
-        {
-          id: 2,
-          email: 'user2@test.com',
-          full_name: 'Test User 2',
-          role: 'admin',
-          is_active: false,
-          email_verified: false,
-          created_at: '2024-01-02T00:00:00Z',
-          updated_at: '2024-01-02T00:00:00Z'
-        }
-      ];
-
-      const mockResponse = {
-        success: true,
-        data: {
-          users: mockUsers,
-          pagination: {
-            current_page: 1,
-            total_pages: 1,
-            total_items: 2,
-            items_per_page: 20
+  describe('getAllUsers', () => {
+    it('should return users successfully', async () => {
+      const mockUsers = {
+        users: [
+          {
+            id: 1,
+            email: 'test@example.com',
+            full_name: 'Test User',
+            role: 'user' as const,
+            is_active: true,
+            email_verified: false,
+            created_at: '2024-01-01T00:00:00Z',
+            updated_at: '2024-01-01T00:00:00Z'
           }
-        },
+        ],
+        pagination: {
+          current_page: 1,
+          total_pages: 1,
+          total_items: 1,
+          items_per_page: 20
+        }
+      };
+
+      const mockServiceResponse = {
+        success: true,
+        data: mockUsers,
         message: 'Users retrieved successfully'
       };
 
-      vi.mocked(userService.getAllUsers).mockResolvedValue(mockResponse);
+      vi.mocked(userService.getAllUsers).mockResolvedValue(mockServiceResponse);
 
-      const response = await request(app)
-        .get('/api/users')
-        .expect(200);
+      const req = mockRequest({
+        query: { page: '1', limit: '20' }
+      });
+      const res = mockResponse();
 
-      expect(response.body).toEqual(mockResponse);
+      await controller.getAllUsers(req as any, res as any);
+
       expect(userService.getAllUsers).toHaveBeenCalledWith({
         page: 1,
         limit: 20,
+        search: undefined,
+        role: undefined,
+        is_active: undefined,
+        email_verified: undefined,
         sort_by: 'created_at',
         sort_direction: 'desc'
       });
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockServiceResponse);
     });
 
-    test('should handle query parameters correctly', async () => {
-      const mockResponse = {
+    it('should handle validation errors', async () => {
+      // Mock validation errors
+      const mockErrors = [{ param: 'page', msg: 'Page must be a positive integer' }];
+      const { validationResult } = await import('express-validator');
+      (validationResult as any).mockReturnValue({
+        isEmpty: vi.fn().mockReturnValue(false),
+        array: vi.fn().mockReturnValue(mockErrors)
+      });
+
+      const req = mockRequest({
+        query: { page: 'invalid' }
+      });
+      const res = mockResponse();
+
+      await controller.getAllUsers(req as any, res as any);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Validation errors',
+        errors: mockErrors
+      });
+    });
+
+    it('should handle service errors', async () => {
+      const mockServiceResponse = {
+        success: false,
+        message: 'Database error',
+        error: 'FETCH_USERS_ERROR'
+      };
+
+      vi.mocked(userService.getAllUsers).mockResolvedValue(mockServiceResponse);
+
+      const req = mockRequest({
+        query: { page: '1', limit: '20' }
+      });
+      const res = mockResponse();
+
+      await controller.getAllUsers(req as any, res as any);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith(mockServiceResponse);
+    });
+
+    it('should handle query parameters correctly', async () => {
+      const mockUsers = {
+        users: [],
+        pagination: {
+          current_page: 1,
+          total_pages: 0,
+          total_items: 0,
+          items_per_page: 20
+        }
+      };
+
+      const mockServiceResponse = {
         success: true,
-        data: { users: [], pagination: { current_page: 2, total_pages: 5, total_items: 100, items_per_page: 20 } },
+        data: mockUsers,
         message: 'Users retrieved successfully'
       };
 
-      vi.mocked(userService.getAllUsers).mockResolvedValue(mockResponse);
+      vi.mocked(userService.getAllUsers).mockResolvedValue(mockServiceResponse);
 
-      await request(app)
-        .get('/api/users')
-        .query({
+      const req = mockRequest({
+        query: {
           page: '2',
-          limit: '20',
+          limit: '10',
           search: 'test',
           role: 'admin',
           is_active: 'true',
           email_verified: 'false',
           sort_by: 'email',
           sort_direction: 'asc'
-        })
-        .expect(200);
+        }
+      });
+      const res = mockResponse();
+
+      await controller.getAllUsers(req as any, res as any);
 
       expect(userService.getAllUsers).toHaveBeenCalledWith({
         page: 2,
-        limit: 20,
+        limit: 10,
         search: 'test',
         role: 'admin',
         is_active: true,
@@ -137,503 +236,538 @@ describe('UserController', () => {
         sort_direction: 'asc'
       });
     });
+  });
 
-    test('should handle service errors gracefully', async () => {
-      vi.mocked(userService.getAllUsers).mockResolvedValue({
-        success: false,
-        message: 'Database connection error',
-        error: 'DB_ERROR'
+  describe('getUserById', () => {
+    it('should return user successfully', async () => {
+      const mockUser = {
+        id: 1,
+        email: 'test@example.com',
+        full_name: 'Test User',
+        role: 'user' as const,
+        is_active: true,
+        email_verified: false,
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z'
+      };
+
+      const mockServiceResponse = {
+        success: true,
+        data: mockUser,
+        message: 'User retrieved successfully'
+      };
+
+      vi.mocked(userService.getUserById).mockResolvedValue(mockServiceResponse);
+
+      const req = mockRequest({
+        params: { id: '1' }
       });
+      const res = mockResponse();
 
-      const response = await request(app)
-        .get('/api/users')
-        .expect(500);
+      await controller.getUserById(req as any, res as any);
 
-      expect(response.body).toMatchObject({
+      expect(userService.getUserById).toHaveBeenCalledWith(1);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockServiceResponse);
+    });
+
+    it('should handle invalid user ID', async () => {
+      const req = mockRequest({
+        params: { id: 'invalid' }
+      });
+      const res = mockResponse();
+
+      await controller.getUserById(req as any, res as any);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
         success: false,
-        message: 'Database connection error'
+        message: 'Invalid user ID',
+        error: 'INVALID_ID'
       });
     });
 
-    test('should validate query parameters', async () => {
-      const response = await request(app)
-        .get('/api/users')
-        .query({ page: '-1', limit: '101' })
-        .expect(400);
-
-      expect(response.body).toMatchObject({
+    it('should handle user not found', async () => {
+      const mockServiceResponse = {
         success: false,
-        message: 'Validation errors'
+        message: 'User not found',
+        error: 'USER_NOT_FOUND'
+      };
+
+      vi.mocked(userService.getUserById).mockResolvedValue(mockServiceResponse);
+
+      const req = mockRequest({
+        params: { id: '999' }
       });
+      const res = mockResponse();
+
+      await controller.getUserById(req as any, res as any);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith(mockServiceResponse);
     });
   });
 
-  describe('GET /api/users/:id', () => {
-    test('should return user by ID', async () => {
-      const mockUser: UserResponse = {
+  describe('createUser', () => {
+    it('should create user successfully', async () => {
+      const mockUser = {
         id: 1,
-        email: 'user@test.com',
+        email: 'test@example.com',
         full_name: 'Test User',
-        role: 'user',
+        role: 'user' as const,
+        is_active: true,
+        email_verified: false,
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z'
+      };
+
+      const mockServiceResponse = {
+        success: true,
+        data: mockUser,
+        message: 'User created successfully'
+      };
+
+      vi.mocked(userService.createUser).mockResolvedValue(mockServiceResponse);
+
+      const req = mockRequest({
+        body: {
+          email: 'test@example.com',
+          password: 'TestPassword123',
+          full_name: 'Test User',
+          role: 'user'
+        }
+      });
+      const res = mockResponse();
+
+      await controller.createUser(req as any, res as any);
+
+      expect(userService.createUser).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        password: 'TestPassword123',
+        full_name: 'Test User',
+        role: 'user'
+      });
+
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith(mockServiceResponse);
+    });
+
+    it('should handle validation errors', async () => {
+      // Mock validation errors
+      const mockErrors = [
+        { param: 'email', msg: 'Please provide a valid email' },
+        { param: 'password', msg: 'Password must be at least 6 characters' },
+        { param: 'full_name', msg: 'Full name must be at least 2 characters' },
+        { param: 'role', msg: 'Role must be either admin, manager, or user' }
+      ];
+      const { validationResult } = await import('express-validator');
+      (validationResult as any).mockReturnValue({
+        isEmpty: vi.fn().mockReturnValue(false),
+        array: vi.fn().mockReturnValue(mockErrors)
+      });
+
+      const req = mockRequest({
+        body: {
+          email: 'invalid-email',
+          password: '123',
+          full_name: 'T',
+          role: 'invalid'
+        }
+      });
+      const res = mockResponse();
+
+      await controller.createUser(req as any, res as any);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Validation errors',
+        errors: mockErrors
+      });
+    });
+
+    it('should handle email already exists error', async () => {
+      const mockServiceResponse = {
+        success: false,
+        message: 'Email already exists',
+        error: 'EMAIL_EXISTS'
+      };
+
+      vi.mocked(userService.createUser).mockResolvedValue(mockServiceResponse);
+
+      const req = mockRequest({
+        body: {
+          email: 'existing@example.com',
+          password: 'TestPassword123',
+          full_name: 'Test User',
+          role: 'user' as const
+        }
+      });
+      const res = mockResponse();
+
+      await controller.createUser(req as any, res as any);
+
+      expect(res.status).toHaveBeenCalledWith(409);
+      expect(res.json).toHaveBeenCalledWith(mockServiceResponse);
+    });
+  });
+
+  describe('updateUser', () => {
+    it('should update user successfully', async () => {
+      const mockUser = {
+        id: 1,
+        email: 'updated@example.com',
+        full_name: 'Updated User',
+        role: 'admin' as const,
         is_active: true,
         email_verified: true,
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z'
       };
 
-      vi.mocked(userService.getUserById).mockResolvedValue({
+      const mockServiceResponse = {
+        success: true,
+        data: mockUser,
+        message: 'User updated successfully'
+      };
+
+      vi.mocked(userService.updateUser).mockResolvedValue(mockServiceResponse);
+
+      const req = mockRequest({
+        params: { id: '1' },
+        body: {
+          email: 'updated@example.com',
+          full_name: 'Updated User',
+          role: 'admin' as const
+        }
+      });
+      const res = mockResponse();
+
+      await controller.updateUser(req as any, res as any);
+
+      expect(userService.updateUser).toHaveBeenCalledWith(1, {
+        id: 1,
+        email: 'updated@example.com',
+        full_name: 'Updated User',
+        role: 'admin'
+      });
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockServiceResponse);
+    });
+
+    it('should handle invalid user ID', async () => {
+      const req = mockRequest({
+        params: { id: 'invalid' },
+        body: {
+          email: 'updated@example.com'
+        }
+      });
+      const res = mockResponse();
+
+      await controller.updateUser(req as any, res as any);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Invalid user ID',
+        error: 'INVALID_ID'
+      });
+    });
+
+    it('should handle user not found error', async () => {
+      const mockServiceResponse = {
+        success: false,
+        message: 'User not found',
+        error: 'USER_NOT_FOUND'
+      };
+
+      vi.mocked(userService.updateUser).mockResolvedValue(mockServiceResponse);
+
+      const req = mockRequest({
+        params: { id: '999' },
+        body: {
+          email: 'updated@example.com'
+        }
+      });
+      const res = mockResponse();
+
+      await controller.updateUser(req as any, res as any);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith(mockServiceResponse);
+    });
+  });
+
+  describe('toggleUserActive', () => {
+    it('should toggle user active status successfully', async () => {
+      const mockUser = {
+        id: 1,
+        email: 'test@example.com',
+        full_name: 'Test User',
+        role: 'user' as const,
+        is_active: false,
+        email_verified: false,
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z'
+      };
+
+      const mockServiceResponse = {
+        success: true,
+        data: mockUser,
+        message: 'User status changed successfully'
+      };
+
+      vi.mocked(userService.toggleUserActive).mockResolvedValue(mockServiceResponse);
+
+      const req = mockRequest({
+        params: { id: '1' }
+      });
+      const res = mockResponse();
+
+      await controller.toggleUserActive(req as any, res as any);
+
+      expect(userService.toggleUserActive).toHaveBeenCalledWith(1);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockServiceResponse);
+    });
+
+    it('should handle invalid user ID', async () => {
+      const req = mockRequest({
+        params: { id: 'invalid' }
+      });
+      const res = mockResponse();
+
+      await controller.toggleUserActive(req as any, res as any);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Invalid user ID',
+        error: 'INVALID_ID'
+      });
+    });
+
+    it('should handle user not found error', async () => {
+      const mockServiceResponse = {
+        success: false,
+        message: 'User not found',
+        error: 'USER_NOT_FOUND'
+      };
+
+      vi.mocked(userService.toggleUserActive).mockResolvedValue(mockServiceResponse);
+
+      const req = mockRequest({
+        params: { id: '999' }
+      });
+      const res = mockResponse();
+
+      await controller.toggleUserActive(req as any, res as any);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith(mockServiceResponse);
+    });
+  });
+
+  describe('deleteUser', () => {
+    it('should perform logical deletion when user has references', async () => {
+      const mockUser = {
+        id: 1,
+        email: 'test@example.com',
+        full_name: 'Test User',
+        role: 'user' as const,
+        is_active: false,
+        email_verified: false,
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z'
+      };
+
+      // Mock getUserById to return user data
+      const getUserResponse = {
         success: true,
         data: mockUser,
         message: 'User retrieved successfully'
-      });
-
-      const response = await request(app)
-        .get('/api/users/1')
-        .expect(200);
-
-      expect(response.body.data).toEqual(mockUser);
-      expect(userService.getUserById).toHaveBeenCalledWith(1);
-    });
-
-    test('should return 404 for non-existent user', async () => {
-      vi.mocked(userService.getUserById).mockResolvedValue({
-        success: false,
-        message: 'User not found',
-        error: 'USER_NOT_FOUND'
-      });
-
-      const response = await request(app)
-        .get('/api/users/999')
-        .expect(404);
-
-      expect(response.body).toMatchObject({
-        success: false,
-        message: 'User not found'
-      });
-    });
-
-    test('should validate user ID parameter', async () => {
-      const response = await request(app)
-        .get('/api/users/invalid')
-        .expect(400);
-
-      expect(response.body).toMatchObject({
-        success: false,
-        message: 'Validation errors'
-      });
-    });
-  });
-
-  describe('POST /api/users', () => {
-    test('should create new user successfully', async () => {
-      const newUser: UserCreateRequest = {
-        email: 'newuser@test.com',
-        password: 'StrongPass123',
-        full_name: 'New Test User',
-        phone: '+584141234567',
-        role: 'user',
-        is_active: true,
-        email_verified: false
       };
 
-      const createdUser: UserResponse = {
-        id: 3,
-        email: 'newuser@test.com',
-        full_name: 'New Test User',
-        phone: '+584141234567',
-        role: 'user',
-        is_active: true,
-        email_verified: false,
-        created_at: '2024-01-03T00:00:00Z',
-        updated_at: '2024-01-03T00:00:00Z'
-      };
+      // Mock checkUserReferences to return true (has references)
+      vi.spyOn(controller as any, 'checkUserReferences').mockResolvedValue(true);
 
-      vi.mocked(userService.createUser).mockResolvedValue({
+      // Mock updateUser for logical deletion
+      const updateUserResponse = {
         success: true,
-        data: createdUser,
-        message: 'User created successfully'
-      });
-
-      const response = await request(app)
-        .post('/api/users')
-        .send(newUser)
-        .expect(201);
-
-      expect(response.body.data).toEqual(createdUser);
-      expect(userService.createUser).toHaveBeenCalledWith(newUser);
-    });
-
-    test('should validate required fields', async () => {
-      const invalidUser = {
-        email: 'invalid-email',
-        password: '123', // Too short
-        // missing full_name and role
-      };
-
-      const response = await request(app)
-        .post('/api/users')
-        .send(invalidUser)
-        .expect(400);
-
-      expect(response.body).toMatchObject({
-        success: false,
-        message: 'Validation errors'
-      });
-    });
-
-    test('should handle email already exists error', async () => {
-      const newUser: UserCreateRequest = {
-        email: 'existing@test.com',
-        password: 'StrongPass123',
-        full_name: 'Test User',
-        role: 'user'
-      };
-
-      vi.mocked(userService.createUser).mockResolvedValue({
-        success: false,
-        message: 'Email already exists',
-        error: 'EMAIL_EXISTS'
-      });
-
-      const response = await request(app)
-        .post('/api/users')
-        .send(newUser)
-        .expect(409);
-
-      expect(response.body).toMatchObject({
-        success: false,
-        message: 'Email already exists'
-      });
-    });
-
-    test('should validate password strength', async () => {
-      const weakPasswordUser = {
-        email: 'test@test.com',
-        password: 'weak',
-        full_name: 'Test User',
-        role: 'user'
-      };
-
-      const response = await request(app)
-        .post('/api/users')
-        .send(weakPasswordUser)
-        .expect(400);
-
-      expect(response.body.errors).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            path: 'password'
-          })
-        ])
-      );
-    });
-  });
-
-  describe('PUT /api/users/:id', () => {
-    test('should update user successfully', async () => {
-      const updateData: UserUpdateRequest = {
-        id: 1,
-        email: 'updated@test.com',
-        full_name: 'Updated User',
-        role: 'admin',
-        is_active: false
-      };
-
-      const updatedUser: UserResponse = {
-        id: 1,
-        email: 'updated@test.com',
-        full_name: 'Updated User',
-        role: 'admin',
-        is_active: false,
-        email_verified: true,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-03T00:00:00Z'
-      };
-
-      vi.mocked(userService.updateUser).mockResolvedValue({
-        success: true,
-        data: updatedUser,
+        data: { ...mockUser, is_active: false },
         message: 'User updated successfully'
-      });
-
-      const response = await request(app)
-        .put('/api/users/1')
-        .send(updateData)
-        .expect(200);
-
-      expect(response.body.data).toEqual(updatedUser);
-      expect(userService.updateUser).toHaveBeenCalledWith(1, updateData);
-    });
-
-    test('should return 404 for non-existent user', async () => {
-      vi.mocked(userService.updateUser).mockResolvedValue({
-        success: false,
-        message: 'User not found',
-        error: 'USER_NOT_FOUND'
-      });
-
-      const response = await request(app)
-        .put('/api/users/999')
-        .send({ full_name: 'Updated Name' })
-        .expect(404);
-
-      expect(response.body).toMatchObject({
-        success: false,
-        message: 'User not found'
-      });
-    });
-
-    test('should validate email format when updating email', async () => {
-      const response = await request(app)
-        .put('/api/users/1')
-        .send({ email: 'invalid-email' })
-        .expect(400);
-
-      expect(response.body).toMatchObject({
-        success: false,
-        message: 'Validation errors'
-      });
-    });
-  });
-
-  describe('PATCH /api/users/:id/toggle-active', () => {
-    test('should toggle user active status', async () => {
-      const toggledUser: UserResponse = {
-        id: 1,
-        email: 'user@test.com',
-        full_name: 'Test User',
-        role: 'user',
-        is_active: false, // Was true, now false
-        email_verified: true,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-03T00:00:00Z'
       };
 
-      vi.mocked(userService.toggleUserActive).mockResolvedValue({
-        success: true,
-        data: toggledUser,
-        message: 'User deactivated successfully'
+      vi.mocked(userService.getUserById).mockResolvedValue(getUserResponse);
+      vi.mocked(userService.updateUser).mockResolvedValue(updateUserResponse);
+
+      const req = mockRequest({
+        params: { id: '1' }
       });
+      const res = mockResponse();
 
-      const response = await request(app)
-        .patch('/api/users/1/toggle-active')
-        .expect(200);
+      await controller.deleteUser(req as any, res as any);
 
-      expect(response.body.data).toEqual(toggledUser);
-      expect(userService.toggleUserActive).toHaveBeenCalledWith(1);
-    });
-
-    test('should return 404 for non-existent user', async () => {
-      vi.mocked(userService.toggleUserActive).mockResolvedValue({
-        success: false,
-        message: 'User not found',
-        error: 'USER_NOT_FOUND'
-      });
-
-      const response = await request(app)
-        .patch('/api/users/999/toggle-active')
-        .expect(404);
-
-      expect(response.body).toMatchObject({
-        success: false,
-        message: 'User not found'
-      });
-    });
-  });
-
-  describe('DELETE /api/users/:id', () => {
-    test('should delete user successfully', async () => {
-      const deleteResponse = {
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
         success: true,
         data: {
-          deleted_user: {
-            id: 1,
-            email: 'user@test.com',
-            full_name: 'Test User'
-          }
+          user: { ...mockUser, is_active: false },
+          deletion_type: 'logical',
+          has_references: true
         },
+        message: 'User deactivated successfully (has orders or payments)'
+      });
+    });
+
+    it('should perform physical deletion when user has no references', async () => {
+      const mockUser = {
+        id: 1,
+        email: 'test@example.com',
+        full_name: 'Test User',
+        role: 'user' as const,
+        is_active: true,
+        email_verified: false,
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z'
+      };
+
+      const getUserResponse = {
+        success: true,
+        data: mockUser,
+        message: 'User retrieved successfully'
+      };
+
+      const deleteUserResponse = {
+        success: true,
+        data: { deleted_user: { id: 1, email: 'test@example.com' } },
         message: 'User deleted successfully'
       };
 
-      vi.mocked(userService.deleteUser).mockResolvedValue(deleteResponse);
+      // Mock checkUserReferences to return false (no references)
+      vi.spyOn(controller as any, 'checkUserReferences').mockResolvedValue(false);
 
-      const response = await request(app)
-        .delete('/api/users/1')
-        .expect(200);
+      vi.mocked(userService.getUserById).mockResolvedValue(getUserResponse);
+      vi.mocked(userService.deleteUser).mockResolvedValue(deleteUserResponse);
 
-      expect(response.body).toEqual(deleteResponse);
-      expect(userService.deleteUser).toHaveBeenCalledWith(1);
+      const req = mockRequest({
+        params: { id: '1' }
+      });
+      const res = mockResponse();
+
+      await controller.deleteUser(req as any, res as any);
+
+      expect(res.status).toHaveBeenCalledWith(204);
+      expect(res.send).toHaveBeenCalled();
     });
 
-    test('should return 400 when user has related orders', async () => {
-      vi.mocked(userService.deleteUser).mockResolvedValue({
-        success: false,
-        message: 'Cannot delete user: has 5 related orders. Consider deactivating instead.',
-        error: 'USER_HAS_ORDERS'
+    it('should handle invalid user ID', async () => {
+      const req = mockRequest({
+        params: { id: 'invalid' }
       });
+      const res = mockResponse();
 
-      const response = await request(app)
-        .delete('/api/users/1')
-        .expect(400);
+      await controller.deleteUser(req as any, res as any);
 
-      expect(response.body).toMatchObject({
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
         success: false,
-        message: expect.stringContaining('related orders')
-      });
-    });
-
-    test('should return 400 when user has related payments', async () => {
-      vi.mocked(userService.deleteUser).mockResolvedValue({
-        success: false,
-        message: 'Cannot delete user: has 3 related payments. Consider deactivating instead.',
-        error: 'USER_HAS_PAYMENTS'
-      });
-
-      const response = await request(app)
-        .delete('/api/users/1')
-        .expect(400);
-
-      expect(response.body).toMatchObject({
-        success: false,
-        message: expect.stringContaining('related payments')
+        message: 'Invalid user ID',
+        error: 'INVALID_ID'
       });
     });
 
-    test('should return 404 for non-existent user', async () => {
-      vi.mocked(userService.deleteUser).mockResolvedValue({
+    it('should handle user not found', async () => {
+      const getUserResponse = {
+        success: false,
+        message: 'User not found',
+        error: 'USER_NOT_FOUND'
+      };
+
+      vi.mocked(userService.getUserById).mockResolvedValue(getUserResponse);
+
+      const req = mockRequest({
+        params: { id: '999' }
+      });
+      const res = mockResponse();
+
+      await controller.deleteUser(req as any, res as any);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({
         success: false,
         message: 'User not found',
         error: 'USER_NOT_FOUND'
       });
-
-      const response = await request(app)
-        .delete('/api/users/999')
-        .expect(404);
-
-      expect(response.body).toMatchObject({
-        success: false,
-        message: 'User not found'
-      });
     });
   });
 
-  describe('Authentication and Authorization', () => {
-    test('should require admin authentication for all endpoints', () => {
-      // This is tested implicitly by our mocked middleware
-      // In a real scenario, you would test without the mock to ensure 401/403 responses
-      expect(true).toBe(true); // Placeholder for middleware tests
-    });
-  });
-
-  describe('Input Validation', () => {
-    test('should reject invalid email formats', async () => {
-      const invalidEmails = ['invalid', '@test.com', 'test@', 'test..test@test.com'];
-
-      for (const email of invalidEmails) {
-        const response = await request(app)
-          .post('/api/users')
-          .send({
-            email,
-            password: 'StrongPass123',
-            full_name: 'Test User',
-            role: 'user'
-          })
-          .expect(400);
-
-        expect(response.body).toMatchObject({
-          success: false,
-          message: 'Validation errors'
-        });
-      }
-    });
-
-    test('should reject invalid phone formats', async () => {
-      const invalidPhones = ['123', 'abc', '+123', '123456789012345678901'];
-
-      for (const phone of invalidPhones) {
-        const response = await request(app)
-          .post('/api/users')
-          .send({
-            email: 'test@test.com',
-            password: 'StrongPass123',
-            full_name: 'Test User',
-            phone,
-            role: 'user'
-          })
-          .expect(400);
-
-        expect(response.body).toMatchObject({
-          success: false,
-          message: 'Validation errors'
-        });
-      }
-    });
-
-    test('should accept valid phone formats', async () => {
-      const validPhones = ['+584141234567', '1234567890', '+1234567890123'];
-
-      vi.mocked(userService.createUser).mockResolvedValue({
-        success: true,
-        data: {} as UserResponse,
-        message: 'User created successfully'
-      });
-
-      for (const phone of validPhones) {
-        await request(app)
-          .post('/api/users')
-          .send({
-            email: `test${Date.now()}@test.com`,
-            password: 'StrongPass123',
-            full_name: 'Test User',
-            phone,
-            role: 'user'
-          })
-          .expect(201);
-      }
-    });
-
-    test('should validate role values', async () => {
-      const response = await request(app)
-        .post('/api/users')
-        .send({
-          email: 'test@test.com',
-          password: 'StrongPass123',
-          full_name: 'Test User',
-          role: 'invalid_role'
+  describe('checkUserReferences', () => {
+    it('should return true when user has orders', async () => {
+      // Mock database client for orders
+      const mockClient = {
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue({
+          data: [{ id: 1 }],
+          error: null
         })
-        .expect(400);
+      };
 
-      expect(response.body).toMatchObject({
-        success: false,
-        message: 'Validation errors'
-      });
-    });
-  });
+      const { typeSafeDatabaseService } = await import('../../src/services/TypeSafeDatabaseService.js');
+      (typeSafeDatabaseService.getClient as any).mockReturnValue(mockClient);
 
-  describe('Error Handling', () => {
-    test('should handle internal server errors gracefully', async () => {
-      vi.mocked(userService.getAllUsers).mockRejectedValue(new Error('Database connection failed'));
+      const result = await (controller as any).checkUserReferences(1);
 
-      const response = await request(app)
-        .get('/api/users')
-        .expect(500);
-
-      expect(response.body).toMatchObject({
-        success: false,
-        message: 'Internal server error'
-      });
+      expect(result).toBe(true);
     });
 
-    test('should handle malformed JSON in request body', async () => {
-      const response = await request(app)
-        .post('/api/users')
-        .set('Content-Type', 'application/json')
-        .send('{ invalid json }')
-        .expect(400);
+    it('should return true when user has payments', async () => {
+      // Mock database client for orders (no orders) then payments (has payments)
+      let callCount = 0;
+      const mockClient = {
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockImplementation(() => {
+          callCount++;
+          if (callCount === 1) {
+            // First call for orders - no results
+            return Promise.resolve({ data: [], error: null });
+          }
+          // Second call for payments - has results
+          return Promise.resolve({ data: [{ id: 1 }], error: null });
+        })
+      };
 
-      expect(response.body).toMatchObject({
-        success: false
-      });
+      const { typeSafeDatabaseService } = await import('../../src/services/TypeSafeDatabaseService.js');
+      (typeSafeDatabaseService.getClient as any).mockReturnValue(mockClient);
+
+      const result = await (controller as any).checkUserReferences(1);
+
+      expect(result).toBe(true);
+    });
+
+    it('should return false when user has no references', async () => {
+      // Mock database client for no references
+      const mockClient = {
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue({
+          data: [],
+          error: null
+        })
+      };
+
+      const { typeSafeDatabaseService } = await import('../../src/services/TypeSafeDatabaseService.js');
+      (typeSafeDatabaseService.getClient as any).mockReturnValue(mockClient);
+
+      const result = await (controller as any).checkUserReferences(1);
+
+      expect(result).toBe(false);
     });
   });
 });

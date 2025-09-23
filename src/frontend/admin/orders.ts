@@ -294,7 +294,7 @@ export class AdminOrders {
     const completedOrdersEl = document.getElementById('ordersStatsCompleted');
 
     const pendingCount = orders.filter(order => order.status === 'pending').length;
-    const completedCount = orders.filter(order => order.status === 'completed').length;
+    const completedCount = orders.filter(order => order.status === 'delivered').length;
 
     if (totalOrdersEl) totalOrdersEl.textContent = orders.length.toString();
     if (pendingOrdersEl) pendingOrdersEl.textContent = pendingCount.toString();
@@ -375,7 +375,7 @@ export class AdminOrders {
     const modalElement = document.getElementById('orderDetailsModal');
     if (modalElement && (window as unknown as WindowWithBootstrap).bootstrap?.Modal) {
       const Modal = (window as unknown as WindowWithBootstrap).bootstrap.Modal;
-      const modal = new Modal(modalElement as HTMLElement);
+      const modal = new Modal(modalElement);
       modal.show();
     }
   }

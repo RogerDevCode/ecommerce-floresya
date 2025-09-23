@@ -1,172 +1,54 @@
 
-🌸━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━🌸
-    FloresYa - Control de entornos INFALIBLE
-🌸━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━🌸
+/home/manager/Sync/ecommerce-floresya/src/frontend/main.ts
+  172:11  error  Unsafe return of a value of type error        @typescript-eslint/no-unsafe-return
+  642:36  error  Unsafe return of a value of type error        @typescript-eslint/no-unsafe-return
+  642:36  error  Unsafe call of a(n) `error` type typed value  @typescript-eslint/no-unsafe-call
+  968:53  error  Unsafe return of a value of type error        @typescript-eslint/no-unsafe-return
 
-ℹ️  Iniciando script de control (PID: 246521)
-ℹ️  Directorio de trabajo: /home/manager/Sync/ecommerce-floresya
-ℹ️  Usuario: manager
-ℹ️  Logs en: /tmp/floresya-20250921-112513.log
-ℹ️  Verificando dependencias del sistema...
-ℹ️  Node.js: v20.19.4, npm: 11.5.2
-✅ Dependencias verificadas correctamente
-ℹ️  Ejecutando verificaciones de salud...
-✅ Verificaciones de salud completadas
-ℹ️  Modo: DESARROLLO (por defecto)
-ℹ️  Limpiando procesos en puerto 3000...
- 246021✅ Procesos limpiados en puerto 3000
-ℹ️  Iniciando en modo DESARROLLO...
-ℹ️  Compilando proyecto TypeScript...
-ℹ️  Compilando backend...
-ℹ️  Compilando frontend...
-src/frontend/admin.ts(374,10): error TS2352: Conversion of type 'Window & typeof globalThis' to type 'WindowWithBootstrap' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
-  Types of property 'bootstrap' are incompatible.
-    Property 'Tooltip' is missing in type '{ Modal: new (element: HTMLElement) => { show(): void; hide(): void; }; Toast: new (element: HTMLElement, options?: { delay?: number; }) => { show(): void; hide(): void; }; }' but required in type '{ Modal: { new (element: Element, options?: unknown): BootstrapModal; getInstance(element: Element): BootstrapModal; }; Tooltip: { new (element: Element, options?: unknown): BootstrapTooltip; getInstance(element: Element): BootstrapTooltip; }; }'.
-src/frontend/admin.ts(375,22): error TS2352: Conversion of type 'Window & typeof globalThis' to type 'WindowWithBootstrap' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
-  Types of property 'bootstrap' are incompatible.
-    Property 'Tooltip' is missing in type '{ Modal: new (element: HTMLElement) => { show(): void; hide(): void; }; Toast: new (element: HTMLElement, options?: { delay?: number; }) => { show(): void; hide(): void; }; }' but required in type '{ Modal: { new (element: Element, options?: unknown): BootstrapModal; getInstance(element: Element): BootstrapModal; }; Tooltip: { new (element: Element, options?: unknown): BootstrapTooltip; getInstance(element: Element): BootstrapTooltip; }; }'.
-src/frontend/admin.ts(387,10): error TS2352: Conversion of type 'Window & typeof globalThis' to type 'WindowWithBootstrap' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
-  Types of property 'bootstrap' are incompatible.
-    Property 'Tooltip' is missing in type '{ Modal: new (element: HTMLElement) => { show(): void; hide(): void; }; Toast: new (element: HTMLElement, options?: { delay?: number; }) => { show(): void; hide(): void; }; }' but required in type '{ Modal: { new (element: Element, options?: unknown): BootstrapModal; getInstance(element: Element): BootstrapModal; }; Tooltip: { new (element: Element, options?: unknown): BootstrapTooltip; getInstance(element: Element): BootstrapTooltip; }; }'.
-src/frontend/admin.ts(388,22): error TS2352: Conversion of type 'Window & typeof globalThis' to type 'WindowWithBootstrap' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
-  Types of property 'bootstrap' are incompatible.
-    Property 'Tooltip' is missing in type '{ Modal: new (element: HTMLElement) => { show(): void; hide(): void; }; Toast: new (element: HTMLElement, options?: { delay?: number; }) => { show(): void; hide(): void; }; }' but required in type '{ Modal: { new (element: Element, options?: unknown): BootstrapModal; getInstance(element: Element): BootstrapModal; }; Tooltip: { new (element: Element, options?: unknown): BootstrapTooltip; getInstance(element: Element): BootstrapTooltip; }; }'.
-src/frontend/admin/orders.ts(376,26): error TS2352: Conversion of type 'Window & typeof globalThis' to type 'WindowWithBootstrap' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
-  Types of property 'bootstrap' are incompatible.
-    Property 'Tooltip' is missing in type '{ Modal: new (element: HTMLElement) => { show(): void; hide(): void; }; Toast: new (element: HTMLElement, options?: { delay?: number; }) => { show(): void; hide(): void; }; }' but required in type '{ Modal: { new (element: Element, options?: unknown): BootstrapModal; getInstance(element: Element): BootstrapModal; }; Tooltip: { new (element: Element, options?: unknown): BootstrapTooltip; getInstance(element: Element): BootstrapTooltip; }; }'.
-src/frontend/admin/orders.ts(377,22): error TS2352: Conversion of type 'Window & typeof globalThis' to type 'WindowWithBootstrap' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
-  Types of property 'bootstrap' are incompatible.
-    Property 'Tooltip' is missing in type '{ Modal: new (element: HTMLElement) => { show(): void; hide(): void; }; Toast: new (element: HTMLElement, options?: { delay?: number; }) => { show(): void; hide(): void; }; }' but required in type '{ Modal: { new (element: Element, options?: unknown): BootstrapModal; getInstance(element: Element): BootstrapModal; }; Tooltip: { new (element: Element, options?: unknown): BootstrapTooltip; getInstance(element: Element): BootstrapTooltip; }; }'.
-src/frontend/admin/products.ts(35,34): error TS2345: Argument of type 'import("/home/manager/Sync/ecommerce-floresya/src/config/supabase").Product[]' is not assignable to parameter of type 'import("/home/manager/Sync/ecommerce-floresya/src/frontend/admin/types").Product[]'.
-  Property 'is_available' is missing in type 'import("/home/manager/Sync/ecommerce-floresya/src/config/supabase").Product' but required in type 'import("/home/manager/Sync/ecommerce-floresya/src/frontend/admin/types").Product'.
-src/frontend/admin/types.ts(138,18): error TS2430: Interface 'WindowWithBootstrap' incorrectly extends interface 'Window'.
-  Types of property 'bootstrap' are incompatible.
-    Property 'Toast' is missing in type '{ Modal: { new (element: Element, options?: unknown): BootstrapModal; getInstance(element: Element): BootstrapModal; }; Tooltip: { new (element: Element, options?: unknown): BootstrapTooltip; getInstance(element: Element): BootstrapTooltip; }; }' but required in type '{ Modal: new (element: HTMLElement) => { show(): void; hide(): void; }; Toast: new (element: HTMLElement, options?: { delay?: number; }) => { show(): void; hide(): void; }; }'.
-src/frontend/auth.ts(98,28): error TS2352: Conversion of type 'Window & typeof globalThis' to type 'WindowWithBootstrap' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
-  The types of 'bootstrap.Modal' are incompatible between these types.
-    Property 'getInstance' is missing in type 'new (element: HTMLElement) => { show(): void; hide(): void; }' but required in type '{ new (element: HTMLElement): BootstrapModal; getInstance(element: HTMLElement): BootstrapModal; }'.
-src/frontend/auth.ts(99,26): error TS2352: Conversion of type 'Window & typeof globalThis' to type 'WindowWithBootstrap' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
-  The types of 'bootstrap.Modal' are incompatible between these types.
-    Property 'getInstance' is missing in type 'new (element: HTMLElement) => { show(): void; hide(): void; }' but required in type '{ new (element: HTMLElement): BootstrapModal; getInstance(element: HTMLElement): BootstrapModal; }'.
-src/frontend/main.ts(1280,24): error TS2352: Conversion of type 'Window & typeof globalThis' to type 'WindowWithBootstrap' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
-  The types of 'bootstrap.Modal' are incompatible between these types.
-    Property 'getInstance' is missing in type 'new (element: HTMLElement) => { show(): void; hide(): void; }' but required in type '{ new (element: HTMLElement): BootstrapModal; getInstance(element: HTMLElement): BootstrapModal; }'.
-src/frontend/product-detail.ts(173,30): error TS2352: Conversion of type 'Product' to type 'APIProductResponse' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
-  Property 'product' is missing in type 'Product' but required in type 'APIProductResponse'.
-src/frontend/product-detail.ts(180,31): error TS2339: Property 'images' does not exist on type 'Product'.
-src/frontend/product-detail.ts(711,24): error TS2352: Conversion of type 'Window & typeof globalThis' to type 'WindowWithBootstrap' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
-  The types of 'bootstrap.Modal' are incompatible between these types.
-    Property 'getInstance' is missing in type 'new (element: HTMLElement) => { show(): void; hide(): void; }' but required in type '{ new (element: HTMLElement): BootstrapModal; getInstance(element: HTMLElement): BootstrapModal; }'.
-src/frontend/services/api.ts(13,8): error TS6059: File '/home/manager/Sync/ecommerce-floresya/src/config/supabase.ts' is not under 'rootDir' '/home/manager/Sync/ecommerce-floresya/src/frontend'. 'rootDir' is expected to contain all source files.
-  The file is in the program because:
-    Imported via '../../config/supabase.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/services/api.ts'
-    Imported via '../../config/supabase.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/services/api.ts'
-    Imported via '../config/supabase.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/main.ts'
-    Imported via '../config/supabase.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/product-detail.ts'
-src/frontend/services/api.ts(13,8): error TS6307: File '/home/manager/Sync/ecommerce-floresya/src/config/supabase.ts' is not listed within the file list of project '/home/manager/Sync/ecommerce-floresya/src/frontend/tsconfig.frontend.json'. Projects must list all files or use an 'include' pattern.
-  The file is in the program because:
-    Imported via '../../config/supabase.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/services/api.ts'
-    Imported via '../../config/supabase.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/services/api.ts'
-    Imported via '../config/supabase.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/main.ts'
-    Imported via '../config/supabase.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/product-detail.ts'
-src/frontend/services/api.ts(17,8): error TS6059: File '/home/manager/Sync/ecommerce-floresya/src/types/globals.ts' is not under 'rootDir' '/home/manager/Sync/ecommerce-floresya/src/frontend'. 'rootDir' is expected to contain all source files.
-  The file is in the program because:
-    Imported via '../../types/globals.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/services/api.ts'
-    Imported via '../../types/globals.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/services/api.ts'
-    Imported via '../types/globals.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/auth.ts'
-    Imported via '../types/globals.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/main.ts'
-    Imported via '../types/globals.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/product-detail.ts'
-    Imported via '../types/globals.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/users-admin.ts'
-    Imported via '../../types/globals.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/utils/logger.ts'
-    Imported via '../../types/globals.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/utils/logger.ts'
-src/frontend/services/api.ts(17,8): error TS6307: File '/home/manager/Sync/ecommerce-floresya/src/types/globals.ts' is not listed within the file list of project '/home/manager/Sync/ecommerce-floresya/src/frontend/tsconfig.frontend.json'. Projects must list all files or use an 'include' pattern.
-  The file is in the program because:
-    Imported via '../../types/globals.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/services/api.ts'
-    Imported via '../../types/globals.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/services/api.ts'
-    Imported via '../types/globals.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/auth.ts'
-    Imported via '../types/globals.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/main.ts'
-    Imported via '../types/globals.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/product-detail.ts'
-    Imported via '../types/globals.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/users-admin.ts'
-    Imported via '../../types/globals.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/utils/logger.ts'
-    Imported via '../../types/globals.js' from file '/home/manager/Sync/ecommerce-floresya/src/frontend/utils/logger.ts'
-src/frontend/services/api.ts(157,81): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'SafeError'.
-src/frontend/services/api.ts(159,126): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'SafeError'.
-src/frontend/services/api.ts(193,81): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'SafeError'.
-src/frontend/services/api.ts(462,7): error TS2740: Type '{}' is missing the following properties from type 'User': id, email, role, is_active, and 3 more.
-src/frontend/services/api.ts(464,104): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'SafeError'.
-src/frontend/utils/logger.ts(186,23): error TS2304: Cannot find name 'SafeError'.
-⚠️  Error compilando frontend, continuando solo con backend
-ℹ️  Copiando archivos estáticos...
+/home/manager/Sync/ecommerce-floresya/src/services/ProductService.ts
+  197:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  197:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  197:63  error  Unsafe return of a value of type `any`    @typescript-eslint/no-unsafe-return
+  415:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  427:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  484:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  587:16  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
-> floresya-ecommerce@2.0.0 build:frontend:static
-> mkdir -p dist/frontend && cp -r public/* dist/frontend/
+/home/manager/Sync/ecommerce-floresya/src/services/TypeSafeDatabaseService.ts
+   22:43   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   23:44   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   28:34   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   41:31   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   55:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
+   69:5    error  Unsafe return of a value of type `any`    @typescript-eslint/no-unsafe-return
+   78:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
+   92:5    error  Unsafe return of a value of type `any`    @typescript-eslint/no-unsafe-return
+  104:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
+  114:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
+  125:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
+  139:5    error  Unsafe return of a value of type `any`    @typescript-eslint/no-unsafe-return
+  154:5    error  Unsafe return of a value of type `any`    @typescript-eslint/no-unsafe-return
+  164:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
+  178:5    error  Unsafe return of a value of type `any`    @typescript-eslint/no-unsafe-return
+  191:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
+  202:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
+  212:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
+  215:64   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  215:81   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  215:101  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  226:68   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  226:85   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  237:51   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  255:31   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  266:31   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  296:22   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  363:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
+  375:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
+  388:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
+  396:25   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  412:32   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  466:67   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  466:88   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
-ℹ️  Copiando archivos compartidos...
-✅ Compilación completada exitosamente
-ℹ️  🌐 Servidor estará disponible en:
-ℹ️     Frontend: http://localhost:3000/
-ℹ️     API: http://localhost:3000/api/
-ℹ️     Docs: http://localhost:3000/api-docs/
+✖ 45 problems (45 errors, 0 warnings)
 
-ℹ️  Presiona Ctrl+C para detener
-
-
-> floresya-ecommerce@2.0.0 dev
-> concurrently "tsc -p tsconfig.node.json --watch" "nodemon --watch dist/backend dist/backend/app/server.js"
-
-[1] [33m[nodemon] 3.1.10[39m
-[1] [33m[nodemon] to restart at any time, enter `rs`[39m
-[1] [33m[nodemon] watching path(s): dist/backend/**/*[39m
-[1] [33m[nodemon] watching extensions: js,mjs,cjs,json[39m
-[1] [32m[nodemon] starting `node dist/backend/app/server.js`[39m
-[0] [2J[3J[H11:25:25 AM - Starting compilation in watch mode...
-[0] 
-[1] [dotenv@17.2.2] injecting env (18) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
-[1] [ℹ️ SYSTEM] Server Logger initialized {
-[1]   level: 'INFO',
-[1]   fileLogging: false,
-[1]   consoleLogging: true,
-[1]   environment: 'development'
-[1] }
-[1] [dotenv@17.2.2] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
-[1] [ℹ️ SYSTEM] Initializing middleware stack
-[1] [ℹ️ SECURITY] Setting up Helmet security headers
-[1] [ℹ️ SECURITY] Configuring CORS {
-[1]   origins: [
-[1]     'http://localhost:3000',
-[1]     'http://127.0.0.1:3000',
-[1]     'http://localhost:8080',
-[1]     'http://127.0.0.1:8080'
-[1]   ]
-[1] }
-[1] [ℹ️ SECURITY] Setting up rate limiting { windowMs: '15 minutes', maxRequests: 1000 }
-[1] [ℹ️ PERF] Enabling response compression
-[1] [ℹ️ SYSTEM] Setting up body parsers { jsonLimit: '10mb', urlencodedLimit: '10mb' }
-[1] [ℹ️ STATIC] Setting up static file serving { path: '/home/manager/Sync/ecommerce-floresya/public', maxAge: '0' }
-[1] [ℹ️ STATIC] Setting up dist file serving { path: '/home/manager/Sync/ecommerce-floresya/dist' }
-[1] [ℹ️ SYSTEM] Enabling request logging middleware
-[1] [✅ SYSTEM] Middleware stack initialized successfully
-[1] [ℹ️ SYSTEM] Initializing API routes
-[1] [ℹ️ SYSTEM] Setting up product routes
-[1] [ℹ️ SYSTEM] Setting up order routes
-[1] [ℹ️ SYSTEM] Setting up occasions routes
-[1] [ℹ️ SYSTEM] Setting up logs routes
-[1] [ℹ️ SYSTEM] Setting up image routes
-[1] [ℹ️ SYSTEM] Setting up user routes
-[1] [ℹ️ SYSTEM] Setting up schema routes
-[1] [ℹ️ SYSTEM] Setting up dashboard routes
-[1] [ℹ️ SYSTEM] Setting up Swagger API documentation
-[1] [✅ SYSTEM] All routes initialized successfully
-[1] [ℹ️ SYSTEM] Initializing FloresYa Server { port: 3000, environment: 'development' }
-[0] 
-[0] 11:25:26 AM - Found 0 errors. Watching for file changes.
-[1] [✅ DATABASE] Supabase connection verified
-[1] [✅ SYSTEM] FloresYa Server started successfully {
-[1]   port: 3000,
-[1]   environment: 'development',
-[1]   apiBaseUrl: 'http://localhost:3000/api',
-[1]   healthCheckUrl: 'http://localhost:3000/api/health'
-[1] }
-[1] [⚡ TIMER] Server Startup completed { label: 'Server Startup', duration: 1112.62, unit: 'ms' }
-ℹ️  Recibida señal de interrupción, limpiando...
-ℹ️  Limpiando procesos en puerto 3000...

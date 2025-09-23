@@ -29,6 +29,11 @@ export default tseslint.config(
       },
     },
     rules: {
+      // 🌸 SSOT (Single Source of Truth) Rules - ZERO TOLERANCE
+      '@typescript-eslint/no-redeclare': 'error', // ❌ Prohibido redeclarar variables/tipos
+      'no-redeclare': 'error', // ❌ Prohibido redeclarar variables nativas
+      'no-duplicate-imports': 'error', // ❌ Prohibido imports duplicados
+
       // Overrides industriales
       '@typescript-eslint/no-unused-vars': ['error', {
         argsIgnorePattern: '^_',
@@ -66,7 +71,8 @@ export default tseslint.config(
       'node_modules/**/*',
       'scripts/**/*.js',
       '*.config.js',
-      
+      'src/config/supabase-types.d.ts',
+      'src/config/swagger.d.ts',
       '.claude/**/*',
     ],
   },

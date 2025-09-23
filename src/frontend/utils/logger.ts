@@ -4,8 +4,7 @@
  * Sin distracciones. Solo información útil, cuando es útil.
  */
 
-import type { LogData, WindowWithFloresyaLogger, Logger, SafeError } from '../../types/globals.js';
-import { formatError } from '../../types/globals.js';
+import type { LogData, Logger, LogEntry } from '../../shared/types/index.js';
 
 // Type definitions
 interface LogLevel {
@@ -13,17 +12,6 @@ interface LogLevel {
   color: string;
   icon: string;
   method: 'error' | 'warn' | 'info' | 'log';
-}
-
-interface LogEntry {
-  timestamp: string;
-  level: string;
-  module: string;
-  message: string;
-  data?: LogData;
-  sessionId: string;
-  url: string;
-  userAgent: string;
 }
 
 interface LogLevels {
@@ -185,8 +173,9 @@ export class FloresYaLogger implements Logger {
         return response;
       } catch (error: unknown) {
         const endTime = performance.now();
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         this.error('FETCH', `${method} ${url} - Failed`, {
-          error: error instanceof Error ? error.message : String(error),
+          error: errorMessage,
           duration: Math.round(endTime - startTime)
         });
         throw error;
@@ -223,16 +212,16 @@ export class FloresYaLogger implements Logger {
     }
   }
 
-  private createLogEntry(level: string, module: string, message: string, data?: LogData): LogEntry {
+  private createLogEntry(level: LogEntry['level'], module: string, message: string, data?: LogData): LogEntry {
     return {
       timestamp: new Date().toISOString(),
       level,
       module,
       message,
       data,
-      sessionId: this.sessionId,
+      session_id: this.sessionId,
       url: window.location.href,
-      userAgent: navigator.userAgent
+      user_agent: navigator.userAgent
     };
   }
 
@@ -320,13 +309,13 @@ export class FloresYaLogger implements Logger {
   }
 
   public user(module: string, message: string, data?: LogData): void {
-    const entry = this.createLogEntry('USER', module, message, data);
+    const entry = this.createLogEntry('user', module, message, data);
     this.addLog(entry);
     this.logToConsole('USER', module, message, data);
   }
 
   public cart(module: string, message: string, data?: LogData): void {
-    const entry = this.createLogEntry('CART', module, message, data);
+    const entry = this.createLogEntry('cart', module, message, data);
     this.addLog(entry);
     this.logToConsole('CART', module, message, data);
   }
@@ -389,21 +378,25 @@ export class FloresYaLogger implements Logger {
 export const logger = new FloresYaLogger();
 
 // Make available globally
-window.floresyaLogger = logger;
-window.logger = logger;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+window.floresyaLogger = logger as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+window.logger = logger as any;
 
 // Default export
 export default logger;
 
 // Only create instance if it doesn't exist
-if (typeof window.floresyaLogger === 'undefined') {
-  window.floresyaLogger = new FloresYaLogger();
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call */
+if (typeof (window as any).floresyaLogger === 'undefined') {
+  (window as any).floresyaLogger = new FloresYaLogger();
 
   // Start auto-sending logs
-  if (window.floresyaLogger && 'startAutoSend' in window.floresyaLogger) {
-    (window as WindowWithFloresyaLogger).floresyaLogger?.startAutoSend(5);
+  if ((window as any).floresyaLogger && 'startAutoSend' in (window as any).floresyaLogger) {
+    (window as any).floresyaLogger?.startAutoSend(5);
   }
 
   console.warn('%c[✅] FloresYaLogger TypeScript initialized - Experiencia limpia, sin distracciones',
     'color: #ff6b9d; font-weight: bold;');
 }
+/* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call */

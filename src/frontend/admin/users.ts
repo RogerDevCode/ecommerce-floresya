@@ -4,6 +4,7 @@
  */
 
 import type { AdminUser, AdminPanelLogger } from './types.js';
+import type { UserRole } from '../../shared/types/index.js';
 
 export class AdminUsers {
   private logger: AdminPanelLogger;
@@ -268,7 +269,7 @@ export class AdminUsers {
     const userData = {
       email: formData.get('email') as string,
       full_name: formData.get('full_name') as string,
-      role: formData.get('role') as string,
+      role: formData.get('role') as UserRole,
       is_active: formData.get('is_active') === 'true'
     };
 

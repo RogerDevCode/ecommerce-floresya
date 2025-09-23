@@ -20,7 +20,7 @@ import { createImageRoutes } from './routes/imageRoutes.js';
 import { createUserRoutes } from './routes/userRoutes.js';
 import { createSchemaRoutes } from './routes/schemaRoutes.js';
 import { createDashboardRoutes } from './routes/dashboardRoutes.js';
-import { supabaseManager } from '../config/supabase.js';
+import supabaseManager from '../config/supabase.js';
 
 // Import comprehensive logging system
 import { serverLogger } from '../utils/serverLogger.js';
@@ -286,12 +286,16 @@ class FloresYaServer {
 
   private initializeErrorHandling(): void {
     // 404 handler for API routes
-    this.app.use('/api/*', (req: Request, res: Response) => {
-      res.status(404).json({
-        success: false,
-        message: 'API endpoint not found',
-        path: req.path
-      });
+    this.app.use((req: Request, res: Response, next) => {
+      if (req.path.startsWith('/api/')) {
+        res.status(404).json({
+          success: false,
+          message: 'API endpoint not found',
+          path: req.path
+        });
+      } else {
+        next();
+      }
     });
 
     // Global error handler with comprehensive logging

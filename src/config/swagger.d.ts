@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 /**
  * 🌸 FloresYa Swagger/OpenAPI Configuration
  * Comprehensive API documentation setup with schema definitions

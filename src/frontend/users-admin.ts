@@ -3,26 +3,21 @@
  * Complete user management interface with advanced features
  */
 
-import { api } from './services/api.js';
+import { api } from './services/apiClient.js';
 import type {
+  PaginationInfo,
   UserCreateRequest,
   UserFormData,
   UserQuery,
   UserResponse,
   UserUpdateRequest,
   WindowWithBootstrap,
-  WindowWithFloresyaLogger
-} from '../types/globals.js';
+  WindowWithFloresyaLogger,
+  WindowWithUsersAdmin
+} from '../shared/types/index.js';
 
 // Extend window with our interfaces
-declare const window: WindowWithBootstrap & WindowWithFloresyaLogger;
-
-interface PaginationInfo {
-  current_page: number;
-  total_pages: number;
-  total_items: number;
-  items_per_page: number;
-}
+declare const window: WindowWithBootstrap & WindowWithFloresyaLogger & WindowWithUsersAdmin;
 
 interface UsersResponse {
   success: boolean;
@@ -313,7 +308,7 @@ class UsersAdminManager {
     pages.push(`
       <li class="page-item ${pagination.current_page === 1 ? 'disabled' : ''}">
         <button class="page-link" ${pagination.current_page === 1 ? 'disabled' : ''}
-                onclick="(window as any).usersAdmin.goToPage(${pagination.current_page - 1})">
+                onclick="window.usersAdmin.goToPage(${pagination.current_page - 1})">
           <i class="bi bi-chevron-left"></i>
         </button>
       </li>
@@ -326,7 +321,7 @@ class UsersAdminManager {
     for (let i = startPage; i <= endPage; i++) {
       pages.push(`
         <li class="page-item ${i === pagination.current_page ? 'active' : ''}">
-          <button class="page-link" onclick="(window as any).usersAdmin.goToPage(${i})">${i}</button>
+          <button class="page-link" onclick="window.usersAdmin.goToPage(${i})">${i}</button>
         </li>
       `);
     }
@@ -335,7 +330,7 @@ class UsersAdminManager {
     pages.push(`
       <li class="page-item ${pagination.current_page === pagination.total_pages ? 'disabled' : ''}">
         <button class="page-link" ${pagination.current_page === pagination.total_pages ? 'disabled' : ''}
-                onclick="(window as any).usersAdmin.goToPage(${pagination.current_page + 1})">
+                onclick="window.usersAdmin.goToPage(${pagination.current_page + 1})">
           <i class="bi bi-chevron-right"></i>
         </button>
       </li>
@@ -360,7 +355,7 @@ class UsersAdminManager {
           <div class="mt-3">
             <h5 class="text-muted">Error al cargar usuarios</h5>
             <p class="text-muted">Verifique su conexión e intente nuevamente</p>
-            <button class="btn btn-primary" onclick="(window as any).usersAdmin.loadUsers()"
+            <button class="btn btn-primary" onclick="window.usersAdmin.loadUsers()"
               <i class="bi bi-arrow-clockwise me-1"></i>Reintentar
             </button>
           </div>
@@ -830,13 +825,13 @@ class UsersAdminManager {
 
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    const manager = new UsersAdminManager();
-    // Expose to window for pagination callbacks
-    (window as WindowWithBootstrap & WindowWithFloresyaLogger & { usersAdmin: UsersAdminManager })['usersAdmin'] = manager;
-  });
-} else {
+document.addEventListener('DOMContentLoaded', () => {
   const manager = new UsersAdminManager();
   // Expose to window for pagination callbacks
-  (window as WindowWithBootstrap & WindowWithFloresyaLogger & { usersAdmin: UsersAdminManager })['usersAdmin'] = manager;
+  (window as unknown as WindowWithBootstrap & WindowWithFloresyaLogger & { usersAdmin: UsersAdminManager })['usersAdmin'] = manager;
+});
+} else {
+const manager = new UsersAdminManager();
+// Expose to window for pagination callbacks
+(window as unknown as WindowWithBootstrap & WindowWithFloresyaLogger & { usersAdmin: UsersAdminManager })['usersAdmin'] = manager;
 }

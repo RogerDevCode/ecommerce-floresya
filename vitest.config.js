@@ -11,6 +11,7 @@ export default defineConfig({
     environment: 'node',
     include: [
       'tests/unit/**/*.test.{js,ts}',
+      'tests/integration/**/*.test.{js,ts}',
       '!tests/unit-es6/**/*.test.js'
     ],
     globals: true,

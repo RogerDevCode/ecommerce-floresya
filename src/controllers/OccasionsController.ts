@@ -5,8 +5,8 @@
 
 import { Request, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
-import { supabaseService } from '../config/supabase.js';
-// Import removed - ApiResponse unused
+import { typeSafeDatabaseService } from '../services/TypeSafeDatabaseService.js';
+import type { OccasionType } from '../shared/types/index.js';
 
 export class OccasionsController {
   /**
@@ -70,19 +70,7 @@ export class OccasionsController {
    */
   private async checkOccasionNameExists(normalizedName: string, excludeId?: number): Promise<boolean> {
     try {
-      let query = supabaseService
-        .from('occasions')
-        .select('id, name');
-
-      if (excludeId) {
-        query = query.neq('id', excludeId);
-      }
-
-      const { data: occasions, error } = await query;
-
-      if (error) {
-        throw new Error(`Failed to check name uniqueness: ${error.message}`);
-      }
+      const occasions = await typeSafeDatabaseService.getOccasionsForQuery(excludeId);
 
       if (!occasions || occasions.length === 0) {
         return false;
@@ -146,15 +134,7 @@ export class OccasionsController {
         return;
       }
 
-      const { data, error } = await supabaseService
-        .from('occasions')
-        .select('*')
-        .eq('is_active', true)
-        .order('display_order', { ascending: true });
-
-      if (error) {
-        throw new Error(`Failed to fetch occasions: ${error.message}`);
-      }
+      const data = await typeSafeDatabaseService.getActiveOccasions();
 
       res.status(200).json({
         success: true,
@@ -223,22 +203,14 @@ export class OccasionsController {
       }
 
       const occasionId = parseInt(req.params.id);
-      const { data, error } = await supabaseService
-        .from('occasions')
-        .select('*')
-        .eq('id', occasionId)
-        .eq('is_active', true)
-        .single();
+      const data = await typeSafeDatabaseService.getActiveOccasionById(occasionId);
 
-      if (error) {
-        if (error.code === 'PGRST116') {
-          res.status(404).json({
-            success: false,
-            message: 'Occasion not found'
-          });
-          return;
-        }
-        throw new Error(`Failed to fetch occasion: ${error.message}`);
+      if (!data) {
+        res.status(404).json({
+          success: false,
+          message: 'Occasion not found'
+        });
+        return;
       }
 
       res.status(200).json({
@@ -330,7 +302,7 @@ export class OccasionsController {
       };
 
       // Apply default AFTER validation passes
-      const finalType = type ?? 'general';
+      const finalType: OccasionType = (type as OccasionType) ?? 'general';
 
       // Apply smart capitalization to the name
       const capitalizedName = this.capitalizeOccasionName(name);
@@ -353,36 +325,17 @@ export class OccasionsController {
       const slug = normalizedName.replace(/\s+/g, '-').replace(/-+/g, '-').trim();
 
       // Get the next display order
-      const { data: maxOrderData, error: maxOrderError } = await supabaseService
-        .from('occasions')
-        .select('display_order')
-        .order('display_order', { ascending: false })
-        .limit(1);
+      const maxOrder = await typeSafeDatabaseService.getMaxOccasionDisplayOrder();
+      const nextDisplayOrder = maxOrder + 1;
 
-      if (maxOrderError) {
-        throw new Error(`Failed to get max display order: ${maxOrderError.message}`);
-      }
-
-      const nextDisplayOrder = maxOrderData && maxOrderData.length > 0 && maxOrderData[0]
-        ? (maxOrderData[0].display_order ?? 0) + 1
-        : 1;
-
-      const { data, error } = await supabaseService
-        .from('occasions')
-        .insert({
-          name: capitalizedName, // Use capitalized name for display
-          type: finalType,
-          slug,
-          description,
-          is_active,
-          display_order: nextDisplayOrder
-        })
-        .select()
-        .single();
-
-      if (error) {
-        throw new Error(`Failed to create occasion: ${error.message}`);
-      }
+      const data = await typeSafeDatabaseService.createOccasion({
+        name: capitalizedName, // Use capitalized name for display
+        type: finalType,
+        slug,
+        description,
+        is_active,
+        display_order: nextDisplayOrder
+      });
 
       res.status(201).json({
         success: true,
@@ -482,21 +435,14 @@ export class OccasionsController {
       };
 
       // Get current occasion data
-      const { data: currentOccasion, error: fetchError } = await supabaseService
-        .from('occasions')
-        .select('*')
-        .eq('id', occasionId)
-        .single();
+      const currentOccasion = await typeSafeDatabaseService.getOccasionById(occasionId);
 
-      if (fetchError) {
-        if (fetchError.code === 'PGRST116') {
-          res.status(404).json({
-            success: false,
-            message: 'Occasion not found'
-          });
-          return;
-        }
-        throw new Error(`Failed to fetch occasion: ${fetchError.message}`);
+      if (!currentOccasion) {
+        res.status(404).json({
+          success: false,
+          message: 'Occasion not found'
+        });
+        return;
       }
 
       // Prepare update data
@@ -504,7 +450,7 @@ export class OccasionsController {
         is_active: boolean;
         updated_at: string;
         name?: string;
-        type?: string;
+        type?: OccasionType;
         slug?: string;
         description?: string | null;
       } = {
@@ -542,36 +488,18 @@ export class OccasionsController {
         // Check if the new slug is different from current
         if (newSlug !== currentOccasion.slug) {
           // Check if the new slug already exists (excluding current occasion)
-          const { data: existingSlug, error: slugCheckError } = await supabaseService
-            .from('occasions')
-            .select('id')
-            .eq('slug', newSlug)
-            .neq('id', occasionId)
-            .single();
+          const slugExists = await typeSafeDatabaseService.checkOccasionSlugExists(newSlug, occasionId);
 
-          if (slugCheckError && slugCheckError.code !== 'PGRST116') {
-            throw new Error(`Failed to check slug uniqueness: ${slugCheckError.message}`);
-          }
-
-          if (existingSlug) {
+          if (slugExists) {
             // Slug exists, generate unique slug with suffix
             let counter = 1;
             let uniqueSlug = `${newSlug}-${counter}`;
 
              
             while (true) {
-              const { data: conflictCheck, error: conflictError } = await supabaseService
-                .from('occasions')
-                .select('id')
-                .eq('slug', uniqueSlug)
-                .neq('id', occasionId)
-                .single();
+              const conflictExists = await typeSafeDatabaseService.checkOccasionSlugExists(uniqueSlug, occasionId);
 
-              if (conflictError && conflictError.code !== 'PGRST116') {
-                throw new Error(`Failed to check slug uniqueness: ${conflictError.message}`);
-              }
-
-              if (!conflictCheck) {
+              if (!conflictExists) {
                 // Found unique slug
                 break;
               }
@@ -592,7 +520,7 @@ export class OccasionsController {
 
       // Handle type change
       if (type !== undefined) {
-        updateData.type = type;
+        updateData.type = type as OccasionType;
       }
 
       // Handle description change
@@ -601,16 +529,7 @@ export class OccasionsController {
       }
 
       // Update the occasion
-      const { data, error } = await supabaseService
-        .from('occasions')
-        .update(updateData)
-        .eq('id', occasionId)
-        .select()
-        .single();
-
-      if (error) {
-        throw new Error(`Failed to update occasion: ${error.message}`);
-      }
+      const data = await typeSafeDatabaseService.updateOccasion(occasionId, updateData);
 
       res.status(200).json({
         success: true,
@@ -698,51 +617,26 @@ export class OccasionsController {
       const occasionId = parseInt(req.params.id);
 
       // Get current occasion data
-      const { data: _occasion, error: fetchError } = await supabaseService
-        .from('occasions')
-        .select('*')
-        .eq('id', occasionId)
-        .single();
+      const _occasion = await typeSafeDatabaseService.getOccasionById(occasionId);
 
-      if (fetchError) {
-        if (fetchError.code === 'PGRST116') {
-          res.status(404).json({
-            success: false,
-            message: 'Occasion not found'
-          });
-          return;
-        }
-        throw new Error(`Failed to fetch occasion: ${fetchError.message}`);
+      if (!_occasion) {
+        res.status(404).json({
+          success: false,
+          message: 'Occasion not found'
+        });
+        return;
       }
 
       // Check if occasion has references in product_occasions
-      const { data: references, error: refError } = await supabaseService
-        .from('product_occasions')
-        .select('id')
-        .eq('occasion_id', occasionId)
-        .limit(1);
-
-      if (refError) {
-        throw new Error(`Failed to check references: ${refError.message}`);
-      }
-
+      const references = await typeSafeDatabaseService.getProductOccasionReferences(occasionId);
       const hasReferences = references && references.length > 0;
 
       if (hasReferences) {
         // Logical deletion - just deactivate
-        const { data, error } = await supabaseService
-          .from('occasions')
-          .update({
-            is_active: false,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', occasionId)
-          .select()
-          .single();
-
-        if (error) {
-          throw new Error(`Failed to deactivate occasion: ${error.message}`);
-        }
+        const data = await typeSafeDatabaseService.updateOccasion(occasionId, {
+          is_active: false,
+          updated_at: new Date().toISOString()
+        });
 
         res.status(200).json({
           success: true,
@@ -755,14 +649,7 @@ export class OccasionsController {
         });
       } else {
         // Physical deletion - no references, safe to delete
-        const { error } = await supabaseService
-          .from('occasions')
-          .delete()
-          .eq('id', occasionId);
-
-        if (error) {
-          throw new Error(`Failed to delete occasion: ${error.message}`);
-        }
+        await typeSafeDatabaseService.deleteOccasion(occasionId);
 
         // Return 204 No Content for successful physical deletion
         res.status(204).send();

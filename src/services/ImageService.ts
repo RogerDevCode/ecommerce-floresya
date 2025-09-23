@@ -4,48 +4,19 @@
  */
 
 import sharp from 'sharp';
-import { supabaseService } from '../config/supabase.js';
-import type { ImageSize, ProductImage } from '../config/supabase.js';
+import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
+import type {
+  ImageSize,
+  ProductImage,
+  MulterFile,
+  ImageUploadRequest,
+  ProcessedImage,
+  ImageUploadResult
+} from '../shared/types/index.js';
 import crypto from 'crypto';
 import path from 'path';
 
-// Tipo para archivos de Multer
-interface MulterFile {
-  fieldname: string;
-  originalname: string;
-  encoding: string;
-  mimetype: string;
-  buffer: Buffer;
-  size: number;
-}
-
-export interface ImageUploadRequest {
-  productId: number;
-  imageIndex: number;
-  file: MulterFile;
-  isPrimary?: boolean;
-}
-
-export interface ProcessedImage {
-  size: ImageSize;
-  buffer: Buffer;
-  width: number;
-  height: number;
-  fileName: string;
-  mimeType: string;
-  fileHash: string;
-}
-
-export interface ImageUploadResult {
-  success: boolean;
-  images: Array<{
-    size: ImageSize;
-    url: string;
-    fileHash: string;
-  }>;
-  primaryImage?: ProductImage;
-  message: string;
-}
+// Using TypeSafeDatabaseService for type-safe operations
 
 export class ImageService {
   // Dimensiones para cada tamaño de imagen
@@ -109,7 +80,7 @@ export class ImageService {
         const filePath = `products/${productId}/${image.fileName}`;
 
         // Subir a Supabase Storage
-        const { error } = await supabaseService.storage
+        const { error } = await typeSafeDatabaseService.getClient().storage
           .from('product-images')
           .upload(filePath, image.buffer, {
             contentType: image.mimeType,
@@ -123,7 +94,7 @@ export class ImageService {
         }
 
         // Obtener URL pública
-        const { data: urlData } = supabaseService.storage
+        const { data: urlData } = typeSafeDatabaseService.getClient().storage
           .from('product-images')
           .getPublicUrl(filePath);
 
@@ -164,17 +135,12 @@ export class ImageService {
       }));
 
       // Use PostgreSQL function for atomic image creation
-      const { data, error } = await supabaseService.rpc('create_product_images_atomic', {
+      const data = await typeSafeDatabaseService.executeRpc('create_product_images_atomic', {
         product_id: productId,
         image_index: imageIndex,
         images_data: imagesData,
         is_primary: isPrimary
       });
-
-      if (error) {
-        console.error('Error in image creation transaction:', error);
-        throw new Error(`Failed to save image records transaction: ${error.message}`);
-      }
 
       if (!data) {
         throw new Error('No data returned from image creation transaction');
@@ -195,7 +161,7 @@ export class ImageService {
       const { productId, imageIndex, file, isPrimary = false } = request;
 
       // Verificar que el producto existe
-      const { data: product, error: productError } = await supabaseService
+      const { data: product, error: productError } = await typeSafeDatabaseService.getClient()
         .from('products')
         .select('id, name')
         .eq('id', productId)
@@ -204,6 +170,9 @@ export class ImageService {
       if (productError || !product) {
         throw new Error(`Product with ID ${productId} not found`);
       }
+
+      // Type assertion para el producto
+      const productData = product as { id: number; name: string };
 
       // Procesar la imagen en las 4 variaciones
       const processedImages = await this.processImage(file);
@@ -221,7 +190,7 @@ export class ImageService {
         success: true,
         images: uploadedImages,
         primaryImage,
-        message: `Successfully uploaded ${uploadedImages.length} image variations for product "${product.name}"`
+        message: `Successfully uploaded ${uploadedImages.length} image variations for product "${productData.name}"`
       };
     } catch (error) {
       console.error('ImageService.uploadProductImage error:', error);
@@ -239,14 +208,9 @@ export class ImageService {
   public async deleteProductImages(productId: number): Promise<boolean> {
     try {
       // Use PostgreSQL function for safe image deletion
-      const { data, error } = await supabaseService.rpc('delete_product_images_safe', {
+      const data = await typeSafeDatabaseService.executeRpc('delete_product_images_safe', {
         product_id: productId
       });
-
-      if (error) {
-        console.error('Error in image deletion transaction:', error);
-        return false;
-      }
 
       // Note: Storage cleanup should be handled by application
       // as Supabase storage operations are not directly transactional
@@ -264,7 +228,7 @@ export class ImageService {
  */
 public async getProductImages(productId: number): Promise<ProductImage[]> {
   try {
-    const { data, error } = await supabaseService
+    const { data, error } = await typeSafeDatabaseService.getClient()
       .from('product_images')
       .select('*')
       .eq('product_id', productId)
@@ -323,23 +287,33 @@ private async resizeImage(
   }
 
   /**
-   * Valida que el archivo sea una imagen válida
-   */
-  public validateImageFile(file: MulterFile): { valid: boolean; error?: string } {
-    // Verificar tamaño máximo (5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      return { valid: false, error: 'Image file size must be less than 5MB' };
-    }
+    * Valida que el archivo sea una imagen válida
+    */
+   public validateImageFile(file: MulterFile): { valid: boolean; error?: string } {
+     try {
+       // Verificar que el archivo existe
+       if (!file) {
+         return { valid: false, error: 'No file provided' };
+       }
 
-    // Verificar tipo MIME
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.mimetype)) {
-      return { valid: false, error: 'Only JPEG, PNG, and WebP images are allowed' };
-    }
+       // Verificar tamaño máximo (5MB)
+       const maxSize = 5 * 1024 * 1024; // 5MB
+       if (file.size > maxSize) {
+         return { valid: false, error: 'Image file size must be less than 5MB' };
+       }
 
-    return { valid: true };
-  }
+       // Verificar tipo MIME
+       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+       if (!allowedTypes.includes(file.mimetype)) {
+         return { valid: false, error: 'Only JPEG, PNG, and WebP images are allowed' };
+       }
+
+       return { valid: true };
+     } catch (error) {
+       console.error('ImageService.validateImageFile error:', error);
+       return { valid: false, error: 'Invalid file format' };
+     }
+   }
 
   /**
    * Obtiene la galería de imágenes de productos para el admin
@@ -362,7 +336,7 @@ private async resizeImage(
     };
   }> {
     try {
-      let query = supabaseService
+      let query = typeSafeDatabaseService.getClient()
         .from('product_images')
         .select(`
           id,
@@ -387,7 +361,7 @@ private async resizeImage(
       }
 
       // Obtener total para paginación
-      const { count } = await supabaseService
+      const { count } = await typeSafeDatabaseService.getClient()
         .from('product_images')
         .select('*', { count: 'exact', head: true });
 
@@ -402,7 +376,16 @@ private async resizeImage(
         throw new Error(`Failed to fetch images gallery: ${error.message}`);
       }
 
-      const images = (data ?? []).map(image => ({
+      const images = (data ?? []).map((image: {
+        id: number;
+        product_id: number | null;
+        size: ImageSize;
+        url: string;
+        file_hash: string;
+        is_primary: boolean;
+        created_at: string;
+        products?: Array<{ name?: string }>;
+      }) => ({
         id: image.id,
         product_id: image.product_id,
         product_name: Array.isArray(image.products) && image.products.length > 0
@@ -456,7 +439,7 @@ private async resizeImage(
 
       // Subir a Supabase Storage en carpeta 'site'
       const filePath = `site/${fileName}`;
-      const { error } = await supabaseService.storage
+      const { error } = await typeSafeDatabaseService.getClient().storage
         .from('product-images')
         .upload(filePath, processedBuffer, {
           contentType: 'image/webp',
@@ -469,7 +452,7 @@ private async resizeImage(
       }
 
       // Obtener URL pública
-      const { data: urlData } = supabaseService.storage
+      const { data: urlData } = typeSafeDatabaseService.getClient().storage
         .from('product-images')
         .getPublicUrl(filePath);
 
@@ -533,7 +516,7 @@ public getCurrentSiteImages(): { hero: string; logo: string; } {
   }> {
     try {
       // Construir consulta base para productos
-      let productsQuery = supabaseService
+      let productsQuery = typeSafeDatabaseService.getClient()
         .from('products')
         .select('id, name, price_usd, active');
 
@@ -559,7 +542,7 @@ public getCurrentSiteImages(): { hero: string; logo: string; } {
       let filteredProductIds = (allProducts as { id: number }[]).map(p => p.id);
 
       if (occasionFilter && occasionFilter !== 'general') {
-        const { data: occasionProducts, error: occasionError } = await supabaseService
+        const { data: occasionProducts, error: occasionError } = await typeSafeDatabaseService.getClient()
           .from('product_occasions')
           .select('product_id')
           .eq('occasion_id', parseInt(occasionFilter));
@@ -574,7 +557,7 @@ public getCurrentSiteImages(): { hero: string; logo: string; } {
 
       // Obtener conteo de imágenes para los productos filtrados
       // Agrupar por product_id para contar imágenes únicas (no por tamaño)
-      const { data: imageCounts, error: imagesError } = await supabaseService
+      const { data: imageCounts, error: imagesError } = await typeSafeDatabaseService.getClient()
         .from('product_images')
         .select('product_id, image_index')
         .in('product_id', filteredProductIds);
@@ -588,7 +571,7 @@ public getCurrentSiteImages(): { hero: string; logo: string; } {
       if (imageCounts) {
         // Usar un Set para evitar duplicados por image_index
         const uniqueImages = new Map<number, Set<number>>();
-        imageCounts.forEach((image) => {
+        imageCounts.forEach((image: { product_id: number; image_index: number }) => {
           if (!uniqueImages.has(image.product_id)) {
             uniqueImages.set(image.product_id, new Set());
           }
@@ -602,13 +585,13 @@ public getCurrentSiteImages(): { hero: string; logo: string; } {
       }
 
       // Filtrar productos según los criterios aplicados
-      const filteredProducts = allProducts.filter(product => filteredProductIds.includes(product.id));
+      const filteredProducts = allProducts.filter((product: { id: number }) => filteredProductIds.includes(product.id));
 
       // Combinar productos filtrados con conteo de imágenes
-      const productsWithCounts = filteredProducts.map(product => ({
+      const productsWithCounts = filteredProducts.map((product: { id: number; name: string; price_usd: number }) => ({
         id: product.id,
         name: product.name,
-        price_usd: parseFloat(product.price_usd),
+        price_usd: product.price_usd,
         image_count: imageCountMap.get(product.id) ?? 0
       }));
 

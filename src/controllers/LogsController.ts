@@ -6,13 +6,8 @@
 import { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 
-interface LogEntry {
-  timestamp: string;
-  level: string;
-  module: string;
-  message: string;
-  data?: unknown;
-}
+// Import consolidated logging types
+import type { LogEntry } from '../shared/types/index.js';
 
 export class LogsController {
   /**

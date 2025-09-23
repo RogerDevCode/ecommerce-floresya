@@ -6,7 +6,7 @@
     <meta name="description" content="FloresYa - Tu floristería en línea de confianza. Hermosos ramos, arreglos florales y plantas para toda ocasión. Entrega a domicilio en Venezuela.">
     <meta name="keywords" content="flores, floristería, ramos, arreglos florales, plantas, Venezuela, entrega domicilio">
     <title>FloresYa - Tu Floristería en Línea</title>
-    
+
     <!-- Critical CSS inline to prevent FOUC -->
     <style>
         /* Hide content initially to prevent FOUC */
@@ -22,30 +22,32 @@
         @media (max-width: 768px) { h1 { font-size: 2rem !important; } }
     </style>
 
-    <!-- Load CSS synchronously to prevent FOUC -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/styles.css">
+    <!-- Tailwind CSS from build -->
+    <link href="/css/styles.css" rel="stylesheet">
+
+    <!-- Additional custom CSS files -->
     <link rel="stylesheet" href="/css/carousel.css">
     <link rel="stylesheet" href="/css/simple-carousel.css">
     <link rel="stylesheet" href="/css/product-transitions.css">
     <link rel="stylesheet" href="/css/scroll-fix.css">
     <link rel="stylesheet" href="/css/inline-styles.css">
+
     <!-- Preload critical resources -->
     <link rel="preload" href="/images/logoFloresYa.jpeg" as="image" importance="high">
     <link rel="modulepreload" href="/dist/frontend/utils/logger.js">
     <link rel="modulepreload" href="/dist/frontend/services/api.js">
     <link rel="modulepreload" href="/dist/frontend/main.js">
-    
+
     <!-- DNS prefetch for external domains -->
     <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
     <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
-    
-    <!-- Bootstrap Icons (non-critical) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" media="print" onload="this.media='all'"">
-    
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
-    
+
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="FloresYa - Tu Floristería en Línea">
     <meta property="og:description" content="Hermosos ramos, arreglos florales y plantas para toda ocasión. Entrega a domicilio en Venezuela.">
@@ -88,79 +90,102 @@
     })();
 </script>
 
-
 </head>
-<body>
+<body class="bg-gray-50">
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="/">
-                <img src="/images/logoFloresYa.jpeg" alt="FloresYa Logo" class="logo-img me-2 logo-brand" data-critical="true" loading="eager">
-                <span class="brand-text">FloresYa</span>
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item nav-item-hidden" id="logoutNavItem">
-                        <a class="nav-link text-danger" href="#" id="mainLogoutBtn" title="Cerrar sesión">
-                            <i class="bi bi-box-arrow-right me-1"></i>Cerrar Sesión
+    <nav class="bg-white shadow-sm sticky top-0 z-50 navbar">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <a class="flex items-center" href="/">
+                    <img src="/images/logoFloresYa.jpeg" alt="FloresYa Logo" class="h-10 w-auto mr-2 logo-brand" data-critical="true" loading="eager">
+                    <span class="text-xl font-bold text-primary-600">FloresYa</span>
+                </a>
+
+                <!-- Mobile menu button -->
+                <button class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500" type="button" id="mobile-menu-button">
+                    <span class="sr-only">Abrir menú principal</span>
+                    <i data-lucide="menu" class="h-6 w-6" id="menu-icon"></i>
+                    <i data-lucide="x" class="h-6 w-6 hidden" id="close-icon"></i>
+                </button>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:block" id="desktop-nav">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <div class="hidden" id="logoutNavItem">
+                            <a class="text-red-600 hover:text-red-800 px-3 py-2 rounded-md text-sm font-medium flex items-center" href="#" id="mainLogoutBtn" title="Cerrar sesión">
+                                <i data-lucide="log-out" class="h-4 w-4 mr-1"></i>Cerrar Sesión
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="ml-4 flex items-center md:ml-6">
+                        <!-- Cart Icon -->
+                        <a class="relative p-2 text-gray-700 hover:text-primary-600 transition-colors" href="#" id="cartToggle" title="Ver carrito">
+                            <i data-lucide="heart" class="h-6 w-6"></i>
+                            <span class="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center cart-badge" id="cartCount">0</span>
+                            <span class="absolute -top-1 -right-1 cart-pulse" id="cartPulse"></span>
                         </a>
-                    </li>
-                </ul>
-                
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link position-relative cart-icon-wrapper" href="#" id="cartToggle" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas" title="Ver carrito">
-                            <i class="bi bi-bag-heart cart-icon"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary-custom cart-badge" id="cartCount">0</span>
-                            <span class="position-absolute cart-pulse" id="cartPulse"></span>
+
+                        <!-- User Dropdown -->
+                        <div class="ml-3 relative hidden" id="userDropdown">
+                            <div>
+                                <button class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500" id="user-menu-button">
+                                    <i data-lucide="user-circle" class="h-8 w-8 text-gray-700"></i>
+                                </button>
+                            </div>
+                            <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden" id="user-menu">
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" id="viewProfile">Mi Perfil</a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" id="viewOrders">Mis Pedidos</a>
+                                <a href="/pages/admin.html" class="hidden block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" id="adminPanel">
+                                    <i data-lucide="shield-check" class="h-4 w-4 inline mr-2"></i>Panel de Administrador
+                                </a>
+                                <div class="border-t border-gray-100"></div>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" id="logoutBtn">Cerrar Sesión</a>
+                            </div>
+                        </div>
+
+                        <!-- Admin Panel Link -->
+                        <a class="hidden ml-3 text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium flex items-center" href="/pages/admin.html" id="adminPanelLink">
+                            <i data-lucide="shield-check" class="h-4 w-4 mr-1"></i>Panel Admin
                         </a>
-                    </li>
-                    <li class="nav-item dropdown nav-item-hidden" id="userDropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" id="userMenu">
-                            <i class="bi bi-person-circle"></i>
+
+                        <!-- Login Button -->
+                        <a class="ml-3 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors" href="#" id="loginBtn">Iniciar Sesión</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile menu -->
+            <div class="md:hidden hidden" id="mobile-menu">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-200 mt-2">
+                    <div class="hidden" id="logoutNavItemMobile">
+                        <a class="text-red-600 hover:text-red-800 block px-3 py-2 rounded-md text-base font-medium flex items-center" href="#" id="mainLogoutBtnMobile">
+                            <i data-lucide="log-out" class="h-4 w-4 mr-2"></i>Cerrar Sesión
                         </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#" id="viewProfile">Mi Perfil</a></li>
-                            <li><a class="dropdown-item" href="#" id="viewOrders">Mis Pedidos</a></li>
-                            <li><a class="dropdown-item nav-item-hidden" href="/pages/admin.html" id="adminPanel">
-                                <i class="bi bi-shield-check me-2"></i>Panel de Administrador
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#" id="logoutBtn">Cerrar Sesión</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item nav-item-hidden" id="adminPanelLink">
-                        <a class="nav-link" href="/pages/admin.html">
-                            <i class="bi bi-shield-check me-1"></i>Panel Admin
-                        </a>
-                    </li>
-                    <li class="nav-item" id="loginBtn">
-                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Iniciar Sesión</a>
-                    </li>
-                </ul>
+                    </div>
+                    <a class="hidden text-gray-700 hover:text-primary-600 block px-3 py-2 rounded-md text-base font-medium flex items-center" href="/pages/admin.html" id="adminPanelLinkMobile">
+                        <i data-lucide="shield-check" class="h-4 w-4 mr-2"></i>Panel Admin
+                    </a>
+                    <a class="bg-primary-600 hover:bg-primary-700 text-white block px-3 py-2 rounded-md text-base font-medium text-center" href="#" id="loginBtnMobile">Iniciar Sesión</a>
+                </div>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section - Optimized Height -->
-    <section class="hero-section text-white text-center py-2 hero-min-height">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-6">
-                    <h1 class="display-5 fw-bold mb-2">Flores Frescas Para Toda Ocasión</h1>
-                    <p class="lead mb-0">Descubre nuestra hermosa colección de ramos, arreglos florales y plantas. Entrega fresca y puntual en toda Venezuela.</p>
+    <!-- Hero Section -->
+    <section class="hero-section text-white text-center py-8 lg:py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div class="text-left lg:text-left">
+                    <h1 class="text-4xl lg:text-5xl font-extrabold mb-4">Flores Frescas Para Toda Ocasión</h1>
+                    <p class="text-lg lg:text-xl leading-relaxed">Descubre nuestra hermosa colección de ramos, arreglos florales y plantas. Entrega fresca y puntual en toda Venezuela.</p>
                 </div>
-                <div class="col-lg-6">
-                    <img src="/images/hero-flowers.webp" alt="Hermosas flores" class="img-fluid rounded shadow hover-lift hero-image" data-critical="true" width="280" height="200" loading="eager">
+                <div class="relative">
+                    <img src="/images/hero-flowers.webp" alt="Hermosas flores" class="w-full max-w-sm mx-auto rounded-lg shadow-lg hover-lift" data-critical="true" width="280" height="200" loading="eager">
                     <!-- Trust indicator overlay -->
-                    <div class="position-absolute hero-badge-position">
-                        <span class="badge hero-badge">
-                            <i class="bi bi-shield-check me-1"></i>Garantizado
+                    <div class="absolute top-4 right-4">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            <i data-lucide="shield-check" class="h-4 w-4 mr-1"></i>Garantizado
                         </span>
                     </div>
                 </div>
@@ -168,34 +193,34 @@
         </div>
     </section>
 
-    <!-- Bootstrap Carousel - Featured Products -->
-    <section class="py-4">
-        <div class="container">
-            <div class="text-center mb-4">
-                <h3 class="fw-bold text-primary-custom">Nuestras Creaciones Destacadas</h3>
-                <p class="text-muted">Descubre nuestros arreglos más populares</p>
+    <!-- Featured Products Carousel -->
+    <section class="py-8">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-8">
+                <h3 class="text-2xl lg:text-3xl font-bold text-primary-600 mb-2">Nuestras Creaciones Destacadas</h3>
+                <p class="text-gray-600">Descubre nuestros arreglos más populares</p>
             </div>
 
-            <!-- Dynamic Bootstrap Carousel - populated by JavaScript -->
-            <div id="featuredCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+            <!-- Dynamic Carousel - populated by JavaScript -->
+            <div id="featuredCarousel" class="relative rounded-lg shadow-md overflow-hidden">
                 <!-- Indicators will be generated dynamically -->
-                <div class="carousel-indicators" id="carouselIndicators">
+                <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10" id="carouselIndicators">
                     <!-- Dynamic indicators -->
                 </div>
 
                 <!-- Slides will be generated dynamically -->
-                <div class="carousel-inner rounded-3 shadow" id="carouselSlides">
+                <div class="relative" id="carouselSlides">
                     <!-- Dynamic slides -->
                 </div>
 
                 <!-- Controls -->
-                <button class="carousel-control-prev" type="button" data-bs-target="#featuredCarousel" data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon"></span>
-                    <span class="visually-hidden">Anterior</span>
+                <button class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-md transition-all z-10" type="button" id="carousel-prev">
+                    <i data-lucide="chevron-left" class="h-6 w-6 text-gray-700"></i>
+                    <span class="sr-only">Anterior</span>
                 </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#featuredCarousel" data-bs-slide="next">
-                    <span class="carousel-control-next-icon"></span>
-                    <span class="visually-hidden">Siguiente</span>
+                <button class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-md transition-all z-10" type="button" id="carousel-next">
+                    <i data-lucide="chevron-right" class="h-6 w-6 text-gray-700"></i>
+                    <span class="sr-only">Siguiente</span>
                 </button>
             </div>
         </div>
@@ -203,547 +228,531 @@
 
     <!-- Featured Products -->
     <main id="main-content">
-        <section id="productos" class="py-5" role="main" aria-label="Sección de productos destacados">
-            <div class="container">
+        <section id="productos" class="py-12" role="main" aria-label="Sección de productos destacados">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Productos Destacados</h2>
+                    <p class="text-lg text-gray-600">Nuestras flores más populares y arreglos especiales</p>
+                </div>
 
-                <div class="text-center mb-5">
-                    <h2 class="fw-bold">Productos Destacados</h2>
-                    <p class="text-muted">Nuestras flores más populares y arreglos especiales</p>
-                    
-                </div>
-            
-            <!-- Search and Filters -->
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Buscar productos..." id="searchInput">
-                        <button class="btn btn-outline-success" type="button" id="searchBtn">
-                            <i class="bi bi-search"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select" id="occasionFilter">
-                        <option value="">Todas las ocasiones</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select" id="sortFilter">
-                        <option value="created_at:desc">Más recientes</option>
-                        <option value="price_usd:asc">Precio: Menor a mayor</option>
-                        <option value="price_usd:desc">Precio: Mayor a menor</option>
-                        <option value="name:asc">Nombre: A-Z</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="row" id="productsContainer">
-                <!-- Products will be loaded here -->
-            </div>
-            
-            <!-- Pagination -->
-            <nav aria-label="Productos" class="mt-4">
-                <ul class="pagination justify-content-center" id="pagination">
-                </ul>
-            </nav>
-        </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="py-4 bg-light">
-        <div class="container">
-            <div class="row text-center">
-                <div class="col-md-3 mb-4">
-                    <div class="feature-item">
-                        <i class="bi bi-flower1 text-success mb-3 feature-icon-large"></i>
-                        <h5>Flores Frescas</h5>
-                        <p class="text-muted">Garantizamos la frescura y calidad de todas nuestras flores</p>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-4">
-                    <div class="feature-item">
-                        <i class="bi bi-truck text-success mb-3 feature-icon-large"></i>
-                        <h5>Entrega Rápida</h5>
-                        <p class="text-muted">Entregamos en el día que elijas, puntual y seguro</p>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-4">
-                    <div class="feature-item">
-                        <i class="bi bi-heart text-success mb-3 feature-icon-large"></i>
-                        <h5>Hechos con Amor</h5>
-                        <p class="text-muted">Cada arreglo es creado con dedicación y cuidado especial</p>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-4">
-                    <div class="feature-item">
-                        <i class="bi bi-shield-check text-success mb-3 feature-icon-large"></i>
-                        <h5>Garantía Total</h5>
-                        <p class="text-muted">Si no estás satisfecho, te devolvemos tu dinero</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Special Sections Navigation - Call to Action -->
-    <section class="special-sections py-4 bg-gradient-primary">
-        <div class="container">
-            <div class="text-center mb-4">
-                <h3 class="fw-bold text-white">¿Buscas algo especial?</h3>
-                <p class="lead text-white-75">Descubre nuestros servicios premium y exclusivos</p>
-            </div>
-            <div class="row text-center">
-                <div class="col-md-6 mb-3">
-                    <a href="#" class="special-link text-decoration-none" onclick="floresyaApp.showFloresNovias()">
-                        <div class="special-card p-3 bg-white rounded shadow-lg h-100 d-flex align-items-center justify-content-center hover-lift">
-                            <div>
-                                <i class="bi bi-suit-heart-fill text-primary-custom mb-3 feature-icon-large"></i>
-                                <h4 class="text-primary-custom fw-bold mb-2">Flores Ya Novias</h4>
-                                <p class="text-muted mb-3">Arreglos exclusivos para el día más especial de tu vida</p>
-                                <span class="btn btn-outline-primary-custom">Conocer más</span>
+                <!-- Search and Filters -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    <div class="md:col-span-2">
+                        <div class="relative">
+                            <input type="text" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Buscar productos..." id="searchInput">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i data-lucide="search" class="h-5 w-5 text-gray-400"></i>
                             </div>
+                            <button class="absolute inset-y-0 right-0 pr-3 flex items-center text-primary-600 hover:text-primary-700" type="button" id="searchBtn">
+                                <i data-lucide="search" class="h-5 w-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <select class="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="occasionFilter">
+                            <option value="">Todas las ocasiones</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select class="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="sortFilter">
+                            <option value="created_at:desc">Más recientes</option>
+                            <option value="price_usd:asc">Precio: Menor a mayor</option>
+                            <option value="price_usd:desc">Precio: Mayor a menor</option>
+                            <option value="name:asc">Nombre: A-Z</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="productsContainer">
+                    <!-- Products will be loaded here -->
+                </div>
+
+                <!-- Pagination -->
+                <nav aria-label="Productos" class="mt-8">
+                    <div class="flex justify-center" id="pagination">
+                    </div>
+                </nav>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="py-12 bg-gray-100">
+            <div class="container mx-auto px-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+                    <div class="space-y-4">
+                        <div class="flex justify-center">
+                            <i data-lucide="flower" class="h-16 w-16 text-green-600"></i>
+                        </div>
+                        <h5 class="text-xl font-semibold text-gray-900">Flores Frescas</h5>
+                        <p class="text-gray-600">Garantizamos la frescura y calidad de todas nuestras flores</p>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex justify-center">
+                            <i data-lucide="truck" class="h-16 w-16 text-green-600"></i>
+                        </div>
+                        <h5 class="text-xl font-semibold text-gray-900">Entrega Rápida</h5>
+                        <p class="text-gray-600">Entregamos en el día que elijas, puntual y seguro</p>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex justify-center">
+                            <i data-lucide="heart" class="h-16 w-16 text-green-600"></i>
+                        </div>
+                        <h5 class="text-xl font-semibold text-gray-900">Hechos con Amor</h5>
+                        <p class="text-gray-600">Cada arreglo es creado con dedicación y cuidado especial</p>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex justify-center">
+                            <i data-lucide="shield-check" class="h-16 w-16 text-green-600"></i>
+                        </div>
+                        <h5 class="text-xl font-semibold text-gray-900">Garantía Total</h5>
+                        <p class="text-gray-600">Si no estás satisfecho, te devolvemos tu dinero</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Special Sections Navigation - Call to Action -->
+        <section class="py-12 bg-gradient-to-br from-primary-600 to-primary-700">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-8">
+                    <h3 class="text-3xl font-bold text-white mb-4">¿Buscas algo especial?</h3>
+                    <p class="text-xl text-pink-100">Descubre nuestros servicios premium y exclusivos</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <a href="#" class="block" onclick="floresyaApp.showFloresNovias()">
+                        <div class="bg-white rounded-lg shadow-lg p-6 h-full flex flex-col items-center justify-center text-center hover:shadow-xl transition-shadow hover-lift">
+                            <i data-lucide="heart" class="h-16 w-16 text-primary-600 mb-4"></i>
+                            <h4 class="text-2xl font-bold text-primary-600 mb-3">Flores Ya Novias</h4>
+                            <p class="text-gray-600 mb-4 flex-grow">Arreglos exclusivos para el día más especial de tu vida</p>
+                            <span class="btn-outline-primary">Conocer más</span>
                         </div>
                     </a>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <div class="special-card p-3 bg-white rounded shadow-lg h-100 d-flex align-items-center justify-content-center hover-lift">
-                        <div>
-                            <i class="bi bi-lightning-fill text-warning mb-3 feature-icon-large"></i>
-                            <h4 class="text-warning fw-bold mb-2">Entrega Express</h4>
-                            <p class="text-muted mb-3">¿Necesitas flores urgente? Entregamos en 2 horas</p>
-                            <a href="/pages/under-construction.html" class="btn btn-warning text-decoration-none">Próximamente</a>
-                        </div>
+                    <div class="bg-white rounded-lg shadow-lg p-6 h-full flex flex-col items-center justify-center text-center hover:shadow-xl transition-shadow hover-lift">
+                        <i data-lucide="zap" class="h-16 w-16 text-yellow-500 mb-4"></i>
+                        <h4 class="text-2xl font-bold text-yellow-600 mb-3">Entrega Express</h4>
+                        <p class="text-gray-600 mb-4 flex-grow">¿Necesitas flores urgente? Entregamos en 2 horas</p>
+                        <a href="/pages/under-construction.html" class="btn-warning">Próximamente</a>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-    
+        </section>
     </main>
 
     <!-- Floating Action Button for Mobile -->
-    <button class="fab d-md-none" onclick="document.getElementById('productos').scrollIntoView({behavior: 'smooth'});" title="Ver productos">
-        <i class="bi bi-flower1"></i>
+    <button class="fixed bottom-5 right-5 bg-primary-600 hover:bg-primary-700 text-white p-4 rounded-full shadow-lg md:hidden z-40 transition-colors fab" onclick="document.getElementById('productos').scrollIntoView({behavior: 'smooth'});" title="Ver productos">
+        <i data-lucide="flower" class="h-6 w-6"></i>
     </button>
 
     <!-- Footer -->
-    <footer class="bg-dark text-white py-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-4 mb-4">
-                    <h5 class="fw-bold mb-3">
-                        <i class="bi bi-flower1 me-2"></i>FloresYa
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="space-y-4">
+                    <h5 class="text-xl font-bold flex items-center">
+                        <i data-lucide="flower" class="h-6 w-6 mr-2"></i>FloresYa
                     </h5>
-                    <p class="mb-3">Tu floristería en línea de confianza. Llevamos la belleza de las flores directamente a tu hogar.</p>
-                    <div class="social-links">
-                        <a href="#" class="text-white me-3"><i class="bi bi-facebook"></i></a>
-                        <a href="#" class="text-white me-3"><i class="bi bi-instagram"></i></a>
-                        <a href="#" class="text-white me-3"><i class="bi bi-twitter"></i></a>
-                        <a href="#" class="text-white"><i class="bi bi-whatsapp"></i></a>
+                    <p class="text-gray-300">Tu floristería en línea de confianza. Llevamos la belleza de las flores directamente a tu hogar.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors">
+                            <i data-lucide="facebook" class="h-6 w-6"></i>
+                        </a>
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors">
+                            <i data-lucide="instagram" class="h-6 w-6"></i>
+                        </a>
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors">
+                            <i data-lucide="twitter" class="h-6 w-6"></i>
+                        </a>
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors">
+                            <i data-lucide="message-circle" class="h-6 w-6"></i>
+                        </a>
                     </div>
                 </div>
-                <div class="col-lg-2 mb-4">
-                    <h6 class="fw-bold mb-3">Productos</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="#" class="text-white-50">Rosas</a></li>
-                        <li><a href="#" class="text-white-50">Bouquets</a></li>
-                        <li><a href="#" class="text-white-50">Plantas</a></li>
-                        <li><a href="#" class="text-white-50">Arreglos</a></li>
+                <div class="space-y-4">
+                    <h6 class="font-bold text-lg">Productos</h6>
+                    <ul class="space-y-2 text-gray-300">
+                        <li><a href="#" class="hover:text-white transition-colors">Rosas</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Bouquets</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Plantas</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Arreglos</a></li>
                     </ul>
                 </div>
-                <div class="col-lg-2 mb-4">
-                    <h6 class="fw-bold mb-3">Ocasiones</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="#" class="text-white-50" data-occasion="amor">Amor</a></li>
-                        <li><a href="#" class="text-white-50" data-occasion="birthday">Cumpleaños</a></li>
-                        <li><a href="#" class="text-white-50" data-occasion="anniversary">Aniversarios</a></li>
-                        <li><a href="#" class="text-white-50" data-occasion="mother">Día de la Madre</a></li>
+                <div class="space-y-4">
+                    <h6 class="font-bold text-lg">Ocasiones</h6>
+                    <ul class="space-y-2 text-gray-300">
+                        <li><a href="#" class="hover:text-white transition-colors" data-occasion="amor">Amor</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors" data-occasion="birthday">Cumpleaños</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors" data-occasion="anniversary">Aniversarios</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors" data-occasion="mother">Día de la Madre</a></li>
                     </ul>
                 </div>
-                <div class="col-lg-4 mb-4">
-                    <h6 class="fw-bold mb-3">Contacto</h6>
-                    <p class="mb-2"><i class="bi bi-geo-alt me-2"></i>Caracas, Venezuela</p>
-                    <p class="mb-2"><i class="bi bi-telephone me-2"></i>+58412-1234567</p>
-                    <p class="mb-2"><i class="bi bi-envelope me-2"></i>contacto@floresya.com</p>
-                    <p class="small text-white-50 mb-0">
-                        <i class="bi bi-clock me-2"></i>
-                        Lun-Vie: 8:00-18:00 | Sáb: 9:00-16:00
-                    </p>
+                <div class="space-y-4">
+                    <h6 class="font-bold text-lg">Contacto</h6>
+                    <div class="space-y-2 text-gray-300">
+                        <p class="flex items-center">
+                            <i data-lucide="map-pin" class="h-4 w-4 mr-2"></i>Caracas, Venezuela
+                        </p>
+                        <p class="flex items-center">
+                            <i data-lucide="phone" class="h-4 w-4 mr-2"></i>+58412-1234567
+                        </p>
+                        <p class="flex items-center">
+                            <i data-lucide="mail" class="h-4 w-4 mr-2"></i>contacto@floresya.com
+                        </p>
+                        <p class="flex items-center text-sm">
+                            <i data-lucide="clock" class="h-4 w-4 mr-2"></i>
+                            Lun-Vie: 8:00-18:00 | Sáb: 9:00-16:00
+                        </p>
+                    </div>
                 </div>
             </div>
-            <hr class="my-4">
-            <div class="row">
-                <div class="col-md-6">
-                    <p class="mb-0">&copy; 2024 FloresYa. Todos los derechos reservados.</p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <a href="#" class="text-white-50 me-3">Términos y Condiciones</a>
-                    <a href="#" class="text-white-50">Política de Privacidad</a>
+            <div class="border-t border-gray-700 mt-8 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-gray-300 mb-4 md:mb-0">&copy; 2024 FloresYa. Todos los derechos reservados.</p>
+                    <div class="flex space-x-6">
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors">Términos y Condiciones</a>
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors">Política de Privacidad</a>
+                    </div>
                 </div>
             </div>
         </div>
     </footer>
 
     <!-- Enhanced Shopping Cart Offcanvas -->
-    <div class="offcanvas offcanvas-end cart-offcanvas cart-offcanvas-width" tabindex="-1" id="cartOffcanvas">
-        <div class="offcanvas-header bg-gradient-primary text-white">
-            <h5 class="offcanvas-title">
-                <i class="bi bi-bag-heart me-2"></i>Mi Carrito
-            </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
-        </div>
-        <div class="offcanvas-body p-0">
-            <!-- Cart Content -->
-            <div class="cart-content">
-                <!-- Guest Info Banner -->
-                <div id="guestBanner" class="alert alert-info mx-3 mt-3 cart-guest-banner">
-                    <i class="bi bi-person-circle me-2"></i>
-                    <strong>Comprando como invitado</strong>
-                    <br><small class="text-muted">Puedes registrarte después para un seguimiento completo</small>
-                </div>
+    <div class="fixed inset-0 overflow-hidden z-50 hidden" id="cartOffcanvas">
+        <div class="absolute inset-0 overflow-hidden">
+            <div class="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity" id="cart-backdrop"></div>
+            <section class="absolute inset-y-0 right-0 pl-10 max-w-full flex">
+                <div class="relative w-screen max-w-md">
+                    <div class="h-full flex flex-col bg-white shadow-xl">
+                        <div class="bg-gradient-to-r from-primary-600 to-primary-700 px-4 py-6 text-white">
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-lg font-medium flex items-center">
+                                    <i data-lucide="heart" class="h-5 w-5 mr-2"></i>Mi Carrito
+                                </h2>
+                                <button type="button" class="text-white hover:text-gray-200 transition-colors" id="cart-close">
+                                    <i data-lucide="x" class="h-6 w-6"></i>
+                                </button>
+                            </div>
+                        </div>
 
-                <!-- Empty Cart State -->
-                <div id="emptyCart" class="text-center py-5">
-                    <i class="bi bi-bag display-1 text-muted mb-3"></i>
-                    <h6 class="text-muted">Tu carrito está vacío</h6>
-                    <p class="text-muted small">¡Agrega algunos productos para comenzar!</p>
-                    <button class="btn btn-outline-primary" data-bs-dismiss="offcanvas">
-                        Explorar productos
-                    </button>
-                </div>
+                        <div class="flex-1 overflow-y-auto">
+                            <!-- Guest Info Banner -->
+                            <div id="guestBanner" class="bg-blue-50 border border-blue-200 mx-4 mt-4 p-3 rounded-lg">
+                                <div class="flex items-start">
+                                    <i data-lucide="user-circle" class="h-5 w-5 text-blue-600 mr-2 mt-0.5"></i>
+                                    <div>
+                                        <p class="font-semibold text-blue-800">Comprando como invitado</p>
+                                        <p class="text-sm text-blue-600">Puedes registrarte después para un seguimiento completo</p>
+                                    </div>
+                                </div>
+                            </div>
 
-                <!-- Cart Items -->
-                <div id="cartItems" class="px-3">
-                    <!-- Cart items will be loaded here dynamically -->
-                </div>
-            </div>
+                            <!-- Empty Cart State -->
+                            <div id="emptyCart" class="text-center py-12 px-4">
+                                <i data-lucide="shopping-bag" class="h-16 w-16 text-gray-400 mx-auto mb-4"></i>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">Tu carrito está vacío</h3>
+                                <p class="text-gray-500 mb-6">¡Agrega algunos productos para comenzar!</p>
+                                <button class="btn-outline-primary" id="close-cart">
+                                    Explorar productos
+                                </button>
+                            </div>
 
-            <!-- Cart Footer -->
-            <div class="cart-footer bg-light mt-auto">
-                <div class="px-3 py-3">
-                    <!-- Quick Actions -->
-                    <div id="quickActions" class="mb-3 cart-quick-actions">
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-outline-secondary btn-sm flex-fill" onclick="cart.clearCart()">
-                                <i class="bi bi-trash"></i> Vaciar
-                            </button>
-                            <button class="btn btn-outline-primary btn-sm flex-fill" onclick="cart.saveForLater()">
-                                <i class="bi bi-bookmark"></i> Guardar
-                            </button>
+                            <!-- Cart Items -->
+                            <div id="cartItems" class="px-4">
+                                <!-- Cart items will be loaded here dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Cart Footer -->
+                        <div class="bg-gray-50 px-4 py-6 border-t border-gray-200">
+                            <!-- Quick Actions -->
+                            <div id="quickActions" class="mb-4">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button class="flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors" onclick="cart.clearCart()">
+                                        <i data-lucide="trash-2" class="h-4 w-4 mr-1"></i> Vaciar
+                                    </button>
+                                    <button class="flex items-center justify-center px-3 py-2 border border-primary-300 rounded-md text-sm font-medium text-primary-700 bg-primary-50 hover:bg-primary-100 transition-colors" onclick="cart.saveForLater()">
+                                        <i data-lucide="bookmark" class="h-4 w-4 mr-1"></i> Guardar
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Subtotal -->
+                            <div id="cartSummary" class="space-y-2 mb-4">
+                                <div class="flex justify-between text-sm">
+                                    <span>Subtotal:</span>
+                                    <span id="cartSubtotal">$0.00</span>
+                                </div>
+                                <div class="flex justify-between text-sm text-gray-500">
+                                    <span>Envío:</span>
+                                    <span>Gratis</span>
+                                </div>
+                                <div class="border-t border-gray-200 pt-2">
+                                    <div class="flex justify-between font-semibold">
+                                        <span>Total:</span>
+                                        <span class="text-primary-600" id="cartTotal">$0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div id="cartActions" class="space-y-3">
+                                <button class="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center transition-colors" id="floresyaCheckoutBtn">
+                                    <i data-lucide="shopping-cart" class="h-5 w-5 mr-2"></i>FloresYa Express
+                                </button>
+                                <button class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center transition-colors" id="regularCheckoutBtn">
+                                    <i data-lucide="credit-card" class="h-5 w-5 mr-2"></i>Checkout Normal
+                                </button>
+
+                                <!-- Trust Indicators -->
+                                <div class="text-center pt-2">
+                                    <div class="flex items-center justify-center space-x-4 text-sm text-gray-500">
+                                        <div class="flex items-center">
+                                            <i data-lucide="shield-check" class="h-4 w-4 text-green-500 mr-1"></i>
+                                            Compra segura
+                                        </div>
+                                        <div class="flex items-center">
+                                            <i data-lucide="truck" class="h-4 w-4 text-green-500 mr-1"></i>
+                                            Envío gratis
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-
-                    <!-- Subtotal -->
-                    <div id="cartSummary" class="cart-summary">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Subtotal:</span>
-                            <span id="cartSubtotal">$0.00</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2 text-muted small">
-                            <span>Envío:</span>
-                            <span>Gratis</span>
-                        </div>
-                        <hr class="my-2">
-                        <div class="d-flex justify-content-between mb-3">
-                            <strong>Total:</strong>
-                            <strong class="text-primary-custom" id="cartTotal">$0.00</strong>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div id="cartActions" class="cart-actions">
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-primary-custom btn-lg" id="floresyaCheckoutBtn">
-                                <i class="bi bi-cart-check me-2"></i>FloresYa Express
-                            </button>
-                            <button class="btn btn-outline-success" id="regularCheckoutBtn">
-                                <i class="bi bi-credit-card me-2"></i>Checkout Normal
-                            </button>
-                        </div>
-                        
-                        <!-- Trust Indicators -->
-                        <div class="text-center mt-3">
-                            <small class="text-muted">
-                                <i class="bi bi-shield-check text-success"></i> Compra segura
-                                <span class="mx-2">|</span>
-                                <i class="bi bi-truck text-success"></i> Envío gratis
-                            </small>
-                        </div>
-                    </div>
                 </div>
-            </div>
+            </section>
         </div>
     </div>
 
     <!-- Product Detail Modal -->
-    <div class="modal fade" id="productModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="productModalTitle"></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="productModalBody">
-                    <!-- Product details will be loaded here -->
-                </div>
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden" id="productModal">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold" id="productModalTitle">Detalles del Producto</h3>
+                <button class="text-gray-400 hover:text-gray-600 transition-colors" id="product-modal-close">
+                    <i data-lucide="x" class="h-6 w-6"></i>
+                </button>
+            </div>
+            <div id="productModalBody">
+                <!-- Product details will be loaded here -->
             </div>
         </div>
     </div>
 
     <!-- Login Modal -->
-    <div class="modal fade" id="loginModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Iniciar Sesión</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden" id="loginModal">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-96 shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Iniciar Sesión</h3>
+                <button class="text-gray-400 hover:text-gray-600 transition-colors" id="login-modal-close">
+                    <i data-lucide="x" class="h-6 w-6"></i>
+                </button>
+            </div>
+            <div>
+                <!-- Development Quick Login Buttons -->
+                <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                    <p class="text-sm text-gray-600 mb-3 flex items-center">
+                        <i data-lucide="settings" class="h-4 w-4 mr-2"></i>Desarrollo - Acceso rápido:
+                    </p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" class="flex items-center justify-center px-3 py-2 border border-primary-300 rounded-md text-sm font-medium text-primary-700 bg-white hover:bg-primary-50 transition-colors" id="devAdminLogin">
+                            <i data-lucide="shield-check" class="h-4 w-4 mr-1"></i>Admin
+                        </button>
+                        <button type="button" class="flex items-center justify-center px-3 py-2 border border-green-300 rounded-md text-sm font-medium text-green-700 bg-white hover:bg-green-50 transition-colors" id="devClientLogin">
+                            <i data-lucide="user" class="h-4 w-4 mr-1"></i>Cliente
+                        </button>
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <!-- Development Quick Login Buttons -->
-                    <div class="dev-login-buttons mb-3 p-2 bg-light rounded form-dev-login">
-                        <small class="text-muted d-block mb-2"><i class="bi bi-tools"></i> Desarrollo - Acceso rápido:</small>
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-outline-primary btn-sm flex-fill" id="devAdminLogin">
-                                <i class="bi bi-shield-check me-1"></i>Admin
-                            </button>
-                            <button type="button" class="btn btn-outline-success btn-sm flex-fill" id="devClientLogin">
-                                <i class="bi bi-person me-1"></i>Cliente
-                            </button>
-                        </div>
+
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" class="form-control" id="loginEmail" required>
                     </div>
-                    <form id="loginForm">
-                        <div class="mb-3">
-                            <label for="loginEmail" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="loginEmail" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="loginPassword" class="form-label">Contraseña</label>
-                            <input type="password" class="form-control" id="loginPassword" required>
-                        </div>
-                        <button type="submit" class="btn btn-success w-100">Iniciar Sesión</button>
-                    </form>
-                    
-                    
-                    <div class="text-center mt-3">
-                        <p>¿No tienes cuenta? <a href="#" data-bs-toggle="modal" data-bs-target="#registerModal" data-bs-dismiss="modal">Regístrate aquí</a></p>
+                    <div>
+                        <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                        <input type="password" class="form-control" id="loginPassword" required>
                     </div>
+                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">Iniciar Sesión</button>
+                </form>
+
+                <div class="text-center mt-4">
+                    <p class="text-sm text-gray-600">¿No tienes cuenta? <a href="#" class="text-primary-600 hover:text-primary-700 font-medium" id="show-register-modal">Regístrate aquí</a></p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Register Modal -->
-    <div class="modal fade" id="registerModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Crear Cuenta</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="registerForm">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="firstName" class="form-label">Nombre</label>
-                                    <input type="text" class="form-control" id="firstName" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="lastName" class="form-label">Apellido</label>
-                                    <input type="text" class="form-control" id="lastName" required>
-                                </div>
-                            </div>
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden" id="registerModal">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-96 shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Crear Cuenta</h3>
+                <button class="text-gray-400 hover:text-gray-600 transition-colors" id="register-modal-close">
+                    <i data-lucide="x" class="h-6 w-6"></i>
+                </button>
+            </div>
+            <div>
+                <form id="registerForm" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="firstName" class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                            <input type="text" class="form-control" id="firstName" required>
                         </div>
-                        <div class="mb-3">
-                            <label for="registerEmail" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="registerEmail" required>
+                        <div>
+                            <label for="lastName" class="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
+                            <input type="text" class="form-control" id="lastName" required>
                         </div>
-                        <div class="mb-3">
-                            <label for="phone" class="form-label">Teléfono</label>
-                            <input type="tel" class="form-control" id="phone" placeholder="+58414-1234567">
-                        </div>
-                        <div class="mb-3">
-                            <label for="registerPassword" class="form-label">Contraseña</label>
-                            <input type="password" class="form-control" id="registerPassword" required>
-                        </div>
-                        <button type="submit" class="btn btn-success w-100">Crear Cuenta</button>
-                    </form>
-                </div>
+                    </div>
+                    <div>
+                        <label for="registerEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" class="form-control" id="registerEmail" required>
+                    </div>
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                        <input type="tel" class="form-control" id="phone" placeholder="+58414-1234567">
+                    </div>
+                    <div>
+                        <label for="registerPassword" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                        <input type="password" class="form-control" id="registerPassword" required>
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">Crear Cuenta</button>
+                </form>
             </div>
         </div>
     </div>
 
     <!-- Flores Ya Novias Modal -->
-    <div class="modal fade" id="floresNoviasModal" tabindex="-1">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header bg-pink text-white">
-                    <h5 class="modal-title">
-                        <i class="bi bi-suit-heart-fill me-2"></i>
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden" id="floresNoviasModal">
+        <div class="relative top-10 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white">
+            <div class="bg-gradient-to-r from-primary-600 to-primary-700 text-white p-6 rounded-t-md -m-5 mb-5">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold flex items-center">
+                        <i data-lucide="heart" class="h-6 w-6 mr-2"></i>
                         Flores Ya Novias - Arreglos Especiales para tu Boda
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </h2>
+                    <button class="text-white hover:text-gray-200 transition-colors" id="novias-modal-close">
+                        <i data-lucide="x" class="h-6 w-6"></i>
+                    </button>
                 </div>
-                <div class="modal-body">
-                    <div class="flores-novias-section">
-                        <div class="container-fluid">
-                            <div class="row">
-                                <div class="col-lg-6 mb-4">
-                                    <div class="novias-card">
-                                        <div class="novias-icon">
-                                            <i class="bi bi-heart-fill"></i>
-                                        </div>
-                                        <h3 class="text-pink mb-3">Tu Día Especial Merece Flores Perfectas</h3>
-                                        <p class="mb-4">
-                                            En FloresYa Novias, entendemos que tu boda es el día más importante de tu vida. 
-                                            Por eso, creamos arreglos florales únicos y personalizados que harán de tu celebración 
-                                            un momento inolvidable.
-                                        </p>
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <div class="feature-highlight">
-                                                    <i class="bi bi-flower1 text-pink mb-2"></i>
-                                                    <h6>Ramos de Novia</h6>
-                                                    <p class="small text-muted">Diseños únicos personalizados para ti</p>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <div class="feature-highlight">
-                                                    <i class="bi bi-gem text-pink mb-2"></i>
-                                                    <h6>Decoración de Altares</h6>
-                                                    <p class="small text-muted">Ambientación floral completa</p>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <div class="feature-highlight">
-                                                    <i class="bi bi-people-fill text-pink mb-2"></i>
-                                                    <h6>Centros de Mesa</h6>
-                                                    <p class="small text-muted">Elegancia para cada mesa</p>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <div class="feature-highlight">
-                                                    <i class="bi bi-suit-heart text-pink mb-2"></i>
-                                                    <h6>Arcos Florales</h6>
-                                                    <p class="small text-muted">El marco perfecto para tus votos</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-6 mb-4">
-                                    <div class="novias-contact-card">
-                                        <h4 class="text-pink mb-4">Solicita tu Consulta Personalizada</h4>
-                                        <form id="noviasContactForm" class="needs-validation" novalidate>
-                                            <div class="row">
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="noviaName" class="form-label">Nombre de la Novia</label>
-                                                    <input type="text" class="form-control" id="noviaName" required>
-                                                    <div class="invalid-feedback">
-                                                        Por favor ingresa tu nombre
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="noviaPhone" class="form-label">Teléfono</label>
-                                                    <input type="tel" class="form-control" id="noviaPhone" required>
-                                                    <div class="invalid-feedback">
-                                                        Por favor ingresa tu teléfono
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="noviaEmail" class="form-label">Email</label>
-                                                <input type="email" class="form-control" id="noviaEmail" required>
-                                                <div class="invalid-feedback">
-                                                    Por favor ingresa un email válido
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="weddingDate" class="form-label">Fecha de Boda</label>
-                                                    <input type="date" class="form-control" id="weddingDate" required>
-                                                    <div class="invalid-feedback">
-                                                        Por favor selecciona la fecha de boda
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="guestCount" class="form-label">Cantidad de Invitados</label>
-                                                    <select class="form-select" id="guestCount" required>
-                                                        <option value="">Selecciona...</option>
-                                                        <option value="1-50">1 - 50 invitados</option>
-                                                        <option value="51-100">51 - 100 invitados</option>
-                                                        <option value="101-200">101 - 200 invitados</option>
-                                                        <option value="201+">Más de 200 invitados</option>
-                                                    </select>
-                                                    <div class="invalid-feedback">
-                                                        Por favor selecciona la cantidad de invitados
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="weddingVenue" class="form-label">Lugar de Celebración</label>
-                                                <input type="text" class="form-control" id="weddingVenue" placeholder="Nombre del venue o dirección">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="noviasMessage" class="form-label">Cuéntanos sobre tu boda soñada</label>
-                                                <textarea class="form-control" id="noviasMessage" rows="4" placeholder="Describe tu estilo preferido, colores, tema de la boda, etc."></textarea>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="budget" class="form-label">Presupuesto Aproximado (USD)</label>
-                                                <select class="form-select" id="budget">
-                                                    <option value="">Prefiero no especificar</option>
-                                                    <option value="100-300">$100 - $300</option>
-                                                    <option value="300-600">$300 - $600</option>
-                                                    <option value="600-1000">$600 - $1,000</option>
-                                                    <option value="1000+">Más de $1,000</option>
-                                                </select>
-                                            </div>
-                                            <button type="submit" class="btn btn-primary-custom btn-lg w-100">
-                                                <i class="bi bi-send me-2"></i>Solicitar Consulta Gratuita
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="space-y-6">
+                    <div class="text-center">
+                        <i data-lucide="heart" class="h-16 w-16 text-primary-600 mx-auto mb-4"></i>
+                        <h3 class="text-2xl font-bold text-primary-600 mb-4">Tu Día Especial Merece Flores Perfectas</h3>
+                        <p class="text-gray-600 mb-6">
+                            En FloresYa Novias, entendemos que tu boda es el día más importante de tu vida.
+                            Por eso, creamos arreglos florales únicos y personalizados que harán de tu celebración
+                            un momento inolvidable.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-center space-y-2">
+                            <i data-lucide="flower" class="h-8 w-8 text-primary-600 mx-auto"></i>
+                            <h6 class="font-semibold">Ramos de Novia</h6>
+                            <p class="text-sm text-gray-600">Diseños únicos personalizados para ti</p>
+                        </div>
+                        <div class="text-center space-y-2">
+                            <i data-lucide="gem" class="h-8 w-8 text-primary-600 mx-auto"></i>
+                            <h6 class="font-semibold">Decoración de Altares</h6>
+                            <p class="text-sm text-gray-600">Ambientación floral completa</p>
+                        </div>
+                        <div class="text-center space-y-2">
+                            <i data-lucide="users" class="h-8 w-8 text-primary-600 mx-auto"></i>
+                            <h6 class="font-semibold">Centros de Mesa</h6>
+                            <p class="text-sm text-gray-600">Elegancia para cada mesa</p>
+                        </div>
+                        <div class="text-center space-y-2">
+                            <i data-lucide="heart" class="h-8 w-8 text-primary-600 mx-auto"></i>
+                            <h6 class="font-semibold">Arcos Florales</h6>
+                            <p class="text-sm text-gray-600">El marco perfecto para tus votos</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h4 class="text-xl font-bold text-primary-600 mb-6">Solicita tu Consulta Personalizada</h4>
+                    <form id="noviasContactForm" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="noviaName" class="block text-sm font-medium text-gray-700 mb-1">Nombre de la Novia</label>
+                                <input type="text" class="form-control" id="noviaName" required>
                             </div>
-                            
-                            <div class="row mt-5">
-                                <div class="col-12 text-center">
-                                    <h4 class="text-pink mb-4">¿Por qué elegir FloresYa Novias?</h4>
-                                    <div class="row">
-                                        <div class="col-md-3 mb-4">
-                                            <div class="feature-item">
-                                                <i class="bi bi-award text-primary-custom mb-3 feature-icon-large"></i>
-                                                <h6>10+ Años de Experiencia</h6>
-                                                <p class="text-muted small">Especializados en bodas exclusivas</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3 mb-4">
-                                            <div class="feature-item">
-                                                <i class="bi bi-palette text-primary-custom mb-3 feature-icon-large"></i>
-                                                <h6>Diseño Personalizado</h6>
-                                                <p class="text-muted small">Cada arreglo es único y hecho a medida</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3 mb-4">
-                                            <div class="feature-item">
-                                                <i class="bi bi-clock-history text-primary-custom mb-3 feature-icon-large"></i>
-                                                <h6>Puntualidad Garantizada</h6>
-                                                <p class="text-muted small">Entrega perfecta el día de tu boda</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3 mb-4">
-                                            <div class="feature-item">
-                                                <i class="bi bi-headset text-primary-custom mb-3 feature-icon-large"></i>
-                                                <h6>Soporte Completo</h6>
-                                                <p class="text-muted small">Te acompañamos en cada paso</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div>
+                                <label for="noviaPhone" class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                                <input type="tel" class="form-control" id="noviaPhone" required>
                             </div>
                         </div>
+                        <div>
+                            <label for="noviaEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" class="form-control" id="noviaEmail" required>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="weddingDate" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Boda</label>
+                                <input type="date" class="form-control" id="weddingDate" required>
+                            </div>
+                            <div>
+                                <label for="guestCount" class="block text-sm font-medium text-gray-700 mb-1">Cantidad de Invitados</label>
+                                <select class="form-select" id="guestCount" required>
+                                    <option value="">Selecciona...</option>
+                                    <option value="1-50">1 - 50 invitados</option>
+                                    <option value="51-100">51 - 100 invitados</option>
+                                    <option value="101-200">101 - 200 invitados</option>
+                                    <option value="201+">Más de 200 invitados</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="weddingVenue" class="block text-sm font-medium text-gray-700 mb-1">Lugar de Celebración</label>
+                            <input type="text" class="form-control" id="weddingVenue" placeholder="Nombre del venue o dirección">
+                        </div>
+                        <div>
+                            <label for="noviasMessage" class="block text-sm font-medium text-gray-700 mb-1">Cuéntanos sobre tu boda soñada</label>
+                            <textarea class="form-control" id="noviasMessage" rows="3" placeholder="Describe tu estilo preferido, colores, tema de la boda, etc."></textarea>
+                        </div>
+                        <div>
+                            <label for="budget" class="block text-sm font-medium text-gray-700 mb-1">Presupuesto Aproximado (USD)</label>
+                            <select class="form-select" id="budget">
+                                <option value="">Prefiero no especificar</option>
+                                <option value="100-300">$100 - $300</option>
+                                <option value="300-600">$300 - $600</option>
+                                <option value="600-1000">$600 - $1,000</option>
+                                <option value="1000+">Más de $1,000</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center transition-colors">
+                            <i data-lucide="send" class="h-5 w-5 mr-2"></i>Solicitar Consulta Gratuita
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="mt-12">
+                <h4 class="text-2xl font-bold text-primary-600 text-center mb-8">¿Por qué elegir FloresYa Novias?</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+                    <div class="space-y-3">
+                        <i data-lucide="award" class="h-12 w-12 text-primary-600 mx-auto"></i>
+                        <h6 class="font-semibold">10+ Años de Experiencia</h6>
+                        <p class="text-sm text-gray-600">Especializados en bodas exclusivas</p>
+                    </div>
+                    <div class="space-y-3">
+                        <i data-lucide="palette" class="h-12 w-12 text-primary-600 mx-auto"></i>
+                        <h6 class="font-semibold">Diseño Personalizado</h6>
+                        <p class="text-sm text-gray-600">Cada arreglo es único y hecho a medida</p>
+                    </div>
+                    <div class="space-y-3">
+                        <i data-lucide="clock" class="h-12 w-12 text-primary-600 mx-auto"></i>
+                        <h6 class="font-semibold">Puntualidad Garantizada</h6>
+                        <p class="text-sm text-gray-600">Entrega perfecta el día de tu boda</p>
+                    </div>
+                    <div class="space-y-3">
+                        <i data-lucide="headphones" class="h-12 w-12 text-primary-600 mx-auto"></i>
+                        <h6 class="font-semibold">Soporte Completo</h6>
+                        <p class="text-sm text-gray-600">Te acompañamos en cada paso</p>
                     </div>
                 </div>
             </div>
@@ -751,14 +760,9 @@
     </div>
 
     <!-- Loading Spinner -->
-    <div class="loading-overlay" id="loadingSpinner">
-        <div class="spinner-border text-success" role="status">
-            <span class="visually-hidden">Cargando...</span>
-        </div>
+    <div class="loading-overlay hidden" id="loadingSpinner">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
     </div>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Content visibility control -->
     <script>
@@ -790,10 +794,116 @@
     <!-- Scroll Effects Fix -->
     <script type="module" src="/dist/frontend/scroll-effects-fix.js"></script>
 
-    
+    <!-- Initialize Lucide Icons -->
+    <script>
+        // Initialize Lucide icons when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+                console.log('[✅] Lucide icons initialized');
+            }
+        });
+    </script>
 
-    <!-- Note: Additional modules like cart, auth, carousel will be migrated to TypeScript in future iterations -->
-    
+    <!-- Modal and UI Interactions -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const menuIcon = document.getElementById('menu-icon');
+            const closeIcon = document.getElementById('close-icon');
+
+            if (mobileMenuButton) {
+                mobileMenuButton.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                    menuIcon.classList.toggle('hidden');
+                    closeIcon.classList.toggle('hidden');
+                });
+            }
+
+            // Cart offcanvas
+            const cartToggle = document.getElementById('cartToggle');
+            const cartOffcanvas = document.getElementById('cartOffcanvas');
+            const cartClose = document.getElementById('cart-close');
+            const cartBackdrop = document.getElementById('cart-backdrop');
+            const closeCart = document.getElementById('close-cart');
+
+            function openCart() {
+                cartOffcanvas.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeCartOffcanvas() {
+                cartOffcanvas.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+
+            if (cartToggle) cartToggle.addEventListener('click', openCart);
+            if (cartClose) cartClose.addEventListener('click', closeCartOffcanvas);
+            if (cartBackdrop) cartBackdrop.addEventListener('click', closeCartOffcanvas);
+            if (closeCart) closeCart.addEventListener('click', closeCartOffcanvas);
+
+            // Modal controls
+            function createModalController(modalId, openButtonId, closeButtonId) {
+                const modal = document.getElementById(modalId);
+                const openBtn = document.getElementById(openButtonId);
+                const closeBtn = document.getElementById(closeButtonId);
+
+                function openModal() {
+                    modal.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                }
+
+                function closeModal() {
+                    modal.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }
+
+                if (openBtn) openBtn.addEventListener('click', openModal);
+                if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+                // Close on backdrop click
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) closeModal();
+                });
+
+                return { openModal, closeModal };
+            }
+
+            // Initialize modals
+            const loginModal = createModalController('loginModal', 'loginBtn', 'login-modal-close');
+            const loginModalMobile = createModalController('loginModal', 'loginBtnMobile', 'login-modal-close');
+            const registerModal = createModalController('registerModal', 'show-register-modal', 'register-modal-close');
+            const productModal = createModalController('productModal', null, 'product-modal-close');
+            const noviasModal = createModalController('floresNoviasModal', null, 'novias-modal-close');
+
+            // Switch between login and register modals
+            document.getElementById('show-register-modal')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                loginModal.closeModal();
+                setTimeout(() => registerModal.openModal(), 100);
+            });
+
+            // User dropdown
+            const userMenuButton = document.getElementById('user-menu-button');
+            const userMenu = document.getElementById('user-menu');
+
+            if (userMenuButton && userMenu) {
+                userMenuButton.addEventListener('click', function() {
+                    userMenu.classList.toggle('hidden');
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!userMenuButton.contains(e.target) && !userMenu.contains(e.target)) {
+                        userMenu.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    </script>
+
     <!-- ✨ Advanced Conversion Optimization Scripts ✨ -->
     <script>
         // Smart counter animation for social proof
@@ -814,19 +924,19 @@
                 }, 20);
             });
         }
-        
+
         // Intersection Observer for animations
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -50px 0px'
         };
-        
+
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.style.opacity = '1';
                     entry.target.style.transform = 'translateY(0)';
-                    
+
                     // Trigger counter animation if element has counter
                     if (entry.target.querySelector('[data-counter]')) {
                         animateCounters();
@@ -834,7 +944,7 @@
                 }
             });
         }, observerOptions);
-        
+
         // Observe elements for scroll animations
         document.addEventListener('DOMContentLoaded', () => {
             const animatedElements = document.querySelectorAll('.social-proof-banner, .testimonial-card');
@@ -845,7 +955,7 @@
                 observer.observe(el);
             });
         });
-        
+
         // Optimized sticky header behavior using CSS classes to avoid scroll-linked positioning warnings
         let lastScrollY = window.scrollY;
         let scrollTicking = false;
@@ -877,16 +987,6 @@
                 scrollTicking = true;
             }
         });
-        
-        // Add CSS for spin animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-        `;
-        document.head.appendChild(style);
 
         // Development Quick Login Functions
         function setupDevLoginButtons() {
@@ -931,8 +1031,6 @@
         // Initialize dev buttons when DOM is ready
         document.addEventListener('DOMContentLoaded', setupDevLoginButtons);
     </script>
-
-    <!-- Scroll optimization -->
 
 </body>
 </html>
