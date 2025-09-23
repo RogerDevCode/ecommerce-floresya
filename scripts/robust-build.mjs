@@ -228,7 +228,7 @@ async function validateBuild() {
   const optionalFiles = [
     'dist/frontend/css/styles.css',
     'dist/frontend/main.js',
-    'dist/frontend/auth.js'
+    'dist/frontend/authManager.js'
   ];
 
   let criticalValid = true;

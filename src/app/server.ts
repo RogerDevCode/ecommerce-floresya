@@ -106,21 +106,7 @@ class FloresYaServer {
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-    // Static files middleware
-    const publicPath = path.join(process.cwd(), 'public');
-    const staticMaxAge = process.env.NODE_ENV === 'production' ? '1y' : '0';
-    serverLogger.info('STATIC', 'Setting up static file serving', {
-      path: publicPath,
-      maxAge: staticMaxAge
-    });
-
-    this.app.use(express.static(publicPath, {
-      maxAge: process.env.NODE_ENV === 'production' ? '1y' : '0',
-      etag: true,
-      lastModified: true
-    }));
-
-    // Serve compiled TypeScript modules with correct MIME types
+    // Serve compiled TypeScript modules with correct MIME types FIRST
     const distPath = path.join(process.cwd(), 'dist');
     serverLogger.info('STATIC', 'Setting up dist file serving', { path: distPath });
     this.app.use('/dist', express.static(distPath, {
@@ -132,6 +118,20 @@ class FloresYaServer {
           res.setHeader('Content-Type', 'application/json');
         }
       }
+    }));
+
+    // Static files middleware (public directory)
+    const publicPath = path.join(process.cwd(), 'public');
+    const staticMaxAge = process.env.NODE_ENV === 'production' ? '1y' : '0';
+    serverLogger.info('STATIC', 'Setting up static file serving', {
+      path: publicPath,
+      maxAge: staticMaxAge
+    });
+
+    this.app.use(express.static(publicPath, {
+      maxAge: process.env.NODE_ENV === 'production' ? '1y' : '0',
+      etag: true,
+      lastModified: true
     }));
 
     // Request logging middleware

@@ -15,7 +15,7 @@
     "build:robust": "node scripts/robust-build.mjs",
     "post:build:frontend": "mkdir -p dist/frontend && mv dist/frontend/frontend/* dist/frontend/ 2>/dev/null || true && rm -rf dist/frontend/frontend",
     "build:frontend:static": "mkdir -p dist/frontend && cp -r public/* dist/frontend/",
-    "build:prod": "npm run clean && node scripts/debug-build.mjs && (npx tsc -p src/frontend/tsconfig.frontend.json || true) && npm run build:frontend:static && npm run post:build:frontend",
+    "build:prod": "npm run clean && npx tsc -p tsconfig.node.json && (npx tsc -p src/frontend/tsconfig.frontend.json || true) && npm run build:frontend:static && npm run post:build:frontend",
     "start": "node dist/backend/app/server.js",
     "vercel-build": "npm run build:prod",
     "dev": "concurrently \"npm run build:css:watch\" \"npx tsc -p tsconfig.node.json --watch\" \"nodemon --watch dist/backend dist/backend/app/server.js\"",
