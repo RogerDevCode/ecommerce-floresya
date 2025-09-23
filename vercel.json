@@ -2,16 +2,16 @@
   "version": 2,
   "buildCommand": "npm run build:prod",
   "installCommand": "npm ci",
-  "outputDirectory": "dist/frontend", // ✅ Frontend compilado — no "public"
+  "outputDirectory": "dist/frontend",
   "functions": {
-    "dist/backend/app/server.js": { // ✅ Ruta correcta al backend compilado
-      "runtime": "nodejs20.x" // ✅ Runtime oficial de Vercel — no @vercel/node
+    "dist/backend/app/server.js": {
+      "runtime": "nodejs20.x"
     }
   },
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api" // ✅ Asume que tu server.ts maneja /api/*
+      "destination": "/api"
     }
   ],
   "headers": [
@@ -25,7 +25,7 @@
       ]
     },
     {
-      "source": "/(.*\\.(js|ts))", // ✅ Archivos JS/TS servidos desde outputDirectory
+      "source": "/(.*\\.(js|ts))",
       "headers": [
         { "key": "Content-Type", "value": "application/javascript" },
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
