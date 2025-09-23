@@ -11,12 +11,7 @@
     "composite": true
   },
   "include": [
-    "src/app/**/*.ts",
-    "src/config/**/*.ts",
-    "src/controllers/**/*.ts",
-    "src/services/**/*.ts",
-    "src/utils/**/*.ts",
-    "src/shared/**/*.ts",
+    "src/**/*.ts",
     "src/**/*.d.ts"
   ],
   "exclude": [
