@@ -6,7 +6,7 @@
 import { Request, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
 import { typeSafeDatabaseService } from '../services/TypeSafeDatabaseService.js';
-import type { OccasionType } from '../shared/types/index.js';
+// import type { OccasionType } from '../shared/types/index.js'; // REMOVED: Column 'type' eliminated from occasions table
 
 export class OccasionsController {
   /**
@@ -302,7 +302,7 @@ export class OccasionsController {
       };
 
       // Apply default AFTER validation passes
-      const finalType: OccasionType = (type as OccasionType) ?? 'general';
+      // const finalType: OccasionType = (type as OccasionType) ?? 'general'; // REMOVED: Column 'type' eliminated from occasions table
 
       // Apply smart capitalization to the name
       const capitalizedName = this.capitalizeOccasionName(name);
@@ -330,7 +330,7 @@ export class OccasionsController {
 
       const data = await typeSafeDatabaseService.createOccasion({
         name: capitalizedName, // Use capitalized name for display
-        type: finalType,
+        // type: finalType, // REMOVED: Column 'type' eliminated from occasions table
         slug,
         description,
         is_active,
@@ -450,7 +450,7 @@ export class OccasionsController {
         is_active: boolean;
         updated_at: string;
         name?: string;
-        type?: OccasionType;
+        // type?: OccasionType; // REMOVED: Column 'type' eliminated from occasions table
         slug?: string;
         description?: string | null;
       } = {
@@ -519,9 +519,9 @@ export class OccasionsController {
       }
 
       // Handle type change
-      if (type !== undefined) {
-        updateData.type = type as OccasionType;
-      }
+      // if (type !== undefined) {
+      //   updateData.type = type as OccasionType;
+      // } // REMOVED: Column 'type' eliminated from occasions table
 
       // Handle description change
       if (description !== undefined) {

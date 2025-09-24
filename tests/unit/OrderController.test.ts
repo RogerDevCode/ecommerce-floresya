@@ -1,236 +1,207 @@
 /**
- * 🌸 FloresYa Order Controller Tests - Enterprise TypeScript Edition
- * Comprehensive unit tests for order management endpoints
+ * 🌸 FloresYa OrderController Unit Tests - Silicon Valley Style Simple Mocks
+ * Clean dependency injection testing with proper mocking
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Request, Response } from 'express';
-import { OrderController } from '../../src/controllers/OrderController.js';
+import { validationResult } from 'express-validator';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { OrderController, orderValidators } from '../../src/controllers/OrderController.js';
 import { OrderService } from '../../src/services/OrderService.js';
-import type {
-  OrderWithItems,
-  OrderWithItemsAndPayments,
-  OrderResponse,
-  OrderStatus,
-  OrderCreateRequest,
-  OrderUpdateRequest
-} from '../../src/shared/types/index.js';
+import { createMockRequest, createMockResponse, createMockService } from '../utils/test-mocks.js';
+import { createTestOrder, createTestOrderList, createTestStatusHistory } from '../utils/test-factories.js';
 
-// Mock express-validator
-vi.mock('express-validator', () => {
-  const mockValidationChain = {
+// Clean mock for express-validator
+vi.mock('express-validator', () => ({
+  body: vi.fn(() => ({
+    isEmail: vi.fn().mockReturnThis(),
+    notEmpty: vi.fn().mockReturnThis(),
+    isLength: vi.fn().mockReturnThis(),
+    isArray: vi.fn().mockReturnThis(),
     isInt: vi.fn().mockReturnThis(),
     isIn: vi.fn().mockReturnThis(),
-    isEmail: vi.fn().mockReturnThis(),
-    isLength: vi.fn().mockReturnThis(),
-    isDecimal: vi.fn().mockReturnThis(),
-    isBoolean: vi.fn().mockReturnThis(),
-    isArray: vi.fn().mockReturnThis(),
     isISO8601: vi.fn().mockReturnThis(),
-    notEmpty: vi.fn().mockReturnThis(),
-    withMessage: vi.fn().mockReturnThis(),
-    optional: vi.fn().mockReturnThis()
-  };
-
-  const defaultValidationResult = {
-    isEmpty: vi.fn().mockReturnValue(true),
-    array: vi.fn().mockReturnValue([])
-  };
-
-  return {
-    body: vi.fn().mockReturnValue(mockValidationChain),
-    param: vi.fn().mockReturnValue(mockValidationChain),
-    query: vi.fn().mockReturnValue(mockValidationChain),
-    validationResult: vi.fn().mockReturnValue(defaultValidationResult)
-  };
-});
-
-// Mock the OrderService
-vi.mock('../../src/services/OrderService.js', () => ({
-  OrderService: vi.fn().mockImplementation(() => ({
-    getOrders: vi.fn(),
-    getOrderById: vi.fn(),
-    createOrder: vi.fn(),
-    updateOrder: vi.fn(),
-    updateOrderStatus: vi.fn(),
-    getOrderStatusHistory: vi.fn()
-  }))
+    optional: vi.fn().mockReturnThis(),
+    withMessage: vi.fn().mockReturnThis()
+  })),
+  param: vi.fn(() => ({
+    isInt: vi.fn().mockReturnThis(),
+    withMessage: vi.fn().mockReturnThis()
+  })),
+  query: vi.fn(() => ({
+    optional: vi.fn().mockReturnThis(),
+    isInt: vi.fn().mockReturnThis(),
+    isIn: vi.fn().mockReturnThis(),
+    withMessage: vi.fn().mockReturnThis()
+  })),
+  validationResult: vi.fn()
 }));
 
-// Create a mock instance for testing
-const mockOrderServiceInstance = {
-  getOrders: vi.fn(),
-  getOrderById: vi.fn(),
-  createOrder: vi.fn(),
-  updateOrder: vi.fn(),
-  updateOrderStatus: vi.fn(),
-  getOrderStatusHistory: vi.fn()
-} as any;
-
-describe('OrderController', () => {
-  let orderController: OrderController;
+describe('OrderController - Silicon Valley Simple Tests', () => {
+  let controller: OrderController;
   let mockOrderService: any;
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
-  let jsonMock: any;
-  let statusMock: any;
+  let jsonSpy: any;
+  let statusSpy: any;
 
-  beforeEach(async () => {
-    // Create a new instance of OrderController with mocked service
-    orderController = new OrderController(() => mockOrderServiceInstance);
-    mockOrderService = mockOrderServiceInstance;
-
-    // Reset the validationResult mock to default (no errors)
-    const { validationResult } = await import('express-validator');
-    (validationResult as any).mockReturnValue({
-      isEmpty: vi.fn().mockReturnValue(true),
-      array: vi.fn().mockReturnValue([])
-    });
-
-    // Mock response methods
-    jsonMock = vi.fn();
-    statusMock = vi.fn().mockReturnValue({ json: jsonMock });
-    mockResponse = {
-      status: statusMock,
-      json: jsonMock
+  beforeEach(() => {
+    // Create clean mock service
+    mockOrderService = {
+      getOrders: vi.fn(),
+      getOrderById: vi.fn(),
+      createOrder: vi.fn(),
+      updateOrder: vi.fn(),
+      updateOrderStatus: vi.fn(),
+      getOrderStatusHistory: vi.fn(),
+      calculateOrderTotals: vi.fn()
     };
+
+    // Inject mock via factory function - Silicon Valley pattern
+    controller = new OrderController(() => mockOrderService);
+
+    jsonSpy = vi.fn().mockReturnThis();
+    statusSpy = vi.fn().mockReturnThis();
+
+    mockResponse = {
+      json: jsonSpy,
+      status: statusSpy,
+      send: vi.fn()
+    };
+
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
     vi.clearAllMocks();
   });
 
+  // Simple validation result factory
+  const createValidationResult = (overrides = {}) => ({
+    isEmpty: () => true,
+    array: () => [],
+    ...overrides
+  } as any);
+
   describe('getOrders', () => {
-    it('should return orders successfully', async () => {
-      const mockOrders: OrderResponse = {
-        orders: [
-          {
-            id: 1,
-            customer_email: 'test@example.com',
-            customer_name: 'Test Customer',
-            status: 'pending' as OrderStatus,
-            total_amount_usd: 50.99,
-            created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z',
-            items: [
-              {
-                id: 1,
-                order_id: 1,
-                product_id: 1,
-                product_name: 'Rosas Rojas',
-                unit_price_usd: 25.99,
-                quantity: 2,
-                subtotal_usd: 51.98
-              }
-            ],
-            user: {
-              id: 1,
-              full_name: 'Admin User',
-              email: 'admin@example.com'
-            }
-          }
-        ],
-        pagination: {
-          current_page: 1,
-          total_pages: 1,
-          total_items: 1,
-          items_per_page: 20
-        }
-      };
+    it('should return orders successfully - clean simple test', async () => {
+      // Arrange - One line setup!
+      mockOrderService.getOrders.mockResolvedValue(createTestOrderList());
 
-      mockOrderService.getOrders.mockResolvedValue(mockOrders);
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
 
-      mockRequest = {
-        query: {
-          page: '1',
-          limit: '20',
-          status: 'pending',
-          sort_by: 'created_at',
-          sort_direction: 'desc'
-        }
-      };
+      mockRequest = createMockRequest({
+        query: { page: '1', limit: '20' }
+      });
 
-      await orderController.getOrders(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.getOrders(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(200);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(mockOrderService.getOrders).toHaveBeenCalledWith({
+        page: 1,
+        limit: 20,
+        sort_by: 'created_at',
+        sort_direction: 'desc'
+      });
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
-        data: mockOrders,
+        data: createTestOrderList(),
         message: 'Orders retrieved successfully'
       });
     });
 
     it('should handle validation errors', async () => {
-      // Mock validation errors
-      const mockErrors = [
-        { param: 'page', msg: 'Page must be a positive integer' },
-        { param: 'limit', msg: 'Limit must be between 1 and 100' }
-      ];
-      const { validationResult } = await import('express-validator');
-      (validationResult as any).mockReturnValue({
-        isEmpty: vi.fn().mockReturnValue(false),
-        array: vi.fn().mockReturnValue(mockErrors)
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult({
+        isEmpty: () => false,
+        array: () => [{ field: 'page', message: 'Invalid page' }]
+      }));
+
+      mockRequest = createMockRequest({
+        query: { page: 'invalid' }
       });
 
-      mockRequest = {
-        query: {
-          page: 'invalid',
-          limit: '200'
-        }
-      };
+      // Act
+      await controller.getOrders(mockRequest as Request, mockResponse as Response);
 
-      await orderController.getOrders(mockRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Invalid query parameters',
-        errors: mockErrors
+        errors: [{ field: 'page', message: 'Invalid page' }]
       });
     });
 
     it('should handle service errors', async () => {
-      mockOrderService.getOrders.mockRejectedValue(new Error('Database error'));
+      // Arrange - Clean error setup
+      mockOrderService.getOrders.mockRejectedValue(new Error('Database connection failed'));
 
-      mockRequest = {
-        query: {
-          page: '1',
-          limit: '20'
-        }
-      };
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
 
-      await orderController.getOrders(mockRequest as Request, mockResponse as Response);
+      mockRequest = createMockRequest({
+        query: { page: '1', limit: '20' }
+      });
 
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Act
+      await controller.getOrders(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(500);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Failed to fetch orders',
-        error: 'Database error'
+        error: 'Database connection failed'
       });
     });
 
-    it('should handle empty query parameters', async () => {
-      const mockOrders: OrderResponse = {
-        orders: [],
-        pagination: {
-          current_page: 1,
-          total_pages: 0,
-          total_items: 0,
-          items_per_page: 20
-        }
-      };
+    it('should use default values when query params are missing', async () => {
+      // Arrange - Clean defaults test
+      mockOrderService.getOrders.mockResolvedValue(createTestOrderList());
 
-      mockOrderService.getOrders.mockResolvedValue(mockOrders);
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
 
-      mockRequest = {
+      mockRequest = createMockRequest({
         query: {}
-      };
+      });
 
-      await orderController.getOrders(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.getOrders(mockRequest as Request, mockResponse as Response);
 
+      // Assert
       expect(mockOrderService.getOrders).toHaveBeenCalledWith({
         page: 1,
         limit: 20,
+        sort_by: 'created_at',
+        sort_direction: 'desc'
+      });
+    });
+
+    it('should limit maximum limit value', async () => {
+      // Arrange - Clean limit test
+      mockOrderService.getOrders.mockResolvedValue(createTestOrderList());
+
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      mockRequest = createMockRequest({
+        query: { limit: '200' } // Should be limited to 100
+      });
+
+      // Act
+      await controller.getOrders(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockOrderService.getOrders).toHaveBeenCalledWith({
+        page: 1,
+        limit: 100, // Should be limited to 100
         sort_by: 'created_at',
         sort_direction: 'desc'
       });
@@ -239,481 +210,479 @@ describe('OrderController', () => {
 
   describe('getOrderById', () => {
     it('should return order successfully', async () => {
-      const mockOrder: OrderWithItemsAndPayments = {
-        id: 1,
-        customer_email: 'test@example.com',
-        customer_name: 'Test Customer',
-        status: 'pending' as OrderStatus,
-        total_amount_usd: 50.99,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
-        items: [
-          {
-            id: 1,
-            order_id: 1,
-            product_id: 1,
-            product_name: 'Rosas Rojas',
-            unit_price_usd: 25.99,
-            quantity: 2,
-            subtotal_usd: 51.98
-          }
-        ],
-        payments: [],
-        status_history: [],
-      };
+      // Arrange - Clean setup
+      mockOrderService.getOrderById.mockResolvedValue(createTestOrder());
 
-      mockOrderService.getOrderById.mockResolvedValue(mockOrder);
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
 
-      mockRequest = {
+      mockRequest = createMockRequest({
         params: { id: '1' }
-      };
+      });
 
-      await orderController.getOrderById(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.getOrderById(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(200);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(mockOrderService.getOrderById).toHaveBeenCalledWith(1);
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
-        data: { order: mockOrder },
+        data: { order: createTestOrder() },
         message: 'Order retrieved successfully'
       });
     });
 
-    it('should return 404 for non-existent order', async () => {
+    it('should handle validation errors', async () => {
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult({
+        isEmpty: () => false,
+        array: () => [{ field: 'id', message: 'Invalid order ID' }]
+      }));
+
+      mockRequest = createMockRequest({
+        params: { id: 'invalid' }
+      });
+
+      // Act
+      await controller.getOrderById(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
+        success: false,
+        message: 'Invalid order ID',
+        errors: [{ field: 'id', message: 'Invalid order ID' }]
+      });
+    });
+
+    it('should handle order not found', async () => {
+      // Arrange - Clean null response
       mockOrderService.getOrderById.mockResolvedValue(null);
 
-      mockRequest = {
-        params: { id: '999' }
-      };
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
 
-      await orderController.getOrderById(mockRequest as Request, mockResponse as Response);
+      mockRequest = createMockRequest({
+        params: { id: '1' }
+      });
 
-      expect(statusMock).toHaveBeenCalledWith(404);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Act
+      await controller.getOrderById(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockOrderService.getOrderById).toHaveBeenCalledWith(1);
+      expect(statusSpy).toHaveBeenCalledWith(404);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Order not found'
       });
     });
 
-    it('should handle validation errors', async () => {
-      // Mock validation errors
-      const mockErrors = [{ param: 'id', msg: 'Order ID must be a positive integer' }];
-      const { validationResult } = await import('express-validator');
-      (validationResult as any).mockReturnValue({
-        isEmpty: vi.fn().mockReturnValue(false),
-        array: vi.fn().mockReturnValue(mockErrors)
-      });
-
-      mockRequest = {
-        params: { id: 'invalid' }
-      };
-
-      await orderController.getOrderById(mockRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({
-        success: false,
-        message: 'Invalid order ID',
-        errors: mockErrors
-      });
-    });
-
     it('should handle service errors', async () => {
-      mockOrderService.getOrderById.mockRejectedValue(new Error('Database error'));
+      // Arrange - Clean error test
+      mockOrderService.getOrderById.mockRejectedValue(new Error('Database connection failed'));
 
-      mockRequest = {
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      mockRequest = createMockRequest({
         params: { id: '1' }
-      };
+      });
 
-      await orderController.getOrderById(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.getOrderById(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(500);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Failed to fetch order',
-        error: 'Database error'
+        error: 'Database connection failed'
       });
     });
   });
 
   describe('createOrder', () => {
     it('should create order successfully', async () => {
-      const mockOrderData: OrderCreateRequest = {
-        customer_email: 'test@example.com',
+      // Arrange - Clean order creation
+      mockOrderService.createOrder.mockResolvedValue(createTestOrder());
+
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      const newOrderData = {
+        customer_email: 'customer@example.com',
         customer_name: 'Test Customer',
-        customer_phone: '+58 412 123 4567',
-        delivery_address: 'Calle Principal 123, Caracas, Venezuela',
+        customer_phone: '+1234567890',
+        delivery_address: '123 Test Street',
+        delivery_city: 'Test City',
+        delivery_state: 'Test State',
+        delivery_zip: '12345',
         delivery_date: '2024-01-20',
-        notes: 'Ring doorbell twice',
+        delivery_time_slot: '10:00-12:00',
+        delivery_notes: 'Please ring the doorbell',
         items: [
           {
             product_id: 1,
-            quantity: 2,
-            unit_price_usd: 25.99
+            quantity: 2
           }
         ],
+        notes: 'Birthday order'
       };
 
-      const mockCreatedOrder: OrderWithItems = {
-        id: 1,
-        customer_email: 'test@example.com',
-        customer_name: 'Test Customer',
-        customer_phone: '+58 412 123 4567',
-        delivery_address: 'Calle Principal 123, Caracas, Venezuela',
-        delivery_date: '2024-01-20',
-        status: 'pending' as OrderStatus,
-        total_amount_usd: 51.98,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
-        items: [
-          {
-            id: 1,
-            order_id: 1,
-            product_id: 1,
-            product_name: 'Rosas Rojas',
-            unit_price_usd: 25.99,
-            quantity: 2,
-            subtotal_usd: 51.98
-          }
-        ],
-        notes: 'Birthday surprise delivery'
-      };
+      mockRequest = createMockRequest({
+        body: newOrderData
+      });
 
-      mockOrderService.createOrder.mockResolvedValue(mockCreatedOrder);
+      // Act
+      await controller.createOrder(mockRequest as Request, mockResponse as Response);
 
-      mockRequest = {
-        body: mockOrderData
-      };
-
-      await orderController.createOrder(mockRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(201);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(mockOrderService.createOrder).toHaveBeenCalledWith(newOrderData);
+      expect(statusSpy).toHaveBeenCalledWith(201);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
-        data: { order: mockCreatedOrder },
+        data: { order: createTestOrder() },
         message: 'Order created successfully'
       });
     });
 
     it('should handle validation errors', async () => {
-      // Mock validation errors
-      const mockErrors = [
-        { param: 'customer_email', msg: 'Valid email is required' },
-        { param: 'customer_name', msg: 'Customer name must be 2-100 characters' },
-        { param: 'delivery_address', msg: 'Delivery address must be 10-500 characters' },
-        { param: 'items', msg: 'Order must contain at least one item' }
-      ];
-      const { validationResult } = await import('express-validator');
-      (validationResult as any).mockReturnValue({
-        isEmpty: vi.fn().mockReturnValue(false),
-        array: vi.fn().mockReturnValue(mockErrors)
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult({
+        isEmpty: () => false,
+        array: () => [{ field: 'customer_email', message: 'Invalid email' }]
+      }));
+
+      mockRequest = createMockRequest({
+        body: { customer_email: 'invalid-email' }
       });
 
-      mockRequest = {
-        body: {
-          customer_email: 'invalid-email',
-          customer_name: '',
-          delivery_address: 'short',
-          items: []
-        }
-      };
+      // Act
+      await controller.createOrder(mockRequest as Request, mockResponse as Response);
 
-      await orderController.createOrder(mockRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Validation failed',
-        errors: mockErrors
+        errors: [{ field: 'customer_email', message: 'Invalid email' }]
       });
     });
 
     it('should handle service errors', async () => {
-      const mockOrderData: OrderCreateRequest = {
-        customer_email: 'test@example.com',
-        customer_name: 'Test Customer',
-        delivery_address: 'Calle Principal 123, Caracas, Venezuela',
-        items: [
-          {
-            product_id: 1,
-            quantity: 2,
-            unit_price_usd: 25.99
-          }
-        ]
-      };
+      // Arrange - Clean error handling
+      mockOrderService.createOrder.mockRejectedValue(new Error('Database connection failed'));
 
-      mockOrderService.createOrder.mockRejectedValue(new Error('Database error'));
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
 
-      mockRequest = {
-        body: mockOrderData
-      };
+      mockRequest = createMockRequest({
+        body: {
+          customer_email: 'customer@example.com',
+          customer_name: 'Test Customer',
+          delivery_address: '123 Test Street',
+          items: [{ product_id: 1, quantity: 1 }]
+        }
+      });
 
-      await orderController.createOrder(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.createOrder(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(500);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Failed to create order',
-        error: 'Database error'
+        error: 'Database connection failed'
       });
     });
   });
 
   describe('updateOrder', () => {
     it('should update order successfully', async () => {
-      const mockUpdateData: OrderUpdateRequest = {
-        id: 1,
-        status: 'confirmed' as OrderStatus
+      // Arrange - Clean update test
+      mockOrderService.updateOrder.mockResolvedValue(createTestOrder());
+
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      const updateData = {
+        status: 'confirmed' as const,
+        delivery_date: '2024-01-21',
+        admin_notes: 'Updated by admin'
       };
 
-      const mockUpdatedOrder = {
-        id: 1,
-        customer_email: 'test@example.com',
-        customer_name: 'Test Customer',
-        status: 'confirmed' as OrderStatus,
-        total_amount_usd: 50.99,
-        admin_notes: 'Order confirmed and ready for processing',
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      };
-
-      mockOrderService.updateOrder.mockResolvedValue(mockUpdatedOrder);
-
-      mockRequest = {
+      mockRequest = createMockRequest({
         params: { id: '1' },
-        body: {
-          status: 'confirmed',
-          admin_notes: 'Order confirmed and ready for processing'
-        }
-      };
+        body: updateData
+      });
 
-      await orderController.updateOrder(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.updateOrder(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(200);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(mockOrderService.updateOrder).toHaveBeenCalledWith({
+        id: 1,
+        ...updateData
+      });
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
-        data: { order: mockUpdatedOrder },
+        data: { order: createTestOrder() },
         message: 'Order updated successfully'
       });
     });
 
-    it('should return 400 for empty update data', async () => {
-      mockRequest = {
+    it('should handle validation errors', async () => {
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult({
+        isEmpty: () => false,
+        array: () => [{ field: 'status', message: 'Invalid status' }]
+      }));
+
+      mockRequest = createMockRequest({
+        params: { id: '1' },
+        body: { status: 'invalid' }
+      });
+
+      // Act
+      await controller.updateOrder(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
+        success: false,
+        message: 'Validation failed',
+        errors: [{ field: 'status', message: 'Invalid status' }]
+      });
+    });
+
+    it('should handle empty update data', async () => {
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      mockRequest = createMockRequest({
         params: { id: '1' },
         body: {}
-      };
+      });
 
-      await orderController.updateOrder(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.updateOrder(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'No update data provided'
       });
     });
 
-    it('should handle validation errors', async () => {
-      // Mock validation errors
-      const mockErrors = [
-        { param: 'id', msg: 'Order ID must be a positive integer' },
-        { param: 'status', msg: 'Invalid status' }
-      ];
-      const { validationResult } = await import('express-validator');
-      (validationResult as any).mockReturnValue({
-        isEmpty: vi.fn().mockReturnValue(false),
-        array: vi.fn().mockReturnValue(mockErrors)
-      });
-
-      mockRequest = {
-        params: { id: 'invalid' },
-        body: {
-          status: 'invalid-status'
-        }
-      };
-
-      await orderController.updateOrder(mockRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({
-        success: false,
-        message: 'Validation failed',
-        errors: mockErrors
-      });
-    });
-
     it('should handle service errors', async () => {
-      mockOrderService.updateOrder.mockRejectedValue(new Error('Database error'));
+      // Arrange - Clean update error
+      mockOrderService.updateOrder.mockRejectedValue(new Error('Database connection failed'));
 
-      mockRequest = {
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      mockRequest = createMockRequest({
         params: { id: '1' },
-        body: {
-          status: 'confirmed'
-        }
-      };
+        body: { status: 'confirmed' }
+      });
 
-      await orderController.updateOrder(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.updateOrder(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(500);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Failed to update order',
-        error: 'Database error'
+        error: 'Database connection failed'
       });
     });
   });
 
   describe('updateOrderStatus', () => {
     it('should update order status successfully', async () => {
-      const mockUpdatedOrder = {
-        id: 1,
-        customer_email: 'test@example.com',
-        customer_name: 'Test Customer',
-        status: 'preparing' as OrderStatus,
-        total_amount_usd: 50.99,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
+      // Arrange - Clean status update
+      mockOrderService.updateOrderStatus.mockResolvedValue(createTestOrder());
+
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      const statusUpdate = {
+        status: 'confirmed' as const,
+        notes: 'Order confirmed by admin'
       };
 
-      mockOrderService.updateOrderStatus.mockResolvedValue(mockUpdatedOrder);
-
-      mockRequest = {
+      mockRequest = createMockRequest({
         params: { id: '1' },
-        body: {
-          status: 'preparing',
-          notes: 'Order is being prepared for delivery'
-        },
-        user: {
-          id: 1,
-          email: 'admin@example.com',
-          role: 'admin' as const
-        }
-      } as any;
+        body: statusUpdate,
+        user: { id: 1 } // Mock authenticated user
+      } as any);
 
-      await orderController.updateOrderStatus(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.updateOrderStatus(mockRequest as Request, mockResponse as Response);
 
-      expect(mockOrderService.updateOrderStatus).toHaveBeenCalledWith(1, 'preparing', 'Order is being prepared for delivery', 1);
-      expect(statusMock).toHaveBeenCalledWith(200);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(mockOrderService.updateOrderStatus).toHaveBeenCalledWith(1, 'confirmed', 'Order confirmed by admin', 1);
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
-        data: { order: mockUpdatedOrder },
+        data: { order: createTestOrder() },
         message: 'Order status updated successfully'
       });
     });
 
     it('should handle validation errors', async () => {
-      // Mock validation errors
-      const mockErrors = [
-        { param: 'id', msg: 'Order ID must be a positive integer' },
-        { param: 'status', msg: 'Valid status is required' }
-      ];
-      const { validationResult } = await import('express-validator');
-      (validationResult as any).mockReturnValue({
-        isEmpty: vi.fn().mockReturnValue(false),
-        array: vi.fn().mockReturnValue(mockErrors)
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult({
+        isEmpty: () => false,
+        array: () => [{ field: 'status', message: 'Invalid status' }]
+      }));
+
+      mockRequest = createMockRequest({
+        params: { id: '1' },
+        body: { status: 'invalid' }
       });
 
-      mockRequest = {
-        params: { id: 'invalid' },
-        body: {
-          status: 'invalid-status'
-        }
-      };
+      // Act
+      await controller.updateOrderStatus(mockRequest as Request, mockResponse as Response);
 
-      await orderController.updateOrderStatus(mockRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Validation failed',
-        errors: mockErrors
+        errors: [{ field: 'status', message: 'Invalid status' }]
       });
     });
 
     it('should handle service errors', async () => {
-      mockOrderService.updateOrderStatus.mockRejectedValue(new Error('Database error'));
+      // Arrange - Clean status error
+      mockOrderService.updateOrderStatus.mockRejectedValue(new Error('Database connection failed'));
 
-      mockRequest = {
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      mockRequest = createMockRequest({
         params: { id: '1' },
-        body: {
-          status: 'preparing'
-        },
-        user: {
-          id: 1,
-          email: 'admin@example.com',
-          role: 'admin' as const
-        }
-      } as any;
+        body: { status: 'confirmed' },
+        user: { id: 1 }
+      } as any);
 
-      await orderController.updateOrderStatus(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.updateOrderStatus(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(500);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Failed to update order status',
-        error: 'Database error'
+        error: 'Database connection failed'
       });
     });
   });
 
   describe('getOrderStatusHistory', () => {
     it('should return order status history successfully', async () => {
-      const mockHistory = [
-        {
-          id: 1,
-          order_id: 1,
-          old_status: 'pending' as OrderStatus,
-          new_status: 'confirmed' as OrderStatus,
-          notes: 'Order confirmed by admin',
-          changed_by: 1,
-          created_at: '2024-01-01T00:00:00Z',
-          users: {
-            full_name: 'Admin User'
-          }
-        },
-        {
-          id: 2,
-          order_id: 1,
-          old_status: 'confirmed' as OrderStatus,
-          new_status: 'preparing' as OrderStatus,
-          notes: 'Order is being prepared',
-          changed_by: 1,
-          created_at: '2024-01-01T01:00:00Z',
-          users: {
-            full_name: 'Admin User'
-          }
-        }
-      ];
+      // Arrange - Clean history test
+      mockOrderService.getOrderStatusHistory.mockResolvedValue(createTestStatusHistory());
 
-      mockOrderService.getOrderStatusHistory.mockResolvedValue(mockHistory);
-
-      mockRequest = {
+      mockRequest = createMockRequest({
         params: { id: '1' }
-      };
+      });
 
-      await orderController.getOrderStatusHistory(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.getOrderStatusHistory(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(200);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(mockOrderService.getOrderStatusHistory).toHaveBeenCalledWith(1);
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
-        data: { history: mockHistory },
+        data: { history: createTestStatusHistory() },
         message: 'Order status history retrieved successfully'
       });
     });
 
     it('should handle service errors', async () => {
-      mockOrderService.getOrderStatusHistory.mockRejectedValue(new Error('Database error'));
+      // Arrange - Clean history error
+      mockOrderService.getOrderStatusHistory.mockRejectedValue(new Error('Database connection failed'));
 
-      mockRequest = {
+      mockRequest = createMockRequest({
         params: { id: '1' }
-      };
+      });
 
-      await orderController.getOrderStatusHistory(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.getOrderStatusHistory(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(500);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Failed to fetch order status history',
-        error: 'Database error'
+        error: 'Database connection failed'
       });
+    });
+  });
+
+  describe('orderValidators', () => {
+    it('should validate getOrders correctly', () => {
+      // Arrange
+      const validators = orderValidators.getOrders;
+
+      // Act & Assert
+      expect(validators).toBeDefined();
+      expect(validators.length).toBeGreaterThan(0);
+    });
+
+    it('should validate getOrderById correctly', () => {
+      // Arrange
+      const validators = orderValidators.getOrderById;
+
+      // Act & Assert
+      expect(validators).toBeDefined();
+      expect(validators.length).toBeGreaterThan(0);
+    });
+
+    it('should validate createOrder correctly', () => {
+      // Arrange
+      const validators = orderValidators.createOrder;
+
+      // Act & Assert
+      expect(validators).toBeDefined();
+      expect(validators.length).toBeGreaterThan(0);
+    });
+
+    it('should validate updateOrder correctly', () => {
+      // Arrange
+      const validators = orderValidators.updateOrder;
+
+      // Act & Assert
+      expect(validators).toBeDefined();
+      expect(validators.length).toBeGreaterThan(0);
+    });
+
+    it('should validate updateOrderStatus correctly', () => {
+      // Arrange
+      const validators = orderValidators.updateOrderStatus;
+
+      // Act & Assert
+      expect(validators).toBeDefined();
+      expect(validators.length).toBeGreaterThan(0);
     });
   });
 });

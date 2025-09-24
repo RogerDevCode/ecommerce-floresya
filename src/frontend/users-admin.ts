@@ -11,13 +11,12 @@ import type {
   UserQuery,
   UserResponse,
   UserUpdateRequest,
-  WindowWithBootstrap,
   WindowWithFloresyaLogger,
   WindowWithUsersAdmin
 } from '../shared/types/index.js';
 
 // Extend window with our interfaces
-declare const window: WindowWithBootstrap & WindowWithFloresyaLogger & WindowWithUsersAdmin;
+declare const window: WindowWithFloresyaLogger & WindowWithUsersAdmin & { usersAdmin: UsersAdminManager };
 
 interface UsersResponse {
   success: boolean;
@@ -32,7 +31,7 @@ interface UsersResponse {
 }
 
 class UsersAdminManager {
-  private modal: InstanceType<NonNullable<typeof window.bootstrap>['Modal']> | null = null;
+  private modal: HTMLElement | null = null;
   private isEditing = false;
   private currentPage = 1;
   private currentQuery: UserQuery = {};
@@ -371,13 +370,23 @@ class UsersAdminManager {
     const modalElement = document.getElementById('userModal');
     if (!modalElement) {return;}
 
-    if (!window.bootstrap) {
-      this.showError('Bootstrap no está cargado correctamente');
-      return;
-    }
+    // Show modal using custom implementation
+    modalElement.classList.remove('hidden');
+    modalElement.classList.add('fixed', 'inset-0', 'z-50', 'flex', 'items-center', 'justify-center', 'bg-black', 'bg-opacity-50');
+    this.modal = modalElement;
 
-    this.modal = new window.bootstrap.Modal(modalElement);
-    this.modal.show();
+    // Add close functionality
+    const closeButtons = modalElement.querySelectorAll('[data-modal-close]');
+    closeButtons.forEach(button => {
+      button.addEventListener('click', () => this.closeModal());
+    });
+
+    // Close on backdrop click
+    modalElement.addEventListener('click', (e) => {
+      if (e.target === modalElement) {
+        this.closeModal();
+      }
+    });
 
     const modalTitle = document.getElementById('modalTitle');
     const passwordLabel = document.getElementById('passwordLabel');
@@ -392,6 +401,17 @@ class UsersAdminManager {
       passwordLabel.textContent = editing
         ? '(dejar vacío para no cambiar)'
         : '(requerida para nuevo usuario)';
+    }
+  }
+
+  /**
+   * Close modal
+   */
+  private closeModal(): void {
+    if (this.modal) {
+      this.modal.classList.add('hidden');
+      this.modal.classList.remove('fixed', 'inset-0', 'z-50', 'flex', 'items-center', 'justify-center', 'bg-black', 'bg-opacity-50');
+      this.modal = null;
     }
   }
 
@@ -572,7 +592,7 @@ class UsersAdminManager {
       }
 
       if (response.success) {
-        this.modal?.hide();
+        this.closeModal();
         void this.loadUsers();
         this.showSuccess(this.isEditing ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente');
         this.log('success', this.isEditing ? 'User updated' : 'User created');
@@ -793,14 +813,12 @@ class UsersAdminManager {
 
     toastContainer.appendChild(toastElement);
 
-    if (window.bootstrap) {
-      const toast = new window.bootstrap.Toast(toastElement, { delay: 5000 });
-      toast.show();
-
-      toastElement.addEventListener('hidden.bs.toast', () => {
+    // Auto remove after delay
+    setTimeout(() => {
+      if (toastElement.parentNode) {
         toastElement.remove();
-      });
-    }
+      }
+    }, 5000);
   }
 
   private log(level: 'info' | 'success' | 'error' | 'warn' | 'api', message: string, data?: unknown): void {
@@ -828,10 +846,10 @@ if (document.readyState === 'loading') {
 document.addEventListener('DOMContentLoaded', () => {
   const manager = new UsersAdminManager();
   // Expose to window for pagination callbacks
-  (window as unknown as WindowWithBootstrap & WindowWithFloresyaLogger & { usersAdmin: UsersAdminManager })['usersAdmin'] = manager;
+  (window as unknown as WindowWithFloresyaLogger & { usersAdmin: UsersAdminManager })['usersAdmin'] = manager;
 });
 } else {
 const manager = new UsersAdminManager();
 // Expose to window for pagination callbacks
-(window as unknown as WindowWithBootstrap & WindowWithFloresyaLogger & { usersAdmin: UsersAdminManager })['usersAdmin'] = manager;
+(window as unknown as WindowWithFloresyaLogger & { usersAdmin: UsersAdminManager })['usersAdmin'] = manager;
 }

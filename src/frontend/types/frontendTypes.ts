@@ -15,7 +15,6 @@ export type {
   CarouselResponse,
   LogData,
   Logger,
-  WindowWithBootstrap,
   WindowWithCart,
   LoginCredentials,
   RegisterData,

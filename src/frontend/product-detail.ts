@@ -4,7 +4,7 @@
  */
 
 import { FloresYaAPI } from './services/apiClient.js';
-import type { Occasion, Product, WindowWithBootstrap, CartItem } from '../shared/types/index.js';
+import type { Occasion, Product, CartItem } from '../shared/types/index.js';
 
 interface ProductWithImagesAndOccasion extends Product {
   images?: Array<{ id: number; url: string; alt_text?: string; display_order?: number; }>;
@@ -458,11 +458,17 @@ class ProductDetailManager {
   private showNavigationMessage(message: string): void {
     // Show a subtle toast message
     const toast = document.createElement('div');
-    toast.className = 'position-fixed top-0 start-50 translate-middle-x mt-3 alert alert-info alert-dismissible';
+    toast.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-blue-50 text-blue-800 border border-blue-200 rounded-lg px-4 py-3 shadow-lg';
     toast.style.zIndex = '9999';
     toast.innerHTML = `
-      <small>${message}</small>
-      <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+      <div class="flex items-center justify-between">
+        <small>${message}</small>
+        <button type="button" class="ml-3 text-blue-600 hover:text-blue-800 focus:outline-none" onclick="this.parentElement.parentElement.remove()">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+          </svg>
+        </button>
+      </div>
     `;
 
     document.body.appendChild(toast);
@@ -657,12 +663,22 @@ class ProductDetailManager {
 
   private showAddToCartMessage(): void {
     const toast = document.createElement('div');
-    toast.className = 'position-fixed top-0 start-50 translate-middle-x mt-3 alert alert-success alert-dismissible';
+    toast.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-50 text-green-800 border border-green-200 rounded-lg px-4 py-3 shadow-lg';
     toast.style.zIndex = '9999';
     toast.innerHTML = `
-      <i class="bi bi-check-circle me-2"></i>
-      <span>¡Producto agregado al carrito!</span>
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+          </svg>
+          <span>¡Producto agregado al carrito!</span>
+        </div>
+        <button type="button" class="ml-3 text-green-600 hover:text-green-800 focus:outline-none" onclick="this.parentElement.parentElement.remove()">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+          </svg>
+        </button>
+      </div>
     `;
 
     document.body.appendChild(toast);
@@ -699,17 +715,39 @@ class ProductDetailManager {
 
     document.body.appendChild(modal);
 
-    // Show modal
-    const bootstrap = (window as unknown as WindowWithBootstrap).bootstrap;
-    if (bootstrap) {
-      const modalInstance = new bootstrap.Modal(modal as HTMLElement);
-      modalInstance.show();
+    // Show modal with custom implementation
+    modal.style.display = 'block';
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
 
-      // Remove modal from DOM when hidden
-      modal.addEventListener('hidden.bs.modal', () => {
-        modal.remove();
-      });
+    // Add close functionality
+    const closeBtn = modal.querySelector('.btn-close');
+    const closeModal = () => {
+      modal.style.display = 'none';
+      modal.classList.remove('show');
+      document.body.style.overflow = '';
+      modal.remove();
+    };
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeModal);
     }
+
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+
+    // Close on escape key
+    const escapeHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeModal();
+        document.removeEventListener('keydown', escapeHandler);
+      }
+    };
+    document.addEventListener('keydown', escapeHandler);
   }
 
   // Public method required by global interface

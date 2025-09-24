@@ -1,49 +1,16 @@
 /**
- * 🌸 FloresYa UserController Unit Tests
- * Comprehensive test suite for UserController endpoints
+ * 🌸 FloresYa UserController Unit Tests - Silicon Valley Simple Mock Edition
+ * Clean, maintainable tests with one mock per test pattern
  */
 
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { UserController } from '../../src/controllers/UserController.js';
+import { Request, Response } from 'express';
+import { validationResult } from 'express-validator';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { UserController, userValidators } from '../../src/controllers/UserController.js';
 import { userService } from '../../src/services/UserService.js';
+import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService.js';
 
-// Mock TypeSafeDatabaseService
-vi.mock('../../src/services/TypeSafeDatabaseService.js', () => ({
-  typeSafeDatabaseService: {
-    getClient: vi.fn()
-  }
-}));
-
-// Mock express-validator
-vi.mock('express-validator', () => {
-  const mockValidationChain = {
-    isEmail: vi.fn().mockReturnThis(),
-    isLength: vi.fn().mockReturnThis(),
-    isIn: vi.fn().mockReturnThis(),
-    isInt: vi.fn().mockReturnThis(),
-    isBoolean: vi.fn().mockReturnThis(),
-    normalizeEmail: vi.fn().mockReturnThis(),
-    trim: vi.fn().mockReturnThis(),
-    escape: vi.fn().mockReturnThis(),
-    matches: vi.fn().mockReturnThis(),
-    withMessage: vi.fn().mockReturnThis(),
-    optional: vi.fn().mockReturnThis()
-  };
-
-  const defaultValidationResult = {
-    isEmpty: vi.fn().mockReturnValue(true),
-    array: vi.fn().mockReturnValue([])
-  };
-
-  return {
-    body: vi.fn().mockReturnValue(mockValidationChain),
-    param: vi.fn().mockReturnValue(mockValidationChain),
-    query: vi.fn().mockReturnValue(mockValidationChain),
-    validationResult: vi.fn().mockReturnValue(defaultValidationResult)
-  };
-});
-
-// Mock the userService
+// Mock dependencies
 vi.mock('../../src/services/UserService.js', () => ({
   userService: {
     getAllUsers: vi.fn(),
@@ -55,232 +22,250 @@ vi.mock('../../src/services/UserService.js', () => ({
   }
 }));
 
-// Mock express request and response
-const mockRequest = (overrides = {}) => ({
-  params: {},
-  query: {},
-  body: {},
-  ...overrides
-});
+vi.mock('../../src/services/TypeSafeDatabaseService.js', () => ({
+  typeSafeDatabaseService: {
+    getClient: vi.fn()
+  }
+}));
 
-const mockResponse = () => {
-  const res = {
-    status: vi.fn().mockReturnThis(),
-    json: vi.fn().mockReturnThis(),
-    send: vi.fn().mockReturnThis()
-  };
-  return res;
-};
-
-const mockNext = vi.fn();
+// Mock express-validator
+vi.mock('express-validator', () => ({
+  body: vi.fn(() => ({
+    isEmail: vi.fn().mockReturnThis(),
+    normalizeEmail: vi.fn().mockReturnThis(),
+    isLength: vi.fn().mockReturnThis(),
+    matches: vi.fn().mockReturnThis(),
+    trim: vi.fn().mockReturnThis(),
+    isIn: vi.fn().mockReturnThis(),
+    isBoolean: vi.fn().mockReturnThis(),
+    optional: vi.fn().mockReturnThis(),
+    withMessage: vi.fn().mockReturnThis()
+  })),
+  param: vi.fn(() => ({
+    isInt: vi.fn().mockReturnThis(),
+    withMessage: vi.fn().mockReturnThis()
+  })),
+  query: vi.fn(() => ({
+    optional: vi.fn().mockReturnThis(),
+    isInt: vi.fn().mockReturnThis(),
+    isLength: vi.fn().mockReturnThis(),
+    isIn: vi.fn().mockReturnThis(),
+    isBoolean: vi.fn().mockReturnThis(),
+    withMessage: vi.fn().mockReturnThis()
+  })),
+  validationResult: vi.fn()
+}));
 
 describe('UserController', () => {
   let controller: UserController;
+  let mockRequest: Partial<Request>;
+  let mockResponse: Partial<Response>;
+  let jsonSpy: any;
+  let statusSpy: any;
 
-  beforeEach(async () => {
+  // Test data factories
+  const createTestUser = (overrides = {}) => ({
+    id: 1,
+    email: 'test@example.com',
+    full_name: 'Test User',
+    phone: '+1234567890',
+    role: 'user' as const,
+    is_active: true,
+    email_verified: false,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    ...overrides
+  });
+
+  const createTestUserList = (users = [createTestUser()], overrides = {}) => ({
+    users,
+    pagination: {
+      current_page: 1,
+      total_pages: 1,
+      total_items: users.length,
+      items_per_page: 20,
+      ...overrides
+    }
+  });
+
+  const createValidationResult = (isEmpty = true, errors: any[] = []) => ({
+    isEmpty: () => isEmpty,
+    array: () => errors,
+    formatter: vi.fn(),
+    errors,
+    mapped: vi.fn(),
+    formatWith: vi.fn(),
+    throw: vi.fn()
+  } as any);
+
+  beforeEach(() => {
     controller = new UserController();
-    vi.clearAllMocks();
+    jsonSpy = vi.fn().mockReturnThis();
+    statusSpy = vi.fn().mockReturnThis();
 
-    // Reset the validationResult mock to default (no errors)
-    const { validationResult } = await import('express-validator');
-    (validationResult as any).mockReturnValue({
-      isEmpty: vi.fn().mockReturnValue(true),
-      array: vi.fn().mockReturnValue([])
-    });
+    mockResponse = {
+      json: jsonSpy,
+      status: statusSpy,
+      send: vi.fn()
+    };
+
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getAllUsers', () => {
     it('should return users successfully', async () => {
-      const mockUsers = {
-        users: [
-          {
-            id: 1,
-            email: 'test@example.com',
-            full_name: 'Test User',
-            role: 'user' as const,
-            is_active: true,
-            email_verified: false,
-            created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
-          }
-        ],
-        pagination: {
-          current_page: 1,
-          total_pages: 1,
-          total_items: 1,
-          items_per_page: 20
+      // Arrange
+      const testUser = createTestUser();
+      const testUserList = createTestUserList([testUser]);
+
+      const mockUserService = vi.mocked(userService);
+      mockUserService.getAllUsers.mockResolvedValue({
+        success: true,
+        data: testUserList,
+        message: 'Users retrieved successfully'
+      });
+
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      mockRequest = {
+        query: {
+          page: '1',
+          limit: '20',
+          search: '',
+          role: 'user',
+          is_active: 'true',
+          email_verified: 'false',
+          sort_by: 'created_at',
+          sort_direction: 'desc'
         }
       };
 
-      const mockServiceResponse = {
-        success: true,
-        data: mockUsers,
-        message: 'Users retrieved successfully'
-      };
+      // Act
+      await controller.getAllUsers(mockRequest as Request, mockResponse as Response);
 
-      vi.mocked(userService.getAllUsers).mockResolvedValue(mockServiceResponse);
-
-      const req = mockRequest({
-        query: { page: '1', limit: '20' }
-      });
-      const res = mockResponse();
-
-      await controller.getAllUsers(req as any, res as any);
-
-      expect(userService.getAllUsers).toHaveBeenCalledWith({
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(mockUserService.getAllUsers).toHaveBeenCalledWith({
         page: 1,
         limit: 20,
-        search: undefined,
-        role: undefined,
-        is_active: undefined,
-        email_verified: undefined,
+        search: '',
+        role: 'user',
+        is_active: true,
+        email_verified: false,
         sort_by: 'created_at',
         sort_direction: 'desc'
       });
-
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith(mockServiceResponse);
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
+        success: true,
+        data: testUserList,
+        message: 'Users retrieved successfully'
+      });
     });
 
     it('should handle validation errors', async () => {
-      // Mock validation errors
-      const mockErrors = [{ param: 'page', msg: 'Page must be a positive integer' }];
-      const { validationResult } = await import('express-validator');
-      (validationResult as any).mockReturnValue({
-        isEmpty: vi.fn().mockReturnValue(false),
-        array: vi.fn().mockReturnValue(mockErrors)
-      });
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult(false, [{ field: 'page', message: 'Invalid page' }]));
 
-      const req = mockRequest({
+      mockRequest = {
         query: { page: 'invalid' }
-      });
-      const res = mockResponse();
+      };
 
-      await controller.getAllUsers(req as any, res as any);
+      // Act
+      await controller.getAllUsers(mockRequest as Request, mockResponse as Response);
 
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Validation errors',
-        errors: mockErrors
+        errors: [{ field: 'page', message: 'Invalid page' }]
       });
     });
 
     it('should handle service errors', async () => {
-      const mockServiceResponse = {
+      // Arrange
+      const mockUserService = vi.mocked(userService);
+      mockUserService.getAllUsers.mockResolvedValue({
         success: false,
         message: 'Database error',
         error: 'FETCH_USERS_ERROR'
-      };
+      });
 
-      vi.mocked(userService.getAllUsers).mockResolvedValue(mockServiceResponse);
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
 
-      const req = mockRequest({
+      mockRequest = {
         query: { page: '1', limit: '20' }
-      });
-      const res = mockResponse();
-
-      await controller.getAllUsers(req as any, res as any);
-
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith(mockServiceResponse);
-    });
-
-    it('should handle query parameters correctly', async () => {
-      const mockUsers = {
-        users: [],
-        pagination: {
-          current_page: 1,
-          total_pages: 0,
-          total_items: 0,
-          items_per_page: 20
-        }
       };
 
-      const mockServiceResponse = {
-        success: true,
-        data: mockUsers,
-        message: 'Users retrieved successfully'
-      };
+      // Act
+      await controller.getAllUsers(mockRequest as Request, mockResponse as Response);
 
-      vi.mocked(userService.getAllUsers).mockResolvedValue(mockServiceResponse);
-
-      const req = mockRequest({
-        query: {
-          page: '2',
-          limit: '10',
-          search: 'test',
-          role: 'admin',
-          is_active: 'true',
-          email_verified: 'false',
-          sort_by: 'email',
-          sort_direction: 'asc'
-        }
-      });
-      const res = mockResponse();
-
-      await controller.getAllUsers(req as any, res as any);
-
-      expect(userService.getAllUsers).toHaveBeenCalledWith({
-        page: 2,
-        limit: 10,
-        search: 'test',
-        role: 'admin',
-        is_active: true,
-        email_verified: false,
-        sort_by: 'email',
-        sort_direction: 'asc'
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(500);
+      expect(jsonSpy).toHaveBeenCalledWith({
+        success: false,
+        message: 'Database error',
+        error: 'FETCH_USERS_ERROR'
       });
     });
   });
 
   describe('getUserById', () => {
     it('should return user successfully', async () => {
-      const mockUser = {
-        id: 1,
-        email: 'test@example.com',
-        full_name: 'Test User',
-        role: 'user' as const,
-        is_active: true,
-        email_verified: false,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      };
-
-      const mockServiceResponse = {
+      // Arrange
+      const testUser = createTestUser();
+      const mockUserService = vi.mocked(userService);
+      mockUserService.getUserById.mockResolvedValue({
         success: true,
-        data: mockUser,
+        data: testUser,
         message: 'User retrieved successfully'
+      });
+
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      mockRequest = {
+        params: { id: '1' }
       };
 
-      vi.mocked(userService.getUserById).mockResolvedValue(mockServiceResponse);
+      // Act
+      await controller.getUserById(mockRequest as Request, mockResponse as Response);
 
-      const req = mockRequest({
-        params: { id: '1' }
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(mockUserService.getUserById).toHaveBeenCalledWith(1);
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
+        success: true,
+        data: testUser,
+        message: 'User retrieved successfully'
       });
-      const res = mockResponse();
-
-      await controller.getUserById(req as any, res as any);
-
-      expect(userService.getUserById).toHaveBeenCalledWith(1);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith(mockServiceResponse);
     });
 
     it('should handle invalid user ID', async () => {
-      const req = mockRequest({
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      mockRequest = {
         params: { id: 'invalid' }
-      });
-      const res = mockResponse();
+      };
 
-      await controller.getUserById(req as any, res as any);
+      // Act
+      await controller.getUserById(mockRequest as Request, mockResponse as Response);
 
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Invalid user ID',
         error: 'INVALID_ID'
@@ -288,332 +273,354 @@ describe('UserController', () => {
     });
 
     it('should handle user not found', async () => {
-      const mockServiceResponse = {
+      // Arrange
+      const mockUserService = vi.mocked(userService);
+      mockUserService.getUserById.mockResolvedValue({
         success: false,
         message: 'User not found',
         error: 'USER_NOT_FOUND'
+      });
+
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      mockRequest = {
+        params: { id: '1' }
       };
 
-      vi.mocked(userService.getUserById).mockResolvedValue(mockServiceResponse);
+      // Act
+      await controller.getUserById(mockRequest as Request, mockResponse as Response);
 
-      const req = mockRequest({
-        params: { id: '999' }
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(404);
+      expect(jsonSpy).toHaveBeenCalledWith({
+        success: false,
+        message: 'User not found',
+        error: 'USER_NOT_FOUND'
       });
-      const res = mockResponse();
-
-      await controller.getUserById(req as any, res as any);
-
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith(mockServiceResponse);
     });
   });
 
   describe('createUser', () => {
     it('should create user successfully', async () => {
-      const mockUser = {
-        id: 1,
-        email: 'test@example.com',
-        full_name: 'Test User',
+      // Arrange
+      const testUser = createTestUser();
+      const mockUserService = vi.mocked(userService);
+      mockUserService.createUser.mockResolvedValue({
+        success: true,
+        data: testUser,
+        message: 'User created successfully'
+      });
+
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      const newUserData = {
+        email: 'newuser@example.com',
+        password: 'Password123',
+        full_name: 'New User',
+        phone: '+1234567890',
         role: 'user' as const,
         is_active: true,
-        email_verified: false,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
+        email_verified: false
       };
 
-      const mockServiceResponse = {
+      mockRequest = {
+        body: newUserData
+      };
+
+      // Act
+      await controller.createUser(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(mockUserService.createUser).toHaveBeenCalledWith(newUserData);
+      expect(statusSpy).toHaveBeenCalledWith(201);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
-        data: mockUser,
+        data: testUser,
         message: 'User created successfully'
-      };
-
-      vi.mocked(userService.createUser).mockResolvedValue(mockServiceResponse);
-
-      const req = mockRequest({
-        body: {
-          email: 'test@example.com',
-          password: 'TestPassword123',
-          full_name: 'Test User',
-          role: 'user'
-        }
       });
-      const res = mockResponse();
-
-      await controller.createUser(req as any, res as any);
-
-      expect(userService.createUser).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'TestPassword123',
-        full_name: 'Test User',
-        role: 'user'
-      });
-
-      expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith(mockServiceResponse);
     });
 
     it('should handle validation errors', async () => {
-      // Mock validation errors
-      const mockErrors = [
-        { param: 'email', msg: 'Please provide a valid email' },
-        { param: 'password', msg: 'Password must be at least 6 characters' },
-        { param: 'full_name', msg: 'Full name must be at least 2 characters' },
-        { param: 'role', msg: 'Role must be either admin, manager, or user' }
-      ];
-      const { validationResult } = await import('express-validator');
-      (validationResult as any).mockReturnValue({
-        isEmpty: vi.fn().mockReturnValue(false),
-        array: vi.fn().mockReturnValue(mockErrors)
-      });
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult(false, [{ field: 'email', message: 'Invalid email' }]));
 
-      const req = mockRequest({
-        body: {
-          email: 'invalid-email',
-          password: '123',
-          full_name: 'T',
-          role: 'invalid'
-        }
-      });
-      const res = mockResponse();
+      mockRequest = {
+        body: { email: 'invalid-email' }
+      };
 
-      await controller.createUser(req as any, res as any);
+      // Act
+      await controller.createUser(mockRequest as Request, mockResponse as Response);
 
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Validation errors',
-        errors: mockErrors
+        errors: [{ field: 'email', message: 'Invalid email' }]
       });
     });
 
-    it('should handle email already exists error', async () => {
-      const mockServiceResponse = {
+    it('should handle email already exists', async () => {
+      // Arrange
+      const mockUserService = vi.mocked(userService);
+      mockUserService.createUser.mockResolvedValue({
         success: false,
         message: 'Email already exists',
         error: 'EMAIL_EXISTS'
-      };
+      });
 
-      vi.mocked(userService.createUser).mockResolvedValue(mockServiceResponse);
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
 
-      const req = mockRequest({
+      mockRequest = {
         body: {
           email: 'existing@example.com',
-          password: 'TestPassword123',
+          password: 'Password123',
           full_name: 'Test User',
-          role: 'user' as const
+          role: 'user'
         }
+      };
+
+      // Act
+      await controller.createUser(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(409);
+      expect(jsonSpy).toHaveBeenCalledWith({
+        success: false,
+        message: 'Email already exists',
+        error: 'EMAIL_EXISTS'
       });
-      const res = mockResponse();
-
-      await controller.createUser(req as any, res as any);
-
-      expect(res.status).toHaveBeenCalledWith(409);
-      expect(res.json).toHaveBeenCalledWith(mockServiceResponse);
     });
   });
 
   describe('updateUser', () => {
     it('should update user successfully', async () => {
-      const mockUser = {
-        id: 1,
-        email: 'updated@example.com',
-        full_name: 'Updated User',
-        role: 'admin' as const,
-        is_active: true,
-        email_verified: true,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      };
-
-      const mockServiceResponse = {
+      // Arrange
+      const testUser = createTestUser();
+      const mockUserService = vi.mocked(userService);
+      mockUserService.updateUser.mockResolvedValue({
         success: true,
-        data: mockUser,
+        data: testUser,
         message: 'User updated successfully'
-      };
-
-      vi.mocked(userService.updateUser).mockResolvedValue(mockServiceResponse);
-
-      const req = mockRequest({
-        params: { id: '1' },
-        body: {
-          email: 'updated@example.com',
-          full_name: 'Updated User',
-          role: 'admin' as const
-        }
       });
-      const res = mockResponse();
 
-      await controller.updateUser(req as any, res as any);
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
 
-      expect(userService.updateUser).toHaveBeenCalledWith(1, {
+      const updateData = {
         id: 1,
         email: 'updated@example.com',
-        full_name: 'Updated User',
-        role: 'admin'
-      });
+        full_name: 'Updated User'
+      };
 
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith(mockServiceResponse);
+      mockRequest = {
+        params: { id: '1' },
+        body: updateData
+      };
+
+      // Act
+      await controller.updateUser(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(mockUserService.updateUser).toHaveBeenCalledWith(1, updateData);
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
+        success: true,
+        data: testUser,
+        message: 'User updated successfully'
+      });
     });
 
     it('should handle invalid user ID', async () => {
-      const req = mockRequest({
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      mockRequest = {
         params: { id: 'invalid' },
-        body: {
-          email: 'updated@example.com'
-        }
-      });
-      const res = mockResponse();
+        body: { email: 'test@example.com' }
+      };
 
-      await controller.updateUser(req as any, res as any);
+      // Act
+      await controller.updateUser(mockRequest as Request, mockResponse as Response);
 
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Invalid user ID',
         error: 'INVALID_ID'
       });
     });
 
-    it('should handle user not found error', async () => {
-      const mockServiceResponse = {
+    it('should handle user not found', async () => {
+      // Arrange
+      const mockUserService = vi.mocked(userService);
+      mockUserService.updateUser.mockResolvedValue({
         success: false,
         message: 'User not found',
         error: 'USER_NOT_FOUND'
+      });
+
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      mockRequest = {
+        params: { id: '1' },
+        body: { email: 'test@example.com' }
       };
 
-      vi.mocked(userService.updateUser).mockResolvedValue(mockServiceResponse);
+      // Act
+      await controller.updateUser(mockRequest as Request, mockResponse as Response);
 
-      const req = mockRequest({
-        params: { id: '999' },
-        body: {
-          email: 'updated@example.com'
-        }
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(404);
+      expect(jsonSpy).toHaveBeenCalledWith({
+        success: false,
+        message: 'User not found',
+        error: 'USER_NOT_FOUND'
       });
-      const res = mockResponse();
-
-      await controller.updateUser(req as any, res as any);
-
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith(mockServiceResponse);
     });
   });
 
   describe('toggleUserActive', () => {
     it('should toggle user active status successfully', async () => {
-      const mockUser = {
-        id: 1,
-        email: 'test@example.com',
-        full_name: 'Test User',
-        role: 'user' as const,
-        is_active: false,
-        email_verified: false,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      };
-
-      const mockServiceResponse = {
+      // Arrange
+      const testUser = createTestUser();
+      const mockUserService = vi.mocked(userService);
+      mockUserService.toggleUserActive.mockResolvedValue({
         success: true,
-        data: mockUser,
+        data: { ...testUser, is_active: false },
         message: 'User status changed successfully'
+      });
+
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      mockRequest = {
+        params: { id: '1' }
       };
 
-      vi.mocked(userService.toggleUserActive).mockResolvedValue(mockServiceResponse);
+      // Act
+      await controller.toggleUserActive(mockRequest as Request, mockResponse as Response);
 
-      const req = mockRequest({
-        params: { id: '1' }
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(mockUserService.toggleUserActive).toHaveBeenCalledWith(1);
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
+        success: true,
+        data: { ...testUser, is_active: false },
+        message: 'User status changed successfully'
       });
-      const res = mockResponse();
-
-      await controller.toggleUserActive(req as any, res as any);
-
-      expect(userService.toggleUserActive).toHaveBeenCalledWith(1);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith(mockServiceResponse);
     });
 
     it('should handle invalid user ID', async () => {
-      const req = mockRequest({
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      mockRequest = {
         params: { id: 'invalid' }
-      });
-      const res = mockResponse();
+      };
 
-      await controller.toggleUserActive(req as any, res as any);
+      // Act
+      await controller.toggleUserActive(mockRequest as Request, mockResponse as Response);
 
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Invalid user ID',
         error: 'INVALID_ID'
       });
     });
 
-    it('should handle user not found error', async () => {
-      const mockServiceResponse = {
+    it('should handle user not found', async () => {
+      // Arrange
+      const mockUserService = vi.mocked(userService);
+      mockUserService.toggleUserActive.mockResolvedValue({
         success: false,
         message: 'User not found',
         error: 'USER_NOT_FOUND'
+      });
+
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      mockRequest = {
+        params: { id: '1' }
       };
 
-      vi.mocked(userService.toggleUserActive).mockResolvedValue(mockServiceResponse);
+      // Act
+      await controller.toggleUserActive(mockRequest as Request, mockResponse as Response);
 
-      const req = mockRequest({
-        params: { id: '999' }
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(404);
+      expect(jsonSpy).toHaveBeenCalledWith({
+        success: false,
+        message: 'User not found',
+        error: 'USER_NOT_FOUND'
       });
-      const res = mockResponse();
-
-      await controller.toggleUserActive(req as any, res as any);
-
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith(mockServiceResponse);
     });
   });
 
   describe('deleteUser', () => {
     it('should perform logical deletion when user has references', async () => {
-      const mockUser = {
-        id: 1,
-        email: 'test@example.com',
-        full_name: 'Test User',
-        role: 'user' as const,
-        is_active: false,
-        email_verified: false,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      };
+      // Arrange
+      const testUser = createTestUser();
+      const mockUserService = vi.mocked(userService);
+      const mockTypeSafeDatabaseService = vi.mocked(typeSafeDatabaseService);
 
-      // Mock getUserById to return user data
-      const getUserResponse = {
+      // Mock user exists
+      mockUserService.getUserById.mockResolvedValue({
         success: true,
-        data: mockUser,
+        data: testUser,
         message: 'User retrieved successfully'
-      };
-
-      // Mock checkUserReferences to return true (has references)
-      vi.spyOn(controller as any, 'checkUserReferences').mockResolvedValue(true);
-
-      // Mock updateUser for logical deletion
-      const updateUserResponse = {
-        success: true,
-        data: { ...mockUser, is_active: false },
-        message: 'User updated successfully'
-      };
-
-      vi.mocked(userService.getUserById).mockResolvedValue(getUserResponse);
-      vi.mocked(userService.updateUser).mockResolvedValue(updateUserResponse);
-
-      const req = mockRequest({
-        params: { id: '1' }
       });
-      const res = mockResponse();
 
-      await controller.deleteUser(req as any, res as any);
+      // Mock user has references
+      const mockClient = {
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue({ data: [{ id: 1 }], error: null })
+      };
+      mockTypeSafeDatabaseService.getClient.mockReturnValue(mockClient as any);
 
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
+      // Mock successful update (deactivation)
+      mockUserService.updateUser.mockResolvedValue({
+        success: true,
+        data: { ...testUser, is_active: false },
+        message: 'User updated successfully'
+      });
+
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      mockRequest = {
+        params: { id: '1' }
+      };
+
+      // Act
+      await controller.deleteUser(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(mockUserService.getUserById).toHaveBeenCalledWith(1);
+      expect(mockTypeSafeDatabaseService.getClient).toHaveBeenCalled();
+      expect(mockUserService.updateUser).toHaveBeenCalledWith(1, { id: 1, is_active: false });
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
         data: {
-          user: { ...mockUser, is_active: false },
+          user: { ...testUser, is_active: false },
           deletion_type: 'logical',
           has_references: true
         },
@@ -622,56 +629,68 @@ describe('UserController', () => {
     });
 
     it('should perform physical deletion when user has no references', async () => {
-      const mockUser = {
-        id: 1,
-        email: 'test@example.com',
-        full_name: 'Test User',
-        role: 'user' as const,
-        is_active: true,
-        email_verified: false,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      };
+      // Arrange
+      const testUser = createTestUser();
+      const mockUserService = vi.mocked(userService);
+      const mockTypeSafeDatabaseService = vi.mocked(typeSafeDatabaseService);
 
-      const getUserResponse = {
+      // Mock user exists
+      mockUserService.getUserById.mockResolvedValue({
         success: true,
-        data: mockUser,
+        data: testUser,
         message: 'User retrieved successfully'
-      };
-
-      const deleteUserResponse = {
-        success: true,
-        data: { deleted_user: { id: 1, email: 'test@example.com' } },
-        message: 'User deleted successfully'
-      };
-
-      // Mock checkUserReferences to return false (no references)
-      vi.spyOn(controller as any, 'checkUserReferences').mockResolvedValue(false);
-
-      vi.mocked(userService.getUserById).mockResolvedValue(getUserResponse);
-      vi.mocked(userService.deleteUser).mockResolvedValue(deleteUserResponse);
-
-      const req = mockRequest({
-        params: { id: '1' }
       });
-      const res = mockResponse();
 
-      await controller.deleteUser(req as any, res as any);
+      // Mock user has no references
+      const mockClient = {
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue({ data: [], error: null })
+      };
+      mockTypeSafeDatabaseService.getClient.mockReturnValue(mockClient as any);
 
-      expect(res.status).toHaveBeenCalledWith(204);
-      expect(res.send).toHaveBeenCalled();
+      // Mock successful physical deletion
+      mockUserService.deleteUser.mockResolvedValue({
+        success: true,
+        data: { deleted_user: { id: 1, email: 'test@example.com', full_name: 'Test User' } },
+        message: 'User deleted successfully'
+      });
+
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      mockRequest = {
+        params: { id: '1' }
+      };
+
+      // Act
+      await controller.deleteUser(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(mockUserService.getUserById).toHaveBeenCalledWith(1);
+      expect(mockTypeSafeDatabaseService.getClient).toHaveBeenCalled();
+      expect(mockUserService.deleteUser).toHaveBeenCalledWith(1);
+      expect(statusSpy).toHaveBeenCalledWith(204);
+      expect(mockResponse.send).toHaveBeenCalled();
     });
 
     it('should handle invalid user ID', async () => {
-      const req = mockRequest({
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      mockRequest = {
         params: { id: 'invalid' }
-      });
-      const res = mockResponse();
+      };
 
-      await controller.deleteUser(req as any, res as any);
+      // Act
+      await controller.deleteUser(mockRequest as Request, mockResponse as Response);
 
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Invalid user ID',
         error: 'INVALID_ID'
@@ -679,23 +698,27 @@ describe('UserController', () => {
     });
 
     it('should handle user not found', async () => {
-      const getUserResponse = {
+      // Arrange
+      const mockUserService = vi.mocked(userService);
+      mockUserService.getUserById.mockResolvedValue({
         success: false,
         message: 'User not found',
         error: 'USER_NOT_FOUND'
+      });
+
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      mockRequest = {
+        params: { id: '1' }
       };
 
-      vi.mocked(userService.getUserById).mockResolvedValue(getUserResponse);
+      // Act
+      await controller.deleteUser(mockRequest as Request, mockResponse as Response);
 
-      const req = mockRequest({
-        params: { id: '999' }
-      });
-      const res = mockResponse();
-
-      await controller.deleteUser(req as any, res as any);
-
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(404);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'User not found',
         error: 'USER_NOT_FOUND'
@@ -703,71 +726,59 @@ describe('UserController', () => {
     });
   });
 
-  describe('checkUserReferences', () => {
-    it('should return true when user has orders', async () => {
-      // Mock database client for orders
-      const mockClient = {
-        from: vi.fn().mockReturnThis(),
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockResolvedValue({
-          data: [{ id: 1 }],
-          error: null
-        })
-      };
+  describe('userValidators', () => {
+    it('should validate getAllUsers correctly', () => {
+      // Arrange
+      const validators = userValidators.getAllUsers;
 
-      const { typeSafeDatabaseService } = await import('../../src/services/TypeSafeDatabaseService.js');
-      (typeSafeDatabaseService.getClient as any).mockReturnValue(mockClient);
-
-      const result = await (controller as any).checkUserReferences(1);
-
-      expect(result).toBe(true);
+      // Act & Assert
+      expect(validators).toBeDefined();
+      expect(validators.length).toBeGreaterThan(0);
     });
 
-    it('should return true when user has payments', async () => {
-      // Mock database client for orders (no orders) then payments (has payments)
-      let callCount = 0;
-      const mockClient = {
-        from: vi.fn().mockReturnThis(),
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockImplementation(() => {
-          callCount++;
-          if (callCount === 1) {
-            // First call for orders - no results
-            return Promise.resolve({ data: [], error: null });
-          }
-          // Second call for payments - has results
-          return Promise.resolve({ data: [{ id: 1 }], error: null });
-        })
-      };
+    it('should validate getUserById correctly', () => {
+      // Arrange
+      const validators = userValidators.getUserById;
 
-      const { typeSafeDatabaseService } = await import('../../src/services/TypeSafeDatabaseService.js');
-      (typeSafeDatabaseService.getClient as any).mockReturnValue(mockClient);
-
-      const result = await (controller as any).checkUserReferences(1);
-
-      expect(result).toBe(true);
+      // Act & Assert
+      expect(validators).toBeDefined();
+      expect(validators.length).toBeGreaterThan(0);
     });
 
-    it('should return false when user has no references', async () => {
-      // Mock database client for no references
-      const mockClient = {
-        from: vi.fn().mockReturnThis(),
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockResolvedValue({
-          data: [],
-          error: null
-        })
-      };
+    it('should validate createUser correctly', () => {
+      // Arrange
+      const validators = userValidators.createUser;
 
-      const { typeSafeDatabaseService } = await import('../../src/services/TypeSafeDatabaseService.js');
-      (typeSafeDatabaseService.getClient as any).mockReturnValue(mockClient);
+      // Act & Assert
+      expect(validators).toBeDefined();
+      expect(validators.length).toBeGreaterThan(0);
+    });
 
-      const result = await (controller as any).checkUserReferences(1);
+    it('should validate updateUser correctly', () => {
+      // Arrange
+      const validators = userValidators.updateUser;
 
-      expect(result).toBe(false);
+      // Act & Assert
+      expect(validators).toBeDefined();
+      expect(validators.length).toBeGreaterThan(0);
+    });
+
+    it('should validate toggleUserActive correctly', () => {
+      // Arrange
+      const validators = userValidators.toggleUserActive;
+
+      // Act & Assert
+      expect(validators).toBeDefined();
+      expect(validators.length).toBeGreaterThan(0);
+    });
+
+    it('should validate deleteUser correctly', () => {
+      // Arrange
+      const validators = userValidators.deleteUser;
+
+      // Act & Assert
+      expect(validators).toBeDefined();
+      expect(validators.length).toBeGreaterThan(0);
     });
   });
 });

@@ -7,8 +7,8 @@
     
     <!-- Tailwind CSS -->
     <link href="/css/styles.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/scroll-fix.css">
@@ -29,7 +29,7 @@
             
             <!-- Error Icon -->
             <div class="error-icon">
-                <i class="bi bi-exclamation-triangle"></i>
+                <i data-lucide="alert-triangle"></i>
             </div>
             
             <!-- Error Title -->
@@ -44,29 +44,29 @@
             <!-- Contact Information -->
             <div class="contact-info">
                 <h5 class="contact-info-title">
-                    <i class="bi bi-headset me-2 contact-info-icon"></i>
+                    <i data-lucide="headphones" class="contact-info-icon me-2"></i>
                     Contacta con Soporte
                 </h5>
                 
                 <div class="contact-item">
-                    <i class="bi bi-telephone contact-icon"></i>
+                    <i data-lucide="phone" class="contact-icon"></i>
                     <span><strong>Teléfono:</strong> +58-XXX-XXXXXXX</span>
                 </div>
                 
                 <div class="contact-item">
-                    <i class="bi bi-envelope contact-icon"></i>
+                    <i data-lucide="mail" class="contact-icon"></i>
                     <span><strong>Email:</strong> admin@floresya.com</span>
                 </div>
                 
                 <div class="contact-item">
-                    <i class="bi bi-clock contact-icon"></i>
+                    <i data-lucide="clock" class="contact-icon"></i>
                     <span><strong>Horario:</strong> Lun-Vie 8:00 AM - 6:00 PM</span>
                 </div>
             </div>
             
             <!-- Action Button -->
             <a href="/" class="btn-home">
-                <i class="bi bi-house me-2"></i>
+                <i data-lucide="home" class="me-2"></i>
                 Volver al Inicio
             </a>
             
@@ -84,9 +84,14 @@
         // Generate a simple error ID for support reference
         const errorId = 'ERR-' + Date.now().toString(36).toUpperCase();
         document.getElementById('error-id').textContent = errorId;
-        
+
         // Log error ID for potential debugging
         console.log('Error page displayed with ID:', errorId);
+
+        // Initialize Lucide icons
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
     </script>
     <script type="module" src="/dist/frontend/scroll-effects-fix.js"></script>
 </body>

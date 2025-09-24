@@ -13,14 +13,14 @@
 -- =============================================================================
 
 -- Tipos de ocasiones para productos florales
-CREATE TYPE occasion_type AS ENUM (
-    'general',          -- Sin ocasión específica
-    'birthday',         -- Cumpleaños
-    'anniversary',      -- Aniversario
-    'wedding',          -- Boda
-    'sympathy',         -- Pésame
-    'congratulations'   -- Felicitaciones
-);
+-- CREATE TYPE occasion_type AS ENUM (
+--     'general',          -- Sin ocasión específica
+--     'birthday',         -- Cumpleaños
+--     'anniversary',      -- Aniversario
+--     'wedding',          -- Boda
+--     'sympathy',         -- Pésame
+--     'congratulations'   -- Felicitaciones
+-- ); -- REMOVED: Enum 'occasion_type' eliminated - no longer used after removing column 'type' from occasions table
 
 -- Estados de órdenes
 CREATE TYPE order_status AS ENUM (
@@ -133,7 +133,7 @@ CREATE TABLE occasions (
     is_active BOOLEAN DEFAULT NOT NULL,
     name VARCHAR(255) NOT NULL,
     slug VARCHAR(255) NOT NULL,
-    type VARCHAR(255) NOT NULL,
+    -- type VARCHAR(255) NOT NULL, -- REMOVED: Column 'type' eliminated from occasions table
     updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
@@ -298,13 +298,13 @@ LEFT JOIN payments p ON o.id = p.order_id;
 -- =============================================================================
 
 -- Insertar ocasiones básicas si no existen
-INSERT INTO occasions (name, type, description) VALUES
-('Sin ocasión específica', 'general', 'Para cualquier momento del año'),
-('Cumpleaños', 'birthday', 'Celebración de cumpleaños'),
-('Aniversario', 'anniversary', 'Conmemoración de aniversarios'),
-('Boda', 'wedding', 'Celebraciones de matrimonio'),
-('Pésame', 'sympathy', 'Momentos de duelo y condolencias'),
-('Felicitaciones', 'congratulations', 'Logros y celebraciones especiales')
+INSERT INTO occasions (name, description) VALUES
+('Sin ocasión específica', 'Para cualquier momento del año'),
+('Cumpleaños', 'Celebración de cumpleaños'),
+('Aniversario', 'Conmemoración de aniversarios'),
+('Boda', 'Celebraciones de matrimonio'),
+('Pésame', 'Momentos de duelo y condolencias'),
+('Felicitaciones', 'Logros y celebraciones especiales')
 ON CONFLICT DO NOTHING;
 
 -- Insertar usuario administrador por defecto si no existe

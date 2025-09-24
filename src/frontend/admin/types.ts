@@ -17,7 +17,6 @@ import type {
   AlertData,
   ActivityData,
   AdminPanelLogger,
-  WindowWithBootstrap,
   Product,
   ProductImage,
   PaginationInfo
@@ -35,8 +34,7 @@ export type {
   DashboardMetrics,
   AlertData,
   ActivityData,
-  AdminPanelLogger,
-  WindowWithBootstrap
+  AdminPanelLogger
 };
 
 // Re-export database types for local use

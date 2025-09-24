@@ -16,8 +16,7 @@ import type {
   ProductQuery,
   ProductResponse,
   ProductWithImages,
-  ProductWithOccasion,
-  WindowWithBootstrap
+  ProductWithOccasion
 } from '../shared/types/index.js';
 
 // Window interface extensions are now centralized in src/types/globals.ts
@@ -306,11 +305,11 @@ export class FloresYaApp {
     const formattedPrice = isNaN(price) ? 'N/A' : price.toFixed(2);
 
     return `
-      <div class="col-md-4 col-lg-3 mb-4">
-        <div class="card product-card h-100" data-product-id="${product.id}" data-medium-images='${mediumImagesJson}'>
-          <div class="card-img-wrapper position-relative">
+      <div class="w-full md:w-1/2 lg:w-1/3 xl:w-1/4 mb-6 px-3">
+        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 product-card h-full" data-product-id="${product.id}" data-medium-images='${mediumImagesJson}'>
+          <div class="relative overflow-hidden rounded-t-lg">
             <img src="${imageUrl}"
-                 class="card-img-top"
+                 class="w-full h-64 object-cover transition-transform duration-300 hover:scale-105"
                  alt="${product.name}"
                  width="300"
                  height="300"
@@ -318,43 +317,42 @@ export class FloresYaApp {
                  onerror="this.src='/images/placeholder-product.webp'">
 
             <!-- Image indicator in top-left corner -->
-            <div class="image-indicator position-absolute top-0 start-0 m-2 px-2 py-1 bg-dark bg-opacity-75 text-white rounded-pill small"
-                 style="font-size: 0.75rem; z-index: 10;">
+            <div class="image-indicator absolute top-2 left-2 px-2 py-1 bg-black bg-opacity-75 text-white rounded-full text-xs z-10">
               <span class="current-image">1</span>/<span class="total-images">${Math.max(1, mediumImages.length ?? 1)}</span>
             </div>
 
-            ${product.featured ? '<span class="badge badge-featured">Destacado</span>' : ''}
+            ${product.featured ? '<span class="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-semibold">Destacado</span>' : ''}
           </div>
-          <div class="card-body d-flex flex-column">
+          <div class="p-4 flex flex-col h-full">
             <!-- Product name with 2-line text wrapping -->
-            <h5 class="card-title product-name product-name-text">${product.name}</h5>
+            <h5 class="text-lg font-semibold mb-2 line-clamp-2 product-name">${product.name}</h5>
 
-            <p class="card-text flex-grow-1 small">${product.summary}</p>
+            <p class="text-gray-600 text-sm flex-grow mb-4">${product.summary}</p>
 
             <!-- Price and BUY button row -->
-            <div class="price-buy-row d-flex align-items-center justify-content-between mb-3">
+            <div class="flex items-center justify-between mb-4">
               <div class="price">
-                <strong class="h5 mb-0">${formattedPrice}</strong>
-                <small class="text-muted">USD</small>
+                <strong class="text-xl font-bold text-green-600">${formattedPrice}</strong>
+                <small class="text-gray-500 ml-1">USD</small>
               </div>
               <!-- BUY button with gradient and bright design -->
-              <button class="btn buy-now-btn product-buy-btn"
+              <button class="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 buy-now-btn product-buy-btn"
                       data-product-id="${product.id}"
                       ${product.stock === 0 ? 'disabled' : ''}>
-                <i class="bi bi-lightning-charge-fill" style="color: #ffd700; font-size: 1.2em;"></i>
+                <i class="bi bi-lightning-charge-fill text-yellow-200 mr-1"></i>
                 <strong>BUY</strong>
               </button>
             </div>
 
-            <div class="card-actions mt-auto">
-              <div class="d-flex gap-2">
+            <div class="mt-auto">
+              <div class="flex gap-2">
                 <!-- Simplified cart button with cart + plus -->
-                <button class="btn btn-primary btn-sm add-to-cart-btn flex-fill product-cart-btn"
+                <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded flex-1 transition-colors duration-200 add-to-cart-btn product-cart-btn"
                         data-product-id="${product.id}"
                         ${product.stock === 0 ? 'disabled' : ''}>
-                  <i class="bi bi-cart3"></i><span class="product-cart-plus">+</span>
+                  <i class="bi bi-cart3"></i><span class="product-cart-plus ml-1">+</span>
                 </button>
-                <button class="btn btn-outline-secondary btn-sm view-details-btn flex-fill"
+                <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 px-4 rounded flex-1 transition-colors duration-200 view-details-btn"
                         data-product-id="${product.id}">
                   <i class="bi bi-eye"></i> Ver
                 </button>
@@ -375,8 +373,8 @@ export class FloresYaApp {
     // Previous button
     if (pagination.current_page > 1) {
       html += `
-        <li class="page-item">
-          <a class="page-link" href="#" data-page="${pagination.current_page - 1}">Anterior</a>
+        <li class="hover:bg-gray-50">
+          <a class="block px-3 py-2 border border-gray-300 rounded" href="#" data-page="${pagination.current_page - 1}">Anterior</a>
         </li>
       `;
     }
@@ -387,8 +385,8 @@ export class FloresYaApp {
 
     for (let page = startPage; page <= endPage; page++) {
       html += `
-        <li class="page-item ${page === pagination.current_page ? 'active' : ''}">
-          <a class="page-link" href="#" data-page="${page}">${page}</a>
+        <li class="${page === pagination.current_page ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 hover:bg-blue-50'}">
+          <a class="block px-3 py-2 border border-gray-300 rounded" href="#" data-page="${page}">${page}</a>
         </li>
       `;
     }
@@ -396,13 +394,13 @@ export class FloresYaApp {
     // Next button
     if (pagination.current_page < pagination.total_pages) {
       html += `
-        <li class="page-item">
-          <a class="page-link" href="#" data-page="${pagination.current_page + 1}">Siguiente</a>
+        <li class="hover:bg-gray-50">
+          <a class="block px-3 py-2 border border-gray-300 rounded" href="#" data-page="${pagination.current_page + 1}">Siguiente</a>
         </li>
       `;
     }
 
-    container.innerHTML = html;
+    container.innerHTML = `<ul class="flex space-x-1">${html}</ul>`;
   }
 
   private populateOccasionFilter(): void {
@@ -933,12 +931,12 @@ export class FloresYaApp {
     if (!container) {return;}
 
     container.innerHTML = `
-      <div class="col-12 text-center py-5">
-        <i class="bi bi-flower1 display-1 text-muted mb-3"></i>
-        <h4 class="text-muted">No se encontraron productos</h4>
-        <p class="text-muted">Intenta ajustar tus filtros de búsqueda</p>
-        <button class="btn btn-primary" onclick="location.reload()">
-          <i class="bi bi-arrow-clockwise"></i> Recargar
+      <div class="col-span-full text-center py-12">
+        <i class="bi bi-flower1 text-6xl text-gray-400 mb-4 block"></i>
+        <h4 class="text-gray-500 text-xl mb-2">No se encontraron productos</h4>
+        <p class="text-gray-500 mb-6">Intenta ajustar tus filtros de búsqueda</p>
+        <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded transition-colors" onclick="location.reload()">
+          <i class="bi bi-arrow-clockwise mr-2"></i>Recargar
         </button>
       </div>
     `;
@@ -949,12 +947,12 @@ export class FloresYaApp {
     if (!container) {return;}
 
     container.innerHTML = `
-      <div class="col-12 text-center py-5">
-        <i class="bi bi-exclamation-triangle display-1 text-danger mb-3"></i>
-        <h4 class="text-danger">Error al cargar productos</h4>
-        <p class="text-muted">Ha ocurrido un error. Intenta recargar la página.</p>
-        <button class="btn btn-danger" onclick="location.reload()">
-          <i class="bi bi-arrow-clockwise"></i> Recargar
+      <div class="col-span-full text-center py-12">
+        <i class="bi bi-exclamation-triangle text-6xl text-red-500 mb-4 block"></i>
+        <h4 class="text-red-600 text-xl mb-2">Error al cargar productos</h4>
+        <p class="text-gray-500 mb-6">Ha ocurrido un error. Intenta recargar la página.</p>
+        <button class="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded transition-colors" onclick="location.reload()">
+          <i class="bi bi-arrow-clockwise mr-2"></i>Recargar
         </button>
       </div>
     `;
@@ -1243,8 +1241,8 @@ private snapToNearest(pos: number): void {
         <i class="bi bi-flower1"></i>
         <h4>Creaciones Destacadas</h4>
         <p>Descubre nuestros arreglos florales más populares y especiales</p>
-        <button class="btn btn-primary-custom" onclick="document.getElementById('productos').scrollIntoView({behavior: 'smooth'});">
-          <i class="bi bi-arrow-down me-2"></i>Ver Productos
+        <button class="bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg transition-colors font-medium" onclick="document.getElementById('productos').scrollIntoView({behavior: 'smooth'});">
+          <i class="bi bi-arrow-down mr-2"></i>Ver Productos
         </button>
       </div>
     `;
@@ -1263,12 +1261,10 @@ private snapToNearest(pos: number): void {
 
   public showFloresNovias(): void {
     const modal = document.getElementById('floresNoviasModal');
-    const bootstrap = (window as unknown as WindowWithBootstrap).bootstrap;
-    if (modal && bootstrap?.Modal) {
-      const modalInstance = bootstrap.Modal.getInstance(modal);
-      if (modalInstance && typeof modalInstance.hide === 'function') {
-        modalInstance.hide();
-      }
+    if (modal) {
+      // Hide modal using custom implementation
+      modal.classList.add('hidden');
+      modal.classList.remove('fixed', 'inset-0', 'z-50', 'flex', 'items-center', 'justify-center', 'bg-black', 'bg-opacity-50');
     }
   }
 

@@ -7,8 +7,8 @@
     
     <!-- Tailwind CSS -->
     <link href="/css/styles.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/scroll-fix.css">
@@ -22,7 +22,7 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div class="container">
             <a class="navbar-brand fw-bold text-success" href="/">
-                <i class="bi bi-flower1 me-2"></i>FloresYa
+                <i data-lucide="flower" class="me-2"></i>FloresYa
             </a>
         </div>
     </nav>
@@ -34,7 +34,7 @@
                 <!-- Order Info -->
                 <div class="card mb-4">
                     <div class="card-header bg-primary-custom text-white">
-                        <h5 class="mb-0"><i class="bi bi-receipt me-2"></i>Información del Pedido</h5>
+                        <h5 class="mb-0"><i data-lucide="receipt" class="me-2"></i>Información del Pedido</h5>
                     </div>
                     <div class="card-body" id="orderInfo">
                         <!-- Order details will be loaded here -->
@@ -44,7 +44,7 @@
                 <!-- Customer Information -->
                 <div class="card mb-4">
                     <div class="card-header bg-primary-custom text-white">
-                        <h5 class="mb-0"><i class="bi bi-person-fill me-2"></i>Información del Cliente</h5>
+                        <h5 class="mb-0"><i data-lucide="user" class="me-2"></i>Información del Cliente</h5>
                     </div>
                     <div class="card-body">
                         <form id="customerForm">
@@ -93,7 +93,7 @@
                 <!-- Currency Calculator -->
                 <div class="card mb-4">
                     <div class="card-header bg-primary-custom text-white">
-                        <h5 class="mb-0"><i class="bi bi-calculator me-2"></i>Calculadora USD - Bs. (BCV)</h5>
+                        <h5 class="mb-0"><i data-lucide="calculator" class="me-2"></i>Calculadora USD - Bs. (BCV)</h5>
                         <small>Total del pedido + $7.00 envío</small>
                     </div>
                     <div class="card-body">
@@ -150,7 +150,7 @@
                 <!-- Payment Methods -->
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-credit-card me-2"></i>Métodos de Pago Disponibles</h5>
+                        <h5 class="mb-0"><i data-lucide="credit-card" class="me-2"></i>Métodos de Pago Disponibles</h5>
                         <small class="text-muted">Selecciona tu método de pago preferido</small>
                     </div>
                     <div class="card-body">
@@ -186,7 +186,7 @@
                     <h5 class="modal-title">¡Pago Registrado!</h5>
                 </div>
                 <div class="modal-body text-center">
-                    <i class="bi bi-check-circle-fill text-success success-modal-icon"></i>
+                    <i data-lucide="check-circle" class="text-success success-modal-icon"></i>
                     <h4 class="mt-3">Pago Enviado Exitosamente</h4>
                     <p>Tu pago ha sido registrado y está siendo verificado. Te notificaremos por email una vez que sea confirmado.</p>
                     <p><strong>Número de Orden:</strong> <span id="successOrderNumber"></span></p>
@@ -209,5 +209,14 @@
     <script type="module" src="/dist/frontend/services/apiClient.js"></script>
     <!-- <script src="/js/payment.js"></script> ARCHIVO NO EXISTE - COMENTADO -->
     <script type="module" src="/dist/frontend/scroll-effects-fix.js"></script>
+
+    <!-- Initialize Lucide Icons -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
+    </script>
 </body>
 </html>

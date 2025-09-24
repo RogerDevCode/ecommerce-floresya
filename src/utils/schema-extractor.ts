@@ -438,14 +438,14 @@ class SupabaseSchemaExtractor {
 -- =============================================================================
 
 -- Tipos de ocasiones para productos florales
-CREATE TYPE occasion_type AS ENUM (
-    'general',          -- Sin ocasión específica
-    'birthday',         -- Cumpleaños
-    'anniversary',      -- Aniversario
-    'wedding',          -- Boda
-    'sympathy',         -- Pésame
-    'congratulations'   -- Felicitaciones
-);
+-- CREATE TYPE occasion_type AS ENUM (
+--     'general',          -- Sin ocasión específica
+--     'birthday',         -- Cumpleaños
+--     'anniversary',      -- Aniversario
+--     'wedding',          -- Boda
+--     'sympathy',         -- Pésame
+--     'congratulations'   -- Felicitaciones
+-- ); -- REMOVED: Enum 'occasion_type' eliminated - no longer used after removing column 'type' from occasions table
 
 -- Estados de órdenes
 CREATE TYPE order_status AS ENUM (

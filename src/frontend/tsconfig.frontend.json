@@ -1,26 +1,23 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": [],
-    "rootDir": "..",
     "outDir": "../../dist/frontend",
-    "jsx": "preserve",
-    "moduleResolution": "node",
-    "declaration": true,
-    "sourceMap": false,
-    "composite": true,
-    "skipLibCheck": true,
-    "allowImportingTsExtensions": false
+    "rootDir": "../",
+    "declaration": false,
+    "declarationMap": false,
+    "types": []
   },
   "include": [
-    "./**/*.ts",
-    "./**/*.tsx",
+    "../frontend/**/*",
     "../shared/**/*",
     "../config/**/*"
   ],
   "exclude": [
     "node_modules",
-    "../../dist"
+    "../../dist",
+    "../../public",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.js"
   ]
 }

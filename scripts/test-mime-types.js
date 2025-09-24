@@ -3,11 +3,11 @@ import fs from 'fs';
 import path from 'path';
 
 const testFiles = [
-  '/dist/frontend/utils/logger.js',
-  '/dist/frontend/services/apiClient.js',
-  '/dist/frontend/main.js',
-  '/dist/frontend/authManager.js',
-  '/dist/frontend/scroll-effects-fix.js'
+  '/dist/frontend/frontend/utils/logger.js',
+  '/dist/frontend/frontend/services/apiClient.js',
+  '/dist/frontend/frontend/main.js',
+  '/dist/frontend/frontend/authManager.js',
+  '/dist/frontend/frontend/scroll-effects-fix.js'
 ];
 
 function testMIMETypes() {

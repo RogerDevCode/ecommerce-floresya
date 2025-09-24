@@ -12,8 +12,7 @@ import { AdminProducts } from './admin/products.js';
 import { AdminImages } from './admin/images.js';
 import type {
   AdminUser,
-  AdminPanelLogger,
-  WindowWithBootstrap
+  AdminPanelLogger
 } from './admin/types.js';
 
 class AdminPanel implements AdminPanelLogger {
@@ -225,7 +224,7 @@ class AdminPanel implements AdminPanelLogger {
     const sections = document.querySelectorAll('.admin-section');
     sections.forEach(sectionEl => {
       const isVisible = sectionEl.id === `${section}Section`;
-      sectionEl.classList.toggle('d-none', !isVisible);
+      sectionEl.classList.toggle('hidden', !isVisible);
     });
   }
 
@@ -310,15 +309,15 @@ class AdminPanel implements AdminPanelLogger {
     const mainContent = document.getElementById('mainContent');
     if (mainContent) {
       mainContent.innerHTML = `
-        <div class="container-fluid">
-          <div class="row justify-content-center">
-            <div class="col-md-6">
-              <div class="card">
-                <div class="card-body text-center">
-                  <i class="bi bi-shield-exclamation display-1 text-warning mb-3"></i>
-                  <h3>Acceso Denegado</h3>
-                  <p class="text-muted">No tienes permisos para acceder al panel de administración.</p>
-                  <button class="btn btn-primary" onclick="window.location.href='/'">
+        <div class="container mx-auto px-4">
+          <div class="flex justify-center">
+            <div class="w-full max-w-md">
+              <div class="bg-white rounded-lg shadow-lg border border-gray-200">
+                <div class="p-8 text-center">
+                  <i class="bi bi-shield-exclamation text-6xl text-yellow-500 mb-4 block"></i>
+                  <h3 class="text-xl font-bold mb-4">Acceso Denegado</h3>
+                  <p class="text-gray-600 mb-6">No tienes permisos para acceder al panel de administración.</p>
+                  <button class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded transition-colors" onclick="window.location.href='/'">
                     Volver al Inicio
                   </button>
                 </div>
@@ -368,27 +367,39 @@ class AdminPanel implements AdminPanelLogger {
   }
 
   /**
-   * Show modal (Bootstrap implementation)
+   * Show modal (Custom implementation with Tailwind)
    */
   public showModal(element: Element): void {
-    if ((window as unknown as WindowWithBootstrap).bootstrap?.Modal) {
-      const Modal = (window as unknown as WindowWithBootstrap).bootstrap.Modal;
-      const modal = new Modal(element as HTMLElement);
-      modal.show();
+    const modalElement = element as HTMLElement;
+    if (modalElement) {
+      modalElement.classList.remove('hidden');
+      modalElement.classList.add('fixed', 'inset-0', 'z-50', 'flex', 'items-center', 'justify-center', 'bg-black', 'bg-opacity-50');
+
+      // Add close functionality
+      const closeButtons = modalElement.querySelectorAll('[data-modal-close]');
+      closeButtons.forEach(button => {
+        button.addEventListener('click', () => this.hideModal(modalElement));
+      });
+
+      // Close on backdrop click
+      modalElement.addEventListener('click', (e) => {
+        if (e.target === modalElement) {
+          this.hideModal(modalElement);
+        }
+      });
     } else {
-      this.log('Bootstrap Modal not available', 'error');
+      this.log('Modal element not found', 'error');
     }
   }
 
   /**
-   * Hide modal (Bootstrap implementation)
+   * Hide modal (Custom implementation)
    */
   public hideModal(element: Element): void {
-    if ((window as unknown as WindowWithBootstrap).bootstrap?.Modal?.getInstance) {
-      const modal = (window as unknown as WindowWithBootstrap).bootstrap.Modal.getInstance(element as HTMLElement);
-      if (modal) {
-        modal.hide();
-      }
+    const modalElement = element as HTMLElement;
+    if (modalElement) {
+      modalElement.classList.add('hidden');
+      modalElement.classList.remove('fixed', 'inset-0', 'z-50', 'flex', 'items-center', 'justify-center', 'bg-black', 'bg-opacity-50');
     }
   }
 }

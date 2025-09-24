@@ -357,7 +357,7 @@ export class AdminProducts {
       <tr>
         <td><strong>#${occasion.id}</strong></td>
         <td>${occasion.name}</td>
-        <td>${occasion.type}</td>
+        <td>${occasion.name}</td>
         <td>
           <span class="badge bg-${occasion.is_active ? 'success' : 'secondary'}">
             ${occasion.is_active ? 'Activa' : 'Inactiva'}

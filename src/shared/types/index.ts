@@ -15,7 +15,7 @@
 // ENUM TYPES (Shared across frontend/backend)
 // ============================================
 
-export type OccasionType = 'general' | 'birthday' | 'anniversary' | 'wedding' | 'sympathy' | 'congratulations';
+// export type OccasionType = 'general' | 'birthday' | 'anniversary' | 'wedding' | 'sympathy' | 'congratulations'; // REMOVED: Column 'type' eliminated from occasions table
 export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 export type PaymentStatus = 'pending' | 'confirmed' | 'failed' | 'refunded';
 export type PaymentMethodType = 'bank_transfer' | 'mobile_payment' | 'cash' | 'crypto' | 'card';
@@ -84,7 +84,7 @@ export interface Occasion {
   slug: string;
   description?: string;
   color: string;
-  type?: OccasionType;
+  // type?: OccasionType; // REMOVED: Column 'type' eliminated from occasions table
   display_order: number;
   is_active: boolean;
   created_at?: string;
@@ -332,27 +332,17 @@ export interface WindowWithCart {
   };
 }
 
-export interface AdminBootstrapModal {
+// Modal interfaces for Tailwind-based components
+export interface ModalManager {
   show(): void;
   hide(): void;
+  toggle(): void;
 }
 
-export interface AdminBootstrapToast {
+export interface ToastManager {
   show(): void;
   hide(): void;
-}
-
-export interface WindowWithBootstrap {
-  bootstrap?: {
-    Modal: {
-      getInstance: (element: Element | HTMLElement | null) => { show: () => void; hide: () => void } | AdminBootstrapModal | null;
-      new (element: HTMLElement): AdminBootstrapModal;
-    };
-    Toast: {
-      new (element: HTMLElement, options?: { delay?: number }): AdminBootstrapToast;
-      getInstance(element: HTMLElement): AdminBootstrapToast | null;
-    };
-  };
+  dismiss(): void;
 }
 
 export interface CartItem {
@@ -659,24 +649,15 @@ export interface ScrollEffectsManager {
 }
 
 // ============================================
-// BOOTSTRAP INTEGRATION TYPES
+// TAILWIND COMPONENT INTEGRATION TYPES
 // ============================================
 
-export interface BootstrapModal {
-  show(): void;
-  hide(): void;
-}
-
-export interface BootstrapToast {
-  show(): void;
-  hide(): void;
-}
-
-export interface BootstrapCarousel {
-  cycle(): void;
-  pause(): void;
+export interface CarouselManager {
   next(): void;
   prev(): void;
+  goToSlide(index: number): void;
+  play(): void;
+  pause(): void;
 }
 
 // ============================================
@@ -894,7 +875,7 @@ export interface OccasionCreateRequest {
   slug: string;
   description?: string;
   color: string;
-  type?: string;
+  // type?: string; // REMOVED: Column 'type' eliminated from occasions table
   display_order?: number;
   is_active?: boolean;
 }

@@ -8,7 +8,8 @@
 
     <!-- Tailwind CSS -->
     <link href="/css/styles.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/styles.css">
@@ -1611,67 +1612,67 @@
                     <ul class="nav flex-column">
                         <li class="nav-item">
                             <a class="nav-link active" href="#dashboard" data-section="dashboard">
-                                <i class="bi bi-speedometer2"></i>
+                                <i data-lucide="gauge"></i>
                                 Dashboard
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#products" data-section="products">
-                                <i class="bi bi-box-seam"></i>
+                                <i data-lucide="package"></i>
                                 Productos
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#orders" data-section="orders">
-                                <i class="bi bi-receipt"></i>
+                                <i data-lucide="receipt"></i>
                                 Pedidos
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#users" data-section="users">
-                                <i class="bi bi-people"></i>
+                                <i data-lucide="users"></i>
                                 Usuarios
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#occasions" data-section="occasions">
-                                <i class="bi bi-calendar-event"></i>
+                                <i data-lucide="calendar"></i>
                                 Ocasiones
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#settings" data-section="settings">
-                                <i class="bi bi-gear"></i>
+                                <i data-lucide="settings"></i>
                                 Configuración
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#images" data-section="images">
-                                <i class="bi bi-images"></i>
+                                <i data-lucide="images"></i>
                                 Imágenes
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#logs" data-section="logs">
-                                <i class="bi bi-journal-text"></i>
+                                <i data-lucide="book"></i>
                                 Logs
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#schema" data-section="schema">
-                                <i class="bi bi-diagram-3"></i>
+                                <i data-lucide="network"></i>
                                 Esquema DB
                             </a>
                         </li>
                         <li class="nav-item mt-3">
                             <a class="nav-link text-warning" href="/" id="backToSite">
-                                <i class="bi bi-arrow-left"></i>
+                                <i data-lucide="arrow-left"></i>
                                 Volver al sitio
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-danger" href="#" id="logoutBtn">
-                                <i class="bi bi-box-arrow-right"></i>
+                                <i data-lucide="log-out"></i>
                                 Cerrar sesión
                             </a>
                         </li>
@@ -1691,7 +1692,7 @@
                         <div class="flex items-center">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 mr-3" id="userRole">Administrador</span>
                             <button class="md:hidden inline-flex items-center justify-center p-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500" id="sidebarToggle">
-                                <i class="bi bi-list h-5 w-5"></i>
+                                <i data-lucide="menu" class="h-5 w-5"></i>
                             </button>
                         </div>
                     </div>
@@ -1704,7 +1705,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                             <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
                                 <div class="flex items-center justify-center mb-4">
-                                    <i class="bi bi-box-seam text-4xl"></i>
+                                    <i data-lucide="package" class="text-4xl"></i>
                                 </div>
                                 <div class="text-center">
                                     <h3 class="text-2xl font-bold mb-2" id="totalProducts">0</h3>
@@ -1713,7 +1714,7 @@
                             </div>
                             <div class="bg-gradient-to-br from-green-500 to-teal-600 rounded-lg shadow-lg p-6 text-white">
                                 <div class="flex items-center justify-center mb-4">
-                                    <i class="bi bi-receipt text-4xl"></i>
+                                    <i data-lucide="receipt" class="text-4xl"></i>
                                 </div>
                                 <div class="text-center">
                                     <h3 class="text-2xl font-bold mb-2" id="totalOrders">0</h3>
@@ -2295,8 +2296,7 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap JS removed - using Tailwind CSS + vanilla JS -->
 
     <!-- Force UI visibility after proper initialization -->
     <script>
@@ -2418,6 +2418,73 @@
     <!-- Load Admin Module -->
     <script type="module" src="/dist/frontend/admin.js"></script>
 
+    <!-- Initialize Lucide Icons -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
+
+        // Simple Modal System to replace Bootstrap Modals
+        window.SimpleModal = {
+            show: function(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = 'block';
+                    modal.classList.add('show');
+                    document.body.classList.add('modal-open');
+
+                    // Add backdrop
+                    const backdrop = document.createElement('div');
+                    backdrop.className = 'modal-backdrop fade show';
+                    backdrop.id = modalId + '-backdrop';
+                    document.body.appendChild(backdrop);
+
+                    // Close on backdrop click
+                    backdrop.addEventListener('click', () => this.hide(modalId));
+                }
+            },
+
+            hide: function(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = 'none';
+                    modal.classList.remove('show');
+                    document.body.classList.remove('modal-open');
+
+                    // Remove backdrop
+                    const backdrop = document.getElementById(modalId + '-backdrop');
+                    if (backdrop) {
+                        backdrop.remove();
+                    }
+                }
+            },
+
+            getInstance: function(modalElement) {
+                return {
+                    hide: () => this.hide(modalElement.id)
+                };
+            }
+        };
+
+        // Replace bootstrap.Modal with SimpleModal
+        window.bootstrap = {
+            Modal: function(element, options) {
+                const modalId = typeof element === 'string' ? element : element.id;
+                return {
+                    show: () => SimpleModal.show(modalId),
+                    hide: () => SimpleModal.hide(modalId)
+                };
+            }
+        };
+
+        window.bootstrap.Modal.getInstance = function(element) {
+            const modalId = typeof element === 'string' ? element : element.id;
+            return SimpleModal.getInstance({id: modalId});
+        };
+    </script>
+
     <!-- Custom Admin JavaScript with Robust Fallback System -->
     <script type="module">
         // 🚨 ROBUST ADMIN PANEL INITIALIZATION SYSTEM 🚨
@@ -2478,7 +2545,7 @@
                                         </div>
 
                                         <h4 class="alert-heading mb-3">
-                                            <i class="bi bi-shield-check me-2"></i>Modo de Recuperación Activado
+                                            <i data-lucide="shield-check" class="me-2"></i>Modo de Recuperación Activado
                                         </h4>
 
                                         <p class="text-muted mb-4">

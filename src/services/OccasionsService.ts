@@ -4,7 +4,8 @@
  */
 
 import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
-import { type Occasion, type OccasionCreateRequest, type OccasionUpdateRequest, type OccasionType } from '../shared/types/index.js';
+import { type Occasion, type OccasionCreateRequest, type OccasionUpdateRequest } from '../shared/types/index.js';
+// import { type OccasionType } from '../shared/types/index.js'; // REMOVED: Column 'type' eliminated from occasions table
 
 // Using TypeSafeDatabaseService for type-safe operations
 
@@ -133,7 +134,7 @@ export class OccasionsService {
       const insertData = {
         ...occasionData,
         slug,
-        type: (occasionData.type ?? 'general') as OccasionType,
+        // type: (occasionData.type ?? 'general') as OccasionType, // REMOVED: Column 'type' eliminated from occasions table
         is_active: true,
         display_order: occasionData.display_order ?? 0
       };

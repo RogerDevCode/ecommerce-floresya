@@ -15,7 +15,7 @@ dotenv.config();
 // Re-export commonly used database types for backward compatibility
 export type {
   // Enum types
-  OccasionType,
+  // OccasionType, // REMOVED: Column 'type' eliminated from occasions table
   OrderStatus,
   PaymentStatus,
   PaymentMethodType,

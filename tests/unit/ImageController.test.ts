@@ -1,43 +1,15 @@
 /**
- * 🌸 FloresYa Image Controller Tests - Enterprise TypeScript Edition
- * Comprehensive unit tests for image management endpoints
+ * 🌸 FloresYa ImageController Unit Tests - Silicon Valley Simple Mock Edition
+ * Clean, maintainable tests with one mock per test pattern
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Request, Response } from 'express';
-import { ImageController } from '../../src/controllers/ImageController.js';
+import { validationResult } from 'express-validator';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { ImageController, imageValidators } from '../../src/controllers/ImageController.js';
 import { ImageService } from '../../src/services/ImageService.js';
-import type {
-  ProductImage,
-  ImageSize,
-  ImageUploadResult,
-  MulterFile
-} from '../../src/shared/types/index.js';
 
-// Mock express-validator with all required functions
-vi.mock('express-validator', () => {
-  const mockValidationChain = {
-    isInt: vi.fn().mockReturnThis(),
-    isIn: vi.fn().mockReturnThis(),
-    withMessage: vi.fn().mockReturnThis(),
-    optional: vi.fn().mockReturnThis()
-  };
-
-  // Default validation result (no errors)
-  const defaultValidationResult = {
-    isEmpty: vi.fn().mockReturnValue(true),
-    array: vi.fn().mockReturnValue([])
-  };
-
-  return {
-    body: vi.fn().mockReturnValue(mockValidationChain),
-    param: vi.fn().mockReturnValue(mockValidationChain),
-    query: vi.fn().mockReturnValue(mockValidationChain),
-    validationResult: vi.fn().mockReturnValue(defaultValidationResult)
-  };
-});
-
-// Mock the ImageService
+// Mock dependencies
 vi.mock('../../src/services/ImageService.js', () => ({
   ImageService: vi.fn().mockImplementation(() => ({
     validateImageFile: vi.fn(),
@@ -51,61 +23,141 @@ vi.mock('../../src/services/ImageService.js', () => ({
   }))
 }));
 
-
-// Create a mock instance for testing
-const mockImageServiceInstance = {
-  validateImageFile: vi.fn(),
-  uploadProductImage: vi.fn(),
-  deleteProductImages: vi.fn(),
-  getProductImages: vi.fn(),
-  getImagesGallery: vi.fn(),
-  uploadSiteImage: vi.fn(),
-  getCurrentSiteImages: vi.fn(),
-  getProductsWithImageCounts: vi.fn(),
-  processImage: vi.fn(),
-  uploadImagesToStorage: vi.fn(),
-  saveImageRecords: vi.fn(),
-  resizeImage: vi.fn(),
-  generateFileName: vi.fn(),
-  generateFileHash: vi.fn(),
-  IMAGE_SIZES: {
-    large: { width: 1200, height: 1200 },
-    medium: { width: 600, height: 600 },
-    small: { width: 300, height: 300 },
-    thumb: { width: 150, height: 150 }
-  }
-} as any;
+// Mock express-validator
+vi.mock('express-validator', () => ({
+  body: vi.fn(() => ({
+    isInt: vi.fn().mockReturnThis(),
+    isIn: vi.fn().mockReturnThis(),
+    optional: vi.fn().mockReturnThis(),
+    withMessage: vi.fn().mockReturnThis()
+  })),
+  param: vi.fn(() => ({
+    isInt: vi.fn().mockReturnThis(),
+    withMessage: vi.fn().mockReturnThis()
+  })),
+  query: vi.fn(() => ({
+    optional: vi.fn().mockReturnThis(),
+    isInt: vi.fn().mockReturnThis(),
+    isIn: vi.fn().mockReturnThis(),
+    withMessage: vi.fn().mockReturnThis()
+  })),
+  validationResult: vi.fn()
+}));
 
 describe('ImageController', () => {
-  let imageController: ImageController;
-  let mockImageService: any;
+  let controller: ImageController;
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
-  let jsonMock: any;
-  let statusMock: any;
+  let jsonSpy: any;
+  let statusSpy: any;
+  let mockImageService: any;
 
-  beforeEach(async () => {
-    // Create a new instance of ImageController with mocked service
-    imageController = new ImageController(() => mockImageServiceInstance);
-    mockImageService = mockImageServiceInstance;
+  // Test data factories
+  const createTestProductImage = (overrides = {}) => ({
+    id: 1,
+    product_id: 1,
+    size: 'medium' as const,
+    url: 'https://example.com/image.webp',
+    file_hash: 'abc123',
+    is_primary: true,
+    image_index: 0,
+    created_at: '2024-01-01T00:00:00Z',
+    ...overrides
+  });
 
-    // Mock response methods
-    jsonMock = vi.fn();
-    statusMock = vi.fn().mockReturnValue({ json: jsonMock });
+  const createTestImageUploadResult = (overrides = {}) => ({
+    success: true,
+    images: [
+      { size: 'thumb' as const, url: 'https://example.com/thumb.webp', fileHash: 'hash1' },
+      { size: 'small' as const, url: 'https://example.com/small.webp', fileHash: 'hash2' },
+      { size: 'medium' as const, url: 'https://example.com/medium.webp', fileHash: 'hash3' },
+      { size: 'large' as const, url: 'https://example.com/large.webp', fileHash: 'hash4' }
+    ],
+    primaryImage: createTestProductImage(),
+    message: 'Successfully uploaded 4 image variations',
+    ...overrides
+  });
+
+  const createTestSiteImageResult = (overrides = {}) => ({
+    success: true,
+    url: 'https://example.com/site-hero.webp',
+    type: 'hero' as const,
+    message: 'Successfully uploaded hero image',
+    ...overrides
+  });
+
+  const createTestGalleryResult = (overrides = {}) => ({
+    images: [createTestProductImage()],
+    pagination: {
+      page: 1,
+      total: 1,
+      pages: 1
+    },
+    ...overrides
+  });
+
+  const createTestProductsWithCounts = (overrides = {}) => ({
+    products: [
+      {
+        id: 1,
+        name: 'Rose Bouquet',
+        price_usd: 75.00,
+        image_count: 4
+      }
+    ],
+    ...overrides
+  });
+
+  const createValidationResult = (isEmpty = true, errors: any[] = []) => ({
+    isEmpty: () => isEmpty,
+    array: () => errors,
+    formatter: vi.fn(),
+    errors,
+    mapped: vi.fn(),
+    formatWith: vi.fn(),
+    throw: vi.fn()
+  } as any);
+
+  const createMockFile = (overrides = {}) => ({
+    buffer: Buffer.from('fake image data'),
+    originalname: 'test-image.jpg',
+    mimetype: 'image/jpeg',
+    size: 1024,
+    fieldname: 'file',
+    encoding: '7bit',
+    stream: null,
+    destination: '',
+    filename: 'test-image.jpg',
+    path: '',
+    ...overrides
+  } as any);
+
+  beforeEach(() => {
+    // Create new controller instance with mocked service
+    const MockImageService = vi.mocked(ImageService);
+    mockImageService = {
+      validateImageFile: vi.fn(),
+      uploadProductImage: vi.fn(),
+      deleteProductImages: vi.fn(),
+      getProductImages: vi.fn(),
+      getImagesGallery: vi.fn(),
+      uploadSiteImage: vi.fn(),
+      getCurrentSiteImages: vi.fn(),
+      getProductsWithImageCounts: vi.fn()
+    };
+    MockImageService.mockImplementation(() => mockImageService);
+
+    controller = new ImageController();
+
+    jsonSpy = vi.fn().mockReturnThis();
+    statusSpy = vi.fn().mockReturnThis();
+
     mockResponse = {
-      status: statusMock,
-      json: jsonMock
+      json: jsonSpy,
+      status: statusSpy
     };
 
-    // Clear all mocks before each test
     vi.clearAllMocks();
-
-    // Reset the validationResult mock to default (no errors)
-    const { validationResult } = await import('express-validator');
-    (validationResult as any).mockReturnValue({
-      isEmpty: vi.fn().mockReturnValue(true),
-      array: vi.fn().mockReturnValue([])
-    });
   });
 
   afterEach(() => {
@@ -113,275 +165,214 @@ describe('ImageController', () => {
   });
 
   describe('uploadProductImage', () => {
-
     it('should upload product image successfully', async () => {
-      const mockFile = {
-        fieldname: 'image',
-        originalname: 'test-image.jpg',
-        encoding: '7bit',
-        mimetype: 'image/jpeg',
-        buffer: Buffer.from('fake-image-data'),
-        size: 1024,
-        stream: null,
-        destination: '',
-        filename: 'test-image.jpg',
-        path: '/tmp/test-image.jpg'
-      } as any;
-
-      const mockUploadResult: ImageUploadResult = {
-        success: true,
-        images: [
-          {
-            size: 'thumb' as ImageSize,
-            url: '/images/products/1/thumb-test-image.jpg',
-            fileHash: 'abc123'
-          },
-          {
-            size: 'small' as ImageSize,
-            url: '/images/products/1/small-test-image.jpg',
-            fileHash: 'def456'
-          }
-        ],
-        primaryImage: {
-          id: 1,
-          product_id: 1,
-          url: '/images/products/1/thumb-test-image.jpg',
-          alt_text: 'Test image',
-          size: 'thumb' as ImageSize,
-          is_primary: true,
-          display_order: 0,
-          created_at: '2024-01-01T00:00:00Z'
-        },
-        message: 'Image uploaded successfully'
-      };
-
+      // Arrange
+      const testUploadResult = createTestImageUploadResult();
       mockImageService.validateImageFile.mockReturnValue({ valid: true });
-      mockImageService.uploadProductImage.mockResolvedValue(mockUploadResult);
+      mockImageService.uploadProductImage.mockResolvedValue(testUploadResult);
 
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      const mockFile = createMockFile();
       mockRequest = {
         params: { productId: '1' },
-        body: {
-          imageIndex: '0',
-          isPrimary: 'true'
-        },
+        body: { imageIndex: '0', isPrimary: 'true' },
         file: mockFile
       };
 
-      await imageController.uploadProductImage(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.uploadProductImage(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(201);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(mockImageService.validateImageFile).toHaveBeenCalledWith(mockFile);
+      expect(mockImageService.uploadProductImage).toHaveBeenCalledWith({
+        productId: 1,
+        imageIndex: 0,
+        file: mockFile,
+        isPrimary: true
+      });
+      expect(statusSpy).toHaveBeenCalledWith(201);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
         data: {
-          images: mockUploadResult.images,
-          primaryImage: mockUploadResult.primaryImage
+          images: testUploadResult.images,
+          primaryImage: testUploadResult.primaryImage
         },
-        message: mockUploadResult.message
+        message: testUploadResult.message
       });
     });
 
     it('should handle validation errors', async () => {
-        // Mock validationResult to return errors
-        const mockErrors = [{ param: 'productId', msg: 'Product ID must be a positive integer' }];
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult(false, [{ field: 'productId', message: 'Invalid product ID' }]));
 
-        // Update the mock to return validation errors
-        const { validationResult } = await import('express-validator');
-        (validationResult as any).mockReturnValue({
-          isEmpty: vi.fn().mockReturnValue(false),
-          array: vi.fn().mockReturnValue(mockErrors)
-        });
-
-        mockRequest = {
-          params: { productId: 'invalid' },
-          body: {
-            imageIndex: 'invalid',
-            isPrimary: 'invalid'
-          },
-          file: {
-            fieldname: 'image',
-            originalname: 'test.jpg',
-            encoding: '7bit',
-            mimetype: 'image/jpeg',
-            buffer: Buffer.from('fake'),
-            size: 1024,
-            stream: null,
-            destination: '',
-            filename: 'test.jpg',
-            path: '/tmp/test.jpg'
-          } as any // File provided to avoid the "No image file provided" error
-        };
-
-        await imageController.uploadProductImage(mockRequest as Request, mockResponse as Response);
-
-        expect(statusMock).toHaveBeenCalledWith(400);
-        expect(jsonMock).toHaveBeenCalledWith({
-          success: false,
-          message: 'Validation failed',
-          errors: mockErrors
-        });
-      });
-
-    it('should return 400 when no file is provided', async () => {
       mockRequest = {
-        params: { productId: '1' },
-        body: {
-          imageIndex: '0',
-          isPrimary: 'false'
-        }
+        params: { productId: 'invalid' },
+        body: {}
       };
 
-      await imageController.uploadProductImage(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.uploadProductImage(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
+        success: false,
+        message: 'Validation failed',
+        errors: [{ field: 'productId', message: 'Invalid product ID' }]
+      });
+    });
+
+    it('should handle missing file', async () => {
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      mockRequest = {
+        params: { productId: '1' },
+        body: { imageIndex: '0' }
+        // No file provided
+      };
+
+      // Act
+      await controller.uploadProductImage(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'No image file provided'
       });
     });
 
     it('should handle invalid image file', async () => {
-      const mockFile = {
-        fieldname: 'image',
-        originalname: 'test-image.txt',
-        encoding: '7bit',
-        mimetype: 'text/plain',
-        buffer: Buffer.from('fake-text-data'),
-        size: 1024,
-        stream: null,
-        destination: '',
-        filename: 'test-image.txt',
-        path: '/tmp/test-image.txt'
-      } as any;
+      // Arrange
       mockImageService.validateImageFile.mockReturnValue({
         valid: false,
-        error: 'Only JPEG, PNG, and WebP images are allowed'
+        error: 'Invalid file type'
       });
 
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      const mockFile = createMockFile({ mimetype: 'image/gif' });
       mockRequest = {
         params: { productId: '1' },
-        body: {
-          imageIndex: '0',
-          isPrimary: 'false'
-        },
+        body: { imageIndex: '0' },
         file: mockFile
       };
 
-      await imageController.uploadProductImage(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.uploadProductImage(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(mockImageService.validateImageFile).toHaveBeenCalledWith(mockFile);
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
-        message: 'Only JPEG, PNG, and WebP images are allowed'
+        message: 'Invalid file type'
       });
     });
 
     it('should handle service errors', async () => {
-      const mockFile = {
-        fieldname: 'image',
-        originalname: 'test-image.jpg',
-        encoding: '7bit',
-        mimetype: 'image/jpeg',
-        buffer: Buffer.from('fake-image-data'),
-        size: 1024,
-        stream: null,
-        destination: '',
-        filename: 'test-image.jpg',
-        path: '/tmp/test-image.jpg'
-      } as any;
-
+      // Arrange
       mockImageService.validateImageFile.mockReturnValue({ valid: true });
-      mockImageService.uploadProductImage.mockRejectedValue(new Error('Upload failed'));
+      mockImageService.uploadProductImage.mockResolvedValue({
+        success: false,
+        images: [],
+        message: 'Database connection failed'
+      });
 
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      const mockFile = createMockFile();
       mockRequest = {
         params: { productId: '1' },
-        body: {
-          imageIndex: '0',
-          isPrimary: 'false'
-        },
-        file: mockFile as any
+        body: { imageIndex: '0' },
+        file: mockFile
       };
 
-      await imageController.uploadProductImage(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.uploadProductImage(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(500);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
-        message: 'Failed to upload image',
-        error: 'Upload failed'
+        message: 'Database connection failed'
       });
     });
   });
 
   describe('deleteProductImages', () => {
     it('should delete product images successfully', async () => {
+      // Arrange
       mockImageService.deleteProductImages.mockResolvedValue(true);
+
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
 
       mockRequest = {
         params: { productId: '1' }
       };
 
-      await imageController.deleteProductImages(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.deleteProductImages(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(200);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(mockImageService.deleteProductImages).toHaveBeenCalledWith(1);
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
         message: 'Successfully deleted all images for product 1'
       });
     });
 
     it('should handle validation errors', async () => {
-        // Mock validationResult to return errors
-        const mockErrors = [{ param: 'productId', msg: 'Product ID must be a positive integer' }];
-
-        // Update the global mock to return validation errors
-        const { validationResult } = await import('express-validator');
-        (validationResult as any).mockReturnValue({
-          isEmpty: vi.fn().mockReturnValue(false),
-          array: vi.fn().mockReturnValue(mockErrors)
-        });
-
-        mockRequest = {
-          params: { productId: 'invalid' }
-        };
-
-        await imageController.deleteProductImages(mockRequest as Request, mockResponse as Response);
-
-        expect(statusMock).toHaveBeenCalledWith(400);
-        expect(jsonMock).toHaveBeenCalledWith({
-          success: false,
-          message: 'Validation failed',
-          errors: mockErrors
-        });
-      });
-
-    it('should handle service errors', async () => {
-      mockImageService.deleteProductImages.mockRejectedValue(new Error('Delete failed'));
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult(false, [{ field: 'productId', message: 'Invalid product ID' }]));
 
       mockRequest = {
-        params: { productId: '1' }
+        params: { productId: 'invalid' }
       };
 
-      await imageController.deleteProductImages(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.deleteProductImages(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
-        message: 'Failed to delete images',
-        error: 'Delete failed'
+        message: 'Validation failed',
+        errors: [{ field: 'productId', message: 'Invalid product ID' }]
       });
     });
 
-    it('should handle service returning false', async () => {
+    it('should handle service errors', async () => {
+      // Arrange
       mockImageService.deleteProductImages.mockResolvedValue(false);
+
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
 
       mockRequest = {
         params: { productId: '1' }
       };
 
-      await imageController.deleteProductImages(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.deleteProductImages(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(500);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Failed to delete product images'
       });
@@ -390,83 +381,72 @@ describe('ImageController', () => {
 
   describe('getProductImages', () => {
     it('should return product images successfully', async () => {
-      const mockImages: ProductImage[] = [
-        {
-          id: 1,
-          product_id: 1,
-          url: '/images/products/1/thumb-image.jpg',
-          alt_text: 'Product image 1',
-          size: 'thumb' as ImageSize,
-          is_primary: true,
-          display_order: 0,
-          created_at: '2024-01-01T00:00:00Z'
-        },
-        {
-          id: 2,
-          product_id: 1,
-          url: '/images/products/1/small-image.jpg',
-          alt_text: 'Product image 2',
-          size: 'small' as ImageSize,
-          is_primary: false,
-          display_order: 1,
-          created_at: '2024-01-01T00:00:00Z'
-        }
-      ];
+      // Arrange
+      const testImages = [createTestProductImage()];
+      mockImageService.getProductImages.mockResolvedValue(testImages);
 
-      mockImageService.getProductImages.mockResolvedValue(mockImages);
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
 
       mockRequest = {
         params: { productId: '1' }
       };
 
-      await imageController.getProductImages(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.getProductImages(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(200);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(mockImageService.getProductImages).toHaveBeenCalledWith(1);
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
         data: {
-          images: mockImages
+          images: testImages
         },
         message: 'Product images retrieved successfully'
       });
     });
 
     it('should handle validation errors', async () => {
-        // Mock validationResult to return errors
-        const mockErrors = [{ param: 'productId', msg: 'Product ID must be a positive integer' }];
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult(false, [{ field: 'productId', message: 'Invalid product ID' }]));
 
-        // Update the global mock to return validation errors
-        const { validationResult } = await import('express-validator');
-        (validationResult as any).mockReturnValue({
-          isEmpty: vi.fn().mockReturnValue(false),
-          array: vi.fn().mockReturnValue(mockErrors)
-        });
+      mockRequest = {
+        params: { productId: 'invalid' }
+      };
 
-        mockRequest = {
-          params: { productId: 'invalid' }
-        };
+      // Act
+      await controller.getProductImages(mockRequest as Request, mockResponse as Response);
 
-        await imageController.getProductImages(mockRequest as Request, mockResponse as Response);
-
-        expect(statusMock).toHaveBeenCalledWith(400);
-        expect(jsonMock).toHaveBeenCalledWith({
-          success: false,
-          message: 'Validation errors',
-          errors: mockErrors
-        });
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
+        success: false,
+        message: 'Validation errors',
+        errors: [{ field: 'productId', message: 'Invalid product ID' }]
       });
+    });
 
     it('should handle service errors', async () => {
-      mockImageService.getProductImages.mockRejectedValue(new Error('Database error'));
+      // Arrange
+      mockImageService.getProductImages.mockRejectedValue(new Error('Database connection failed'));
+
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
 
       mockRequest = {
         params: { productId: '1' }
       };
 
-      await imageController.getProductImages(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.getProductImages(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(500);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Failed to get product images'
       });
@@ -475,308 +455,257 @@ describe('ImageController', () => {
 
   describe('getImagesGallery', () => {
     it('should return images gallery successfully', async () => {
-      const mockGalleryResult = {
-        images: [
-          {
-            id: 1,
-            product_id: 1,
-            product_name: 'Rosas Rojas',
-            size: 'thumb' as ImageSize,
-            url: '/images/products/1/thumb-image.jpg',
-            file_hash: 'abc123',
-            is_primary: true,
-            created_at: '2024-01-01T00:00:00Z'
-          }
-        ],
-        pagination: {
-          page: 1,
-          total: 10,
-          pages: 1
-        }
-      };
-
-      mockImageService.getImagesGallery.mockResolvedValue(mockGalleryResult);
+      // Arrange
+      const testGalleryResult = createTestGalleryResult();
+      mockImageService.getImagesGallery.mockResolvedValue(testGalleryResult);
 
       mockRequest = {
-        query: {
-          filter: 'all',
-          page: '1',
-          limit: '20'
-        }
+        query: { filter: 'all', page: '1', limit: '20' }
       };
 
-      await imageController.getImagesGallery(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.getImagesGallery(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(200);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(mockImageService.getImagesGallery).toHaveBeenCalledWith('all', 1, 20);
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
-        data: mockGalleryResult,
+        data: testGalleryResult,
         message: 'Images gallery retrieved successfully'
       });
     });
 
     it('should handle service errors', async () => {
-      mockImageService.getImagesGallery.mockRejectedValue(new Error('Database error'));
+      // Arrange
+      mockImageService.getImagesGallery.mockRejectedValue(new Error('Database connection failed'));
 
       mockRequest = {
-        query: {
-          filter: 'all',
-          page: '1',
-          limit: '20'
-        }
+        query: { filter: 'all', page: '1', limit: '20' }
       };
 
-      await imageController.getImagesGallery(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.getImagesGallery(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(500);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Failed to retrieve images gallery',
-        error: 'Database error'
+        error: 'Database connection failed'
       });
     });
   });
 
   describe('uploadSiteImage', () => {
     it('should upload site image successfully', async () => {
-      const mockFile = {
-        fieldname: 'image',
-        originalname: 'hero-image.jpg',
-        encoding: '7bit',
-        mimetype: 'image/jpeg',
-        buffer: Buffer.from('fake-image-data'),
-        size: 1024,
-        stream: null,
-        destination: '',
-        filename: 'hero-image.jpg',
-        path: '/tmp/hero-image.jpg'
-      } as any;
-
-      const mockUploadResult = {
-        success: true,
-        url: '/images/site/hero-image.jpg',
-        type: 'hero' as const,
-        message: 'Site image uploaded successfully'
-      };
-
+      // Arrange
+      const testSiteImageResult = createTestSiteImageResult();
       mockImageService.validateImageFile.mockReturnValue({ valid: true });
-      mockImageService.uploadSiteImage.mockResolvedValue(mockUploadResult);
+      mockImageService.uploadSiteImage.mockResolvedValue(testSiteImageResult);
 
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      const mockFile = createMockFile();
       mockRequest = {
-        body: {
-          type: 'hero'
-        },
+        body: { type: 'hero' },
         file: mockFile
       };
 
-      await imageController.uploadSiteImage(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.uploadSiteImage(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(201);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(mockImageService.validateImageFile).toHaveBeenCalledWith(mockFile);
+      expect(mockImageService.uploadSiteImage).toHaveBeenCalledWith(mockFile, 'hero');
+      expect(statusSpy).toHaveBeenCalledWith(201);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
         data: {
-          url: mockUploadResult.url,
-          type: mockUploadResult.type
+          url: testSiteImageResult.url,
+          type: testSiteImageResult.type
         },
         message: 'Successfully uploaded hero image'
       });
     });
 
     it('should handle validation errors', async () => {
-        // Mock validationResult to return errors
-        const mockErrors = [{ param: 'type', msg: 'Type must be hero or logo' }];
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult(false, [{ field: 'type', message: 'Invalid type' }]));
 
-        // Update the global mock to return validation errors
-        const { validationResult } = await import('express-validator');
-        (validationResult as any).mockReturnValue({
-          isEmpty: vi.fn().mockReturnValue(false),
-          array: vi.fn().mockReturnValue(mockErrors)
-        });
-
-        mockRequest = {
-          body: {
-            type: 'invalid-type'
-          }
-        };
-
-        await imageController.uploadSiteImage(mockRequest as Request, mockResponse as Response);
-
-        expect(statusMock).toHaveBeenCalledWith(400);
-        expect(jsonMock).toHaveBeenCalledWith({
-          success: false,
-          message: 'Validation failed',
-          errors: mockErrors
-        });
-      });
-
-    it('should return 400 when no file is provided', async () => {
       mockRequest = {
-        body: {
-          type: 'hero'
-        }
+        body: { type: 'invalid' }
       };
 
-      await imageController.uploadSiteImage(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.uploadSiteImage(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
+        success: false,
+        message: 'Validation failed',
+        errors: [{ field: 'type', message: 'Invalid type' }]
+      });
+    });
+
+    it('should handle missing file', async () => {
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      mockRequest = {
+        body: { type: 'hero' }
+        // No file provided
+      };
+
+      // Act
+      await controller.uploadSiteImage(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'No image file provided'
-      });
-    });
-
-    it('should handle invalid image type', async () => {
-      const mockFile = {
-        fieldname: 'image',
-        originalname: 'hero-image.jpg',
-        encoding: '7bit',
-        mimetype: 'image/jpeg',
-        buffer: Buffer.from('fake-image-data'),
-        size: 1024,
-        stream: null,
-        destination: '',
-        filename: 'hero-image.jpg',
-        path: '/tmp/hero-image.jpg'
-      } as any;
-
-      mockRequest = {
-        body: {
-          type: 'invalid'
-        },
-        file: mockFile
-      };
-
-      await imageController.uploadSiteImage(mockRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({
-        success: false,
-        message: 'Invalid image type. Must be "hero" or "logo"'
-      });
-    });
-
-    it('should handle service errors', async () => {
-      const mockFile = {
-        fieldname: 'image',
-        originalname: 'hero-image.jpg',
-        encoding: '7bit',
-        mimetype: 'image/jpeg',
-        buffer: Buffer.from('fake-image-data'),
-        size: 1024
-      } as any;
-
-      mockImageService.validateImageFile.mockReturnValue({ valid: true });
-      mockImageService.uploadSiteImage.mockRejectedValue(new Error('Upload failed'));
-
-      mockRequest = {
-        body: {
-          type: 'hero'
-        },
-        file: mockFile
-      };
-
-      await imageController.uploadSiteImage(mockRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({
-        success: false,
-        message: 'Failed to upload site image',
-        error: 'Upload failed'
       });
     });
   });
 
   describe('getCurrentSiteImages', () => {
     it('should return current site images successfully', () => {
-      const mockSiteImages = {
-        hero: '/images/site/hero-image.jpg',
-        logo: '/images/site/logo-image.png'
-      };
+      // Arrange
+      mockImageService.getCurrentSiteImages.mockReturnValue({
+        hero: '/images/hero-flowers.webp',
+        logo: '/images/logoFloresYa.jpeg'
+      });
 
-      mockImageService.getCurrentSiteImages.mockReturnValue(mockSiteImages);
+      // Act
+      controller.getCurrentSiteImages(mockRequest as Request, mockResponse as Response);
 
-      imageController.getCurrentSiteImages(mockRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(200);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(mockImageService.getCurrentSiteImages).toHaveBeenCalled();
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
-        data: mockSiteImages,
+        data: {
+          hero: '/images/hero-flowers.webp',
+          logo: '/images/logoFloresYa.jpeg'
+        },
         message: 'Current site images retrieved successfully'
       });
     });
 
     it('should handle service errors', () => {
+      // Arrange
       mockImageService.getCurrentSiteImages.mockImplementation(() => {
-        throw new Error('Service error');
+        throw new Error('Database connection failed');
       });
 
-      imageController.getCurrentSiteImages(mockRequest as Request, mockResponse as Response);
+      // Act
+      controller.getCurrentSiteImages(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(500);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Failed to retrieve current site images',
-        error: 'Service error'
+        error: 'Database connection failed'
       });
     });
   });
 
   describe('getProductsWithImageCounts', () => {
     it('should return products with image counts successfully', async () => {
-      const mockProductsWithCounts = {
-        products: [
-          {
-            id: 1,
-            name: 'Rosas Rojas',
-            price_usd: 25.99,
-            image_count: 3
-          },
-          {
-            id: 2,
-            name: 'Tulipanes Blancos',
-            price_usd: 19.99,
-            image_count: 2
-          }
-        ]
-      };
-
-      mockImageService.getProductsWithImageCounts.mockResolvedValue(mockProductsWithCounts);
+      // Arrange
+      const testProductsWithCounts = createTestProductsWithCounts();
+      mockImageService.getProductsWithImageCounts.mockResolvedValue(testProductsWithCounts);
 
       mockRequest = {
-        query: {
-          sort_by: 'image_count',
-          sort_direction: 'asc'
-        }
+        query: { sort_by: 'image_count', sort_direction: 'asc' }
       };
 
-      await imageController.getProductsWithImageCounts(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.getProductsWithImageCounts(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(200);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(mockImageService.getProductsWithImageCounts).toHaveBeenCalledWith('image_count', 'asc');
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
-        data: mockProductsWithCounts,
+        data: testProductsWithCounts,
         message: 'Products with image counts retrieved successfully'
       });
     });
 
     it('should handle service errors', async () => {
-      mockImageService.getProductsWithImageCounts.mockRejectedValue(new Error('Database error'));
+      // Arrange
+      mockImageService.getProductsWithImageCounts.mockRejectedValue(new Error('Database connection failed'));
 
       mockRequest = {
-        query: {
-          sort_by: 'name',
-          sort_direction: 'desc'
-        }
+        query: { sort_by: 'name', sort_direction: 'desc' }
       };
 
-      await imageController.getProductsWithImageCounts(mockRequest as Request, mockResponse as Response);
+      // Act
+      await controller.getProductsWithImageCounts(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(500);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Failed to retrieve products with image counts',
-        error: 'Database error'
+        error: 'Database connection failed'
       });
+    });
+  });
+
+  describe('imageValidators', () => {
+    it('should validate uploadProductImage correctly', () => {
+      // Arrange
+      const validators = imageValidators.uploadProductImage;
+
+      // Act & Assert
+      expect(validators).toBeDefined();
+      expect(validators.length).toBeGreaterThan(0);
+    });
+
+    it('should validate deleteProductImages correctly', () => {
+      // Arrange
+      const validators = imageValidators.deleteProductImages;
+
+      // Act & Assert
+      expect(validators).toBeDefined();
+      expect(validators.length).toBeGreaterThan(0);
+    });
+
+    it('should validate getProductImages correctly', () => {
+      // Arrange
+      const validators = imageValidators.getProductImages;
+
+      // Act & Assert
+      expect(validators).toBeDefined();
+      expect(validators.length).toBeGreaterThan(0);
+    });
+
+    it('should validate getImagesGallery correctly', () => {
+      // Arrange
+      const validators = imageValidators.getImagesGallery;
+
+      // Act & Assert
+      expect(validators).toBeDefined();
+      expect(validators.length).toBeGreaterThan(0);
+    });
+
+    it('should validate uploadSiteImage correctly', () => {
+      // Arrange
+      const validators = imageValidators.uploadSiteImage;
+
+      // Act & Assert
+      expect(validators).toBeDefined();
+      expect(validators.length).toBeGreaterThan(0);
     });
   });
 });

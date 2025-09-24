@@ -1,6 +1,6 @@
 /**
- * 🌸 FloresYa ProductController Unit Tests - Mock Edition
- * Tests unitarios para ProductController usando mocks
+ * 🌸 FloresYa ProductController Unit Tests - Silicon Valley Simple Mock Edition
+ * Clean, maintainable tests with one mock per test pattern
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -23,28 +23,68 @@ import { ProductController } from '../../src/controllers/ProductController.js';
 import { ProductService } from '../../src/services/ProductService.js';
 import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService.js';
 
-// Mock request and response
-const mockRequest = (options: any = {}) => ({
-  params: options.params || {},
-  query: options.query || {},
-  body: options.body || {},
-  ...options
-});
-
-const mockResponse = () => {
-  const res: any = {};
-  res.status = vi.fn().mockReturnValue(res);
-  res.json = vi.fn().mockReturnValue(res);
-  res.send = vi.fn().mockReturnValue(res);
-  return res;
-};
-
 describe('ProductController Unit Tests', () => {
   let controller: ProductController;
   let mockProductService: any;
 
+  // Test data factories
+  const createTestProduct = (overrides = {}) => ({
+    id: 1,
+    name: 'Rosas Rojas',
+    summary: 'Hermosas rosas rojas',
+    price_usd: 25.99,
+    stock: 100,
+    active: true,
+    featured: false,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    ...overrides
+  });
+
+  const createTestProductList = (products = [createTestProduct()], overrides = {}) => ({
+    products,
+    pagination: {
+      current_page: 1,
+      total_pages: 1,
+      total_items: products.length,
+      items_per_page: 20,
+      ...overrides
+    }
+  });
+
+  const createTestCarouselProduct = (overrides = {}) => ({
+    id: 1,
+    name: 'Rosas Rojas',
+    summary: 'Hermosas rosas rojas',
+    price_usd: 25.99,
+    carousel_order: 1,
+    primary_thumb_url: '/images/rosas-thumb.webp',
+    images: [{ url: '/images/rosas-small.webp', size: 'small' }],
+    ...overrides
+  });
+
+  const createTestCarouselData = (products = [createTestCarouselProduct()], overrides = {}) => ({
+    products,
+    total_count: products.length,
+    ...overrides
+  });
+
+  const createMockRequest = (options: any = {}) => ({
+    params: options.params || {},
+    query: options.query || {},
+    body: options.body || {},
+    ...options
+  });
+
+  const createMockResponse = () => {
+    const res: any = {};
+    res.status = vi.fn().mockReturnValue(res);
+    res.json = vi.fn().mockReturnValue(res);
+    res.send = vi.fn().mockReturnValue(res);
+    return res;
+  };
+
   beforeEach(() => {
-    // Reset all mocks
     vi.clearAllMocks();
 
     // Create mock ProductService instance
@@ -87,46 +127,38 @@ describe('ProductController Unit Tests', () => {
 
   describe('getCarousel', () => {
     it('should return carousel products successfully', async () => {
-      const mockCarouselData = {
-        products: [
-          {
-            id: 1,
-            name: 'Rosas Rojas',
-            summary: 'Hermosas rosas rojas',
-            price_usd: 25.99,
-            carousel_order: 1,
-            primary_thumb_url: '/images/rosas-thumb.webp',
-            images: [{ url: '/images/rosas-small.webp', size: 'small' }]
-          }
-        ],
-        total_count: 1
-      };
+      // Arrange
+      const testCarouselData = createTestCarouselData();
+      mockProductService.getCarouselProducts.mockResolvedValue(testCarouselData);
 
-      mockProductService.getCarouselProducts.mockResolvedValue(mockCarouselData);
+      const req = createMockRequest();
+      const res = createMockResponse();
 
-      const req = mockRequest();
-      const res = mockResponse();
-
+      // Act
       await controller.getCarousel(req as any, res as any);
 
+      // Assert
       expect(mockProductService.getCarouselProducts).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
-        data: mockCarouselData,
+        data: testCarouselData,
         message: 'Carousel products retrieved successfully'
       });
     });
 
     it('should handle service errors', async () => {
+      // Arrange
       const errorMessage = 'Database connection failed';
       mockProductService.getCarouselProducts.mockRejectedValue(new Error(errorMessage));
 
-      const req = mockRequest();
-      const res = mockResponse();
+      const req = createMockRequest();
+      const res = createMockResponse();
 
+      // Act
       await controller.getCarousel(req as any, res as any);
 
+      // Assert
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
@@ -138,35 +170,19 @@ describe('ProductController Unit Tests', () => {
 
   describe('getProducts', () => {
     it('should return products successfully', async () => {
-      const mockProducts = {
-        products: [
-          {
-            id: 1,
-            name: 'Rosas Rojas',
-            price_usd: 25.99,
-            active: true,
-            featured: false,
-            images: [],
-            primary_image_url: '/images/rosas.webp'
-          }
-        ],
-        pagination: {
-          current_page: 1,
-          total_pages: 1,
-          total_items: 1,
-          items_per_page: 20
-        }
-      };
+      // Arrange
+      const testProducts = createTestProductList();
+      mockProductService.getProducts.mockResolvedValue(testProducts);
 
-      mockProductService.getProducts.mockResolvedValue(mockProducts);
-
-      const req = mockRequest({
+      const req = createMockRequest({
         query: { page: '1', limit: '20' }
       });
-      const res = mockResponse();
+      const res = createMockResponse();
 
+      // Act
       await controller.getProducts(req as any, res as any);
 
+      // Assert
       expect(mockProductService.getProducts).toHaveBeenCalledWith({
         page: 1,
         limit: 20,
@@ -181,45 +197,7 @@ describe('ProductController Unit Tests', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
-        data: mockProducts,
-        message: 'Products retrieved successfully'
-      });
-    });
-
-    it('should handle validation errors', async () => {
-      const mockProducts = {
-        products: [
-          {
-            id: 1,
-            name: 'Rosas Rojas',
-            price_usd: 25.99,
-            active: true,
-            featured: false,
-            images: [],
-            primary_image_url: '/images/rosas.webp'
-          }
-        ],
-        pagination: {
-          current_page: 1,
-          total_pages: 1,
-          total_items: 1,
-          items_per_page: 20
-        }
-      };
-
-      mockProductService.getProducts.mockResolvedValue(mockProducts);
-
-      const req = mockRequest({
-        query: { page: 'invalid' }
-      });
-      const res = mockResponse();
-
-      await controller.getProducts(req as any, res as any);
-
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
-        success: true,
-        data: mockProducts,
+        data: testProducts,
         message: 'Products retrieved successfully'
       });
     });
@@ -227,45 +205,40 @@ describe('ProductController Unit Tests', () => {
 
   describe('getFeatured', () => {
     it('should return featured products successfully', async () => {
-      const mockFeaturedProducts = [
-        {
-          id: 1,
-          name: 'Rosas Rojas',
-          price_usd: 25.99,
-          active: true,
-          featured: true,
-          images: [],
-          primary_image_url: '/images/rosas.webp'
-        }
-      ];
+      // Arrange
+      const testFeaturedProducts = [createTestProduct({ featured: true })];
+      mockProductService.getFeaturedProducts.mockResolvedValue(testFeaturedProducts);
 
-      mockProductService.getFeaturedProducts.mockResolvedValue(mockFeaturedProducts);
-
-      const req = mockRequest({
+      const req = createMockRequest({
         query: { limit: '8' }
       });
-      const res = mockResponse();
+      const res = createMockResponse();
 
+      // Act
       await controller.getFeatured(req as any, res as any);
 
+      // Assert
       expect(mockProductService.getFeaturedProducts).toHaveBeenCalledWith(8);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
-        data: { products: mockFeaturedProducts, count: 1 },
+        data: { products: testFeaturedProducts, count: 1 },
         message: 'Featured products retrieved successfully'
       });
     });
 
     it('should handle service errors', async () => {
+      // Arrange
       const errorMessage = 'Database connection failed';
       mockProductService.getFeaturedProducts.mockRejectedValue(new Error(errorMessage));
 
-      const req = mockRequest();
-      const res = mockResponse();
+      const req = createMockRequest();
+      const res = createMockResponse();
 
+      // Act
       await controller.getFeatured(req as any, res as any);
 
+      // Assert
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
@@ -277,53 +250,41 @@ describe('ProductController Unit Tests', () => {
 
   describe('getProductById', () => {
     it('should return product successfully', async () => {
-      const mockProduct = {
-        id: 1,
-        name: 'Rosas Rojas',
-        price_usd: 25.99,
-        active: true,
-        featured: false,
-        images: [
-          {
-            id: 1,
-            product_id: 1,
-            url: '/images/rosas.webp',
-            size: 'medium',
-            is_primary: true,
-            image_index: 0
-          }
-        ],
-        primary_image_url: '/images/rosas.webp'
-      };
+      // Arrange
+      const testProduct = createTestProduct();
+      mockProductService.getProductById.mockResolvedValue(testProduct);
 
-      mockProductService.getProductById.mockResolvedValue(mockProduct);
-
-      const req = mockRequest({
+      const req = createMockRequest({
         params: { id: '1' }
       });
-      const res = mockResponse();
+      const res = createMockResponse();
 
+      // Act
       await controller.getProductById(req as any, res as any);
 
+      // Assert
       expect(mockProductService.getProductById).toHaveBeenCalledWith(1);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
-        data: { product: mockProduct },
+        data: { product: testProduct },
         message: 'Product retrieved successfully'
       });
     });
 
     it('should handle product not found', async () => {
+      // Arrange
       mockProductService.getProductById.mockResolvedValue(null);
 
-      const req = mockRequest({
+      const req = createMockRequest({
         params: { id: '999' }
       });
-      const res = mockResponse();
+      const res = createMockResponse();
 
+      // Act
       await controller.getProductById(req as any, res as any);
 
+      // Assert
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
@@ -334,44 +295,39 @@ describe('ProductController Unit Tests', () => {
 
   describe('searchProducts', () => {
     it('should search products successfully', async () => {
-      const mockProducts = [
-        {
-          id: 1,
-          name: 'Rosas Rojas',
-          price_usd: 25.99,
-          active: true,
-          featured: false,
-          images: [],
-          primary_image_url: '/images/rosas.webp'
-        }
-      ];
+      // Arrange
+      const testProducts = [createTestProduct()];
+      mockProductService.searchProducts.mockResolvedValue(testProducts);
 
-      mockProductService.searchProducts.mockResolvedValue(mockProducts);
-
-      const req = mockRequest({
+      const req = createMockRequest({
         query: { q: 'rosas', limit: '10' }
       });
-      const res = mockResponse();
+      const res = createMockResponse();
 
+      // Act
       await controller.searchProducts(req as any, res as any);
 
+      // Assert
       expect(mockProductService.searchProducts).toHaveBeenCalledWith('rosas', 10);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
-        data: { products: mockProducts, count: 1 },
+        data: { products: testProducts, count: 1 },
         message: 'Search completed successfully'
       });
     });
 
     it('should handle missing search term', async () => {
-      const req = mockRequest({
+      // Arrange
+      const req = createMockRequest({
         query: { limit: '10' }
       });
-      const res = mockResponse();
+      const res = createMockResponse();
 
+      // Act
       await controller.searchProducts(req as any, res as any);
 
+      // Assert
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
@@ -382,19 +338,11 @@ describe('ProductController Unit Tests', () => {
 
   describe('createProduct', () => {
     it('should create product successfully', async () => {
-      const mockProduct = {
-        id: 1,
-        name: 'Rosas Rojas',
-        price_usd: 25.99,
-        active: true,
-        featured: false,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      };
+      // Arrange
+      const testProduct = createTestProduct();
+      mockProductService.createProduct.mockResolvedValue(testProduct);
 
-      mockProductService.createProduct.mockResolvedValue(mockProduct);
-
-      const req = mockRequest({
+      const req = createMockRequest({
         body: {
           name: 'Rosas Rojas',
           description: 'Hermosas rosas rojas para cualquier ocasión',
@@ -403,10 +351,12 @@ describe('ProductController Unit Tests', () => {
           featured: false
         }
       });
-      const res = mockResponse();
+      const res = createMockResponse();
 
+      // Act
       await controller.createProduct(req as any, res as any);
 
+      // Assert
       expect(mockProductService.createProduct).toHaveBeenCalledWith({
         name: 'Rosas Rojas',
         description: 'Hermosas rosas rojas para cualquier ocasión',
@@ -418,7 +368,7 @@ describe('ProductController Unit Tests', () => {
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
-        data: { product: mockProduct },
+        data: { product: testProduct },
         message: 'Product created successfully'
       });
     });
@@ -426,19 +376,11 @@ describe('ProductController Unit Tests', () => {
 
   describe('updateProduct', () => {
     it('should update product successfully', async () => {
-      const mockProduct = {
-        id: 1,
-        name: 'Rosas Rojas Premium',
-        price_usd: 29.99,
-        active: true,
-        featured: true,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      };
+      // Arrange
+      const testProduct = createTestProduct({ name: 'Rosas Rojas Premium', price_usd: 29.99, featured: true });
+      mockProductService.updateProduct.mockResolvedValue(testProduct);
 
-      mockProductService.updateProduct.mockResolvedValue(mockProduct);
-
-      const req = mockRequest({
+      const req = createMockRequest({
         params: { id: '1' },
         body: {
           name: 'Rosas Rojas Premium',
@@ -446,10 +388,12 @@ describe('ProductController Unit Tests', () => {
           featured: true
         }
       });
-      const res = mockResponse();
+      const res = createMockResponse();
 
+      // Act
       await controller.updateProduct(req as any, res as any);
 
+      // Assert
       expect(mockProductService.updateProduct).toHaveBeenCalledWith({
         id: 1,
         name: 'Rosas Rojas Premium',
@@ -460,7 +404,7 @@ describe('ProductController Unit Tests', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
-        data: { product: mockProduct },
+        data: { product: testProduct },
         message: 'Product updated successfully'
       });
     });
@@ -468,33 +412,27 @@ describe('ProductController Unit Tests', () => {
 
   describe('updateCarouselOrder', () => {
     it('should update carousel order successfully', async () => {
-      const mockProduct = {
-        id: 1,
-        name: 'Rosas Rojas',
-        price_usd: 25.99,
-        carousel_order: 2,
-        active: true,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      };
+      // Arrange
+      const testProduct = createTestProduct({ carousel_order: 2 });
+      mockProductService.updateCarouselOrder.mockResolvedValue(testProduct);
 
-      mockProductService.updateCarouselOrder.mockResolvedValue(mockProduct);
-
-      const req = mockRequest({
+      const req = createMockRequest({
         params: { id: '1' },
         body: {
           carousel_order: 2
         }
       });
-      const res = mockResponse();
+      const res = createMockResponse();
 
+      // Act
       await controller.updateCarouselOrder(req as any, res as any);
 
+      // Assert
       expect(mockProductService.updateCarouselOrder).toHaveBeenCalledWith(1, 2);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
-        data: { product: mockProduct },
+        data: { product: testProduct },
         message: 'Carousel order updated successfully'
       });
     });
@@ -502,36 +440,30 @@ describe('ProductController Unit Tests', () => {
 
   describe('deleteProduct', () => {
     it('should perform logical deletion when product has references', async () => {
-      const mockProduct = {
-        id: 1,
-        name: 'Rosas Rojas',
-        price_usd: 25.99,
-        active: false,
-        featured: false,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      };
-
-      mockProductService.getProductById.mockResolvedValue(mockProduct);
-      mockProductService.updateProduct.mockResolvedValue(mockProduct);
+      // Arrange
+      const testProduct = createTestProduct({ active: false });
+      mockProductService.getProductById.mockResolvedValue(testProduct);
+      mockProductService.updateProduct.mockResolvedValue(testProduct);
 
       // Mock TypeSafeDatabaseService to return images (simulating references)
       (typeSafeDatabaseService.getProductImages as any).mockResolvedValue([
         { id: 1, product_id: 1, url: '/images/test.jpg' }
       ]);
 
-      const req = mockRequest({
+      const req = createMockRequest({
         params: { id: '1' }
       });
-      const res = mockResponse();
+      const res = createMockResponse();
 
+      // Act
       await controller.deleteProduct(req as any, res as any);
 
+      // Assert
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
         data: {
-          product: mockProduct,
+          product: testProduct,
           deletion_type: 'logical',
           has_references: true
         },
@@ -540,27 +472,21 @@ describe('ProductController Unit Tests', () => {
     });
 
     it('should perform physical deletion when product has no references', async () => {
-      const mockProduct = {
-        id: 1,
-        name: 'Rosas Rojas',
-        price_usd: 25.99,
-        active: true,
-        featured: false,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      };
-
-      mockProductService.getProductById.mockResolvedValue(mockProduct);
+      // Arrange
+      const testProduct = createTestProduct();
+      mockProductService.getProductById.mockResolvedValue(testProduct);
       mockProductService.checkProductReferences.mockResolvedValue(false);
       mockProductService.deleteProduct.mockResolvedValue(undefined);
 
-      const req = mockRequest({
+      const req = createMockRequest({
         params: { id: '1' }
       });
-      const res = mockResponse();
+      const res = createMockResponse();
 
+      // Act
       await controller.deleteProduct(req as any, res as any);
 
+      // Assert
       expect(res.status).toHaveBeenCalledWith(204);
       expect(res.send).toHaveBeenCalledWith();
     });

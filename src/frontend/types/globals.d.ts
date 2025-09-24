@@ -7,19 +7,15 @@
 import type {
   WindowWithLogger,
   WindowWithCart,
-  WindowWithBootstrap,
   Logger,
-  CartManager,
-  BootstrapModal,
-  BootstrapToast
+  CartManager
 } from '../../shared/types/index.js';
 
 // Extend the global Window interface
 declare global {
   interface Window extends
     WindowWithLogger,
-    WindowWithCart,
-    WindowWithBootstrap {
+    WindowWithCart {
     // Frontend app instances
     floresyaApp?: {
       init(): Promise<void>;
@@ -107,23 +103,9 @@ declare global {
       debounce<T extends (...args: never[]) => unknown>(func: T, delay: number): T;
     };
 
-    // Logger instance
-    logger?: Logger;
-
     // Cart manager
     cart?: CartManager;
 
-    // Bootstrap instances
-    bootstrap?: {
-      Modal: {
-        getInstance(element: Element | HTMLElement | null): BootstrapModal | null;
-        new (element: HTMLElement): BootstrapModal;
-      };
-      Toast: {
-        new (element: HTMLElement, options?: { delay?: number }): BootstrapToast;
-        getInstance(element: HTMLElement): BootstrapToast | null;
-      };
-    };
   }
 }
 

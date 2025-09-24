@@ -10,6 +10,7 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
 import { config } from 'dotenv';
+import 'module-alias/register.js';
 
 // Import routes
 import { createProductRoutes } from './routes/productRoutes.js';
@@ -62,7 +63,8 @@ class FloresYaServer {
           fontSrc: ["'self'", "https://cdn.jsdelivr.net"]
         }
       },
-      crossOriginEmbedderPolicy: false
+      crossOriginEmbedderPolicy: false,
+      noSniff: false // Disable X-Content-Type-Options to allow custom MIME types
     }));
 
     // CORS configuration
@@ -113,9 +115,11 @@ class FloresYaServer {
       setHeaders: (res, filePath) => {
         if (filePath.endsWith('.js')) {
           res.setHeader('Content-Type', 'application/javascript');
+          res.setHeader('X-Content-Type-Options', 'nosniff');
         }
         if (filePath.endsWith('.js.map')) {
           res.setHeader('Content-Type', 'application/json');
+          res.setHeader('X-Content-Type-Options', 'nosniff');
         }
       }
     }));

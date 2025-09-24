@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administración de Usuarios - FloresYa</title>
     <link href="/css/styles.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <link href="/css/admin.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/scroll-fix.css">
     <style>
@@ -183,11 +184,11 @@
         <div class="admin-header">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h1><i class="bi bi-people-fill me-3"></i>Administración de Usuarios</h1>
+                    <h1><i data-lucide="users" class="me-3"></i>Administración de Usuarios</h1>
                     <p class="mb-0 opacity-75">Gestión completa de usuarios del sistema FloresYa</p>
                 </div>
                 <button class="btn btn-light btn-lg" id="btnNewUser">
-                    <i class="bi bi-person-plus me-2"></i>Nuevo Usuario
+                    <i data-lucide="user-plus" class="me-2"></i>Nuevo Usuario
                 </button>
             </div>
         </div>
@@ -197,14 +198,14 @@
             <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label fw-bold">
-                        <i class="bi bi-search me-1"></i>Buscar
+                        <i data-lucide="search" class="me-1"></i>Buscar
                     </label>
                     <input type="text" class="form-control search-box" id="searchInput"
                            placeholder="Buscar por email o nombre...">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold">
-                        <i class="bi bi-shield-check me-1"></i>Rol
+                        <i data-lucide="shield-check" class="me-1"></i>Rol
                     </label>
                     <select class="form-select" id="roleFilter">
                         <option value="">Todos los roles</option>
@@ -215,7 +216,7 @@
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold">
-                        <i class="bi bi-toggle-on me-1"></i>Estado
+                        <i data-lucide="toggle-right" class="me-1"></i>Estado
                     </label>
                     <select class="form-select" id="statusFilter">
                         <option value="">Todos</option>
@@ -225,7 +226,7 @@
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold">
-                        <i class="bi bi-envelope-check me-1"></i>Email
+                        <i data-lucide="mail-check" class="me-1"></i>Email
                     </label>
                     <select class="form-select" id="emailVerifiedFilter">
                         <option value="">Todos</option>
@@ -235,7 +236,7 @@
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold">
-                        <i class="bi bi-sort-down me-1"></i>Ordenar por
+                        <i data-lucide="arrow-down" class="me-1"></i>Ordenar por
                     </label>
                     <select class="form-select" id="sortBy">
                         <option value="created_at">Fecha creación</option>
@@ -255,14 +256,14 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
-                                <th><i class="bi bi-envelope me-1"></i>Email</th>
-                                <th><i class="bi bi-person me-1"></i>Nombre</th>
-                                <th><i class="bi bi-telephone me-1"></i>Teléfono</th>
-                                <th><i class="bi bi-shield me-1"></i>Rol</th>
-                                <th><i class="bi bi-toggle-on me-1"></i>Estado</th>
-                                <th><i class="bi bi-envelope-check me-1"></i>Email Verif.</th>
-                                <th><i class="bi bi-calendar me-1"></i>Creado</th>
-                                <th><i class="bi bi-gear me-1"></i>Acciones</th>
+                                <th><i data-lucide="mail" class="me-1"></i>Email</th>
+                                <th><i data-lucide="user" class="me-1"></i>Nombre</th>
+                                <th><i data-lucide="phone" class="me-1"></i>Teléfono</th>
+                                <th><i data-lucide="shield" class="me-1"></i>Rol</th>
+                                <th><i data-lucide="toggle-right" class="me-1"></i>Estado</th>
+                                <th><i data-lucide="mail-check" class="me-1"></i>Email Verif.</th>
+                                <th><i data-lucide="calendar" class="me-1"></i>Creado</th>
+                                <th><i data-lucide="settings" class="me-1"></i>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="usersTableBody">
@@ -299,7 +300,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalTitle">
-                        <i class="bi bi-person-plus me-2"></i>Crear Nuevo Usuario
+                        <i data-lucide="user-plus" class="me-2"></i>Crear Nuevo Usuario
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -310,7 +311,7 @@
                         <!-- Email -->
                         <div class="mb-3">
                             <label class="form-label fw-bold">
-                                <i class="bi bi-envelope me-1"></i>Email *
+                                <i data-lucide="mail" class="me-1"></i>Email *
                             </label>
                             <input type="email" class="form-control" id="email" required>
                             <div class="invalid-feedback" id="emailError"></div>
@@ -319,7 +320,7 @@
                         <!-- Full Name -->
                         <div class="mb-3">
                             <label class="form-label fw-bold">
-                                <i class="bi bi-person me-1"></i>Nombre Completo *
+                                <i data-lucide="user" class="me-1"></i>Nombre Completo *
                             </label>
                             <input type="text" class="form-control" id="full_name" required>
                             <div class="invalid-feedback" id="fullNameError"></div>
@@ -328,7 +329,7 @@
                         <!-- Phone -->
                         <div class="mb-3">
                             <label class="form-label fw-bold">
-                                <i class="bi bi-telephone me-1"></i>Teléfono
+                                <i data-lucide="phone" class="me-1"></i>Teléfono
                             </label>
                             <input type="tel" class="form-control" id="phone" placeholder="+58414XXXXXXX">
                             <div class="invalid-feedback" id="phoneError"></div>
@@ -338,7 +339,7 @@
                         <!-- Role -->
                         <div class="mb-3">
                             <label class="form-label fw-bold">
-                                <i class="bi bi-shield me-1"></i>Rol *
+                                <i data-lucide="shield" class="me-1"></i>Rol *
                             </label>
                             <select class="form-select" id="role" required>
                                 <option value="">Seleccionar rol...</option>
@@ -355,7 +356,7 @@
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" id="is_active" checked>
                                     <label class="form-check-label fw-bold">
-                                        <i class="bi bi-toggle-on me-1"></i>Usuario activo
+                                        <i data-lucide="toggle-right" class="me-1"></i>Usuario activo
                                     </label>
                                 </div>
                             </div>
@@ -363,7 +364,7 @@
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" id="email_verified">
                                     <label class="form-check-label fw-bold">
-                                        <i class="bi bi-envelope-check me-1"></i>Email verificado
+                                        <i data-lucide="mail-check" class="me-1"></i>Email verificado
                                     </label>
                                 </div>
                             </div>
@@ -372,12 +373,12 @@
                         <!-- Password -->
                         <div class="mb-3">
                             <label class="form-label fw-bold">
-                                <i class="bi bi-key me-1"></i>Contraseña <span class="text-muted" id="passwordLabel">(requerida para nuevo usuario)</span>
+                                <i data-lucide="key" class="me-1"></i>Contraseña <span class="text-muted" id="passwordLabel">(requerida para nuevo usuario)</span>
                             </label>
                             <div class="input-group">
                                 <input type="password" class="form-control" id="password">
                                 <button class="btn btn-outline-secondary" type="button" id="btnTogglePassword">
-                                    <i class="bi bi-eye"></i>
+                                    <i data-lucide="eye"></i>
                                 </button>
                             </div>
                             <div class="invalid-feedback" id="passwordError"></div>
@@ -389,10 +390,10 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                        <i data-lucide="x-circle" class="me-1"></i>Cancelar
                     </button>
                     <button type="button" class="btn btn-primary" id="btnSaveUser">
-                        <i class="bi bi-check-circle me-1"></i>Guardar Usuario
+                        <i data-lucide="check-circle" class="me-1"></i>Guardar Usuario
                     </button>
                 </div>
             </div>
@@ -406,5 +407,14 @@
 
     <script type="module" src="/dist/frontend/users-admin.js"></script>
     <script type="module" src="/dist/frontend/scroll-effects-fix.js"></script>
+
+    <!-- Initialize Lucide Icons -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
+    </script>
 </body>
 </html>

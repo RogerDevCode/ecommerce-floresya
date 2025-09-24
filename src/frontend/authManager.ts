@@ -5,7 +5,7 @@
 
 
 // Import types from shared types
-import type { LoginCredentials, WindowWithBootstrap } from '../shared/types/index.js';
+import type { LoginCredentials } from '../shared/types/index.js';
 
 // Define types for authentication
 interface AuthUser {
@@ -82,13 +82,11 @@ export class AuthManager {
         // Store user session
         this.setUserSession(response.user);
 
-        // Close login modal
+        // Close login modal using custom implementation
         const loginModal = document.getElementById('loginModal');
-        if (loginModal && (window as unknown as WindowWithBootstrap).bootstrap?.Modal?.getInstance) {
-          const modal = (window as unknown as WindowWithBootstrap).bootstrap.Modal.getInstance(loginModal);
-          if (modal) {
-            modal.hide();
-          }
+        if (loginModal) {
+          loginModal.classList.add('hidden');
+          loginModal.classList.remove('fixed', 'inset-0', 'z-50', 'flex', 'items-center', 'justify-center', 'bg-black', 'bg-opacity-50');
         }
 
         // Redirect based on user role
@@ -329,13 +327,24 @@ export class AuthManager {
   }
 
   private showAlert(message: string, type: 'info' | 'success' | 'warning' | 'danger' = 'info'): void {
-    // Create alert element
+    // Create alert element with Tailwind classes
     const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+
+    const colorMap = {
+      info: 'bg-blue-50 border-blue-200 text-blue-800',
+      success: 'bg-green-50 border-green-200 text-green-800',
+      warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+      danger: 'bg-red-50 border-red-200 text-red-800'
+    };
+
+    alertDiv.className = `fixed top-5 right-5 z-50 max-w-sm border rounded-lg shadow-lg p-4 ${colorMap[type]} transform transition-all duration-300`;
     alertDiv.innerHTML = `
-      ${message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium">${message}</span>
+        <button type="button" class="ml-3 text-gray-400 hover:text-gray-600" onclick="this.parentElement.parentElement.remove()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
     `;
 
     // Add to page

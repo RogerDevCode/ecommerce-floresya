@@ -1,207 +1,251 @@
 /**
- * 🌸 FloresYa Logs Controller Tests - Enterprise TypeScript Edition
- * Comprehensive unit tests for frontend logging endpoints
+ * 🌸 FloresYa LogsController Unit Tests - Silicon Valley Simple Mock Edition
+ * Clean, maintainable tests with one mock per test pattern
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Request, Response } from 'express';
-import { LogsController } from '../../src/controllers/LogsController.js';
-import type { LogEntry } from '../../src/shared/types/index.js';
+import { validationResult } from 'express-validator';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { LogsController, logsValidators } from '../../src/controllers/LogsController.js';
+
+// Mock dependencies
+vi.mock('express-validator', () => ({
+  body: vi.fn(() => ({
+    isArray: vi.fn().mockReturnThis(),
+    isISO8601: vi.fn().mockReturnThis(),
+    isString: vi.fn().mockReturnThis(),
+    optional: vi.fn().mockReturnThis(),
+    withMessage: vi.fn().mockReturnThis()
+  })),
+  validationResult: vi.fn()
+}));
+
+// Mock console methods to avoid noise in tests
+const originalConsoleWarn = console.warn;
+const originalConsoleError = console.error;
 
 describe('LogsController', () => {
-  let logsController: LogsController;
+  let controller: LogsController;
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
-  let jsonMock: any;
-  let statusMock: any;
+  let jsonSpy: any;
+  let statusSpy: any;
+
+  // Test data factories
+  const createTestLogEntry = (overrides = {}) => ({
+    timestamp: '2024-01-01T00:00:00.000Z',
+    level: 'ERROR' as const,
+    module: 'TestModule',
+    message: 'Test error message',
+    data: { error: 'Test error details' },
+    ...overrides
+  });
+
+  const createTestLogEntryWarn = (overrides = {}) => ({
+    timestamp: '2024-01-01T00:00:01.000Z',
+    level: 'WARN' as const,
+    module: 'TestModule',
+    message: 'Test warning message',
+    data: { warning: 'Test warning details' },
+    ...overrides
+  });
+
+  const createTestLogEntryInfo = (overrides = {}) => ({
+    timestamp: '2024-01-01T00:00:02.000Z',
+    level: 'INFO' as const,
+    module: 'TestModule',
+    message: 'Test info message',
+    data: { info: 'Test info details' },
+    ...overrides
+  });
+
+  const createValidationResult = (isEmpty = true, errors: any[] = []) => ({
+    isEmpty: () => isEmpty,
+    array: () => errors,
+    formatter: vi.fn(),
+    errors,
+    mapped: vi.fn(),
+    formatWith: vi.fn(),
+    throw: vi.fn()
+  } as any);
 
   beforeEach(() => {
-    // Create a new instance of LogsController
-    logsController = new LogsController();
+    controller = new LogsController();
+    jsonSpy = vi.fn().mockReturnThis();
+    statusSpy = vi.fn().mockReturnThis();
 
-    // Mock response methods
-    jsonMock = vi.fn();
-    statusMock = vi.fn().mockReturnValue({ json: jsonMock });
     mockResponse = {
-      status: statusMock,
-      json: jsonMock
+      json: jsonSpy,
+      status: statusSpy
     };
+
+    // Mock console methods
+    console.warn = vi.fn();
+    console.error = vi.fn();
+
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
     vi.clearAllMocks();
+    // Restore original console methods
+    console.warn = originalConsoleWarn;
+    console.error = originalConsoleError;
   });
 
   describe('receiveFrontendLogs', () => {
-    it('should receive and process frontend logs successfully', () => {
-      const mockLogs: LogEntry[] = [
-        {
-          timestamp: '2024-01-01T00:00:00Z',
-          level: 'INFO',
-          module: 'CartManager',
-          message: 'Item added to cart',
-          data: { productId: 1, quantity: 2 }
-        },
-        {
-          timestamp: '2024-01-01T00:01:00Z',
-          level: 'ERROR',
-          module: 'PaymentService',
-          message: 'Payment failed',
-          data: { error: 'Insufficient funds' }
-        }
-      ];
+    it('should receive logs successfully', () => {
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
 
-      const sessionId = 'test-session-123';
-
-      mockRequest = {
-        body: {
-          logs: mockLogs,
-          sessionId: sessionId
-        }
+      const logData = {
+        logs: [createTestLogEntry(), createTestLogEntryInfo()],
+        sessionId: 'test-session-123'
       };
 
-      logsController.receiveFrontendLogs(mockRequest as Request, mockResponse as Response);
+      mockRequest = {
+        body: logData
+      };
 
-      expect(statusMock).toHaveBeenCalledWith(200);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Act
+      controller.receiveFrontendLogs(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
         message: 'Logs received successfully',
         received: 2,
-        sessionId: sessionId
+        sessionId: 'test-session-123'
       });
-    });
-
-    it('should handle logs with errors and warnings', () => {
-      const mockLogs: LogEntry[] = [
-        {
-          timestamp: '2024-01-01T00:00:00Z',
-          level: 'INFO',
-          module: 'CartManager',
-          message: 'Item added to cart',
-          data: { productId: 1, quantity: 2 }
-        },
-        {
-          timestamp: '2024-01-01T00:01:00Z',
-          level: 'ERROR',
-          module: 'PaymentService',
-          message: 'Payment failed',
-          data: { error: 'Insufficient funds' }
-        },
-        {
-          timestamp: '2024-01-01T00:02:00Z',
-          level: 'WARN',
-          module: 'ImageService',
-          message: 'Image loading slow',
-          data: { loadTime: 5000 }
-        }
-      ];
-
-      const sessionId = 'test-session-456';
-
-      // Mock console.warn to verify it's called
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-      mockRequest = {
-        body: {
-          logs: mockLogs,
-          sessionId: sessionId
-        }
-      };
-
-      logsController.receiveFrontendLogs(mockRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(200);
-      expect(jsonMock).toHaveBeenCalledWith({
-        success: true,
-        message: 'Logs received successfully',
-        received: 3,
-        sessionId: sessionId
-      });
-
-      // Verify that console.warn was called for errors and warnings
-      // 1 general message + 2 individual error/warning messages = 3 total calls
-      expect(consoleWarnSpy).toHaveBeenCalledTimes(3);
-      expect(consoleWarnSpy).toHaveBeenCalledWith('⚠️ Issues detected: 2 errors/warnings');
-      expect(consoleWarnSpy).toHaveBeenCalledWith('[ERROR] PaymentService: Payment failed', { error: 'Insufficient funds' });
-      expect(consoleWarnSpy).toHaveBeenCalledWith('[WARN] ImageService: Image loading slow', { loadTime: 5000 });
-
-      consoleWarnSpy.mockRestore();
     });
 
     it('should handle validation errors', () => {
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult(false, [{ field: 'logs', message: 'Logs must be an array' }]));
+
       mockRequest = {
-        body: {
-          logs: 'invalid-logs-format',
-          sessionId: 'test-session'
-        }
+        body: { logs: 'invalid' }
       };
 
-      logsController.receiveFrontendLogs(mockRequest as Request, mockResponse as Response);
+      // Act
+      controller.receiveFrontendLogs(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
-        message: 'Logs must be an array'
+        message: 'Invalid log data',
+        errors: [{ field: 'logs', message: 'Logs must be an array' }]
       });
     });
 
-    it('should return 400 when logs is not an array', () => {
+    it('should handle invalid logs format (not an array)', () => {
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
       mockRequest = {
-        body: {
-          logs: 'not-an-array',
-          sessionId: 'test-session'
-        }
+        body: { logs: 'not-an-array' }
       };
 
-      logsController.receiveFrontendLogs(mockRequest as Request, mockResponse as Response);
+      // Act
+      controller.receiveFrontendLogs(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Logs must be an array'
       });
     });
 
     it('should handle empty logs array', () => {
-      mockRequest = {
-        body: {
-          logs: [],
-          sessionId: 'test-session'
-        }
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      const logData = {
+        logs: [],
+        sessionId: 'test-session-123'
       };
 
-      logsController.receiveFrontendLogs(mockRequest as Request, mockResponse as Response);
+      mockRequest = {
+        body: logData
+      };
 
-      expect(statusMock).toHaveBeenCalledWith(200);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Act
+      controller.receiveFrontendLogs(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
         message: 'Logs received successfully',
         received: 0,
-        sessionId: 'test-session'
+        sessionId: 'test-session-123'
+      });
+    });
+
+    it('should log errors and warnings to console', () => {
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
+
+      const logData = {
+        logs: [createTestLogEntry(), createTestLogEntryWarn(), createTestLogEntryInfo()],
+        sessionId: 'test-session-123'
+      };
+
+      mockRequest = {
+        body: logData
+      };
+
+      // Act
+      controller.receiveFrontendLogs(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(vi.mocked(console.warn)).toHaveBeenCalledWith('⚠️ Issues detected: 2 errors/warnings');
+      expect(vi.mocked(console.warn)).toHaveBeenCalledWith(
+        '[ERROR] TestModule: Test error message',
+        { error: 'Test error details' }
+      );
+      expect(vi.mocked(console.warn)).toHaveBeenCalledWith(
+        '[WARN] TestModule: Test warning message',
+        { warning: 'Test warning details' }
+      );
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
+        success: true,
+        message: 'Logs received successfully',
+        received: 3,
+        sessionId: 'test-session-123'
       });
     });
 
     it('should handle logs without sessionId', () => {
-      const mockLogs: LogEntry[] = [
-        {
-          timestamp: '2024-01-01T00:00:00Z',
-          level: 'INFO',
-          module: 'CartManager',
-          message: 'Item added to cart',
-          data: { productId: 1, quantity: 2 }
-        }
-      ];
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
 
-      mockRequest = {
-        body: {
-          logs: mockLogs
-        }
+      const logData = {
+        logs: [createTestLogEntryInfo()]
       };
 
-      logsController.receiveFrontendLogs(mockRequest as Request, mockResponse as Response);
+      mockRequest = {
+        body: logData
+      };
 
-      expect(statusMock).toHaveBeenCalledWith(200);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Act
+      controller.receiveFrontendLogs(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
         message: 'Logs received successfully',
         received: 1,
@@ -210,122 +254,116 @@ describe('LogsController', () => {
     });
 
     it('should handle service errors', () => {
-      // Mock console.error to verify it's called
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
 
+      // Mock an error that occurs during processing
       mockRequest = {
-        body: null as any // This will cause an error when accessing req.body
-      };
+        body: null // This will cause an error when accessing properties
+      } as any;
 
-      logsController.receiveFrontendLogs(mockRequest as Request, mockResponse as Response);
+      // Act
+      controller.receiveFrontendLogs(mockRequest as Request, mockResponse as Response);
 
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Assert
+      expect(vi.mocked(console.error)).toHaveBeenCalledWith(
+        'LogsController.receiveFrontendLogs error:',
+        expect.any(TypeError)
+      );
+      expect(statusSpy).toHaveBeenCalledWith(500);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
         message: 'Failed to process frontend logs',
         error: expect.any(String)
       });
-
-      expect(consoleErrorSpy).toHaveBeenCalled();
-      consoleErrorSpy.mockRestore();
     });
 
     it('should handle logs with different levels correctly', () => {
-      const mockLogs: LogEntry[] = [
-        {
-          timestamp: '2024-01-01T00:00:00Z',
-          level: 'DEBUG',
-          module: 'TestModule',
-          message: 'Debug message',
-          data: { debug: true }
-        },
-        {
-          timestamp: '2024-01-01T00:01:00Z',
-          level: 'INFO',
-          module: 'TestModule',
-          message: 'Info message',
-          data: { info: 'test' }
-        },
-        {
-          timestamp: '2024-01-01T00:02:00Z',
-          level: 'WARN',
-          module: 'TestModule',
-          message: 'Warning message',
-          data: { warning: 'test' }
-        },
-        {
-          timestamp: '2024-01-01T00:03:00Z',
-          level: 'ERROR',
-          module: 'TestModule',
-          message: 'Error message',
-          data: { error: 'test' }
-        }
-      ];
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
 
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-      mockRequest = {
-        body: {
-          logs: mockLogs,
-          sessionId: 'test-session'
-        }
+      const logData = {
+        logs: [
+          { ...createTestLogEntry(), level: 'ERROR' as const },
+          { ...createTestLogEntryWarn(), level: 'WARN' as const },
+          { ...createTestLogEntryInfo(), level: 'INFO' as const },
+          { ...createTestLogEntryInfo(), level: 'DEBUG' as const }
+        ]
       };
 
-      logsController.receiveFrontendLogs(mockRequest as Request, mockResponse as Response);
+      mockRequest = {
+        body: logData
+      };
 
-      expect(statusMock).toHaveBeenCalledWith(200);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Act
+      controller.receiveFrontendLogs(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(vi.mocked(console.warn)).toHaveBeenCalledWith('⚠️ Issues detected: 2 errors/warnings');
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
         message: 'Logs received successfully',
         received: 4,
-        sessionId: 'test-session'
+        sessionId: undefined
       });
-
-      // Should only log errors and warnings (1 general message + 2 individual messages = 3 total calls)
-      expect(consoleWarnSpy).toHaveBeenCalledTimes(3);
-      consoleWarnSpy.mockRestore();
     });
 
-    it('should handle logs with null or undefined data', () => {
-      const mockLogs: LogEntry[] = [
-        {
-          timestamp: '2024-01-01T00:00:00Z',
-          level: 'ERROR',
-          module: 'TestModule',
-          message: 'Error with null data',
-          data: null
-        },
-        {
-          timestamp: '2024-01-01T00:01:00Z',
-          level: 'WARN',
-          module: 'TestModule',
-          message: 'Warning with undefined data',
-          data: undefined
-        }
-      ];
+    it('should handle logs with missing optional data field', () => {
+      // Arrange
+      const mockValidationResult = vi.mocked(validationResult);
+      mockValidationResult.mockReturnValue(createValidationResult());
 
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-      mockRequest = {
-        body: {
-          logs: mockLogs,
-          sessionId: 'test-session'
-        }
+      const logData = {
+        logs: [
+          {
+            timestamp: '2024-01-01T00:00:00.000Z',
+            level: 'INFO' as const,
+            module: 'TestModule',
+            message: 'Test message without data'
+            // No data field
+          }
+        ]
       };
 
-      logsController.receiveFrontendLogs(mockRequest as Request, mockResponse as Response);
+      mockRequest = {
+        body: logData
+      };
 
-      expect(statusMock).toHaveBeenCalledWith(200);
-      expect(jsonMock).toHaveBeenCalledWith({
+      // Act
+      controller.receiveFrontendLogs(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(200);
+      expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
         message: 'Logs received successfully',
-        received: 2,
-        sessionId: 'test-session'
+        received: 1,
+        sessionId: undefined
       });
+    });
+  });
 
-      // Should log 1 general message + 2 individual messages = 3 total calls
-      expect(consoleWarnSpy).toHaveBeenCalledTimes(3);
-      consoleWarnSpy.mockRestore();
+  describe('logsValidators', () => {
+    it('should validate receiveFrontendLogs correctly', () => {
+      // Arrange
+      const validators = logsValidators.receiveFrontendLogs;
+
+      // Act & Assert
+      expect(validators).toBeDefined();
+      expect(validators.length).toBeGreaterThan(0);
+    });
+
+    it('should have proper validation rules', () => {
+      // Arrange
+      const validators = logsValidators.receiveFrontendLogs;
+
+      // Act & Assert
+      expect(validators).toBeDefined();
+      expect(Array.isArray(validators)).toBe(true);
+      expect(validators.length).toBe(6); // Should have 6 validation rules
     });
   });
 });

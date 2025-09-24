@@ -3,7 +3,7 @@
  * Handles orders management, filtering, pagination, and order details
  */
 
-import type { AdminOrder, OrdersFilters, OrderDetails, AdminPanelLogger, WindowWithBootstrap } from './types.js';
+import type { AdminOrder, OrdersFilters, OrderDetails, AdminPanelLogger } from './types.js';
 
 export class AdminOrders {
   private logger: AdminPanelLogger;
@@ -191,9 +191,9 @@ export class AdminOrders {
     if (orders.length === 0) {
       ordersTableBody.innerHTML = `
         <tr>
-          <td colspan="7" class="text-center py-4">
-            <div class="text-muted">
-              <i class="bi bi-inbox display-4 mb-3"></i>
+          <td colspan="7" class="text-center py-8">
+            <div class="text-gray-500">
+              <i class="bi bi-inbox text-6xl mb-3 block"></i>
               <p>No se encontraron pedidos</p>
             </div>
           </td>
@@ -206,22 +206,24 @@ export class AdminOrders {
       <tr>
         <td><strong>#${order.id}</strong></td>
         <td>
-          <div class="fw-medium">${order.customer_name}</div>
-          ${order.customer_email ? `<small class="text-muted">${order.customer_email}</small>` : ''}
+          <div class="font-medium">${order.customer_name}</div>
+          ${order.customer_email ? `<small class="text-gray-500">${order.customer_email}</small>` : ''}
         </td>
         <td>$${order.total_amount_usd.toFixed(2)}</td>
         <td>
-          <span class="badge bg-${this.getStatusColor(order.status)}">${order.status}</span>
+          <span class="px-2 py-1 text-xs font-semibold rounded-full ${this.getStatusColorTailwind(order.status)}">${order.status}</span>
         </td>
         <td>${new Date(order.created_at).toLocaleDateString()}</td>
         <td>${order.delivery_date ? new Date(order.delivery_date).toLocaleDateString() : '-'}</td>
         <td>
-          <div class="btn-group btn-group-sm">
-            <button class="btn btn-outline-primary" onclick="adminPanel.orders.viewOrderDetails(${order.id})"
+          <div class="flex space-x-2">
+            <button class="px-3 py-1 text-sm border border-blue-500 text-blue-500 rounded hover:bg-blue-50 transition-colors"
+                    onclick="adminPanel.orders.viewOrderDetails(${order.id})"
                     title="Ver detalles">
               <i class="bi bi-eye"></i>
             </button>
-            <button class="btn btn-outline-secondary" onclick="adminPanel.orders.printOrder()"
+            <button class="px-3 py-1 text-sm border border-gray-500 text-gray-500 rounded hover:bg-gray-50 transition-colors"
+                    onclick="adminPanel.orders.printOrder()"
                     title="Imprimir">
               <i class="bi bi-printer"></i>
             </button>
@@ -254,7 +256,7 @@ export class AdminOrders {
     const orderTotalEl = document.getElementById('orderTotal');
 
     if (orderStatusEl) {
-      orderStatusEl.innerHTML = `<span class="badge bg-${this.getStatusColor(orderDetails.status)}">${orderDetails.status}</span>`;
+      orderStatusEl.innerHTML = `<span class="px-2 py-1 text-xs font-semibold rounded-full ${this.getStatusColorTailwind(orderDetails.status)}">${orderDetails.status}</span>`;
     }
     if (orderDateEl) orderDateEl.textContent = new Date(orderDetails.created_at).toLocaleDateString();
     if (orderTotalEl) orderTotalEl.textContent = `$${orderDetails.total_amount_usd.toFixed(2)}`;
@@ -274,13 +276,13 @@ export class AdminOrders {
     if (!itemsContainer) return;
 
     itemsContainer.innerHTML = items.map(item => `
-      <div class="row py-2 border-bottom">
-        <div class="col-md-6">
+      <div class="grid grid-cols-4 gap-4 py-2 border-b border-gray-200">
+        <div class="col-span-2">
           <strong>${item.product_name}</strong>
         </div>
-        <div class="col-md-2 text-center">${item.quantity}</div>
-        <div class="col-md-2 text-end">$${item.unit_price_usd.toFixed(2)}</div>
-        <div class="col-md-2 text-end">$${item.subtotal_usd.toFixed(2)}</div>
+        <div class="text-center">${item.quantity}</div>
+        <div class="text-right">$${item.unit_price_usd.toFixed(2)}</div>
+        <div class="text-right">$${item.subtotal_usd.toFixed(2)}</div>
       </div>
     `).join('');
   }
@@ -354,29 +356,53 @@ export class AdminOrders {
   }
 
   /**
-   * Get status color for badges
+   * Get status color for badges (Tailwind)
    */
-  private getStatusColor(status: string): string {
+  private getStatusColorTailwind(status: string): string {
     const colors: Record<string, string> = {
-      'pending': 'warning',
-      'confirmed': 'info',
-      'processing': 'primary',
-      'shipped': 'secondary',
-      'delivered': 'success',
-      'cancelled': 'danger'
+      'pending': 'bg-yellow-100 text-yellow-800',
+      'confirmed': 'bg-blue-100 text-blue-800',
+      'processing': 'bg-purple-100 text-purple-800',
+      'shipped': 'bg-gray-100 text-gray-800',
+      'delivered': 'bg-green-100 text-green-800',
+      'cancelled': 'bg-red-100 text-red-800'
     };
-    return colors[status] ?? 'secondary';
+    return colors[status] ?? 'bg-gray-100 text-gray-800';
   }
 
   /**
-   * Show order modal
+   * Show order modal using custom implementation
    */
   private showOrderModal(): void {
     const modalElement = document.getElementById('orderDetailsModal');
-    if (modalElement && (window as unknown as WindowWithBootstrap).bootstrap?.Modal) {
-      const Modal = (window as unknown as WindowWithBootstrap).bootstrap.Modal;
-      const modal = new Modal(modalElement);
-      modal.show();
+    if (modalElement) {
+      // Add Tailwind classes for modal display
+      modalElement.classList.remove('hidden');
+      modalElement.classList.add('fixed', 'inset-0', 'z-50', 'flex', 'items-center', 'justify-center', 'bg-black', 'bg-opacity-50');
+
+      // Add close functionality
+      const closeButtons = modalElement.querySelectorAll('[data-modal-close]');
+      closeButtons.forEach(button => {
+        button.addEventListener('click', () => this.hideOrderModal());
+      });
+
+      // Close on backdrop click
+      modalElement.addEventListener('click', (e) => {
+        if (e.target === modalElement) {
+          this.hideOrderModal();
+        }
+      });
+    }
+  }
+
+  /**
+   * Hide order modal
+   */
+  private hideOrderModal(): void {
+    const modalElement = document.getElementById('orderDetailsModal');
+    if (modalElement) {
+      modalElement.classList.add('hidden');
+      modalElement.classList.remove('fixed', 'inset-0', 'z-50', 'flex', 'items-center', 'justify-content-center', 'bg-black', 'bg-opacity-50');
     }
   }
 

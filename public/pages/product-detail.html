@@ -7,7 +7,8 @@
 
     <!-- Tailwind CSS -->
     <link href="/css/styles.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/styles.css">
@@ -31,20 +32,20 @@
 <body>
     <!-- Product Counter -->
     <div class="product-counter">
-        <i class="bi bi-list-ol me-2"></i>
+        <i data-lucide="list-ordered" class="me-2"></i>
         <span id="product-counter">1/1</span>
     </div>
 
     <!-- Navigation Buttons -->
     <div class="product-navigation nav-btn-left">
         <button id="prev-product-btn" class="product-nav-btn" title="Producto anterior">
-            <i class="bi bi-chevron-left"></i>
+            <i data-lucide="chevron-left"></i>
         </button>
     </div>
 
     <div class="product-navigation nav-btn-right">
         <button id="next-product-btn" class="product-nav-btn" title="Siguiente producto">
-            <i class="bi bi-chevron-right"></i>
+            <i data-lucide="chevron-right"></i>
         </button>
     </div>
 
@@ -56,11 +57,11 @@
         <div class="p-3 border-bottom">
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
-                    <i class="bi bi-cart3 me-2"></i>
+                    <i data-lucide="shopping-cart" class="me-2"></i>
                     Carrito (<span id="cart-count">0</span>)
                 </h5>
                 <button class="btn btn-sm btn-outline-secondary" onclick="productDetail.hideCartPanel()">
-                    <i class="bi bi-x-lg"></i>
+                    <i data-lucide="x"></i>
                 </button>
             </div>
         </div>
@@ -73,7 +74,7 @@
             </div>
             <div class="d-grid gap-2">
                 <a href="/pages/payment.html" class="btn btn-success">
-                    <i class="bi bi-credit-card me-2"></i>
+                    <i data-lucide="credit-card" class="me-2"></i>
                     Proceder al Pago
                 </a>
                 <button class="btn btn-outline-secondary" onclick="productDetail.hideCartPanel()">
@@ -104,7 +105,7 @@
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item">
                                     <a href="/" class="text-success text-decoration-none">
-                                        <i class="bi bi-house-door me-1"></i>Inicio
+                                        <i data-lucide="home" class="me-1"></i>Inicio
                                     </a>
                                 </li>
                                 <li class="breadcrumb-item">
@@ -116,13 +117,13 @@
                     </div>
                     <div class="col-md-6 text-end">
                         <button id="back-btn" class="btn btn-outline-secondary me-2">
-                            <i class="bi bi-arrow-left me-1"></i>Volver
+                            <i data-lucide="arrow-left" class="me-1"></i>Volver
                         </button>
                         <button id="home-btn" class="btn btn-outline-success me-2">
-                            <i class="bi bi-house me-1"></i>Inicio
+                            <i data-lucide="home" class="me-1"></i>Inicio
                         </button>
                         <button id="cart-toggle" class="btn btn-success position-relative">
-                            <i class="bi bi-cart3 me-1"></i>Carrito
+                            <i data-lucide="shopping-cart" class="me-1"></i>Carrito
                             <span id="cart-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-badge-hidden">
                                 0
                             </span>
@@ -149,7 +150,7 @@
                             <!-- Image Counter Overlay -->
                             <div class="position-absolute bottom-0 start-0 m-3">
                                 <span class="badge bg-dark bg-opacity-75 text-white">
-                                    <i class="bi bi-images me-1"></i>
+                                    <i data-lucide="images" class="me-1"></i>
                                     <span id="current-image">1</span> / <span id="total-images">1</span>
                                 </span>
                             </div>
@@ -157,7 +158,7 @@
                             <!-- Zoom Indicator -->
                             <div class="position-absolute top-0 end-0 m-3">
                                 <span class="badge bg-dark bg-opacity-75 text-white">
-                                    <i class="bi bi-zoom-in me-1"></i>Click para ampliar
+                                    <i data-lucide="zoom-in" class="me-1"></i>Click para ampliar
                                 </span>
                             </div>
                         </div>
@@ -180,7 +181,7 @@
                         <!-- Occasion Badge -->
                         <div class="mb-3">
                             <span class="badge-occasion" id="product-occasion-badge">
-                                <i class="bi bi-heart me-1"></i>
+                                <i data-lucide="heart" class="me-1"></i>
                                 <span id="product-occasion">Ocasión especial</span>
                             </span>
                         </div>
@@ -192,11 +193,11 @@
                                 <h2 id="product-price" class="text-success fw-bold mb-0">$0.00</h2>
                             </div>
                             <div class="d-flex align-items-center">
-                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <i data-lucide="check-circle" class="text-success me-2"></i>
                                 <span class="text-muted">Disponible para entrega</span>
                             </div>
                             <div class="d-flex align-items-center mt-1">
-                                <i class="bi bi-truck text-success me-2"></i>
+                                <i data-lucide="truck" class="text-success me-2"></i>
                                 <span class="text-muted">Entrega el mismo día disponible</span>
                             </div>
                         </div>
@@ -206,13 +207,13 @@
                             <div class="row g-3">
                                 <div class="col-12 col-md-6">
                                     <button id="add-to-cart-btn" class="btn btn-add-cart btn-lg w-100">
-                                        <i class="bi bi-cart-plus me-2"></i>
+                                        <i data-lucide="shopping-cart" class="me-2"></i>
                                         Agregar al Carrito
                                     </button>
                                 </div>
                                 <div class="col-12 col-md-6">
                                     <button id="buy-now-btn" class="btn btn-buy-now btn-lg w-100">
-                                        <i class="bi bi-lightning me-2"></i>
+                                        <i data-lucide="zap" class="me-2"></i>
                                         Comprar Ahora
                                     </button>
                                 </div>
@@ -222,7 +223,7 @@
                         <!-- Product Description -->
                         <div class="product-description-section">
                             <h5 class="fw-bold mb-3">
-                                <i class="bi bi-info-circle me-2"></i>
+                                <i data-lucide="info" class="me-2"></i>
                                 Descripción del Producto
                             </h5>
                             <p id="product-description" class="text-muted lh-lg">
@@ -236,19 +237,19 @@
                             <h6 class="fw-bold mb-3">Características:</h6>
                             <ul class="list-unstyled">
                                 <li class="mb-2">
-                                    <i class="bi bi-flower1 text-success me-2"></i>
+                                    <i data-lucide="flower" class="text-success me-2"></i>
                                     Flores frescas del día
                                 </li>
                                 <li class="mb-2">
-                                    <i class="bi bi-award text-success me-2"></i>
+                                    <i data-lucide="award" class="text-success me-2"></i>
                                     Diseño profesional
                                 </li>
                                 <li class="mb-2">
-                                    <i class="bi bi-gift text-success me-2"></i>
+                                    <i data-lucide="gift" class="text-success me-2"></i>
                                     Incluye tarjeta de dedicatoria
                                 </li>
                                 <li class="mb-2">
-                                    <i class="bi bi-shield-check text-success me-2"></i>
+                                    <i data-lucide="shield-check" class="text-success me-2"></i>
                                     Garantía de frescura
                                 </li>
                             </ul>
@@ -257,7 +258,7 @@
                         <!-- Contact Info -->
                         <div class="contact-info mt-4 p-3 bg-light rounded">
                             <h6 class="fw-bold mb-2">
-                                <i class="bi bi-chat-dots me-2"></i>
+                                <i data-lucide="message-circle" class="me-2"></i>
                                 ¿Necesitas ayuda personalizada?
                             </h6>
                             <p class="mb-0 text-muted">
@@ -265,11 +266,11 @@
                             </p>
                             <div class="mt-2">
                                 <button class="btn btn-outline-success btn-sm me-2">
-                                    <i class="bi bi-whatsapp me-1"></i>
+                                    <i data-lucide="message-circle" class="me-1"></i>
                                     WhatsApp
                                 </button>
                                 <button class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-telephone me-1"></i>
+                                    <i data-lucide="phone" class="me-1"></i>
                                     Llamar
                                 </button>
                             </div>
@@ -284,5 +285,14 @@
     <script type="module" src="/dist/frontend/services/apiClient.js"></script>
     <script type="module" src="/dist/frontend/product-detail.js"></script>
     <script type="module" src="/dist/frontend/scroll-effects-fix.js"></script>
+
+    <!-- Initialize Lucide Icons -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
+    </script>
 </body>
 </html>

@@ -1,26 +1,49 @@
 {
-  "extends": "./tsconfig.base.json",
   "compilerOptions": {
+    "module": "ESNext",
+    "target": "ES2022",
     "lib": ["ES2022", "DOM"],
-    "types": ["node"],
-    "rootDir": "./src",
-    "outDir": "./dist",
     "moduleResolution": "node",
-    "declaration": false,
-    "sourceMap": false,
-    "composite": false,
-    "incremental": false
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist/backend",
+    "rootDir": "./src",
+    "baseUrl": "./",
+    "paths": {
+      "@backend/*": ["./src/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@frontend/*": ["./src/frontend/*"]
+    },
+    "types": ["node", "vitest/globals"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmitOnError": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo"
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.d.ts"
+    "src/**/*",
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "tests",
-    "**/*.test.ts",
-    "**/*.spec.ts"
-  ]
+    "public",
+    "src/frontend/**/*",
+    "**/*.spec.js",
+    "**/*.test.js"
+  ],
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  }
 }

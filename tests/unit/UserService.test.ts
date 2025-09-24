@@ -1,294 +1,485 @@
 /**
- * 🌸 FloresYa UserService Integration Tests - Real Database Edition
- * Tests de integración para UserService usando datos reales de Supabase
+ * 🌸 FloresYa UserService Unit Tests - Silicon Valley Simple Mock Edition
+ * Clean, maintainable tests with one mock per test pattern
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { UserService } from '../../src/services/UserService.js';
-import { FloresYaServer } from '../../src/app/server.js';
-import supertest from 'supertest';
-import { testSupabase, setupTestDatabase, teardownTestDatabase } from '../config/test-database.js';
+import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService.js';
+import * as bcrypt from 'bcryptjs';
+import type { UserUpdateRequest } from '../../src/shared/types/index.js';
 
-describe('FloresYa UserService Integration Tests - Real Database', () => {
-  let server: FloresYaServer;
-  let request: any;
+// Mock dependencies
+vi.mock('../../src/services/TypeSafeDatabaseService.js', () => ({
+  typeSafeDatabaseService: {
+    getClient: vi.fn(),
+    executeRpc: vi.fn()
+  }
+}));
+
+vi.mock('bcryptjs', () => ({
+  hash: vi.fn()
+}));
+
+describe('UserService', () => {
   let userService: UserService;
 
-  beforeAll(async () => {
-    // Setup test database connection
-    await setupTestDatabase();
+  // Test data factories
+  const createTestUser = (overrides = {}) => ({
+    id: 1,
+    email: 'test@example.com',
+    full_name: 'Test User',
+    phone: '+1234567890',
+    role: 'user' as const,
+    is_active: true,
+    email_verified: false,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    ...overrides
+  });
 
-    // Create server instance
-    server = new FloresYaServer();
+  const createTestUserList = (users = [createTestUser()], overrides = {}) => ({
+    users,
+    pagination: {
+      current_page: 1,
+      total_pages: 1,
+      total_items: users.length,
+      items_per_page: 20,
+      ...overrides
+    }
+  });
 
-    // Get the Express app
-    const app = server.getApp();
+  const createRpcSuccessResponse = (data = createTestUser(), message = 'Operation successful') => ({
+    success: true,
+    user: data,
+    message
+  });
 
-    // Create supertest agent
-    request = supertest(app);
+  const createRpcDeleteResponse = (user = createTestUser()) => ({
+    success: true,
+    deleted_user: { id: user.id, email: user.email, full_name: user.full_name },
+    message: 'User deleted successfully'
+  });
 
-    // Create UserService instance for direct testing
+  beforeEach(() => {
     userService = new UserService();
+    vi.clearAllMocks();
   });
 
-  afterAll(async () => {
-    // Cleanup test data
-    await teardownTestDatabase();
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
-  describe('UserService Direct Tests', () => {
-    it('should get all users from real database', async () => {
-      const response = await userService.getAllUsers();
+  describe('getAllUsers', () => {
+    it('should return users successfully with default parameters', async () => {
+      // Arrange - Clean silicon valley mock
+      const testUser = createTestUser();
+      const testUserList = createTestUserList([testUser]);
 
-      expect(response.success).toBe(true);
-      expect(response.data).toBeTruthy();
-      expect(response.data).toHaveProperty('users');
-      expect(Array.isArray(response.data!.users)).toBe(true);
+      const mockTypeSafeDatabaseService = vi.mocked(typeSafeDatabaseService);
 
-      if (response.data!.users.length > 0) {
-        const user = response.data!.users[0];
-        expect(user).toHaveProperty('id');
-        expect(user).toHaveProperty('email');
-        expect(user).toHaveProperty('full_name');
-        expect(user).toHaveProperty('role');
-        expect(user).toHaveProperty('is_active');
-      }
+      // Simple working mock
+      const mockClient = {
+        from: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnThis(),
+            or: vi.fn().mockReturnThis(), 
+            order: vi.fn().mockReturnThis(),
+            range: vi.fn().mockResolvedValue({
+              data: [testUser],
+              error: null,
+              count: 1
+            })
+          })
+        })
+      };
+
+      mockTypeSafeDatabaseService.getClient.mockReturnValue(mockClient as any);
+
+      // Act
+      const result = await userService.getAllUsers();
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(testUserList);
+      expect(result.message).toBe('Retrieved 1 users successfully');
     });
 
-    it('should get user by ID from real database', async () => {
-      // First get all users to get a valid ID
-      const usersResponse = await userService.getAllUsers();
-      expect(usersResponse.success).toBe(true);
-      expect(usersResponse.data).toBeTruthy();
-      expect(usersResponse.data!.users.length).toBeGreaterThan(0);
+    it('should handle search filter', async () => {
+      // Arrange - Clean search mock
+      const testUser = createTestUser();
 
-      const userId = usersResponse.data!.users[0].id;
-      const userResponse = await userService.getUserById(userId);
+      const mockTypeSafeDatabaseService = vi.mocked(typeSafeDatabaseService);
 
-      expect(userResponse.success).toBe(true);
-      expect(userResponse.data!.id).toBe(userId);
-      expect(userResponse.data).toHaveProperty('email');
-      expect(userResponse.data).toHaveProperty('full_name');
-      expect(userResponse.data).toHaveProperty('role');
+      // Simple working chain for search
+      const mockRange = vi.fn().mockResolvedValue({
+        data: [testUser],
+        error: null,
+        count: 1
+      });
+
+      const mockClient = {
+        from: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            or: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            order: vi.fn().mockReturnThis(),
+            range: vi.fn().mockResolvedValue({
+              data: [testUser],
+              error: null,
+              count: 1
+            })
+          })
+        })
+      };
+
+      mockTypeSafeDatabaseService.getClient.mockReturnValue(mockClient as any);
+
+      // Act
+      const result = await userService.getAllUsers({ search: 'test' });
+
+      // Assert
+      expect(result.success).toBe(true);
     });
 
-    it('should return error for non-existent user ID', async () => {
-      const userResponse = await userService.getUserById(99999);
+    it('should handle role filter', async () => {
+      // Arrange
+      const testUser = createTestUser();
+      const mockSupabaseClient = {
+        from: vi.fn(() => ({
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              order: vi.fn(() => ({
+                range: vi.fn().mockResolvedValue({
+                  data: [testUser],
+                  error: null,
+                  count: 1
+                })
+              }))
+            }))
+          }))
+        }))
+      };
 
-      expect(userResponse.success).toBe(false);
-      expect(userResponse.message).toBe('User not found');
+      const mockTypeSafeDatabaseService = vi.mocked(typeSafeDatabaseService);
+      mockTypeSafeDatabaseService.getClient.mockReturnValue(mockSupabaseClient as any);
+
+      // Act
+      const result = await userService.getAllUsers({ role: 'admin' });
+
+      // Assert
+      expect(result.success).toBe(true);
     });
 
-    it('should get user by email from real database', async () => {
-      // First get all users to get a valid email
-      const usersResponse = await userService.getAllUsers();
-      expect(usersResponse.success).toBe(true);
-      expect(usersResponse.data).toBeTruthy();
-      expect(usersResponse.data!.users.length).toBeGreaterThan(0);
+    it('should handle database errors', async () => {
+       // Arrange - Clean error mock
+       const testUser = createTestUser();
+       const mockTypeSafeDatabaseService = vi.mocked(typeSafeDatabaseService);
 
-      const userEmail = usersResponse.data!.users[0].email;
-      const userResponse = await userService.getUserByEmail(userEmail);
+       // Simple working chain for error
+       const mockRange = vi.fn().mockResolvedValue({
+         data: null,
+         error: { message: 'Database connection failed' },
+         count: null
+       });
 
-      expect(userResponse.success).toBe(true);
-      expect(userResponse.data!.email).toBe(userEmail);
-      expect(userResponse.data).toHaveProperty('id');
-      expect(userResponse.data).toHaveProperty('full_name');
-      expect(userResponse.data).toHaveProperty('role');
+       const mockClient = {
+         from: vi.fn().mockReturnValue({
+           select: vi.fn().mockReturnValue({
+             eq: vi.fn().mockReturnThis(),
+             or: vi.fn().mockReturnThis(),
+             order: vi.fn().mockReturnThis(),
+             range: mockRange
+           })
+         })
+       };
+
+       mockTypeSafeDatabaseService.getClient.mockReturnValue(mockClient as any);
+
+      // Act
+      const result = await userService.getAllUsers();
+
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Database error: Database connection failed');
+      expect(result.error).toBe('FETCH_USERS_ERROR');
+    });
+  });
+
+  describe('getUserById', () => {
+    it('should return user successfully', async () => {
+      // Arrange
+      const testUser = createTestUser();
+      const mockSupabaseClient = {
+        from: vi.fn(() => ({
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              single: vi.fn().mockResolvedValue({
+                data: testUser,
+                error: null
+              })
+            }))
+          }))
+        }))
+      };
+
+      const mockTypeSafeDatabaseService = vi.mocked(typeSafeDatabaseService);
+      mockTypeSafeDatabaseService.getClient.mockReturnValue(mockSupabaseClient as any);
+
+      // Act
+      const result = await userService.getUserById(1);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(testUser);
+      expect(result.message).toBe('User retrieved successfully');
     });
 
-    it('should return error for non-existent email', async () => {
-      const userResponse = await userService.getUserByEmail('nonexistent@example.com');
+    it('should handle invalid user ID', async () => {
+      // Act
+      const result = await userService.getUserById(NaN);
 
-      expect(userResponse.success).toBe(false);
-      expect(userResponse.message).toBe('User not found');
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Invalid user ID provided');
+      expect(result.error).toBe('INVALID_ID');
     });
 
-    it('should create user in real database', async () => {
-      const newUser = {
+    it('should handle user not found', async () => {
+      // Arrange
+      const mockSupabaseClient = {
+        from: vi.fn(() => ({
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              single: vi.fn().mockResolvedValue({
+                data: null,
+                error: { code: 'PGRST116', message: 'No rows found' }
+              })
+            }))
+          }))
+        }))
+      };
+
+      const mockTypeSafeDatabaseService = vi.mocked(typeSafeDatabaseService);
+      mockTypeSafeDatabaseService.getClient.mockReturnValue(mockSupabaseClient as any);
+
+      // Act
+      const result = await userService.getUserById(999);
+
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('User not found');
+      expect(result.error).toBe('USER_NOT_FOUND');
+    });
+  });
+
+  describe('getUserByEmail', () => {
+    it('should return user successfully', async () => {
+      // Arrange
+      const testUser = createTestUser();
+      const mockSupabaseClient = {
+        from: vi.fn(() => ({
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              single: vi.fn().mockResolvedValue({
+                data: testUser,
+                error: null
+              })
+            }))
+          }))
+        }))
+      };
+
+      const mockTypeSafeDatabaseService = vi.mocked(typeSafeDatabaseService);
+      mockTypeSafeDatabaseService.getClient.mockReturnValue(mockSupabaseClient as any);
+
+      // Act
+      const result = await userService.getUserByEmail('test@example.com');
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(testUser);
+      expect(result.message).toBe('User retrieved successfully');
+    });
+
+    it('should handle empty email', async () => {
+      // Act
+      const result = await userService.getUserByEmail('');
+
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Email is required');
+      expect(result.error).toBe('INVALID_EMAIL');
+    });
+  });
+
+  describe('createUser', () => {
+    it('should create user successfully', async () => {
+      // Arrange
+      const mockBcrypt = vi.mocked(bcrypt);
+      (mockBcrypt.hash as any).mockResolvedValue('hashed_password');
+
+      const testUser = createTestUser();
+      const mockTypeSafeDatabaseService = vi.mocked(typeSafeDatabaseService);
+      mockTypeSafeDatabaseService.executeRpc.mockResolvedValue(createRpcSuccessResponse(testUser));
+
+      const userData = {
         email: 'test@example.com',
         password: 'TestPassword123',
         full_name: 'Test User',
+        phone: '+1234567890',
         role: 'user' as const,
-        is_active: true
+        is_active: true,
+        email_verified: false
       };
 
-      const createResponse = await userService.createUser(newUser);
+      // Act
+      const result = await userService.createUser(userData);
 
-      expect(createResponse.success).toBe(true);
-      expect(createResponse.data!.email).toBe(newUser.email);
-      expect(createResponse.data!.full_name).toBe(newUser.full_name);
-      expect(createResponse.data!.role).toBe(newUser.role);
-      expect(createResponse.data!.is_active).toBe(newUser.is_active);
-      expect(createResponse.data).toHaveProperty('id');
-      expect(createResponse.data).toHaveProperty('created_at');
+      // Assert
+      expect(mockBcrypt.hash).toHaveBeenCalledWith('TestPassword123', 12);
+      expect(typeSafeDatabaseService.executeRpc).toHaveBeenCalledWith('create_user_atomic', {
+        user_data: {
+          email: 'test@example.com',
+          password_hash: 'hashed_password',
+          full_name: 'Test User',
+          phone: '+1234567890',
+          role: 'user',
+          is_active: true,
+          email_verified: false
+        }
+      });
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(testUser);
+      expect(result.message).toBe('User created successfully');
     });
 
-    it('should update user in real database', async () => {
-      // First create a user to update
-      const newUser = {
-        email: 'update-test@example.com',
-        password: 'TestPassword123',
-        full_name: 'Update Test User',
-        role: 'user' as const,
-        is_active: true
+    it('should handle validation errors', async () => {
+      // Arrange
+      const invalidUserData = {
+        email: 'invalid-email',
+        password: '123',
+        full_name: 'T',
+        role: 'invalid' as any
       };
 
-      const createResponse = await userService.createUser(newUser);
-      expect(createResponse.success).toBe(true);
+      // Act
+      const result = await userService.createUser(invalidUserData);
 
-      // Update the user
-      const updatedData = {
-        id: createResponse.data!.id,
-        full_name: 'Updated Test User',
-        is_active: false
-      };
-
-      const updateResponse = await userService.updateUser(createResponse.data!.id, updatedData);
-
-      expect(updateResponse.success).toBe(true);
-      expect(updateResponse.data!.id).toBe(createResponse.data!.id);
-      expect(updateResponse.data!.full_name).toBe(updatedData.full_name);
-      expect(updateResponse.data!.is_active).toBe(updatedData.is_active);
-      expect(updateResponse.data!.email).toBe(createResponse.data!.email); // Should remain unchanged
-    });
-
-    it('should delete user from real database', async () => {
-      // First create a user to delete
-      const newUser = {
-        email: 'delete-test@example.com',
-        password: 'TestPassword123',
-        full_name: 'Delete Test User',
-        role: 'user' as const,
-        is_active: true
-      };
-
-      const createResponse = await userService.createUser(newUser);
-      expect(createResponse.success).toBe(true);
-
-      // Delete the user
-      const deleteResponse = await userService.deleteUser(createResponse.data!.id);
-
-      expect(deleteResponse.success).toBe(true);
-      expect(deleteResponse.data!.deleted_user.id).toBe(createResponse.data!.id);
-      expect(deleteResponse.data!.deleted_user.email).toBe(newUser.email);
-
-      // Verify user is deleted
-      const deletedUserResponse = await userService.getUserById(createResponse.data!.id);
-      expect(deletedUserResponse.success).toBe(false);
-      expect(deletedUserResponse.message).toBe('User not found');
-    });
-
-    it('should toggle user active status', async () => {
-      // First create a user
-      const newUser = {
-        email: 'toggle-test@example.com',
-        password: 'TestPassword123',
-        full_name: 'Toggle Test User',
-        role: 'user' as const,
-        is_active: true
-      };
-
-      const createResponse = await userService.createUser(newUser);
-      expect(createResponse.success).toBe(true);
-
-      // Toggle user status
-      const toggleResponse = await userService.toggleUserActive(createResponse.data!.id);
-
-      expect(toggleResponse.success).toBe(true);
-      expect(toggleResponse.data!.id).toBe(createResponse.data!.id);
-      expect(toggleResponse.data!.is_active).toBe(false); // Should be toggled to false
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Validation errors');
+      expect(result.error).toBe('VALIDATION_ERROR');
+      expect(result.errors).toBeDefined();
+      expect(result.errors?.length).toBeGreaterThan(0);
     });
   });
 
-  describe('GET /api/users - Real Database Integration', () => {
-    it('should return users from real database', async () => {
-      const response = await request
-        .get('/api/users')
-        .expect(200);
+  describe('updateUser', () => {
+    it('should update user successfully', async () => {
+      // Arrange
+      const mockBcrypt = vi.mocked(bcrypt);
+      (mockBcrypt.hash as any).mockResolvedValue('new_hashed_password');
 
-      expect(response.body).toMatchObject({
-        success: true,
-        message: 'Users retrieved successfully'
+      const testUser = createTestUser();
+      const mockTypeSafeDatabaseService = vi.mocked(typeSafeDatabaseService);
+      mockTypeSafeDatabaseService.executeRpc.mockResolvedValue(createRpcSuccessResponse(testUser));
+
+      const updateData: UserUpdateRequest = {
+        id: 1,
+        email: 'updated@example.com',
+        full_name: 'Updated User',
+        password: 'NewPassword123'
+      };
+
+      // Act
+      const result = await userService.updateUser(1, updateData);
+
+      // Assert
+      expect(mockBcrypt.hash).toHaveBeenCalledWith('NewPassword123', 12);
+      expect(typeSafeDatabaseService.executeRpc).toHaveBeenCalledWith('update_user_atomic', {
+        user_id: 1,
+        user_data: {
+          email: 'updated@example.com',
+          full_name: 'Updated User',
+          password_hash: 'new_hashed_password'
+        }
       });
-
-      expect(response.body.data).toHaveProperty('users');
-      expect(Array.isArray(response.body.data.users)).toBe(true);
-
-      if (response.body.data.users.length > 0) {
-        const user = response.body.data.users[0];
-        expect(user).toHaveProperty('id');
-        expect(user).toHaveProperty('email');
-        expect(user).toHaveProperty('full_name');
-        expect(user).toHaveProperty('role');
-        expect(user).toHaveProperty('active');
-      }
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(testUser);
+      expect(result.message).toBe('User updated successfully');
     });
 
-    it('should filter users by active status', async () => {
-      const response = await request
-        .get('/api/users?active=true')
-        .expect(200);
+    it('should handle invalid user ID', async () => {
+      // Act
+      const result = await userService.updateUser(NaN, { id: 1, email: 'test@example.com' } as UserUpdateRequest);
 
-      const users = response.body.data.users;
-      expect(users.length).toBeGreaterThan(0);
-
-      // All users should be active
-      users.forEach((user: any) => {
-        expect(user.active).toBe(true);
-      });
-    });
-
-    it('should filter users by role', async () => {
-      const response = await request
-        .get('/api/users?role=customer')
-        .expect(200);
-
-      const users = response.body.data.users;
-
-      // All users should have the specified role
-      users.forEach((user: any) => {
-        expect(user.role).toBe('customer');
-      });
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Invalid user ID provided');
+      expect(result.error).toBe('INVALID_ID');
     });
   });
 
-  describe('GET /api/users/:id - Real Database Integration', () => {
-    it('should return a specific user from real database', async () => {
-      // First get all users to get a valid ID
-      const usersResponse = await request
-        .get('/api/users')
-        .expect(200);
+  describe('toggleUserActive', () => {
+    it('should toggle user active status successfully', async () => {
+      // Arrange
+      const testUser = createTestUser();
+      const mockTypeSafeDatabaseService = vi.mocked(typeSafeDatabaseService);
+      mockTypeSafeDatabaseService.executeRpc.mockResolvedValue(createRpcSuccessResponse(testUser));
 
-      const users = usersResponse.body.data.users;
-      expect(users.length).toBeGreaterThan(0);
+      // Act
+      const result = await userService.toggleUserActive(1);
 
-      const userId = users[0].id;
-
-      const response = await request
-        .get(`/api/users/${userId}`)
-        .expect(200);
-
-      expect(response.body).toMatchObject({
-        success: true,
-        message: 'User retrieved successfully'
+      // Assert
+      expect(typeSafeDatabaseService.executeRpc).toHaveBeenCalledWith('toggle_user_active_atomic', {
+        user_id: 1
       });
-
-      expect(response.body.data).toHaveProperty('user');
-      expect(response.body.data.user.id).toBe(userId);
-      expect(response.body.data.user).toHaveProperty('email');
-      expect(response.body.data.user).toHaveProperty('full_name');
-      expect(response.body.data.user).toHaveProperty('role');
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(testUser);
+      expect(result.message).toBe('Operation successful');
     });
 
-    it('should return 404 for non-existent user', async () => {
-      const response = await request
-        .get('/api/users/99999')
-        .expect(404);
+    it('should handle invalid user ID', async () => {
+      // Act
+      const result = await userService.toggleUserActive(NaN);
 
-      expect(response.body).toMatchObject({
-        success: false,
-        message: 'User not found'
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Invalid user ID provided');
+      expect(result.error).toBe('INVALID_ID');
+    });
+  });
+
+  describe('deleteUser', () => {
+    it('should delete user successfully', async () => {
+      // Arrange
+      const testUser = createTestUser();
+      const mockTypeSafeDatabaseService = vi.mocked(typeSafeDatabaseService);
+      mockTypeSafeDatabaseService.executeRpc.mockResolvedValue(createRpcDeleteResponse(testUser));
+
+      // Act
+      const result = await userService.deleteUser(1);
+
+      // Assert
+      expect(typeSafeDatabaseService.executeRpc).toHaveBeenCalledWith('delete_user_atomic', {
+        user_id: 1
       });
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual({
+        deleted_user: { id: 1, email: 'test@example.com', full_name: 'Test User' }
+      });
+      expect(result.message).toBe('User deleted successfully');
+    });
+
+    it('should handle invalid user ID', async () => {
+      // Act
+      const result = await userService.deleteUser(NaN);
+
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Invalid user ID provided');
+      expect(result.error).toBe('INVALID_ID');
     });
   });
 });

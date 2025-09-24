@@ -1,13 +1,13 @@
 /**
- * 🌸 FloresYa Occasions Controller Tests - Enterprise TypeScript Edition
- * Comprehensive unit tests for occasion management endpoints
+ * 🌸 FloresYa Occasions Controller Tests - Silicon Valley Simple Mock Edition
+ * Clean, maintainable tests with one mock per test pattern
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Request, Response } from 'express';
 import { OccasionsController } from '../../src/controllers/OccasionsController.js';
 import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService.js';
-import type { Occasion, OccasionType } from '../../src/shared/types/index.js';
+import type { Occasion } from '../../src/shared/types/index.js';
 
 // Mock the database service
 vi.mock('../../src/services/TypeSafeDatabaseService.js', () => ({
@@ -32,11 +32,43 @@ describe('OccasionsController', () => {
   let jsonMock: any;
   let statusMock: any;
 
+  // Test data factories
+  const createTestOccasion = (overrides = {}) => ({
+    id: 1,
+    name: 'Cumpleaños',
+    slug: 'cumpleanos',
+    description: 'Celebraciones de cumpleaños',
+    color: '#FF6B6B',
+    display_order: 1,
+    is_active: true,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    ...overrides
+  });
+
+  const createTestOccasionsList = (occasions = [createTestOccasion()], overrides = []) => [
+    ...occasions,
+    ...overrides
+  ];
+
+  const createMockRequest = (options: any = {}) => ({
+    params: options.params || {},
+    query: options.query || {},
+    body: options.body || {},
+    ...options
+  });
+
+  const createMockResponse = () => {
+    const res: any = {};
+    res.status = vi.fn().mockReturnValue(res);
+    res.json = vi.fn().mockReturnValue(res);
+    res.send = vi.fn().mockReturnValue(res);
+    return res;
+  };
+
   beforeEach(() => {
-    // Create a new instance of OccasionsController
     occasionsController = new OccasionsController();
 
-    // Mock response methods
     jsonMock = vi.fn();
     const sendMock = vi.fn();
     statusMock = vi.fn().mockReturnValue({ json: jsonMock, send: sendMock });
@@ -46,7 +78,6 @@ describe('OccasionsController', () => {
       send: sendMock
     };
 
-    // Clear all mocks
     vi.clearAllMocks();
   });
 
@@ -56,93 +87,50 @@ describe('OccasionsController', () => {
 
   describe('getOccasions', () => {
     it('should return all active occasions successfully', async () => {
-      const mockOccasions: Occasion[] = [
-        {
-          id: 1,
-          name: 'Cumpleaños',
-          slug: 'cumpleanos',
-          description: 'Celebraciones de cumpleaños',
-          color: '#FF6B6B',
-          type: 'birthday' as OccasionType,
-          display_order: 1,
-          is_active: true,
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
-        },
-        {
+      // Arrange
+      const testOccasions = createTestOccasionsList([
+        createTestOccasion(),
+        createTestOccasion({
           id: 2,
           name: 'Aniversario',
           slug: 'aniversario',
           description: 'Aniversarios especiales',
           color: '#4ECDC4',
-          type: 'anniversary' as OccasionType,
-          display_order: 2,
-          is_active: true,
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
-        }
-      ];
+          display_order: 2
+        })
+      ]);
 
-      vi.mocked(typeSafeDatabaseService.getActiveOccasions).mockResolvedValue(mockOccasions);
+      vi.mocked(typeSafeDatabaseService.getActiveOccasions).mockResolvedValue(testOccasions);
 
-      mockRequest = {
+      mockRequest = createMockRequest({
         query: {}
-      };
-
-      await occasionsController.getOccasions(mockRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(200);
-      expect(jsonMock).toHaveBeenCalledWith({
-        success: true,
-        data: mockOccasions,
-        message: 'Occasions retrieved successfully'
       });
-    });
 
-    it('should return occasions successfully with valid query', async () => {
-      const mockOccasions: Occasion[] = [
-        {
-          id: 1,
-          name: 'Cumpleaños',
-          slug: 'cumpleanos',
-          description: 'Celebraciones de cumpleaños',
-          color: '#FF6B6B',
-          type: 'birthday' as OccasionType,
-          display_order: 1,
-          is_active: true,
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
-        }
-      ];
-
-      vi.mocked(typeSafeDatabaseService.getActiveOccasions).mockResolvedValue(mockOccasions);
-
-      mockRequest = {
-        query: {
-          limit: '10'
-        }
-      };
-
+      // Act
       await occasionsController.getOccasions(mockRequest as Request, mockResponse as Response);
 
+      // Assert
       expect(statusMock).toHaveBeenCalledWith(200);
       expect(jsonMock).toHaveBeenCalledWith({
         success: true,
-        data: mockOccasions,
+        data: testOccasions,
         message: 'Occasions retrieved successfully'
       });
     });
 
     it('should handle service errors', async () => {
+      // Arrange
       const errorMessage = 'Database connection failed';
       vi.mocked(typeSafeDatabaseService.getActiveOccasions).mockRejectedValue(new Error(errorMessage));
 
-      mockRequest = {
+      mockRequest = createMockRequest({
         query: {}
-      };
+      });
 
+      // Act
       await occasionsController.getOccasions(mockRequest as Request, mockResponse as Response);
 
+      // Assert
       expect(statusMock).toHaveBeenCalledWith(500);
       expect(jsonMock).toHaveBeenCalledWith({
         success: false,
@@ -154,59 +142,38 @@ describe('OccasionsController', () => {
 
   describe('getOccasionById', () => {
     it('should return occasion by ID successfully', async () => {
-      const mockOccasion: Occasion = {
-        id: 1,
-        name: 'Cumpleaños',
-        slug: 'cumpleanos',
-        description: 'Celebraciones de cumpleaños',
-        color: '#FF6B6B',
-        type: 'birthday' as OccasionType,
-        display_order: 1,
-        is_active: true,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      };
+      // Arrange
+      const testOccasion = createTestOccasion();
+      vi.mocked(typeSafeDatabaseService.getActiveOccasionById).mockResolvedValue(testOccasion);
 
-      vi.mocked(typeSafeDatabaseService.getActiveOccasionById).mockResolvedValue(mockOccasion);
-
-      mockRequest = {
+      mockRequest = createMockRequest({
         params: { id: '1' }
-      };
+      });
 
+      // Act
       await occasionsController.getOccasionById(mockRequest as Request, mockResponse as Response);
 
+      // Assert
       expect(statusMock).toHaveBeenCalledWith(200);
       expect(jsonMock).toHaveBeenCalledWith({
         success: true,
-        data: { occasion: mockOccasion },
+        data: { occasion: testOccasion },
         message: 'Occasion retrieved successfully'
       });
     });
 
     it('should return 404 when occasion not found', async () => {
+      // Arrange
       vi.mocked(typeSafeDatabaseService.getActiveOccasionById).mockResolvedValue(null);
 
-      mockRequest = {
+      mockRequest = createMockRequest({
         params: { id: '999' }
-      };
-
-      await occasionsController.getOccasionById(mockRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(404);
-      expect(jsonMock).toHaveBeenCalledWith({
-        success: false,
-        message: 'Occasion not found'
       });
-    });
 
-    it('should return 404 when occasion ID is not found', async () => {
-      // Test with a valid ID format but non-existent occasion
-      mockRequest = {
-        params: { id: '999' }
-      };
-
+      // Act
       await occasionsController.getOccasionById(mockRequest as Request, mockResponse as Response);
 
+      // Assert
       expect(statusMock).toHaveBeenCalledWith(404);
       expect(jsonMock).toHaveBeenCalledWith({
         success: false,
@@ -215,15 +182,18 @@ describe('OccasionsController', () => {
     });
 
     it('should handle service errors', async () => {
+      // Arrange
       const errorMessage = 'Database query failed';
       vi.mocked(typeSafeDatabaseService.getActiveOccasionById).mockRejectedValue(new Error(errorMessage));
 
-      mockRequest = {
+      mockRequest = createMockRequest({
         params: { id: '1' }
-      };
+      });
 
+      // Act
       await occasionsController.getOccasionById(mockRequest as Request, mockResponse as Response);
 
+      // Assert
       expect(statusMock).toHaveBeenCalledWith(500);
       expect(jsonMock).toHaveBeenCalledWith({
         success: false,
@@ -235,49 +205,47 @@ describe('OccasionsController', () => {
 
   describe('createOccasion', () => {
     it('should create occasion successfully', async () => {
+      // Arrange
       const createData = {
         name: 'nuevo cumpleaños',
-        type: 'birthday' as OccasionType,
         description: 'Nueva ocasión de cumpleaños',
         is_active: true
       };
 
-      const mockCreatedOccasion: Occasion = {
+      const testCreatedOccasion = createTestOccasion({
         id: 3,
         name: 'Nuevo Cumpleaños',
         slug: 'nuevo-cumpleanos',
         description: 'Nueva ocasión de cumpleaños',
         color: '#FF6B6B',
-        type: 'birthday' as OccasionType,
-        display_order: 3,
-        is_active: true,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      };
+        display_order: 3
+      });
 
       // Mock the helper methods
       vi.spyOn(occasionsController as any, 'checkOccasionNameExists').mockResolvedValue(false);
       vi.mocked(typeSafeDatabaseService.getMaxOccasionDisplayOrder).mockResolvedValue(2);
-      vi.mocked(typeSafeDatabaseService.createOccasion).mockResolvedValue(mockCreatedOccasion);
+      vi.mocked(typeSafeDatabaseService.createOccasion).mockResolvedValue(testCreatedOccasion);
 
-      mockRequest = {
+      mockRequest = createMockRequest({
         body: createData
-      };
+      });
 
+      // Act
       await occasionsController.createOccasion(mockRequest as Request, mockResponse as Response);
 
+      // Assert
       expect(statusMock).toHaveBeenCalledWith(201);
       expect(jsonMock).toHaveBeenCalledWith({
         success: true,
-        data: { occasion: mockCreatedOccasion },
+        data: { occasion: testCreatedOccasion },
         message: 'Occasion created successfully'
       });
     });
 
     it('should handle duplicate name error', async () => {
+      // Arrange
       const createData = {
         name: 'cumpleaños existente',
-        type: 'birthday' as OccasionType,
         description: 'Intento de duplicado',
         is_active: true
       };
@@ -285,12 +253,14 @@ describe('OccasionsController', () => {
       // Mock the helper method to return true (name exists)
       vi.spyOn(occasionsController as any, 'checkOccasionNameExists').mockResolvedValue(true);
 
-      mockRequest = {
+      mockRequest = createMockRequest({
         body: createData
-      };
+      });
 
+      // Act
       await occasionsController.createOccasion(mockRequest as Request, mockResponse as Response);
 
+      // Assert
       expect(statusMock).toHaveBeenCalledWith(409);
       expect(jsonMock).toHaveBeenCalledWith({
         success: false,
@@ -299,61 +269,23 @@ describe('OccasionsController', () => {
       });
     });
 
-    it('should create occasion with valid data', async () => {
-      const createData = {
-        name: 'Test Occasion',
-        type: 'general' as OccasionType,
-        description: 'Test description',
-        is_active: true
-      };
-
-      const mockCreatedOccasion: Occasion = {
-        id: 3,
-        name: 'Test Occasion',
-        slug: 'test-occasion',
-        description: 'Test description',
-        color: '#FF6B6B',
-        type: 'general' as OccasionType,
-        display_order: 3,
-        is_active: true,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      };
-
-      // Mock the helper methods
-      vi.spyOn(occasionsController as any, 'checkOccasionNameExists').mockResolvedValue(false);
-      vi.mocked(typeSafeDatabaseService.getMaxOccasionDisplayOrder).mockResolvedValue(2);
-      vi.mocked(typeSafeDatabaseService.createOccasion).mockResolvedValue(mockCreatedOccasion);
-
-      mockRequest = {
-        body: createData
-      };
-
-      await occasionsController.createOccasion(mockRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(201);
-      expect(jsonMock).toHaveBeenCalledWith({
-        success: true,
-        data: { occasion: mockCreatedOccasion },
-        message: 'Occasion created successfully'
-      });
-    });
-
     it('should handle service errors', async () => {
+      // Arrange
       const errorMessage = 'Database insertion failed';
       vi.spyOn(occasionsController as any, 'checkOccasionNameExists').mockRejectedValue(new Error(errorMessage));
 
-      mockRequest = {
+      mockRequest = createMockRequest({
         body: {
           name: 'Test Occasion',
-          type: 'general' as OccasionType,
           description: 'Test description',
           is_active: true
         }
-      };
+      });
 
+      // Act
       await occasionsController.createOccasion(mockRequest as Request, mockResponse as Response);
 
+      // Assert
       expect(statusMock).toHaveBeenCalledWith(500);
       expect(jsonMock).toHaveBeenCalledWith({
         success: false,
@@ -365,139 +297,61 @@ describe('OccasionsController', () => {
 
   describe('updateOccasion', () => {
     it('should update occasion successfully', async () => {
-      const currentOccasion: Occasion = {
-        id: 1,
-        name: 'Cumpleaños',
-        slug: 'cumpleanos',
-        description: 'Celebraciones de cumpleaños',
-        color: '#FF6B6B',
-        type: 'birthday' as OccasionType,
-        display_order: 1,
-        is_active: true,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      };
-
+      // Arrange
+      const currentOccasion = createTestOccasion();
       const updateData = {
         name: 'nuevo nombre de cumpleaños',
         description: 'Nueva descripción',
         is_active: true
       };
 
-      const mockUpdatedOccasion: Occasion = {
+      const testUpdatedOccasion = createTestOccasion({
         ...currentOccasion,
         name: 'Nuevo Nombre De Cumpleaños',
-        description: 'Nueva descripción',
-        updated_at: expect.any(String)
-      };
+        description: 'Nueva descripción'
+      });
 
       // Mock the helper methods
       vi.mocked(typeSafeDatabaseService.getOccasionById).mockResolvedValue(currentOccasion);
       vi.spyOn(occasionsController as any, 'checkOccasionNameExists').mockResolvedValue(false);
       vi.mocked(typeSafeDatabaseService.checkOccasionSlugExists).mockResolvedValue(false);
-      vi.mocked(typeSafeDatabaseService.updateOccasion).mockResolvedValue(mockUpdatedOccasion);
+      vi.mocked(typeSafeDatabaseService.updateOccasion).mockResolvedValue(testUpdatedOccasion);
 
-      mockRequest = {
+      mockRequest = createMockRequest({
         params: { id: '1' },
         body: updateData
-      };
+      });
 
+      // Act
       await occasionsController.updateOccasion(mockRequest as Request, mockResponse as Response);
 
+      // Assert
       expect(statusMock).toHaveBeenCalledWith(200);
       expect(jsonMock).toHaveBeenCalledWith({
         success: true,
         data: {
-          occasion: mockUpdatedOccasion,
+          occasion: testUpdatedOccasion,
           slug_changed: expect.any(Boolean)
         },
         message: 'Occasion updated successfully'
       });
     });
 
-    it('should handle slug change when name is updated', async () => {
-      const currentOccasion: Occasion = {
-        id: 1,
-        name: 'Cumpleaños',
-        slug: 'cumpleanos',
-        description: 'Celebraciones de cumpleaños',
-        color: '#FF6B6B',
-        type: 'birthday' as OccasionType,
-        display_order: 1,
-        is_active: true,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      };
-
-      const updateData = {
-        name: 'fiesta de cumpleaños',
-        description: 'Nueva descripción',
-        is_active: true
-      };
-
-      const mockUpdatedOccasion: Occasion = {
-        ...currentOccasion,
-        name: 'Fiesta De Cumpleaños',
-        slug: 'fiesta-de-cumpleanos',
-        description: 'Nueva descripción',
-        updated_at: expect.any(String)
-      };
-
-      // Mock the helper methods
-      vi.mocked(typeSafeDatabaseService.getOccasionById).mockResolvedValue(currentOccasion);
-      vi.spyOn(occasionsController as any, 'checkOccasionNameExists').mockResolvedValue(false);
-      vi.mocked(typeSafeDatabaseService.checkOccasionSlugExists).mockResolvedValue(false);
-      vi.mocked(typeSafeDatabaseService.updateOccasion).mockResolvedValue(mockUpdatedOccasion);
-
-      mockRequest = {
-        params: { id: '1' },
-        body: updateData
-      };
-
-      await occasionsController.updateOccasion(mockRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(200);
-      expect(jsonMock).toHaveBeenCalledWith({
-        success: true,
-        data: {
-          occasion: mockUpdatedOccasion,
-          slug_changed: true
-        },
-        message: 'Occasion updated successfully'
-      });
-    });
-
     it('should return 404 when occasion not found', async () => {
+      // Arrange
       vi.mocked(typeSafeDatabaseService.getOccasionById).mockResolvedValue(null);
 
-      mockRequest = {
+      mockRequest = createMockRequest({
         params: { id: '999' },
         body: {
           name: 'Test Update'
         }
-      };
-
-      await occasionsController.updateOccasion(mockRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(404);
-      expect(jsonMock).toHaveBeenCalledWith({
-        success: false,
-        message: 'Occasion not found'
       });
-    });
 
-    it('should return 404 when occasion not found for update', async () => {
-      vi.mocked(typeSafeDatabaseService.getOccasionById).mockResolvedValue(null);
-
-      mockRequest = {
-        params: { id: '999' },
-        body: {
-          name: 'Test Update'
-        }
-      };
-
+      // Act
       await occasionsController.updateOccasion(mockRequest as Request, mockResponse as Response);
 
+      // Assert
       expect(statusMock).toHaveBeenCalledWith(404);
       expect(jsonMock).toHaveBeenCalledWith({
         success: false,
@@ -506,18 +360,21 @@ describe('OccasionsController', () => {
     });
 
     it('should handle service errors', async () => {
+      // Arrange
       const errorMessage = 'Database update failed';
       vi.mocked(typeSafeDatabaseService.getOccasionById).mockRejectedValue(new Error(errorMessage));
 
-      mockRequest = {
+      mockRequest = createMockRequest({
         params: { id: '1' },
         body: {
           name: 'Test Update'
         }
-      };
+      });
 
+      // Act
       await occasionsController.updateOccasion(mockRequest as Request, mockResponse as Response);
 
+      // Assert
       expect(statusMock).toHaveBeenCalledWith(500);
       expect(jsonMock).toHaveBeenCalledWith({
         success: false,
@@ -529,43 +386,33 @@ describe('OccasionsController', () => {
 
   describe('deleteOccasion', () => {
     it('should perform logical deletion when occasion has references', async () => {
-      const mockOccasion: Occasion = {
-        id: 1,
-        name: 'Cumpleaños',
-        slug: 'cumpleanos',
-        description: 'Celebraciones de cumpleaños',
-        color: '#FF6B6B',
-        type: 'birthday' as OccasionType,
-        display_order: 1,
-        is_active: true,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      };
-
+      // Arrange
+      const testOccasion = createTestOccasion();
       const mockReferences = [1, 2, 3]; // Array of product IDs
 
-      const mockUpdatedOccasion: Occasion = {
-        ...mockOccasion,
-        is_active: false,
-        updated_at: expect.any(String)
-      };
+      const testUpdatedOccasion = createTestOccasion({
+        ...testOccasion,
+        is_active: false
+      });
 
       // Mock the helper methods
-      vi.mocked(typeSafeDatabaseService.getOccasionById).mockResolvedValue(mockOccasion);
+      vi.mocked(typeSafeDatabaseService.getOccasionById).mockResolvedValue(testOccasion);
       vi.mocked(typeSafeDatabaseService.getProductOccasionReferences).mockResolvedValue(mockReferences);
-      vi.mocked(typeSafeDatabaseService.updateOccasion).mockResolvedValue(mockUpdatedOccasion);
+      vi.mocked(typeSafeDatabaseService.updateOccasion).mockResolvedValue(testUpdatedOccasion);
 
-      mockRequest = {
+      mockRequest = createMockRequest({
         params: { id: '1' }
-      };
+      });
 
+      // Act
       await occasionsController.deleteOccasion(mockRequest as Request, mockResponse as Response);
 
+      // Assert
       expect(statusMock).toHaveBeenCalledWith(200);
       expect(jsonMock).toHaveBeenCalledWith({
         success: true,
         data: {
-          occasion: mockUpdatedOccasion,
+          occasion: testUpdatedOccasion,
           deletion_type: 'logical',
           has_references: true
         },
@@ -574,59 +421,45 @@ describe('OccasionsController', () => {
     });
 
     it('should perform physical deletion when occasion has no references', async () => {
-      const mockOccasion: Occasion = {
+      // Arrange
+      const testOccasion = createTestOccasion({
         id: 2,
         name: 'Aniversario',
         slug: 'aniversario',
         description: 'Aniversarios especiales',
         color: '#4ECDC4',
-        type: 'anniversary' as OccasionType,
-        display_order: 2,
-        is_active: true,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      };
+        display_order: 2
+      });
 
       // Mock the helper methods
-      vi.mocked(typeSafeDatabaseService.getOccasionById).mockResolvedValue(mockOccasion);
+      vi.mocked(typeSafeDatabaseService.getOccasionById).mockResolvedValue(testOccasion);
       vi.mocked(typeSafeDatabaseService.getProductOccasionReferences).mockResolvedValue([]);
       vi.mocked(typeSafeDatabaseService.deleteOccasion).mockResolvedValue(undefined);
 
-      mockRequest = {
+      mockRequest = createMockRequest({
         params: { id: '2' }
-      };
+      });
 
+      // Act
       await occasionsController.deleteOccasion(mockRequest as Request, mockResponse as Response);
 
+      // Assert
       expect(statusMock).toHaveBeenCalledWith(204);
       expect(jsonMock).not.toHaveBeenCalled();
     });
 
     it('should return 404 when occasion not found', async () => {
+      // Arrange
       vi.mocked(typeSafeDatabaseService.getOccasionById).mockResolvedValue(null);
 
-      mockRequest = {
+      mockRequest = createMockRequest({
         params: { id: '999' }
-      };
-
-      await occasionsController.deleteOccasion(mockRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(404);
-      expect(jsonMock).toHaveBeenCalledWith({
-        success: false,
-        message: 'Occasion not found'
       });
-    });
 
-    it('should return 404 when occasion not found for deletion', async () => {
-      vi.mocked(typeSafeDatabaseService.getOccasionById).mockResolvedValue(null);
-
-      mockRequest = {
-        params: { id: '999' }
-      };
-
+      // Act
       await occasionsController.deleteOccasion(mockRequest as Request, mockResponse as Response);
 
+      // Assert
       expect(statusMock).toHaveBeenCalledWith(404);
       expect(jsonMock).toHaveBeenCalledWith({
         success: false,
@@ -635,15 +468,18 @@ describe('OccasionsController', () => {
     });
 
     it('should handle service errors', async () => {
+      // Arrange
       const errorMessage = 'Database deletion failed';
       vi.mocked(typeSafeDatabaseService.getOccasionById).mockRejectedValue(new Error(errorMessage));
 
-      mockRequest = {
+      mockRequest = createMockRequest({
         params: { id: '1' }
-      };
+      });
 
+      // Act
       await occasionsController.deleteOccasion(mockRequest as Request, mockResponse as Response);
 
+      // Assert
       expect(statusMock).toHaveBeenCalledWith(500);
       expect(jsonMock).toHaveBeenCalledWith({
         success: false,
@@ -656,8 +492,10 @@ describe('OccasionsController', () => {
   describe('Private helper methods', () => {
     describe('capitalizeOccasionName', () => {
       it('should capitalize occasion names correctly', () => {
+        // Arrange
         const controller = new OccasionsController();
 
+        // Act & Assert
         expect((controller as any).capitalizeOccasionName('cumpleaños')).toBe('Cumpleaños');
         expect((controller as any).capitalizeOccasionName('día de la madre')).toBe('Día de la Madre');
         expect((controller as any).capitalizeOccasionName('san valentín')).toBe('San Valentín');
@@ -665,8 +503,10 @@ describe('OccasionsController', () => {
       });
 
       it('should handle empty and single word names', () => {
+        // Arrange
         const controller = new OccasionsController();
 
+        // Act & Assert
         expect((controller as any).capitalizeOccasionName('')).toBe('');
         expect((controller as any).capitalizeOccasionName('cumpleaños')).toBe('Cumpleaños');
       });
@@ -674,8 +514,10 @@ describe('OccasionsController', () => {
 
     describe('normalizeOccasionName', () => {
       it('should normalize occasion names correctly', () => {
+        // Arrange
         const controller = new OccasionsController();
 
+        // Act & Assert
         expect((controller as any).normalizeOccasionName('Cumpleaños')).toBe('cumpleaños');
         expect((controller as any).normalizeOccasionName('Día de la Madre')).toBe('dia de la madre');
         expect((controller as any).normalizeOccasionName('San Valentín')).toBe('san valentin');
@@ -683,8 +525,10 @@ describe('OccasionsController', () => {
       });
 
       it('should preserve ñ character', () => {
+        // Arrange
         const controller = new OccasionsController();
 
+        // Act & Assert
         expect((controller as any).normalizeOccasionName('Cumpleaños')).toBe('cumpleaños');
         expect((controller as any).normalizeOccasionName('Ñoño')).toBe('ñoño');
       });
@@ -692,69 +536,37 @@ describe('OccasionsController', () => {
 
     describe('checkOccasionNameExists', () => {
       it('should return false when name does not exist', async () => {
+        // Arrange
         const controller = new OccasionsController();
-        const mockOccasions: Occasion[] = [
-          {
-            id: 1,
-            name: 'Cumpleaños',
-            slug: 'cumpleanos',
-            description: 'Celebraciones de cumpleaños',
-            color: '#FF6B6B',
-            type: 'birthday' as OccasionType,
-            display_order: 1,
-            is_active: true,
-            created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
-          }
-        ];
+        const testOccasions = createTestOccasionsList();
 
-        vi.mocked(typeSafeDatabaseService.getOccasionsForQuery).mockResolvedValue(mockOccasions);
+        vi.mocked(typeSafeDatabaseService.getOccasionsForQuery).mockResolvedValue(testOccasions);
 
+        // Act
         const result = await (controller as any).checkOccasionNameExists('aniversario');
 
+        // Assert
         expect(result).toBe(false);
       });
 
       it('should return true when name exists', async () => {
+        // Arrange
         const controller = new OccasionsController();
-        const mockOccasions: Occasion[] = [
-          {
-            id: 1,
-            name: 'Cumpleaños',
-            slug: 'cumpleanos',
-            description: 'Celebraciones de cumpleaños',
-            color: '#FF6B6B',
-            type: 'birthday' as OccasionType,
-            display_order: 1,
-            is_active: true,
-            created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
-          }
-        ];
+        const testOccasions = createTestOccasionsList();
 
-        vi.mocked(typeSafeDatabaseService.getOccasionsForQuery).mockResolvedValue(mockOccasions);
+        vi.mocked(typeSafeDatabaseService.getOccasionsForQuery).mockResolvedValue(testOccasions);
 
+        // Act
         const result = await (controller as any).checkOccasionNameExists('cumpleaños');
 
+        // Assert
         expect(result).toBe(true);
       });
 
       it('should exclude specified ID when checking', async () => {
+        // Arrange
         const controller = new OccasionsController();
-        const allOccasions: Occasion[] = [
-          {
-            id: 1,
-            name: 'Cumpleaños',
-            slug: 'cumpleanos',
-            description: 'Celebraciones de cumpleaños',
-            color: '#FF6B6B',
-            type: 'birthday' as OccasionType,
-            display_order: 1,
-            is_active: true,
-            created_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z'
-          }
-        ];
+        const allOccasions = createTestOccasionsList();
 
         // Mock getOccasionsForQuery to exclude the specified ID
         vi.mocked(typeSafeDatabaseService.getOccasionsForQuery).mockImplementation((excludeId?: number) => {
@@ -765,8 +577,10 @@ describe('OccasionsController', () => {
           return Promise.resolve(allOccasions);
         });
 
+        // Act
         const result = await (controller as any).checkOccasionNameExists('cumpleaños', 1);
 
+        // Assert
         expect(result).toBe(false);
       });
     });

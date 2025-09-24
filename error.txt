@@ -1,54 +1,24 @@
 
-/home/manager/Sync/ecommerce-floresya/src/frontend/main.ts
-  172:11  error  Unsafe return of a value of type error        @typescript-eslint/no-unsafe-return
-  642:36  error  Unsafe return of a value of type error        @typescript-eslint/no-unsafe-return
-  642:36  error  Unsafe call of a(n) `error` type typed value  @typescript-eslint/no-unsafe-call
-  968:53  error  Unsafe return of a value of type error        @typescript-eslint/no-unsafe-return
+> floresya-ecommerce@2.0.0 build:prod
+> NODE_ENV=production npm run build
 
-/home/manager/Sync/ecommerce-floresya/src/services/ProductService.ts
-  197:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  197:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  197:63  error  Unsafe return of a value of type `any`    @typescript-eslint/no-unsafe-return
-  415:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  427:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  484:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  587:16  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
-/home/manager/Sync/ecommerce-floresya/src/services/TypeSafeDatabaseService.ts
-   22:43   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-   23:44   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-   28:34   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-   41:31   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-   55:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
-   69:5    error  Unsafe return of a value of type `any`    @typescript-eslint/no-unsafe-return
-   78:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
-   92:5    error  Unsafe return of a value of type `any`    @typescript-eslint/no-unsafe-return
-  104:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
-  114:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
-  125:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
-  139:5    error  Unsafe return of a value of type `any`    @typescript-eslint/no-unsafe-return
-  154:5    error  Unsafe return of a value of type `any`    @typescript-eslint/no-unsafe-return
-  164:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
-  178:5    error  Unsafe return of a value of type `any`    @typescript-eslint/no-unsafe-return
-  191:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
-  202:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
-  212:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
-  215:64   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  215:81   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  215:101  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  226:68   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  226:85   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  237:51   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  255:31   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  266:31   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  296:22   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  363:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
-  375:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
-  388:5    error  Unsafe return of a value of type `any[]`  @typescript-eslint/no-unsafe-return
-  396:25   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  412:32   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  466:67   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  466:88   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+> floresya-ecommerce@2.0.0 build
+> npm run clean && npm run build:css && npm run build:backend && npm run build:frontend
 
-✖ 45 problems (45 errors, 0 warnings)
+
+> floresya-ecommerce@2.0.0 clean
+> rimraf dist
+
+
+> floresya-ecommerce@2.0.0 build:css
+> postcss src/styles.css -o public/css/styles.css
+
+
+> floresya-ecommerce@2.0.0 build:backend
+> tsc -p tsconfig.json
+
+
+> floresya-ecommerce@2.0.0 build:frontend
+> tsc -p src/frontend/tsconfig.frontend.json
 

@@ -19,7 +19,8 @@ import {
   type RawOrderWithItemsPaymentsHistory
 } from '../shared/types/index.js';
 
-const db = typeSafeDatabaseService.getClient();
+// Get database client dynamically for better testability
+const getDb = () => typeSafeDatabaseService.getClient();
 
 interface OrderQuery {
   page?: number;
@@ -53,7 +54,7 @@ export class OrderService {
 
       const offset = (page - 1) * limit;
 
-      let queryBuilder = db
+      let queryBuilder = getDb()
         .from('orders')
         .select(`
           *,
@@ -113,7 +114,7 @@ export class OrderService {
    */
   public async getOrderById(id: number): Promise<OrderWithItemsAndPayments | null> {
     try {
-      const { data, error } = await db
+      const { data, error } = await getDb()
         .from('orders')
         .select(`
           *,
@@ -199,7 +200,7 @@ export class OrderService {
     try {
       const { id, ...updates } = updateData;
 
-      const { data, error } = await db
+      const { data, error } = await getDb()
         .from('orders')
         .update(updates)
         .eq('id', id)
@@ -250,7 +251,7 @@ export class OrderService {
    */
   public async getOrderStatusHistory(orderId: number): Promise<OrderStatusHistory[]> {
     try {
-      const { data, error } = await db
+      const { data, error } = await getDb()
         .from('order_status_history')
         .select(`*, users(full_name)`)
         .eq('order_id', orderId)
@@ -273,7 +274,7 @@ export class OrderService {
   private async calculateOrderTotals(items: Array<{ product_id: number; quantity: number }>) {
     const productIds = items.map(item => item.product_id);
 
-    const { data: products, error } = await db
+    const { data: products, error } = await getDb()
       .from('products')
       .select('id, name, summary, price_usd, stock')
       .in('id', productIds)
