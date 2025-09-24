@@ -4,9 +4,9 @@
  */
 
 import { vi } from 'vitest';
-import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService.js';
-import { TestDataFactory } from './test-data-builders.js';
-import { createDatabaseServiceMock, createErrorMock } from './mock-factory.js';
+import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService';
+import { TestDataFactory } from './test-data-builders';
+import { createDatabaseServiceMock, createErrorMock } from './mock-factory';
 
 // Common Test Scenarios
 export const CommonScenarios = {

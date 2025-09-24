@@ -3,8 +3,9 @@
  * Handles user management, CRUD operations, and user table rendering
  */
 
-import type { AdminUser, AdminPanelLogger } from './types.js';
-import type { UserRole } from '../../shared/types/index.js';
+import type { UserRole } from '@shared/types';
+
+import type { AdminUser, AdminPanelLogger } from './types';
 
 export class AdminUsers {
   private logger: AdminPanelLogger;

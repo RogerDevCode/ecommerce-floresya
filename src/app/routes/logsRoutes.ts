@@ -4,6 +4,7 @@
  */
 
 import { Router } from 'express';
+
 import { LogsController, logsValidators } from '../../controllers/LogsController.js';
 
 export function createLogsRoutes(): Router {

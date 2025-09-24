@@ -68,10 +68,11 @@ export class NamingConventionValidator {
             }
           }
 
-          // Archivos HTML/CSS: kebab-case
+          // Archivos HTML/CSS: kebab-case (excepto archivos generados con hashes)
           if (entry.name.endsWith('.html') || entry.name.endsWith('.css')) {
             const filename = path.parse(entry.name).name;
-            if (!this.isKebabCase(filename)) {
+            // Ignorar archivos generados que contienen hashes (ej: index-X8b7Z_4p, index-fUmMsp0O)
+            if (!this.isKebabCase(filename) && !/[a-zA-Z0-9]+-[a-zA-Z0-9_-]{8,}/.test(filename)) {
               errors.push({
                 file: relativePath,
                 line: 1,
@@ -79,7 +80,7 @@ export class NamingConventionValidator {
               });
             }
           }
-        } else if (entry.isDirectory() && !entry.name.includes('node_modules')) {
+        } else if (entry.isDirectory() && !entry.name.includes('node_modules') && !entry.name.includes('dist')) {
           await walk(fullPath);
         }
       }

@@ -3,7 +3,7 @@
  * Herramienta profesional para extraer y actualizar el esquema de Supabase
  *
  * Uso:
- * - Desde línea de comandos: npx ts-node /home/manager/Sync/ecommerce-floresya/src/utils/schema-extractor.ts
+ * - Desde línea de comandos: npx ts-node /home/manager/Sync/ecommerce-floresya/src/utils/schema-extractor.ts.js
  * - Desde panel admin: API endpoint /api/admin/schema
  * - Actualización automática: npm run schema:update
  */
@@ -706,7 +706,7 @@ ON CONFLICT (key) DO NOTHING;
 -- Total de índices: ${this.stats.totalIndexes}
 
 -- Para actualizar este archivo ejecute:
--- npx ts-node scripts/schema-extractor.ts
+-- npx ts-node scripts/schema-extractor.ts.js
 -- o desde el panel de administrador: Configuración > Ver Esquema DB
 
 -- Compatible con FloresYa TypeScript types y controllers

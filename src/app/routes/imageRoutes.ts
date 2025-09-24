@@ -4,6 +4,7 @@
  */
 
 import { Router } from 'express';
+
 import { ImageController, imageValidators, imageUpload } from '../../controllers/ImageController.js';
 
 export function createImageRoutes(): Router {

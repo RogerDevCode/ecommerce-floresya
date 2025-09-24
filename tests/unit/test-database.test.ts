@@ -4,8 +4,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { TestEnvironmentValidator } from '../utils/test-database.js';
-import type { ConnectionMetrics } from '../utils/test-database.js';
+import { TestEnvironmentValidator } from '../utils/test-database';
+import type { ConnectionMetrics } from '../utils/test-database';
 
 // Test data factories
 const createTestConnectionMetrics = (overrides = {}) => ({

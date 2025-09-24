@@ -4,16 +4,16 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { FloresYaServer } from '../../src/app/server.js';
+import { FloresYaServer } from '../../src/app/server';
 import supertest from 'supertest';
-import { testSupabase } from '../utils/test-database.js';
+import { testSupabase } from '../utils/test-database';
 import {
   createTestProduct,
   createTestProductList,
   createTestCarouselProduct,
   createTestCarouselData
-} from '../utils/test-factories.js';
-import { createSimpleProductMock } from '../utils/test-mocks.js';
+} from '../utils/test-factories';
+import { createSimpleProductMock } from '../utils/test-mocks';
 
 describe('FloresYa Products - Ultra Simple Tests', () => {
   let server: FloresYaServer;

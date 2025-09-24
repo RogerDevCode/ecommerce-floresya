@@ -8,7 +8,7 @@ import { SupabaseClient, createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 
 // Import all database types from consolidated source
-import type { Database } from '../shared/types/index.js';
+import type { Database } from '../shared/types/index';
 
 dotenv.config();
 
@@ -59,7 +59,7 @@ export type {
   CarouselResponse,
   OrderResponse,
   Database
-} from '../shared/types/index.js';
+} from '../shared/types/index';
 
 // ============================================
 // SUPABASE CONFIGURATION

@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
- * 🌸 FloresYa Enterprise Build System - Fixed Version
+ * 🌸 FloresYa Enterprise Build System - Enhanced Version
  * ============================================
  * Robust build script with automatic error recovery
+ * Process management and graceful shutdown
  * Silicon Valley grade deployment automation
  * ============================================
  */
@@ -15,6 +16,111 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PROJECT_ROOT = path.resolve(__dirname, '..');
+
+// Process Manager for handling child processes
+class ProcessManager {
+  constructor() {
+    this.childProcesses = new Set();
+    this.isShuttingDown = false;
+    this.setupGracefulShutdown();
+  }
+
+  /**
+   * Add a child process to the manager
+   */
+  addProcess(childProcess) {
+    this.childProcesses.add(childProcess);
+
+    // Set up event listeners for this process
+    childProcess.on('close', (code) => {
+      this.childProcesses.delete(childProcess);
+      log('INFO', `Child process exited with code ${code}`);
+      this.checkAllProcessesClosed();
+    });
+
+    childProcess.on('error', (error) => {
+      this.childProcesses.delete(childProcess);
+      log('ERROR', `Child process error: ${error.message}`);
+      this.checkAllProcessesClosed();
+    });
+  }
+
+  /**
+   * Remove a child process from the manager
+   */
+  removeProcess(childProcess) {
+    this.childProcesses.delete(childProcess);
+    this.checkAllProcessesClosed();
+  }
+
+  /**
+   * Kill all child processes gracefully
+   */
+  async killAllProcesses() {
+    if (this.isShuttingDown) return;
+    this.isShuttingDown = true;
+
+    log('BUILD', `Terminating ${this.childProcesses.size} child processes...`);
+
+    const killPromises = Array.from(this.childProcesses).map(async (child) => {
+      return new Promise((resolve) => {
+        if (child.killed) {
+          resolve();
+          return;
+        }
+
+        // Try graceful termination first
+        child.kill('SIGTERM');
+
+        // Set timeout for forceful termination
+        const timeout = setTimeout(() => {
+          if (!child.killed) {
+            log('WARNING', 'Force killing child process...');
+            child.kill('SIGKILL');
+          }
+          resolve();
+        }, 5000); // 5 second timeout
+
+        child.on('close', () => {
+          clearTimeout(timeout);
+          resolve();
+        });
+      });
+    });
+
+    await Promise.all(killPromises);
+    log('SUCCESS', 'All child processes terminated');
+  }
+
+  /**
+   * Check if all processes have closed
+   */
+  checkAllProcessesClosed() {
+    if (this.childProcesses.size === 0 && this.isShuttingDown) {
+      log('SUCCESS', 'All processes closed, exiting gracefully');
+      process.exit(0);
+    }
+  }
+
+  /**
+   * Set up graceful shutdown handlers
+   */
+  setupGracefulShutdown() {
+    const shutdown = async (signal) => {
+      log('BUILD', `Received ${signal}, initiating graceful shutdown...`);
+      await this.killAllProcesses();
+    };
+
+    process.on('SIGINT', () => shutdown('SIGINT'));
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('beforeExit', () => {
+      if (!this.isShuttingDown) {
+        log('BUILD', 'Process exiting, cleaning up child processes...');
+        this.killAllProcesses();
+      }
+    });
+  }
+}
 
 // Colors for logging
 const colors = {
@@ -41,6 +147,9 @@ function log(level, message) {
   console.log(`${color}[${timestamp}] ${level}: ${message}${colors.reset}`);
 }
 
+// Global process manager instance
+const processManager = new ProcessManager();
+
 function runCommand(command, args = [], options = {}) {
   return new Promise((resolve, reject) => {
     log('BUILD', `Executing: ${command} ${args.join(' ')}`);
@@ -52,6 +161,9 @@ function runCommand(command, args = [], options = {}) {
       timeout: options.timeout || 120000, // 2 minutes default timeout
       ...options
     });
+
+    // Register the child process with the manager
+    processManager.addProcess(child);
 
     let stdout = '';
     let stderr = '';
@@ -67,6 +179,9 @@ function runCommand(command, args = [], options = {}) {
     });
 
     child.on('close', (code) => {
+      // Remove from process manager when done
+      processManager.removeProcess(child);
+
       if (code === 0) {
         log('SUCCESS', `Command completed: ${command}`);
         resolve({ stdout, stderr, code });
@@ -77,6 +192,8 @@ function runCommand(command, args = [], options = {}) {
     });
 
     child.on('error', (error) => {
+      // Remove from process manager on error
+      processManager.removeProcess(child);
       log('ERROR', `Command error: ${error.message}`);
       reject(error);
     });
@@ -144,8 +261,8 @@ async function buildCSS() {
 async function buildBackend() {
   log('BUILD', 'Building Backend TypeScript...');
   try {
-    // Use the correct config for backend compilation
-    await runCommand('npx', ['tsc', '-p', 'tsconfig.node.json']);
+    // Use the correct config for backend compilation (tsconfig.json)
+    await runCommand('npx', ['tsc', '-p', 'tsconfig.json']);
     log('SUCCESS', 'Backend TypeScript build completed');
   } catch (error) {
     log('ERROR', `Backend TypeScript build failed: ${error.message}`);
@@ -153,7 +270,7 @@ async function buildBackend() {
 
     // Try building with --skipLibCheck to allow partial compilation
     try {
-      await runCommand('npx', ['tsc', '-p', 'tsconfig.node.json', '--skipLibCheck']);
+      await runCommand('npx', ['tsc', '-p', 'tsconfig.json', '--skipLibCheck']);
       log('SUCCESS', 'Backend TypeScript build completed with --skipLibCheck');
     } catch (skipError) {
       log('ERROR', `Backend build failed even with --skipLibCheck: ${skipError.message}`);
@@ -178,8 +295,8 @@ async function copyFrontendAssets() {
   log('BUILD', 'Copying frontend assets...');
   try {
     await ensureDirectories();
-    // Use npm script that handles this correctly
-    await runCommand('npm', ['run', 'build:frontend:static']);
+    // Copy frontend assets directly (no npm script available)
+    await runCommand('bash', ['-c', 'cp -r public/* dist/frontend/ 2>/dev/null || true']);
     log('SUCCESS', 'Frontend assets copied');
   } catch (error) {
     log('WARNING', `Asset copy failed: ${error.message}`);
@@ -196,23 +313,22 @@ async function copyFrontendAssets() {
 async function fixFrontendStructure() {
   log('BUILD', 'Fixing frontend directory structure...');
   try {
-    // Use npm script that handles this correctly
-    await runCommand('npm', ['run', 'post:build:frontend']);
-    log('SUCCESS', 'Frontend structure fixed');
-  } catch (error) {
-    log('WARNING', `Frontend structure fix failed: ${error.message}`);
-    // Try manual fix as fallback
+    // Fix frontend structure manually (no npm script available)
+    const nestedPath = path.join(PROJECT_ROOT, 'dist/frontend/frontend');
     try {
-      const nestedPath = path.join(PROJECT_ROOT, 'dist/frontend/frontend');
       const stats = await fs.stat(nestedPath);
       if (stats.isDirectory()) {
         await runCommand('bash', ['-c', 'mv dist/frontend/frontend/* dist/frontend/ 2>/dev/null || true']);
         await runCommand('rm', ['-rf', 'dist/frontend/frontend']);
         log('SUCCESS', 'Frontend structure fixed (manual method)');
+      } else {
+        log('INFO', 'No nested frontend directory found - structure is already correct');
       }
     } catch {
-      log('INFO', 'No nested frontend directory found or manual fix not needed');
+      log('INFO', 'No nested frontend directory found - structure is already correct');
     }
+  } catch (error) {
+    log('WARNING', `Frontend structure fix failed: ${error.message}`);
   }
 }
 
@@ -302,9 +418,37 @@ async function main() {
     await validateBuild();
 
     log('SUCCESS', '🎉 Enterprise build completed successfully! 🎉');
+
+    // Graceful shutdown - wait for all child processes to complete
+    if (processManager.childProcesses.size > 0) {
+      log('BUILD', `Waiting for ${processManager.childProcesses.size} child processes to complete...`);
+
+      // Wait for all processes to finish naturally
+      await new Promise((resolve) => {
+        const checkComplete = () => {
+          if (processManager.childProcesses.size === 0) {
+            resolve();
+          } else {
+            setTimeout(checkComplete, 100);
+          }
+        };
+        checkComplete();
+      });
+
+      log('SUCCESS', 'All child processes completed successfully');
+    }
+
     process.exit(0);
   } catch (error) {
     log('ERROR', `Build failed: ${error.message}`);
+
+    // Ensure all child processes are killed before exiting
+    try {
+      await processManager.killAllProcesses();
+    } catch (killError) {
+      log('ERROR', `Error during process cleanup: ${killError.message}`);
+    }
+
     process.exit(1);
   }
 }

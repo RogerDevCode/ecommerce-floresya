@@ -5,7 +5,7 @@
 
 
 // Import types from shared types
-import type { LoginCredentials } from '../shared/types/index.js';
+import type { LoginCredentials } from '@shared/types';
 
 // Define types for authentication
 interface AuthUser {
@@ -21,7 +21,7 @@ interface AuthResponse {
   message?: string;
 }
 
-// Window interface extensions are now centralized in src/types/globals.ts
+// Window interface extensions are now centralized in src/types/globals.ts.js
 
 export class AuthManager {
   private currentUser: AuthUser | null = null;

@@ -12,13 +12,13 @@ const mockTypeSafeDatabaseService = vi.hoisted(() => ({
 }));
 
 // Mock the TypeSafeDatabaseService module with hoisted values
-vi.mock('../../src/services/TypeSafeDatabaseService.js', () => ({
+vi.mock('../../src/services/TypeSafeDatabaseService', () => ({
   typeSafeDatabaseService: mockTypeSafeDatabaseService
 }));
 
 // Import after mocking
-import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService.js';
-import { OrderService } from '../../src/services/OrderService.js';
+import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService';
+import { OrderService } from '../../src/services/OrderService';
 
 // Helper functions for test data
 function createTestOrder() {

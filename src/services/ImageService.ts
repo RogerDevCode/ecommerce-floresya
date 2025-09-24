@@ -3,8 +3,9 @@
  * Handles image upload, resizing, and storage to Supabase
  */
 
-import sharp from 'sharp';
-import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
+import crypto from 'crypto';
+import path from 'path';
+
 import type {
   ImageSize,
   ProductImage,
@@ -12,9 +13,10 @@ import type {
   ImageUploadRequest,
   ProcessedImage,
   ImageUploadResult
-} from '../shared/types/index.js';
-import crypto from 'crypto';
-import path from 'path';
+} from '@shared/types';
+import sharp from 'sharp';
+
+import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
 
 // Using TypeSafeDatabaseService for type-safe operations
 

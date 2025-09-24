@@ -6,10 +6,10 @@
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { OrderController, orderValidators } from '../../src/controllers/OrderController.js';
-import { OrderService } from '../../src/services/OrderService.js';
-import { createMockRequest, createMockResponse, createMockService } from '../utils/test-mocks.js';
-import { createTestOrder, createTestOrderList, createTestStatusHistory } from '../utils/test-factories.js';
+import { OrderController, orderValidators } from '../../src/controllers/OrderController';
+import { OrderService } from '../../src/services/OrderService';
+import { createMockRequest, createMockResponse, createMockService } from '../utils/test-mocks';
+import { createTestOrder, createTestOrderList, createTestStatusHistory } from '../utils/test-factories';
 
 // Clean mock for express-validator
 vi.mock('express-validator', () => ({

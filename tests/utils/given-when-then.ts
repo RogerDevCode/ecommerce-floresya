@@ -4,9 +4,9 @@
  */
 
 import { vi } from 'vitest';
-import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService.js';
-import { TestDataFactory } from './test-data-builders.js';
-import { MockSetupUtils, TestExecutionUtils, TestAssertionUtils } from './test-scenario-utils.js';
+import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService';
+import { TestDataFactory } from './test-data-builders';
+import { MockSetupUtils, TestExecutionUtils, TestAssertionUtils } from './test-scenario-utils';
 
 // Given-When-Then Builder
 export class GWTBuilder {
@@ -92,7 +92,7 @@ export class GWTBuilder {
   // WHEN methods
   whenGetOrders(params?: any): this {
     this.context.when = async () => {
-      const { OrderService } = await import('../../src/services/OrderService.js');
+      const { OrderService } = await import('../../src/services/OrderService');
       const service = new OrderService();
       return await service.getOrders(params);
     };
@@ -101,7 +101,7 @@ export class GWTBuilder {
 
   whenGetOrderById(id: number): this {
     this.context.when = async () => {
-      const { OrderService } = await import('../../src/services/OrderService.js');
+      const { OrderService } = await import('../../src/services/OrderService');
       const service = new OrderService();
       return await service.getOrderById(id);
     };
@@ -110,7 +110,7 @@ export class GWTBuilder {
 
   whenCreateOrder(orderData: any): this {
     this.context.when = async () => {
-      const { OrderService } = await import('../../src/services/OrderService.js');
+      const { OrderService } = await import('../../src/services/OrderService');
       const service = new OrderService();
       return await service.createOrder(orderData);
     };
@@ -119,7 +119,7 @@ export class GWTBuilder {
 
   whenUpdateOrder(updateData: any): this {
     this.context.when = async () => {
-      const { OrderService } = await import('../../src/services/OrderService.js');
+      const { OrderService } = await import('../../src/services/OrderService');
       const service = new OrderService();
       return await service.updateOrder(updateData);
     };
@@ -128,7 +128,7 @@ export class GWTBuilder {
 
   whenUpdateOrderStatus(orderId: number, status: string, notes?: string, userId?: number): this {
     this.context.when = async () => {
-      const { OrderService } = await import('../../src/services/OrderService.js');
+      const { OrderService } = await import('../../src/services/OrderService');
       const service = new OrderService();
       return await service.updateOrderStatus(orderId, status as any, notes, userId);
     };

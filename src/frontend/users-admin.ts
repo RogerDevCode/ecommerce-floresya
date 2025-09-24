@@ -3,7 +3,6 @@
  * Complete user management interface with advanced features
  */
 
-import { api } from './services/apiClient.js';
 import type {
   PaginationInfo,
   UserCreateRequest,
@@ -13,7 +12,9 @@ import type {
   UserUpdateRequest,
   WindowWithFloresyaLogger,
   WindowWithUsersAdmin
-} from '../shared/types/index.js';
+} from '@shared/types';
+
+import { api } from './services/apiClient';
 
 // Extend window with our interfaces
 declare const window: WindowWithFloresyaLogger & WindowWithUsersAdmin & { usersAdmin: UsersAdminManager };

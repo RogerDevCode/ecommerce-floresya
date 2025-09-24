@@ -4,7 +4,7 @@
  */
 
 import { vi } from 'vitest';
-import { MockFactory, QueryBuilderContract, SupabaseClientContract } from './mock-contracts.js';
+import { MockFactory, QueryBuilderContract, SupabaseClientContract } from './mock-contracts';
 
 // Base Mock Factory
 export abstract class BaseMockFactory<T> implements MockFactory<T> {

@@ -4,10 +4,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { setupTestDatabase, teardownTestDatabase, getDatabaseHealthStatus } from '../utils/test-database.js';
+import { setupTestDatabase, teardownTestDatabase, getDatabaseHealthStatus } from '../utils/test-database';
 
 // Mock the entire test-database module with clean structure
-vi.mock('../utils/test-database.js', async () => {
+vi.mock('../utils/test-database', async () => {
   const mockSupabaseClient = {
     from: vi.fn().mockReturnValue({
       select: vi.fn().mockReturnThis(),
@@ -102,7 +102,7 @@ describe('FloresYa Database Connection Tests - Simple Mock Edition', () => {
 
   beforeEach(async () => {
     // Import the mocked client
-    const { testSupabase } = await import('../utils/test-database.js');
+    const { testSupabase } = await import('../utils/test-database');
     mockSupabase = testSupabase;
 
     // Get health status for monitoring (ensure it's properly mocked)

@@ -5,7 +5,13 @@
     "rootDir": "../",
     "declaration": false,
     "declarationMap": false,
-    "types": []
+    "types": [],
+    "baseUrl": "../..",
+    "paths": {
+      "@backend/*": ["./src/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@frontend/*": ["./src/frontend/*"]
+    }
   },
   "include": [
     "../frontend/**/*",

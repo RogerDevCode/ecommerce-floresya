@@ -4,8 +4,8 @@
  */
 
 import { vi } from 'vitest';
-import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService.js';
-import { TestScenario, MockScenario, TestResult } from './mock-contracts.js';
+import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService';
+import { TestScenario, MockScenario, TestResult } from './mock-contracts';
 
 // Scenario Builder for OrderService Tests
 export class OrderServiceScenarioBuilder {
@@ -42,7 +42,7 @@ export class OrderServiceScenarioBuilder {
   whenGetOrders(params?: any): this {
     this.scenario.when = async () => {
       this.setupMocks();
-      const { OrderService } = await import('../../src/services/OrderService.js');
+      const { OrderService } = await import('../../src/services/OrderService');
       const service = new OrderService();
       return await service.getOrders(params);
     };
@@ -52,7 +52,7 @@ export class OrderServiceScenarioBuilder {
   whenGetOrderById(id: number): this {
     this.scenario.when = async () => {
       this.setupMocks();
-      const { OrderService } = await import('../../src/services/OrderService.js');
+      const { OrderService } = await import('../../src/services/OrderService');
       const service = new OrderService();
       return await service.getOrderById(id);
     };
@@ -62,7 +62,7 @@ export class OrderServiceScenarioBuilder {
   whenCreateOrder(orderData: any): this {
     this.scenario.when = async () => {
       this.setupMocks();
-      const { OrderService } = await import('../../src/services/OrderService.js');
+      const { OrderService } = await import('../../src/services/OrderService');
       const service = new OrderService();
       return await service.createOrder(orderData);
     };
@@ -72,7 +72,7 @@ export class OrderServiceScenarioBuilder {
   whenUpdateOrder(updateData: any): this {
     this.scenario.when = async () => {
       this.setupMocks();
-      const { OrderService } = await import('../../src/services/OrderService.js');
+      const { OrderService } = await import('../../src/services/OrderService');
       const service = new OrderService();
       return await service.updateOrder(updateData);
     };
@@ -82,7 +82,7 @@ export class OrderServiceScenarioBuilder {
   whenUpdateOrderStatus(orderId: number, status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled', notes?: string, userId?: number): this {
     this.scenario.when = async () => {
       this.setupMocks();
-      const { OrderService } = await import('../../src/services/OrderService.js');
+      const { OrderService } = await import('../../src/services/OrderService');
       const service = new OrderService();
       return await service.updateOrderStatus(orderId, status, notes, userId);
     };
@@ -92,7 +92,7 @@ export class OrderServiceScenarioBuilder {
   whenGetOrderStatusHistory(orderId: number): this {
     this.scenario.when = async () => {
       this.setupMocks();
-      const { OrderService } = await import('../../src/services/OrderService.js');
+      const { OrderService } = await import('../../src/services/OrderService');
       const service = new OrderService();
       return await service.getOrderStatusHistory(orderId);
     };

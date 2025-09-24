@@ -4,8 +4,9 @@
  */
 
 import { Router } from 'express';
-import { ProductController, productValidators } from '../../controllers/ProductController.js';
+
 import { ImageController, imageValidators } from '../../controllers/ImageController.js';
+import { ProductController, productValidators } from '../../controllers/ProductController.js';
 
 export function createProductRoutes(): Router {
   const router = Router();

@@ -3,7 +3,6 @@
  * Implements new carousel_order logic with optimal performance
  */
 
-import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
 import {
   type CarouselProduct,
   type CarouselResponse,
@@ -16,10 +15,12 @@ import {
   type ProductUpdateRequest,
   type ProductWithImages,
   type RawProductWithImages
-} from '../shared/types/index.js';
+} from '@shared/types';
 
 // Import consolidated utility function
-import { omitFunction as _omitFunction } from '../shared/utils/index.js';
+import { omitFunction as _omitFunction } from '@shared/utils';
+
+import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
 
 // Using TypeSafeDatabaseService for type-safe operations
 
@@ -393,7 +394,7 @@ export class ProductService {
       // Prepare insert data according to actual schema (excluding occasion_ids)
       const insertData = {
         ...restData,
-        stock: stock,
+        stock,
         sku: sku ?? undefined,
         featured: featured ?? false,
         active: true,
@@ -409,7 +410,7 @@ export class ProductService {
         // Execute within a single transaction
         const data = await typeSafeDatabaseService.executeRpc('create_product_with_occasions', {
           product_data: insertData,
-          occasion_ids: occasion_ids
+          occasion_ids
         });
 
         if (!data || (data as any)?.length === 0) {

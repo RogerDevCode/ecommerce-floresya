@@ -122,7 +122,15 @@
       "Bash(PORT=3006 timeout 10s node dist/backend/app/server.js)",
       "Bash(ln:*)",
       "Bash(PORT=3007 timeout 15s node dist/backend/app/server.js)",
-      "Bash(do echo \"Testing: $file\")"
+      "Bash(do echo \"Testing: $file\")",
+      "Bash(PORT=3100 timeout 15s node dist/backend/app/server.js)",
+      "Bash(PORT=3010 timeout 15s node dist/backend/app/server.js)",
+      "Bash(PORT=3200 timeout 15s node dist/backend/app/server.js)",
+      "Bash(PORT=3400 timeout 15s node dist/backend/app/server.js)",
+      "Bash(PORT=3500 timeout 15s node dist/backend/app/server.js)",
+      "Bash(PORT=3600 timeout 15s node dist/backend/app/server.js)",
+      "Bash(PORT=3000 timeout 15s node dist/backend/app/server.js)",
+      "Bash(PORT=3020 timeout 5s node dist/backend/app/server.js)"
     ],
     "deny": [],
     "ask": []

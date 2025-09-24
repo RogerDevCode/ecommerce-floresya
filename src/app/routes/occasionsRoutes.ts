@@ -4,6 +4,7 @@
  */
 
 import { Router } from 'express';
+
 import { OccasionsController, occasionsValidators } from '../../controllers/OccasionsController.js';
 
 export function createOccasionsRoutes(): Router {

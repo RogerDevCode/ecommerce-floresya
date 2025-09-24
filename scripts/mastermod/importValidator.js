@@ -54,7 +54,7 @@ export class ImportValidator {
               }
             }
           }
-        } else if (entry.isDirectory() && !entry.name.includes('node_modules')) {
+        } else if (entry.isDirectory() && !entry.name.includes('node_modules') && !entry.name.includes('dist')) {
           await walk(fullPath);
         }
       }

@@ -1,52 +1,31 @@
 {
   "version": 2,
-  "name": "floresya-ecommerce",
-  "builds": [
-    {
-      "src": "dist/backend/app/server.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "dist/backend/**",
-          "public/**",
-          "package.json"
-        ]
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/dist/backend/app/server.js"
-    },
-    {
-      "src": "/api-docs(.*)",
-      "dest": "/dist/backend/app/server.js"
-    },
-    {
-      "src": "/dist/(.*)",
-      "dest": "/dist/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/index.html"
-    }
-  ],
   "functions": {
     "dist/backend/app/server.js": {
-      "maxDuration": 30
+      "includeFiles": [
+        "dist/backend/**",
+        "dist/frontend/**",
+        "public/**",
+        "package.json",
+        "tailwind.config.ts",
+        "postcss.config.js"
+      ]
     }
   },
-  "env": {
-    "NODE_ENV": "production"
-  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/dist/backend/app/server.js"
+    },
+    {
+      "source": "/api-docs(.*)",
+      "destination": "/dist/backend/app/server.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/dist/backend/app/server.js"
+    }
+  ],
   "headers": [
     {
       "source": "/api/(.*)",
@@ -79,6 +58,10 @@
         {
           "key": "Referrer-Policy",
           "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co"
         }
       ]
     },
@@ -144,29 +127,8 @@
       ]
     }
   ],
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/admin",
-      "destination": "/pages/admin.html",
-      "permanent": false
-    },
-    {
-      "source": "/dashboard",
-      "destination": "/pages/admin.html",
-      "permanent": false
-    }
-  ],
   "installCommand": "npm install",
   "buildCommand": "npm run build:prod",
-  "outputDirectory": "dist",
-  "cleanUrls": true,
-  "trailingSlash": false,
   "github": {
     "silent": true
   }

@@ -5,8 +5,8 @@
 
 import { Request, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
+
 import { typeSafeDatabaseService } from '../services/TypeSafeDatabaseService.js';
-// import type { OccasionType } from '../shared/types/index.js'; // REMOVED: Column 'type' eliminated from occasions table
 
 export class OccasionsController {
   /**
@@ -138,7 +138,7 @@ export class OccasionsController {
 
       res.status(200).json({
         success: true,
-        data: data,
+        data,
         message: 'Occasions retrieved successfully'
       });
     } catch (error) {

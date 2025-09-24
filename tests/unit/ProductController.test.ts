@@ -6,12 +6,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock the ProductService module
-vi.mock('../../src/services/ProductService.js', () => ({
+vi.mock('../../src/services/ProductService', () => ({
   ProductService: vi.fn()
 }));
 
 // Mock the TypeSafeDatabaseService module
-vi.mock('../../src/services/TypeSafeDatabaseService.js', () => ({
+vi.mock('../../src/services/TypeSafeDatabaseService', () => ({
   typeSafeDatabaseService: {
     getProductImages: vi.fn(),
     getProductOccasionReferences: vi.fn(),
@@ -19,9 +19,9 @@ vi.mock('../../src/services/TypeSafeDatabaseService.js', () => ({
   }
 }));
 
-import { ProductController } from '../../src/controllers/ProductController.js';
-import { ProductService } from '../../src/services/ProductService.js';
-import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService.js';
+import { ProductController } from '../../src/controllers/ProductController';
+import { ProductService } from '../../src/services/ProductService';
+import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService';
 
 describe('ProductController Unit Tests', () => {
   let controller: ProductController;

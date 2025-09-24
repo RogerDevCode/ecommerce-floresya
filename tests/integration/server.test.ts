@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { FloresYaServer } from '../../src/app/server.js';
+import { FloresYaServer } from '../../src/app/server';
 import supertest from 'supertest';
 
 describe('FloresYa Server Integration Tests', () => {
@@ -183,7 +183,7 @@ describe('FloresYa Server Integration Tests', () => {
 
     it('should serve JavaScript files with correct MIME type', async () => {
       const response = await request
-        .get('/config/supabase.js')
+        .get('/config/supabase')
         .expect(200);
 
       expect(response.headers['content-type']).toMatch(/(application\/javascript|text\/javascript)/);

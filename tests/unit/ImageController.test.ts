@@ -6,11 +6,11 @@
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { ImageController, imageValidators } from '../../src/controllers/ImageController.js';
-import { ImageService } from '../../src/services/ImageService.js';
+import { ImageController, imageValidators } from '../../src/controllers/ImageController';
+import { ImageService } from '../../src/services/ImageService';
 
 // Mock dependencies
-vi.mock('../../src/services/ImageService.js', () => ({
+vi.mock('../../src/services/ImageService', () => ({
   ImageService: vi.fn().mockImplementation(() => ({
     validateImageFile: vi.fn(),
     uploadProductImage: vi.fn(),

@@ -3,31 +3,35 @@
  * Clean architecture with zero technical debt
  */
 
-import express, { Application, NextFunction, Request, Response } from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import compression from 'compression';
-import rateLimit from 'express-rate-limit';
 import path from 'path';
+
+import compression from 'compression';
+import cors from 'cors';
 import { config } from 'dotenv';
-import 'module-alias/register.js';
+import express, { Application, NextFunction, Request, Response } from 'express';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
+
+
 
 // Import routes
-import { createProductRoutes } from './routes/productRoutes.js';
-import { createOrderRoutes } from './routes/orderRoutes.js';
-import { createOccasionsRoutes } from './routes/occasionsRoutes.js';
-import { createLogsRoutes } from './routes/logsRoutes.js';
-import { createImageRoutes } from './routes/imageRoutes.js';
-import { createUserRoutes } from './routes/userRoutes.js';
-import { createSchemaRoutes } from './routes/schemaRoutes.js';
-import { createDashboardRoutes } from './routes/dashboardRoutes.js';
 import supabaseManager from '../config/supabase.js';
-
-// Import comprehensive logging system
+import { swaggerSpec, swaggerUi } from '../config/swagger.js';
 import { serverLogger } from '../utils/serverLogger.js';
 
+import { createDashboardRoutes } from './routes/dashboardRoutes.js';
+import { createImageRoutes } from './routes/imageRoutes.js';
+import { createLogsRoutes } from './routes/logsRoutes.js';
+import { createOccasionsRoutes } from './routes/occasionsRoutes.js';
+import { createOrderRoutes } from './routes/orderRoutes.js';
+import { createProductRoutes } from './routes/productRoutes.js';
+import { createSchemaRoutes } from './routes/schemaRoutes.js';
+import { createUserRoutes } from './routes/userRoutes.js';
+
+
+// Import comprehensive logging system
+
 // Import Swagger configuration
-import { swaggerSpec, swaggerUi } from '../config/swagger.js';
 
 // Load environment variables
 config();

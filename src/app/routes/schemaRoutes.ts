@@ -4,6 +4,7 @@
  */
 
 import { Router, Request, Response } from 'express';
+
 import { SupabaseSchemaExtractor } from '../../utils/schema-extractor.js';
 import { serverLogger } from '../../utils/serverLogger.js';
 

@@ -3,15 +3,16 @@
  * Complete order management with payments and status tracking
  */
 
+import type { AuthenticatedRequest } from '@shared/types';
 import { Request, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
-import type { AuthenticatedRequest } from '../shared/types/index.js';
-import { OrderService } from '../services/OrderService.js';
+
 import type {
   OrderCreateRequest,
   OrderStatus,
   OrderUpdateRequest
 } from '../config/supabase.js';
+import { OrderService } from '../services/OrderService.js';
 
 // Factory function for dependency injection
 const createOrderService = () => new OrderService();

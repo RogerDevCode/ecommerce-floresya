@@ -3,9 +3,9 @@
  * Business logic for occasions management
  */
 
+import { type Occasion, type OccasionCreateRequest, type OccasionUpdateRequest } from '@shared/types';
+
 import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
-import { type Occasion, type OccasionCreateRequest, type OccasionUpdateRequest } from '../shared/types/index.js';
-// import { type OccasionType } from '../shared/types/index.js'; // REMOVED: Column 'type' eliminated from occasions table
 
 // Using TypeSafeDatabaseService for type-safe operations
 

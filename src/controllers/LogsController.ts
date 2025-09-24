@@ -3,11 +3,11 @@
  * Handles frontend log submissions for debugging and monitoring
  */
 
+import type { LogEntry } from '@shared/types';
 import { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 
 // Import consolidated logging types
-import type { LogEntry } from '../shared/types/index.js';
 
 export class LogsController {
   /**
@@ -115,7 +115,7 @@ export class LogsController {
         success: true,
         message: 'Logs received successfully',
         received: logs.length,
-        sessionId: sessionId
+        sessionId
       });
 
     } catch (error) {

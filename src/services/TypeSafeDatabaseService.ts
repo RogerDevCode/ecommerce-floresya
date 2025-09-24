@@ -5,8 +5,6 @@
  * ============================================
  */
 
-import { SupabaseClient } from '@supabase/supabase-js';
-import { supabaseService } from '../config/supabase.js';
 import type {
   Database,
   User,
@@ -16,7 +14,10 @@ import type {
   Order,
   ProductWithImages,
   OrderWithItems
-} from '../shared/types/index.js';
+} from '@shared/types';
+import { SupabaseClient } from '@supabase/supabase-js';
+
+import { supabaseService } from '../config/supabase.js';
 
 // Type assertion helper with explicit DB schema
 function getTypedClient(): SupabaseClient<any> {

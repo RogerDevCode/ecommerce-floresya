@@ -5,12 +5,12 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Request, Response } from 'express';
-import { OccasionsController } from '../../src/controllers/OccasionsController.js';
-import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService.js';
-import type { Occasion } from '../../src/shared/types/index.js';
+import { OccasionsController } from '../../src/controllers/OccasionsController';
+import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService';
+import type { Occasion } from '../../src/shared/types/index';
 
 // Mock the database service
-vi.mock('../../src/services/TypeSafeDatabaseService.js', () => ({
+vi.mock('../../src/services/TypeSafeDatabaseService', () => ({
   typeSafeDatabaseService: {
     getActiveOccasions: vi.fn(),
     getActiveOccasionById: vi.fn(),

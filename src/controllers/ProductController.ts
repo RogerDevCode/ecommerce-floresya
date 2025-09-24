@@ -5,8 +5,9 @@
 
 import { Request, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
-import { ProductService } from '../services/ProductService.js';
+
 import { type ProductCreateRequest, ProductQuery, ProductUpdateRequest } from '../config/supabase.js';
+import { ProductService } from '../services/ProductService.js';
 import { typeSafeDatabaseService } from '../services/TypeSafeDatabaseService.js';
 
 export class ProductController {

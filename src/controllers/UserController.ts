@@ -5,9 +5,10 @@
 
 import { Request, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
+
 import { type UserCreateRequest, UserQuery, UserUpdateRequest } from '../config/supabase.js';
-import { userService } from '../services/UserService.js';
 import { typeSafeDatabaseService } from '../services/TypeSafeDatabaseService.js';
+import { userService } from '../services/UserService.js';
 
 export class UserController {
 

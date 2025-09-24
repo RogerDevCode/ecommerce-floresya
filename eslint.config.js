@@ -1,10 +1,10 @@
 import js from '@eslint/js';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
+import prettierConfig from 'eslint-config-prettier';
 import importPlugin from 'eslint-plugin-import';
 import nodePlugin from 'eslint-plugin-n';
 import promisePlugin from 'eslint-plugin-promise';
-import prettierConfig from 'eslint-config-prettier';
 
 export default [
   // Base configuration
@@ -58,11 +58,33 @@ export default [
       '@typescript-eslint/no-unsafe-call': 'off', // Too strict for this project
       '@typescript-eslint/no-unsafe-return': 'off', // Too strict for this project
 
-      // Import rules (relaxed)
-      'import/order': 'off', // Disabled for existing codebase
-      'import/no-duplicates': 'warn',
-      'import/no-unresolved': 'off', // TypeScript handles this
-      'import/extensions': 'off', // TypeScript handles this
+      // Import rules (updated)
+      'import/order': [
+        'error',
+        {
+          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+          pathGroups: [
+            {
+              pattern: '@/**',
+              group: 'internal',
+            },
+          ],
+          'newlines-between': 'always',
+          alphabetize: {
+            order: 'asc',
+            caseInsensitive: true,
+          },
+        },
+      ],
+      'import/no-duplicates': 'error',
+      'import/no-unresolved': 'error', // Activated: ESLint will now check imports
+      'import/extensions': [
+        'error',
+        'never',
+        {
+          json: 'always', // json files must have extension
+        },
+      ],
 
       // General rules
       'no-console': 'warn',
@@ -125,6 +147,33 @@ export default [
       'no-console': 'warn',
       'prefer-const': 'error',
       'no-var': 'error',
+      // Import rules for JS files
+      'import/order': [
+        'error',
+        {
+          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+          pathGroups: [
+            {
+              pattern: '@/**',
+              group: 'internal',
+            },
+          ],
+          'newlines-between': 'always',
+          alphabetize: {
+            order: 'asc',
+            caseInsensitive: true,
+          },
+        },
+      ],
+      'import/no-duplicates': 'error',
+      'import/no-unresolved': 'error',
+      'import/extensions': [
+        'error',
+        'never',
+        {
+          json: 'always',
+        },
+      ],
     },
   },
 
@@ -181,6 +230,7 @@ export default [
     rules: {
       '@typescript-eslint/no-explicit-any': 'off', // Tests often use any
       'no-console': 'off', // Allow console in tests
+      'import/no-unresolved': 'error'
     },
   },
 

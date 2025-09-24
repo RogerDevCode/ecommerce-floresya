@@ -5,8 +5,9 @@
 
 import { Request, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
-import { ImageService } from '../services/ImageService.js';
 import multer from 'multer';
+
+import { ImageService } from '../services/ImageService.js';
 
 // Factory function for dependency injection
 const createImageService = () => new ImageService();
@@ -305,7 +306,7 @@ export class ImageController {
       res.status(200).json({
         success: true,
         data: {
-          images: images
+          images
         },
         message: 'Product images retrieved successfully'
       });

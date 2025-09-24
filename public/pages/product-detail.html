@@ -8,7 +8,7 @@
     <!-- Tailwind CSS -->
     <link href="/css/styles.css" rel="stylesheet">
     <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://unpkg.com/lucide@0.451.0/dist/umd/lucide.js"></script>
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/styles.css">
@@ -30,23 +30,57 @@
 
 </head>
 <body>
-    <!-- Product Counter -->
-    <div class="product-counter">
-        <i data-lucide="list-ordered" class="me-2"></i>
-        <span id="product-counter">1/1</span>
+    <!-- Floating Action Hub -->
+    <div class="floating-action-hub" id="floating-hub">
+        <div class="hub-main-button" id="hub-toggle">
+            <i data-lucide="plus" class="hub-icon"></i>
+        </div>
+        <div class="hub-actions" id="hub-actions">
+            <button class="hub-action-btn" id="hub-home" title="Ir a Inicio">
+                <i data-lucide="home"></i>
+            </button>
+            <button class="hub-action-btn" id="hub-back" title="Volver">
+                <i data-lucide="arrow-left"></i>
+            </button>
+            <button class="hub-action-btn" id="hub-cart" title="Ver Carrito">
+                <i data-lucide="shopping-cart"></i>
+                <span class="hub-badge" id="hub-cart-badge">0</span>
+            </button>
+            <button class="hub-action-btn" id="hub-login" title="Iniciar Sesión">
+                <i data-lucide="user"></i>
+            </button>
+        </div>
     </div>
 
-    <!-- Navigation Buttons -->
-    <div class="product-navigation nav-btn-left">
-        <button id="prev-product-btn" class="product-nav-btn" title="Producto anterior">
-            <i data-lucide="chevron-left"></i>
-        </button>
-    </div>
+    <!-- Enhanced Navigation Bar -->
+    <div class="smart-nav-bar" id="smart-nav">
+        <div class="nav-section nav-left">
+            <button id="prev-product-btn" class="nav-arrow-btn" title="Producto anterior">
+                <i data-lucide="chevron-left"></i>
+            </button>
+            <div class="product-counter-modern">
+                <i data-lucide="package" class="me-2"></i>
+                <span id="product-counter">1 de 1</span>
+            </div>
+        </div>
 
-    <div class="product-navigation nav-btn-right">
-        <button id="next-product-btn" class="product-nav-btn" title="Siguiente producto">
-            <i data-lucide="chevron-right"></i>
-        </button>
+        <div class="nav-section nav-center">
+            <div class="smart-breadcrumb" id="smart-breadcrumb">
+                <a href="/" class="breadcrumb-link">
+                    <i data-lucide="home"></i>
+                </a>
+                <i data-lucide="chevron-right" class="breadcrumb-separator"></i>
+                <a href="/#productos" class="breadcrumb-link" id="return-link">Productos</a>
+                <i data-lucide="chevron-right" class="breadcrumb-separator"></i>
+                <span class="breadcrumb-current" id="current-product">Producto</span>
+            </div>
+        </div>
+
+        <div class="nav-section nav-right">
+            <button id="next-product-btn" class="nav-arrow-btn" title="Siguiente producto">
+                <i data-lucide="chevron-right"></i>
+            </button>
+        </div>
     </div>
 
     <!-- Cart Overlay -->
@@ -96,37 +130,32 @@
 
     <!-- Main Product Content -->
     <div id="product-content">
-        <!-- Top Actions Bar -->
-        <div class="top-actions">
-            <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <nav aria-label="breadcrumb">
-                            <ol class="breadcrumb mb-0">
-                                <li class="breadcrumb-item">
-                                    <a href="/" class="text-success text-decoration-none">
-                                        <i data-lucide="home" class="me-1"></i>Inicio
-                                    </a>
-                                </li>
-                                <li class="breadcrumb-item">
-                                    <a href="/#productos" class="text-success text-decoration-none" id="category-breadcrumb">Productos</a>
-                                </li>
-                                <li class="breadcrumb-item active" id="product-breadcrumb">Producto</li>
-                            </ol>
-                        </nav>
+        <!-- Quick Actions Bar -->
+        <div class="quick-actions-bar">
+            <div class="container-fluid">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="quick-nav-left">
+                        <button id="back-btn" class="quick-btn quick-btn-ghost">
+                            <i data-lucide="arrow-left"></i>
+                            <span>Volver</span>
+                        </button>
                     </div>
-                    <div class="col-md-6 text-end">
-                        <button id="back-btn" class="btn btn-outline-secondary me-2">
-                            <i data-lucide="arrow-left" class="me-1"></i>Volver
+
+                    <div class="quick-nav-center">
+                        <div class="product-title-preview" id="product-title-preview">
+                            <span class="loading-text">Cargando...</span>
+                        </div>
+                    </div>
+
+                    <div class="quick-nav-right">
+                        <button id="login-btn" class="quick-btn quick-btn-ghost me-2">
+                            <i data-lucide="user"></i>
+                            <span>Cuenta</span>
                         </button>
-                        <button id="home-btn" class="btn btn-outline-success me-2">
-                            <i data-lucide="home" class="me-1"></i>Inicio
-                        </button>
-                        <button id="cart-toggle" class="btn btn-success position-relative">
-                            <i data-lucide="shopping-cart" class="me-1"></i>Carrito
-                            <span id="cart-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-badge-hidden">
-                                0
-                            </span>
+                        <button id="cart-toggle" class="quick-btn quick-btn-primary position-relative">
+                            <i data-lucide="shopping-cart"></i>
+                            <span>Carrito</span>
+                            <span id="cart-badge" class="cart-badge-modern cart-badge-hidden">0</span>
                         </button>
                     </div>
                 </div>

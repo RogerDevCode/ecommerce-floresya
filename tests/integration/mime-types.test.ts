@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { FloresYaServer } from '../../src/app/server.js';
+import { FloresYaServer } from '../../src/app/server';
 import supertest from 'supertest';
 
 describe('FloresYa MIME Types Integration Tests', () => {
@@ -30,16 +30,16 @@ describe('FloresYa MIME Types Integration Tests', () => {
 
   describe('Frontend JavaScript Files MIME Types', () => {
     const testFiles = [
-      '/dist/frontend/main.js',
-      '/dist/frontend/authManager.js',
-      '/dist/frontend/auth.js', // Symlink to authManager.js
-      '/dist/frontend/utils/logger.js',
-      '/dist/frontend/services/apiClient.js',
-      '/dist/frontend/services/api.js', // Symlink to apiClient.js
-      '/dist/frontend/scroll-effects-fix.js',
-      '/dist/frontend/adminPanel.js',
-      '/dist/frontend/product-detail.js',
-      '/dist/frontend/users-admin.js',
+      '/dist/frontend/main',
+      '/dist/frontend/authManager',
+      '/dist/frontend/auth', // Symlink to authManager.js.ts.js
+      '/dist/frontend/utils/logger',
+      '/dist/frontend/services/apiClient',
+      '/dist/frontend/services/api', // Symlink to apiClient.js.ts.js
+      '/dist/frontend/scroll-effects-fix',
+      '/dist/frontend/adminPanel',
+      '/dist/frontend/product-detail',
+      '/dist/frontend/users-admin',
     ];
 
     testFiles.forEach((filePath) => {
@@ -95,7 +95,7 @@ describe('FloresYa MIME Types Integration Tests', () => {
   describe('Security Headers Validation', () => {
     it('should include X-Content-Type-Options header', async () => {
       const response = await request
-        .get('/dist/frontend/main.js')
+        .get('/dist/frontend/main')
         .expect(200);
 
       // Verify security headers are present
@@ -108,7 +108,7 @@ describe('FloresYa MIME Types Integration Tests', () => {
 
     it('should not have concatenated MIME types in any headers', async () => {
       const response = await request
-        .get('/dist/frontend/main.js')
+        .get('/dist/frontend/main')
         .expect(200);
 
       // Check all headers for any concatenation issues
@@ -124,7 +124,7 @@ describe('FloresYa MIME Types Integration Tests', () => {
   describe('Error Handling for MIME Type Issues', () => {
     it('should handle non-existent JavaScript files gracefully', async () => {
       const response = await request
-        .get('/dist/frontend/non-existent-file.js')
+        .get('/dist/frontend/non-existent-file')
         .expect(404);
 
       // Should return proper 404, not serve HTML with wrong MIME type
@@ -145,7 +145,7 @@ describe('FloresYa MIME Types Integration Tests', () => {
   describe('Symlink Resolution', () => {
     it('should serve auth.js symlink with correct MIME type', async () => {
       const response = await request
-        .get('/dist/frontend/auth.js')
+        .get('/dist/frontend/auth')
         .expect(200);
 
       expect(response.headers['content-type']).toBe('application/javascript');
@@ -153,7 +153,7 @@ describe('FloresYa MIME Types Integration Tests', () => {
 
     it('should serve services/api.js symlink with correct MIME type', async () => {
       const response = await request
-        .get('/dist/frontend/services/api.js')
+        .get('/dist/frontend/services/api')
         .expect(200);
 
       expect(response.headers['content-type']).toBe('application/javascript');

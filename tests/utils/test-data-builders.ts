@@ -3,7 +3,7 @@
  * Fluent builders for creating complex test data with relationships
  */
 
-import { TestDataBuilder } from './mock-contracts.js';
+import { TestDataBuilder } from './mock-contracts';
 
 // Base Builder Class
 export abstract class BaseBuilder<T> implements TestDataBuilder<T> {

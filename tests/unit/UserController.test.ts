@@ -6,12 +6,12 @@
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { UserController, userValidators } from '../../src/controllers/UserController.js';
-import { userService } from '../../src/services/UserService.js';
-import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService.js';
+import { UserController, userValidators } from '../../src/controllers/UserController';
+import { userService } from '../../src/services/UserService';
+import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService';
 
 // Mock dependencies
-vi.mock('../../src/services/UserService.js', () => ({
+vi.mock('../../src/services/UserService', () => ({
   userService: {
     getAllUsers: vi.fn(),
     getUserById: vi.fn(),
@@ -22,7 +22,7 @@ vi.mock('../../src/services/UserService.js', () => ({
   }
 }));
 
-vi.mock('../../src/services/TypeSafeDatabaseService.js', () => ({
+vi.mock('../../src/services/TypeSafeDatabaseService', () => ({
   typeSafeDatabaseService: {
     getClient: vi.fn()
   }

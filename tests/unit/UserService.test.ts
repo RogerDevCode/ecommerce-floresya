@@ -4,13 +4,13 @@
  */
 
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { UserService } from '../../src/services/UserService.js';
-import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService.js';
+import { UserService } from '../../src/services/UserService';
+import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService';
 import * as bcrypt from 'bcryptjs';
-import type { UserUpdateRequest } from '../../src/shared/types/index.js';
+import type { UserUpdateRequest } from '../../src/shared/types/index';
 
 // Mock dependencies
-vi.mock('../../src/services/TypeSafeDatabaseService.js', () => ({
+vi.mock('../../src/services/TypeSafeDatabaseService', () => ({
   typeSafeDatabaseService: {
     getClient: vi.fn(),
     executeRpc: vi.fn()

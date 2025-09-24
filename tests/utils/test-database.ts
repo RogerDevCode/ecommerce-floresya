@@ -6,7 +6,7 @@
 
 import { SupabaseClient, createClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
-import type { Database } from '../../src/shared/types/index.js';
+import type { Database } from '../../src/shared/types/index';
 
 // Load main environment variables for tests
 config({ path: '.env' });

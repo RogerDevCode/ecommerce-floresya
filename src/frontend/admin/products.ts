@@ -3,8 +3,9 @@
  * Handles product management, CRUD operations, and product table rendering
  */
 
-import type { Product, AdminOccasion, AdminPanelLogger } from './types.js';
-import type { FloresYaAPI } from '../services/apiClient.js';
+import type { FloresYaAPI } from '@frontend/services/apiClient';
+
+import type { Product, AdminOccasion, AdminPanelLogger } from './types';
 
 export class AdminProducts {
   private logger: AdminPanelLogger;

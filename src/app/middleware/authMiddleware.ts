@@ -5,8 +5,9 @@
 
 import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+
 import { supabaseService } from '../../config/supabase.js';
-import type { AuthenticatedRequest } from '../../shared/types/index.js';
+import type { AuthenticatedRequest } from '../../shared/types/index';
 
 interface JWTPayload {
   sub: string; // user ID
@@ -16,12 +17,6 @@ interface JWTPayload {
   exp: number;
 }
 
-interface _SupabaseUser {
-  id: number;
-  email: string;
-  role: string;
-  is_active: boolean;
-}
 
 /**
  * Middleware to authenticate requests using JWT token

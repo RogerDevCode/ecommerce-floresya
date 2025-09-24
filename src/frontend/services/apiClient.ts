@@ -5,6 +5,12 @@
 
 // Import shared types
 import type {
+  RegisterData,
+  LogData,
+  CarouselResponse
+} from '@shared/types';
+
+import type {
   Product,
   Occasion,
   User,
@@ -12,11 +18,6 @@ import type {
   ApiResponse,
   ProductQuery
 } from '../../config/supabase.js';
-import type {
-  RegisterData,
-  LogData,
-  CarouselResponse
-} from '../../shared/types/index.js';
 
 // Note: Window interface extended in main.ts to avoid conflicts
 
@@ -309,9 +310,10 @@ export class FloresYaAPI {
 
     // Log the actual data structure for debugging
     if (response.success && response.data) {
+      const carouselProducts = response.data.carousel_products || response.data.products || [];
       this.log('✅ Carousel data received', {
-        count: response.data.carousel_products?.length ?? 0,
-        firstProduct: response.data.carousel_products?.[0] ?? null
+        count: carouselProducts.length,
+        firstProduct: carouselProducts[0] ?? null
       }, 'success');
     }
 
@@ -461,7 +463,7 @@ export class FloresYaAPI {
   formatCurrency(amount: number, currency = 'USD'): string {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: currency,
+      currency,
       minimumFractionDigits: 2
     }).format(amount);
   }

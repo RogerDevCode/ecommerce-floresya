@@ -3,7 +3,7 @@
  * Handles image management, upload, gallery, and image operations
  */
 
-import type { ProductImage, AdminPanelLogger } from './types.js';
+import type { ProductImage, AdminPanelLogger } from './types';
 
 export class AdminImages {
   private logger: AdminPanelLogger;

@@ -4,16 +4,16 @@
  * Refactored into modular components for better maintainability
  */
 
-import { FloresYaAPI } from './services/apiClient.js';
-import { AdminDashboard } from './admin/dashboard.js';
-import { AdminOrders } from './admin/orders.js';
-import { AdminUsers } from './admin/users.js';
-import { AdminProducts } from './admin/products.js';
-import { AdminImages } from './admin/images.js';
+import { AdminDashboard } from './admin/dashboard';
+import { AdminImages } from './admin/images';
+import { AdminOrders } from './admin/orders';
+import { AdminProducts } from './admin/products';
 import type {
   AdminUser,
   AdminPanelLogger
-} from './admin/types.js';
+} from './admin/types';
+import { AdminUsers } from './admin/users';
+import { FloresYaAPI } from './services/apiClient';
 
 class AdminPanel implements AdminPanelLogger {
   private api: FloresYaAPI;

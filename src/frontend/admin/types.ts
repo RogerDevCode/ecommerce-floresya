@@ -20,7 +20,7 @@ import type {
   Product,
   ProductImage,
   PaginationInfo
-} from '../../shared/types/index.js';
+} from '@shared/types';
 
 // Re-export admin types for local use
 export type {
@@ -44,5 +44,5 @@ export type {
   PaginationInfo
 };
 
-// Window interface extensions are now centralized in src/types/globals.ts
+// Window interface extensions are now centralized in src/types/globals.ts.js
 export {};

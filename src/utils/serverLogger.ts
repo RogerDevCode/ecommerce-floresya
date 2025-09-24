@@ -7,7 +7,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // Import consolidated logging types
-import type { LogEntry, LogConfig } from '../shared/types/index.js';
+import type { LogEntry, LogConfig } from '../shared/types/index';
 
 class ServerLogger {
   private config: LogConfig;

@@ -1,12 +1,12 @@
 /* ===========================================
-   PAYMENT PAGE STYLES
+   PAYMENT PAGE STYLES - Tailwind CSS v4 Compatible
    ===========================================
 
    Migrated from public/pages/payment.html
    Date: 2025-09-19
    =========================================== */
 
-/* Migrated inline styles */
+/* Migrated inline styles - Tailwind CSS v4 compatible */
 .success-modal-icon {
     font-size: 4rem;
 }

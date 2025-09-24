@@ -1,12 +1,12 @@
 /* ===========================================
-   ADMIN PAGE STYLES
+   ADMIN PAGE STYLES - Tailwind CSS v4 Compatible
    ===========================================
 
    Migrated from public/pages/admin.html
    Date: 2025-09-19
    =========================================== */
 
-/* Migrated inline styles */
+/* Migrated inline styles - Tailwind CSS v4 compatible */
 .admin-section-hidden {
     display: none;
 }

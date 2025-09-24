@@ -4,7 +4,7 @@
  * Sin distracciones. Solo información útil, cuando es útil.
  */
 
-import type { LogData, Logger, LogEntry } from '../../shared/types/index.js';
+import type { LogData, Logger, LogEntry } from '@shared/types';
 
 // Type definitions
 interface LogLevel {

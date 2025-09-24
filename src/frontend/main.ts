@@ -17,9 +17,9 @@ import type {
   ProductResponse,
   ProductWithImages,
   ProductWithOccasion
-} from '../shared/types/index.js';
+} from '@shared/types';
 
-// Window interface extensions are now centralized in src/types/globals.ts
+// Window interface extensions are now centralized in src/types/globals.ts.js
 
 export class FloresYaApp {
   private products: ProductWithOccasion[];
@@ -217,54 +217,82 @@ export class FloresYaApp {
     this.log('🔄 Cargando carrusel', {}, 'info');
 
     try {
-      if (!window.api) {
-        throw new Error('API not available');
-      }
+      // First try to load from API
+      if (window.api) {
+        const response = await window.api.getCarousel() as ApiResponse<CarouselResponse>;
 
-      const response = await window.api.getCarousel() as ApiResponse<CarouselResponse>;
+        if (response.success && response.data) {
+          // Check if carousel_products exists and is an array, fallback to products for compatibility
+          const carouselProducts = response.data.carousel_products || response.data.products || [];
 
-      if (response.success && response.data) {
-        // Check if carousel_products exists and is an array
-        const carouselProducts = response.data.carousel_products || [];
-
-        if (Array.isArray(carouselProducts) && carouselProducts.length > 0) {
-          this.renderCarousel(carouselProducts);
-          this.log('✅ Carrusel cargado', {
-            count: carouselProducts.length
-          }, 'success');
-        } else {
-          this.log('ℹ️ No hay productos para mostrar en el carrusel', {
-            count: 0
-          }, 'info');
-          this.showCarouselFallback();
+          if (Array.isArray(carouselProducts) && carouselProducts.length > 0) {
+            this.renderCarousel(carouselProducts);
+            this.log('✅ Carrusel cargado desde API', {
+              count: carouselProducts.length
+            }, 'success');
+            return;
+          }
         }
-      } else {
-        // Check if it's a network/connectivity issue
-        const responseWithMessage = response as { message?: unknown };
-        const errorMessage = typeof responseWithMessage.message === 'string' ? responseWithMessage.message : 'Unknown error';
-        const isConnectivityIssue = typeof errorMessage === 'string' && (
-          errorMessage.includes('NetworkError') ||
-          errorMessage.includes('fetch') ||
-          errorMessage.includes('connectivity')
-        );
-
-        this.log(`${isConnectivityIssue ? '🌐' : '⚠️'} No se pudieron cargar productos del carrusel`, {
-          message: errorMessage,
-          isConnectivityIssue
-        }, isConnectivityIssue ? 'info' : 'warn');
-        this.showCarouselFallback();
       }
+
+      // If API fails or returns no data, try to use regular products
+      this.log('🔄 API del carrusel no disponible, usando productos regulares', {}, 'info');
+      if (this.products.length > 0) {
+        // Use first 3 products as carousel items
+        const carouselProducts = this.products.slice(0, 3).map((product, index) => ({
+          ...product,
+          primary_thumb_url: product.primary_image_url || '/images/placeholder-product.webp',
+          carousel_order: index + 1
+        }));
+
+        this.renderCarousel(carouselProducts);
+        this.log('✅ Carrusel cargado con productos regulares', {
+          count: carouselProducts.length
+        }, 'success');
+      } else {
+        // Create mock data for testing
+        this.log('🔄 No hay productos, creando carrusel de prueba', {}, 'info');
+        const mockProducts = [
+          {
+            id: 1,
+            name: 'Rosas Rojas Clásicas',
+            summary: 'Hermosas rosas rojas perfectas para expresar amor y pasión',
+            price_usd: 25.99,
+            primary_thumb_url: '/images/placeholder-product.webp',
+            stock: 10,
+            carousel_order: 1
+          },
+          {
+            id: 2,
+            name: 'Bouquet Primaveral',
+            summary: 'Colorido arreglo floral con las flores más frescas de la temporada',
+            price_usd: 32.50,
+            primary_thumb_url: '/images/placeholder-product.webp',
+            stock: 5,
+            carousel_order: 2
+          },
+          {
+            id: 3,
+            name: 'Orquídeas Elegantes',
+            summary: 'Sofisticadas orquídeas blancas para ocasiones especiales',
+            price_usd: 45.00,
+            primary_thumb_url: '/images/placeholder-product.webp',
+            stock: 3,
+            carousel_order: 3
+          }
+        ];
+
+        this.renderCarousel(mockProducts);
+        this.log('✅ Carrusel de prueba cargado', {
+          count: mockProducts.length
+        }, 'success');
+      }
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const isConnectivityIssue = errorMessage.includes('NetworkError') ||
-                                 errorMessage.includes('fetch') ||
-                                 errorMessage.includes('connectivity') ||
-                                 errorMessage.includes('No network connectivity');
-
-      this.log(`${isConnectivityIssue ? '🌐' : '❌'} Error cargando carrusel`, {
-        error: errorMessage,
-        isConnectivityIssue
-      }, isConnectivityIssue ? 'warn' : 'error');
+      this.log('❌ Error cargando carrusel', {
+        error: errorMessage
+      }, 'error');
       this.showCarouselFallback();
     }
   }
@@ -286,7 +314,7 @@ export class FloresYaApp {
   }
 
   private createProductCard(product: ProductWithImages): string {
-    // Prefer small size image for product cards, fallback to primary, then any available
+    // Optimized image selection for better visual impact
     const smallImage = product.images?.find(img => img.size === 'small');
     const primaryImage = product.primary_image_url;
     const fallbackImage = product.images?.[0];
@@ -296,71 +324,132 @@ export class FloresYaApp {
       ? imageToUse.url
       : (typeof imageToUse === 'string' ? imageToUse : '/images/placeholder-product.webp');
 
-    // Obtener imágenes medium para el efecto hover
+    // Medium images for hover gallery effect
     const mediumImages = (product as ProductWithImages & {medium_images?: string[]}).medium_images ?? [];
     const mediumImagesJson = JSON.stringify(mediumImages);
 
-    // price_usd is already a number
+    // Price formatting with proper currency display
     const price = product.price_usd;
     const formattedPrice = isNaN(price) ? 'N/A' : price.toFixed(2);
 
     return `
-      <div class="w-full md:w-1/2 lg:w-1/3 xl:w-1/4 mb-6 px-3">
-        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 product-card h-full" data-product-id="${product.id}" data-medium-images='${mediumImagesJson}'>
-          <div class="relative overflow-hidden rounded-t-lg">
-            <img src="${imageUrl}"
-                 class="w-full h-64 object-cover transition-transform duration-300 hover:scale-105"
-                 alt="${product.name}"
-                 width="300"
-                 height="300"
-                 loading="lazy"
-                 onerror="this.src='/images/placeholder-product.webp'">
+      <article class="product-card container-query fade-in-up" data-product-id="${product.id}" data-medium-images='${mediumImagesJson}'>
+        <!-- Premium Image Container -->
+        <div class="product-card-image">
+          <img src="${imageUrl}"
+               alt="${product.name}"
+               width="400"
+               height="400"
+               loading="lazy"
+               decoding="async"
+               onerror="this.src='/images/placeholder-product.webp'">
 
-            <!-- Image indicator in top-left corner -->
-            <div class="image-indicator absolute top-2 left-2 px-2 py-1 bg-black bg-opacity-75 text-white rounded-full text-xs z-10">
-              <span class="current-image">1</span>/<span class="total-images">${Math.max(1, mediumImages.length ?? 1)}</span>
-            </div>
-
-            ${product.featured ? '<span class="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-semibold">Destacado</span>' : ''}
+          <!-- Elegant Image Overlay with Quick View -->
+          <div class="image-overlay">
+            <button class="quick-view-btn view-details-btn"
+                    data-product-id="${product.id}"
+                    title="Vista rápida de ${product.name}"
+                    aria-label="Ver detalles del producto">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
           </div>
-          <div class="p-4 flex flex-col h-full">
-            <!-- Product name with 2-line text wrapping -->
-            <h5 class="text-lg font-semibold mb-2 line-clamp-2 product-name">${product.name}</h5>
 
-            <p class="text-gray-600 text-sm flex-grow mb-4">${product.summary}</p>
-
-            <!-- Price and BUY button row -->
-            <div class="flex items-center justify-between mb-4">
-              <div class="price">
-                <strong class="text-xl font-bold text-green-600">${formattedPrice}</strong>
-                <small class="text-gray-500 ml-1">USD</small>
-              </div>
-              <!-- BUY button with gradient and bright design -->
-              <button class="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 buy-now-btn product-buy-btn"
-                      data-product-id="${product.id}"
-                      ${product.stock === 0 ? 'disabled' : ''}>
-                <i class="bi bi-lightning-charge-fill text-yellow-200 mr-1"></i>
-                <strong>BUY</strong>
-              </button>
-            </div>
-
-            <div class="mt-auto">
-              <div class="flex gap-2">
-                <!-- Simplified cart button with cart + plus -->
-                <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded flex-1 transition-colors duration-200 add-to-cart-btn product-cart-btn"
-                        data-product-id="${product.id}"
-                        ${product.stock === 0 ? 'disabled' : ''}>
-                  <i class="bi bi-cart3"></i><span class="product-cart-plus ml-1">+</span>
-                </button>
-                <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 px-4 rounded flex-1 transition-colors duration-200 view-details-btn"
-                        data-product-id="${product.id}">
-                  <i class="bi bi-eye"></i> Ver
-                </button>
-              </div>
-            </div>
+          <!-- Clean Image Navigation for Multiple Images -->
+          ${mediumImages.length > 1 ? `
+          <div class="absolute inset-0 flex items-center justify-between p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <button class="bg-white/80 backdrop-blur-sm text-gray-700 p-2 rounded-full shadow-lg hover:bg-white transition-all duration-200 image-nav-prev"
+                    data-product-id="${product.id}"
+                    aria-label="Imagen anterior">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+              </svg>
+            </button>
+            <button class="bg-white/80 backdrop-blur-sm text-gray-700 p-2 rounded-full shadow-lg hover:bg-white transition-all duration-200 image-nav-next"
+                    data-product-id="${product.id}"
+                    aria-label="Siguiente imagen">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </button>
           </div>
+          ` : ''}
+
+          <!-- Simple Image Counter -->
+          ${mediumImages.length > 1 ? `
+          <div class="absolute top-3 left-3 bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-medium">
+            <span class="current-image">1</span>/<span class="total-images">${mediumImages.length}</span>
+          </div>
+          ` : ''}
         </div>
-      </div>
+
+        <!-- Premium Product Information -->
+        <div class="product-info">
+          <!-- Product Title -->
+          <h3 class="product-title">
+            ${product.name}
+          </h3>
+
+          <!-- Product Description -->
+          <p class="product-description">
+            ${product.summary || 'Hermoso arreglo floral perfecto para cualquier ocasión especial.'}
+          </p>
+
+          <!-- Prominent Price Display -->
+          <div class="product-price">
+            $${formattedPrice}
+            <span class="currency">USD</span>
+          </div>
+
+          <!-- Modern Action Buttons -->
+          <div class="product-actions">
+            <!-- Add to Cart Button (narrower with tooltip) -->
+            <button class="product-btn product-btn-cart add-to-cart-btn"
+                    data-product-id="${product.id}"
+                    ${product.stock === 0 ? 'disabled aria-disabled="true"' : ''}
+                    title="Agregar ${product.name} al carrito"
+                    data-tooltip="Agregar al carrito">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 4M7 13l2.5 4M17 21a2 2 0 100-4 2 2 0 000 4zM9 21a2 2 0 100-4 2 2 0 000 4z"/>
+              </svg>
+              <span class="btn-text">Carrito</span>
+            </button>
+
+            <!-- Buy Now Button -->
+            <button class="product-btn product-btn-buy buy-now-btn"
+                    data-product-id="${product.id}"
+                    ${product.stock === 0 ? 'disabled aria-disabled="true"' : ''}
+                    title="Comprar ${product.name} inmediatamente"
+                    data-tooltip="Comprar ahora">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              <span class="btn-text">Comprar</span>
+            </button>
+
+            <!-- View Details Button -->
+            <button class="product-btn product-btn-details view-details-btn"
+                    data-product-id="${product.id}"
+                    title="Ver detalles completos de ${product.name}"
+                    data-tooltip="Ver detalles">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+              <span class="btn-text">Detalles</span>
+            </button>
+          </div>
+
+          ${product.stock === 0 ? `
+          <!-- Out of Stock Indicator -->
+          <div class="mt-2 text-center text-sm text-gray-500 font-medium">
+            Temporalmente agotado
+          </div>
+          ` : ''}
+        </div>
+      </article>
     `;
   }
 
@@ -505,11 +594,42 @@ export class FloresYaApp {
       }
     });
 
-    // Product card hover events will be bound when cards are rendered
-    // This ensures more reliable event handling
-
-    this.log('✅ Eventos vinculados', {}, 'success');
+    // Carousel navigation events
+  const carouselPrevBtn = document.getElementById('carousel-prev');
+  const carouselNextBtn = document.getElementById('carousel-next');
+  
+  if (carouselPrevBtn) {
+    carouselPrevBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.navigateCarousel('prev');
+    });
   }
+  
+  if (carouselNextBtn) {
+    carouselNextBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.navigateCarousel('next');
+    });
+  }
+
+  // Carousel indicator clicks
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('#carouselIndicators button')) {
+      e.preventDefault();
+      const button = target.closest('#carouselIndicators button');
+      const slideIndex = parseInt(button.getAttribute('data-slide-index') ?? '0');
+      if (!isNaN(slideIndex)) {
+        this.goToCarouselSlide(slideIndex);
+      }
+    }
+  });
+
+  // Product card hover events will be bound when cards are rendered
+  // This ensures more reliable event handling
+
+  this.log('✅ Eventos vinculados', {}, 'success');
+}
 
   private handleSearch(): void {
     const searchInput = document.getElementById('searchInput') as HTMLInputElement;
@@ -597,31 +717,6 @@ export class FloresYaApp {
   }
 
 
-  /**
-   * Buy now - add to cart and redirect to payment page
-   */
-  public buyNow(productId: number): void {
-    const product = this.products.find(p => p.id === productId);
-    if (!product) {return;}
-
-    // Add to cart first
-    if (typeof window !== 'undefined' && window.cart) {
-      const cart = window.cart;
-      if (cart && typeof cart.addItem === 'function') {
-        cart.addItem({
-          id: product.id,
-          name: product.name,
-          price_usd: product.price_usd ?? 0,
-          quantity: 1
-        });
-      }
-    }
-
-    this.log('⚡ Compra directa iniciada', { productId, productName: product.name }, 'info');
-
-    // Redirect to payment page
-    window.location.href = '/payment';
-  }
 
   private sortProductsByOccasionAndName(products: ProductWithOccasion[]): ProductWithOccasion[] {
     // Group products by occasion, then sort alphabetically by name within each group
@@ -690,14 +785,33 @@ export class FloresYaApp {
     productCards.forEach(card => {
       const cardElement = card as HTMLElement;
 
+      // Bind navigation button events
+      const prevBtn = cardElement.querySelector('.image-nav-prev');
+      const nextBtn = cardElement.querySelector('.image-nav-next');
+
+      if (prevBtn) {
+        prevBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.navigateProductImage(cardElement, 'prev');
+        });
+      }
+
+      if (nextBtn) {
+        nextBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.navigateProductImage(cardElement, 'next');
+        });
+      }
+
+      // Auto-cycle images on hover (optional)
       cardElement.addEventListener('mouseenter', () => {
         this.handleProductCardHover(cardElement, true);
       });
 
       cardElement.addEventListener('mouseleave', (e) => {
-        // Check if mouse is actually leaving the card
         const relatedTarget = (e).relatedTarget as HTMLElement;
-        // Only continue hover if relatedTarget exists AND is contained within the card
         if (!relatedTarget || !cardElement.contains(relatedTarget)) {
           this.handleProductCardHover(cardElement, false);
         }
@@ -719,8 +833,54 @@ export class FloresYaApp {
     this.hoverTimeouts.clear();
   }
 
+  private navigateProductImage(card: HTMLElement, direction: 'prev' | 'next'): void {
+    const productImage = card.querySelector('img');
+    const imageIndicator = card.querySelector('.image-indicator');
+    if (!productImage || !imageIndicator) return;
+
+    // Get medium images from data attribute
+    let mediumImages: string[] = [];
+    try {
+      const mediumImagesData = card.dataset.mediumImages ?? '[]';
+      mediumImages = JSON.parse(mediumImagesData);
+    } catch (error) {
+      this.log('⚠️ Error parsing medium images', { error, card: card.dataset.productId }, 'warn');
+      return;
+    }
+
+    if (mediumImages.length <= 1) return;
+
+    // Get current image index
+    const currentSrc = productImage.src;
+    let currentIndex = mediumImages.findIndex(img => currentSrc.includes(img));
+    if (currentIndex === -1) currentIndex = 0;
+
+    // Calculate next index
+    let nextIndex: number;
+    if (direction === 'next') {
+      nextIndex = (currentIndex + 1) % mediumImages.length;
+    } else {
+      nextIndex = (currentIndex - 1 + mediumImages.length) % mediumImages.length;
+    }
+
+    // Update image and counter
+    productImage.src = mediumImages[nextIndex];
+
+    const currentImageSpan = imageIndicator.querySelector('.current-image');
+    if (currentImageSpan) {
+      currentImageSpan.textContent = (nextIndex + 1).toString();
+    }
+
+    this.log('🖼️ Imagen navegada', {
+      direction,
+      currentIndex,
+      nextIndex,
+      productId: card.dataset.productId
+    }, 'info');
+  }
+
   private handleProductCardHover(card: HTMLElement, isEntering: boolean): void {
-    const productImage = card.querySelector('.card-img-top');
+    const productImage = card.querySelector('img');
     if (!(productImage instanceof HTMLImageElement)) return;
     const productId = card.dataset.productId ?? 'unknown';
 
@@ -978,7 +1138,7 @@ private renderCarousel(products: CarouselProduct[]): void {
   const slides = document.getElementById('carouselSlides');
 
   if (!indicators || !slides) {
-    this.log('⚠️ Contenedores del carrusel Bootstrap no encontrados', {}, 'warn');
+    this.log('⚠️ Contenedores del carrusel no encontrados', {}, 'warn');
     return;
   }
 
@@ -987,53 +1147,99 @@ private renderCarousel(products: CarouselProduct[]): void {
     return;
   }
 
-  // Generate indicators
+  // Generate modern indicators with smooth animations
   const indicatorsHtml = products.map((_, index) => `
     <button type="button"
-            data-bs-target="#featuredCarousel"
-            data-bs-slide-to="${index}"
-            ${index === 0 ? 'class="active" aria-current="true"' : ''}
-            aria-label="Slide ${index + 1}"></button>
+            class="w-3 h-3 rounded-full transition-all duration-300 hover:scale-110 ${index === 0 ? 'bg-white shadow-lg' : 'bg-white/60 hover:bg-white/80'}"
+            data-slide-index="${index}"
+            aria-label="Ver producto ${index + 1}">
+    </button>
   `).join('');
 
-  // Generate slides using Bootstrap structure
+  // Generate premium magazine-style slides
   const slidesHtml = products.map((product, index) => {
     const primaryImage = product.primary_thumb_url ?? '/images/placeholder-product.webp';
     const isActive = index === 0 ? 'active' : '';
+    const formattedPrice = product.price_usd.toFixed(2);
 
     return `
-      <div class="carousel-item ${isActive}">
-        <div class="row g-0">
-          <div class="col-md-8">
-            <img src="${primaryImage}"
-                 class="d-block"
-                 alt="${product.name}"
-                 style="height: 150px; width: 150px; object-fit: cover; margin: 0 auto;"
-                 onerror="this.src='/images/placeholder-product.webp'">
+      <div class="carousel-slide ${isActive}" data-slide-index="${index}">
+        <!-- Magazine Layout Container -->
+        <div class="carousel-image-container">
+          <img src="${primaryImage}"
+               alt="${product.name}"
+               loading="${index === 0 ? 'eager' : 'lazy'}"
+               decoding="async"
+               onerror="this.src='/images/placeholder-product.webp'">
+        </div>
+
+        <div class="carousel-content">
+          <!-- Product Title -->
+          <h2 class="carousel-title">
+            ${product.name}
+          </h2>
+
+          <!-- Product Description -->
+          <p class="carousel-description">
+            ${product.summary || 'Hermoso arreglo floral creado especialmente para momentos únicos y ocasiones especiales.'}
+          </p>
+
+          <!-- Prominent Price -->
+          <div class="carousel-price">
+            $${formattedPrice}
           </div>
-          <div class="col-md-4 d-flex align-items-center bg-light">
-            <div class="p-4 text-center w-100">
-              <h5 class="card-title fw-bold mb-3">${product.name}</h5>
-              <p class="card-text text-muted mb-3">${product.summary || 'Hermoso arreglo floral'}</p>
-              <p class="h4 text-primary mb-3">$${product.price_usd.toFixed(2)}</p>
-              <button class="btn btn-primary btn-lg add-to-cart-btn" data-product-id="${product.id}">
-                <i class="bi bi-cart-plus me-2"></i>Comprar Ahora
-              </button>
-            </div>
+
+          <!-- Strong Call-to-Action -->
+          <div class="flex gap-4">
+            <button class="btn-primary carousel-cta add-to-cart-btn flex-1"
+                    data-product-id="${product.id}"
+                    title="Agregar ${product.name} al carrito">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 4M7 13l2.5 4M17 21a2 2 0 100-4 2 2 0 000 4zM9 21a2 2 0 100-4 2 2 0 000 4z"/>
+              </svg>
+              Agregar al Carrito
+            </button>
+
+            <button class="btn-secondary view-details-btn"
+                    data-product-id="${product.id}"
+                    title="Ver detalles de ${product.name}">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
           </div>
         </div>
       </div>
     `;
   }).join('');
 
-  // Update DOM
+  // Update DOM with new content
   indicators.innerHTML = indicatorsHtml;
   slides.innerHTML = slidesHtml;
 
-  // Bootstrap carousel will initialize automatically via data-bs-ride="carousel"
-  // Manual initialization can be added later if needed
+  // Set up slides with proper classes
+  const allSlides = Array.from(slides.querySelectorAll('.carousel-slide'));
+  allSlides.forEach((slide, index) => {
+    const slideElement = slide as HTMLElement;
+    if (index === 0) {
+      slideElement.classList.add('active');
+      slideElement.classList.remove('hidden');
+    } else {
+      slideElement.classList.remove('active');
+      slideElement.classList.add('hidden');
+    }
+  });
 
-  this.log('✅ Carrusel Bootstrap renderizado', { productCount: products.length }, 'success');
+  this.log('✅ Carrusel configurado', {
+    productCount: products.length,
+    activeSlide: 0
+  }, 'success');
+
+  this.log('✅ Carrusel magazine renderizado', {
+    productCount: products.length,
+    style: 'magazine-layout'
+  }, 'success');
 }
 
 private initializeInfiniteCarousel(products: CarouselProduct[]): void {
@@ -1233,21 +1439,27 @@ private snapToNearest(pos: number): void {
 }
 */
   private showCarouselFallback(): void {
-    const container = document.getElementById('dynamicCarousel');
+    const container = document.getElementById('featuredCarousel');
     if (!container) {return;}
 
     const fallbackHtml = `
-      <div class="carousel-fallback">
-        <i class="bi bi-flower1"></i>
-        <h4>Creaciones Destacadas</h4>
-        <p>Descubre nuestros arreglos florales más populares y especiales</p>
-        <button class="bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg transition-colors font-medium" onclick="document.getElementById('productos').scrollIntoView({behavior: 'smooth'});">
-          <i class="bi bi-arrow-down mr-2"></i>Ver Productos
+      <div class="carousel-fallback" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; text-align: center; padding: 40px;">
+        <i data-lucide="flower" class="h-16 w-16 text-primary-600 mb-4"></i>
+        <h4 class="text-2xl font-bold text-gray-800 mb-3">Creaciones Destacadas</h4>
+        <p class="text-gray-600 mb-6 max-w-md">Descubre nuestros arreglos florales más populares y especiales</p>
+        <button class="bg-primary-600 hover:bg-primary-700 text-white py-3 px-6 rounded-lg transition-colors font-medium flex items-center" onclick="document.getElementById('productos').scrollIntoView({behavior: 'smooth'});">
+          <i data-lucide="arrow-down" class="h-4 w-4 mr-2"></i>Ver Productos
         </button>
       </div>
     `;
 
     container.innerHTML = fallbackHtml;
+
+    // Initialize Lucide icons for the fallback
+    if (typeof (window as any).lucide !== 'undefined') {
+      (window as any).lucide.createIcons();
+    }
+
     this.log('⚠️ Mostrando fallback del carrusel', {}, 'warn');
   }
 
@@ -1358,7 +1570,7 @@ private snapToNearest(pos: number): void {
           </div>
         </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min"></script>
       </body>
       </html>
     `;
@@ -1409,13 +1621,106 @@ private snapToNearest(pos: number): void {
 
     this.saveCart();
     this.updateCartUI();
-    this.showCartNotification(`${product.name} agregado al carrito`);
+    this.updateNavbarCartCount();
+    this.showSuccessNotification(`¡${product.name} agregado al carrito!`, product.images?.[0]?.url);
 
     this.log('🛒 Product added to cart', {
       productId,
       productName: product.name,
-      cartSize: this.cart.length
-    }, 'info');
+      cartSize: this.cart.length,
+      totalItems: this.cart.reduce((sum, item) => sum + item.quantity, 0)
+    }, 'success');
+  }
+
+  public buyNow(productId: number): void {
+    // Add to cart first
+    this.addToCart(productId);
+
+    // Redirect to payment page after brief delay
+    setTimeout(() => {
+      window.location.href = '/pages/payment.html';
+    }, 500);
+  }
+
+  private updateNavbarCartCount(): void {
+    const totalItems = this.cart.reduce((sum, item) => sum + item.quantity, 0);
+
+    // Update cart badge in navbar
+    const cartBadges = document.querySelectorAll('.cart-badge, #cart-badge, [data-cart-count]');
+    cartBadges.forEach(badge => {
+      if (badge instanceof HTMLElement) {
+        badge.textContent = totalItems.toString();
+        badge.style.display = totalItems > 0 ? 'block' : 'none';
+        if (totalItems > 0) {
+          badge.classList.add('animate-bounce');
+          setTimeout(() => badge.classList.remove('animate-bounce'), 500);
+        }
+      }
+    });
+
+    // Update cart link text
+    const cartLinks = document.querySelectorAll('.cart-link-text');
+    cartLinks.forEach(link => {
+      if (link instanceof HTMLElement) {
+        link.textContent = `Carrito (${totalItems})`;
+      }
+    });
+  }
+
+  private showSuccessNotification(message: string, productImage?: string): void {
+    this.showNotification(message, 'success', productImage);
+  }
+
+  private showErrorNotification(message: string): void {
+    this.showNotification(message, 'error');
+  }
+
+  private showNotification(message: string, type: 'success' | 'error' | 'info' = 'info', productImage?: string): void {
+    // Remove existing notifications
+    const existingNotifications = document.querySelectorAll('.floresya-notification');
+    existingNotifications.forEach(notification => notification.remove());
+
+    // Create notification
+    const notification = document.createElement('div');
+    notification.className = `floresya-notification notification-${type}`;
+
+    const iconClass = type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : 'info';
+    const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+
+    notification.innerHTML = `
+      <div class="notification-content">
+        ${productImage ? `<img src="${productImage}" alt="Producto" class="notification-image">` : ''}
+        <div class="notification-text">
+          <div class="notification-icon ${bgColor}">
+            <i data-lucide="${iconClass}"></i>
+          </div>
+          <span>${message}</span>
+        </div>
+        <button class="notification-close" onclick="this.parentElement.parentElement.remove()">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(notification);
+
+    // Initialize Lucide icons in the notification
+    if (typeof window !== 'undefined' && (window as any).lucide) {
+      (window as any).lucide.createIcons();
+    }
+
+    // Show with animation
+    setTimeout(() => {
+      notification.classList.add('show');
+    }, 10);
+
+    // Auto remove after 4 seconds
+    setTimeout(() => {
+      notification.classList.remove('show');
+      setTimeout(() => {
+        notification.remove();
+      }, 300);
+    }, 4000);
   }
 
   public removeFromCart(productId: number): void {
@@ -1542,6 +1847,91 @@ private snapToNearest(pos: number): void {
         toast.parentNode.removeChild(toast);
       }
     }, 3000);
+  }
+  
+  // Carousel navigation methods
+  private navigateCarousel(direction: 'prev' | 'next'): void {
+    const slidesContainer = document.getElementById('carouselSlides');
+    if (!slidesContainer) {
+      this.log('⚠️ Carousel container no encontrado', {}, 'warn');
+      return;
+    }
+    
+    const slides = Array.from(slidesContainer.querySelectorAll('.carousel-slide'));
+    if (slides.length === 0) {
+      this.log('⚠️ No hay slides para navegar', {}, 'warn');
+      return;
+    }
+    
+    // Find current active slide index
+    let currentIndex = -1;
+    slides.forEach((slide, index) => {
+      if (!slide.classList.contains('hidden')) {
+        currentIndex = index;
+      }
+    });
+    
+    // If no slide is currently active, default to first slide
+    if (currentIndex === -1) {
+      currentIndex = 0;
+    }
+    
+    let nextIndex: number;
+    if (direction === 'next') {
+      nextIndex = (currentIndex + 1) % slides.length;
+    } else { // prev
+      nextIndex = (currentIndex - 1 + slides.length) % slides.length;
+    }
+    
+    this.goToCarouselSlide(nextIndex);
+  }
+  
+  private goToCarouselSlide(index: number): void {
+    const slidesContainer = document.getElementById('carouselSlides');
+    if (!slidesContainer) {
+      this.log('⚠️ Carousel container no encontrado', {}, 'warn');
+      return;
+    }
+    
+    const slides = Array.from(slidesContainer.querySelectorAll('.carousel-slide'));
+    const indicatorsContainer = document.getElementById('carouselIndicators');
+    if (!indicatorsContainer) {
+      this.log('⚠️ Carousel indicators container no encontrado', {}, 'warn');
+      return;
+    }
+    
+    const indicators = Array.from(indicatorsContainer.querySelectorAll('button'));
+    
+    // Validate index
+    if (index < 0 || index >= slides.length) {
+      this.log('⚠️ Índice de slide inválido', { index, max: slides.length - 1 }, 'warn');
+      return;
+    }
+    
+    // Update slide visibility using CSS classes
+    slides.forEach((slide, idx) => {
+      const slideElement = slide as HTMLElement;
+      if (idx === index) {
+        slideElement.classList.add('active');
+        slideElement.classList.remove('hidden');
+      } else {
+        slideElement.classList.remove('active');
+        slideElement.classList.add('hidden');
+      }
+    });
+    
+    // Update indicators
+    indicators.forEach((indicator, idx) => {
+      if (idx === index) {
+        indicator.classList.remove('bg-gray-400');
+        indicator.classList.add('bg-white');
+      } else {
+        indicator.classList.remove('bg-white');
+        indicator.classList.add('bg-gray-400');
+      }
+    });
+    
+    this.log('✅ Navegación al slide completada', { index }, 'info');
   }
 }
 

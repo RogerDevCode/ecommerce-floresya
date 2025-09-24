@@ -3,8 +3,6 @@
  * Business logic for user management with atomic operations
  */
 
-import * as bcrypt from 'bcryptjs';
-import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
 import {
   type ApiResponse,
   type UserCreateRequest,
@@ -12,7 +10,10 @@ import {
   type UserQuery,
   type UserResponse,
   type UserUpdateRequest
-} from '../shared/types/index.js';
+} from '@shared/types';
+import * as bcrypt from 'bcryptjs';
+
+import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
 
 // Using TypeSafeDatabaseService for type-safe operations
 

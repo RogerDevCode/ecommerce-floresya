@@ -3,7 +3,6 @@
  * Complete order management with cart calculation and status tracking
  */
 
-import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
 import {
   type Order,
   type OrderCreateRequest,
@@ -17,7 +16,9 @@ import {
   type RawOrderStatusHistoryWithUser,
   type RawOrderWithItemsAndUser,
   type RawOrderWithItemsPaymentsHistory
-} from '../shared/types/index.js';
+} from '@shared/types';
+
+import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
 
 // Get database client dynamically for better testability
 const getDb = () => typeSafeDatabaseService.getClient();

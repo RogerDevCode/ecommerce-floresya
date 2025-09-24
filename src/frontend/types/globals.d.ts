@@ -9,7 +9,7 @@ import type {
   WindowWithCart,
   Logger,
   CartManager
-} from '../../shared/types/index.js';
+} from '@shared/types';
 
 // Extend the global Window interface
 declare global {
@@ -34,7 +34,7 @@ declare global {
 
     // Product detail manager
     productDetail?: {
-      init(productId: number): Promise<void>;
+      init(): Promise<void>;
       addToCart(productId: number, quantity: number): Promise<boolean>;
       showImages(productId: number): void;
       increaseQuantity(productId: number): void;

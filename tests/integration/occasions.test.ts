@@ -4,12 +4,12 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { FloresYaServer } from '../../src/app/server.js';
+import { FloresYaServer } from '../../src/app/server';
 import supertest from 'supertest';
-import { setupTestDatabase, teardownTestDatabase } from '../utils/test-database.js';
+import { setupTestDatabase, teardownTestDatabase } from '../utils/test-database';
 
 // Mock the entire test-database module with clean structure
-vi.mock('../utils/test-database.js', async () => {
+vi.mock('../utils/test-database', async () => {
   const mockSupabaseClient = {
     from: vi.fn().mockReturnValue({
       select: vi.fn().mockReturnThis(),
@@ -58,7 +58,7 @@ describe('FloresYa Occasions Integration Tests - Simple Mock Edition', () => {
 
   beforeEach(async () => {
     // Import the mocked client
-    const { testSupabase } = await import('../utils/test-database.js');
+    const { testSupabase } = await import('../utils/test-database');
     mockSupabase = testSupabase;
 
     // Create server instance
@@ -77,7 +77,7 @@ describe('FloresYa Occasions Integration Tests - Simple Mock Edition', () => {
 
   describe('GET /api/occasions - Simple Mock Integration', () => {
     it('should return occasions from mock database', async () => {
-      // Arrange - Clean mock setup like database-connection.test.ts
+      // Arrange - Clean mock setup like database-connection.test.ts.js
       const mockOccasions = createTestOccasionsList([
         createTestOccasion(),
         createTestOccasion({ id: 2, name: 'Aniversario', slug: 'aniversario' })

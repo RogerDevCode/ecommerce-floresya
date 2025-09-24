@@ -1,5 +1,6 @@
-import { defineConfig } from 'vitest/config';
 import path from 'path';
+
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   resolve: {
@@ -9,6 +10,7 @@ export default defineConfig({
       '@frontend': path.resolve(__dirname, './src/frontend'),
       '@tests': path.resolve(__dirname, './tests'),
     },
+    extensions: ['.ts', '.tsx', '.js', '.jsx'],
   },
 
   test: {

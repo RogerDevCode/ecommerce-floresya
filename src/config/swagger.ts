@@ -490,9 +490,9 @@ const swaggerDefinition: SwaggerConfig['definition'] = {
 const options: swaggerJSDoc.Options = {
   definition: swaggerDefinition,
   apis: [
-    './src/controllers/*.ts',
-    './src/routes/*.ts',
-    './src/app/server.ts'
+    './src/controllers/*',
+    './src/routes/*',
+    './src/app/server'
   ]
 };
 

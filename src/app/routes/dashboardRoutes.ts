@@ -4,9 +4,10 @@
  */
 
 import { Router } from 'express';
+
 import { typeSafeDatabaseService } from '../../services/TypeSafeDatabaseService.js';
-import { serverLogger } from '../../utils/serverLogger.js';
 import { getTimeAgo } from '../../shared/utils/index.js';
+import { serverLogger } from '../../utils/serverLogger.js';
 
 export function createDashboardRoutes(): Router {
   const router = Router();
@@ -63,7 +64,7 @@ export function createDashboardRoutes(): Router {
         totalProducts: totalProducts || 0,
         totalOrders: totalOrders || 0,
         totalUsers: totalUsers || 0,
-        totalRevenue: totalRevenue
+        totalRevenue
       };
 
       serverLogger.success('DASHBOARD', 'Dashboard metrics retrieved', metrics);
