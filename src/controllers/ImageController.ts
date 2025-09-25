@@ -159,8 +159,7 @@ export class ImageController {
         });
       }
     } catch (error) {
-      console.error('ImageController.uploadProductImage error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to upload image',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -230,8 +229,7 @@ export class ImageController {
         });
       }
     } catch (error) {
-      console.error('ImageController.deleteProductImages error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to delete images',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -312,8 +310,7 @@ export class ImageController {
       });
 
     } catch (error) {
-      console.error('ImageController.getProductImages error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to get product images'
       });
@@ -409,8 +406,7 @@ export class ImageController {
         message: 'Images gallery retrieved successfully'
       });
     } catch (error) {
-      console.error('ImageController.getImagesGallery error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to retrieve images gallery',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -519,8 +515,7 @@ export class ImageController {
         });
       }
     } catch (error) {
-      console.error('ImageController.uploadSiteImage error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to upload site image',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -568,8 +563,7 @@ export class ImageController {
         message: 'Current site images retrieved successfully'
       });
     } catch (error) {
-      console.error('ImageController.getCurrentSiteImages error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to retrieve current site images',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -640,8 +634,7 @@ export class ImageController {
         message: 'Products with image counts retrieved successfully'
       });
     } catch (error) {
-      console.error('ImageController.getProductsWithImageCounts error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to retrieve products with image counts',
         error: error instanceof Error ? error.message : 'Unknown error'

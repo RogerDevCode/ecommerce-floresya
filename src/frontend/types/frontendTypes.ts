@@ -24,4 +24,4 @@ export type {
   ImageSize,
   CartItem,
   AuthenticatedRequest
-} from '@shared/types';
+} from "shared/types/index";

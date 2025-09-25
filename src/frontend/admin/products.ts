@@ -3,9 +3,9 @@
  * Handles product management, CRUD operations, and product table rendering
  */
 
-import type { FloresYaAPI } from '@frontend/services/apiClient';
+import type { FloresYaAPI } from '../services/apiClient.js';
 
-import type { Product, AdminOccasion, AdminPanelLogger } from './types';
+import type { Product, AdminOccasion, AdminPanelLogger } from './types.js';
 
 export class AdminProducts {
   private logger: AdminPanelLogger;
@@ -497,6 +497,5 @@ export class AdminProducts {
    */
   private showModal(_element: Element): void {
     // Implementation depends on UI framework (Bootstrap, etc.)
-    console.warn('Modal implementation needed');
-  }
+      }
 }

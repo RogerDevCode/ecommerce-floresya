@@ -2062,11 +2062,392 @@
 
                     <!-- Settings Section -->
                     <div id="settings-section" class="admin-section" style="display: none;">
-                        <h4>Configuración del Sistema</h4>
-                        <div class="card admin-card">
-                            <div class="card-body">
-                                <p class="text-muted">Configuración del sistema próximamente...</p>
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4>
+                                <i data-lucide="settings" class="me-2"></i>
+                                Configuración del Sistema
+                            </h4>
+                            <button class="btn btn-primary" id="saveAllSettings">
+                                <i data-lucide="save" class="me-2"></i>
+                                Guardar Todo
+                            </button>
+                        </div>
+
+                        <div class="row">
+                            <!-- General Settings -->
+                            <div class="col-lg-6 mb-4">
+                                <div class="card admin-card">
+                                    <div class="card-header bg-primary text-white">
+                                        <h5 class="mb-0">
+                                            <i data-lucide="globe" class="me-2"></i>
+                                            Configuración General
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="siteName" class="form-label">Nombre del Sitio</label>
+                                            <input type="text" class="form-control" id="siteName" value="FloresYa">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="siteDescription" class="form-label">Descripción</label>
+                                            <textarea class="form-control" id="siteDescription" rows="3">Tu floristería en línea de confianza</textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="contactEmail" class="form-label">Email de Contacto</label>
+                                            <input type="email" class="form-control" id="contactEmail" value="info@floresya.com">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="contactPhone" class="form-label">Teléfono de Contacto</label>
+                                            <input type="tel" class="form-control" id="contactPhone" value="+58 414 123 4567">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="businessAddress" class="form-label">Dirección del Negocio</label>
+                                            <textarea class="form-control" id="businessAddress" rows="2">Caracas, Venezuela</textarea>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
+
+                            <!-- Payment Settings -->
+                            <div class="col-lg-6 mb-4">
+                                <div class="card admin-card">
+                                    <div class="card-header bg-success text-white">
+                                        <h5 class="mb-0">
+                                            <i data-lucide="credit-card" class="me-2"></i>
+                                            Configuración de Pagos
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="bcvRate" class="form-label">Tasa BCV (Bs/$)</label>
+                                            <input type="number" class="form-control" id="bcvRate" value="36.50" step="0.01">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="shippingCost" class="form-label">Costo de Envío ($)</label>
+                                            <input type="number" class="form-control" id="shippingCost" value="5.00" step="0.01">
+                                        </div>
+
+                                        <h6 class="mt-4 mb-3">Métodos de Pago Activos</h6>
+
+                                        <!-- Bank Transfer -->
+                                        <div class="card mb-3">
+                                            <div class="card-body p-3">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="enableBankTransfer" checked>
+                                                    <label class="form-check-label fw-bold" for="enableBankTransfer">
+                                                        Transferencia Bancaria
+                                                    </label>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Banco</label>
+                                                        <input type="text" class="form-control form-control-sm" value="Banesco">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Número de Cuenta</label>
+                                                        <input type="text" class="form-control form-control-sm" value="0134-0000-00000000000">
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-2">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Titular</label>
+                                                        <input type="text" class="form-control form-control-sm" value="FloresYa C.A.">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">RIF/Cédula</label>
+                                                        <input type="text" class="form-control form-control-sm" value="J-12345678-9">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Mobile Payment -->
+                                        <div class="card mb-3">
+                                            <div class="card-body p-3">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="enableMobilePayment" checked>
+                                                    <label class="form-check-label fw-bold" for="enableMobilePayment">
+                                                        Pago Móvil
+                                                    </label>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Banco</label>
+                                                        <input type="text" class="form-control form-control-sm" value="Banesco">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Teléfono</label>
+                                                        <input type="text" class="form-control form-control-sm" value="0414-1234567">
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-2">
+                                                    <div class="col-md-12">
+                                                        <label class="form-label">Cédula</label>
+                                                        <input type="text" class="form-control form-control-sm" value="12.345.678">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Zelle -->
+                                        <div class="card mb-3">
+                                            <div class="card-body p-3">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="enableZelle" checked>
+                                                    <label class="form-check-label fw-bold" for="enableZelle">
+                                                        Zelle
+                                                    </label>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <label class="form-label">Email Zelle</label>
+                                                        <input type="email" class="form-control form-control-sm" value="floresya@gmail.com">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Email Settings -->
+                            <div class="col-lg-6 mb-4">
+                                <div class="card admin-card">
+                                    <div class="card-header bg-info text-white">
+                                        <h5 class="mb-0">
+                                            <i data-lucide="mail" class="me-2"></i>
+                                            Configuración de Email
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" id="enableEmailNotifications" checked>
+                                            <label class="form-check-label" for="enableEmailNotifications">
+                                                Habilitar notificaciones por email
+                                            </label>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="smtpHost" class="form-label">Servidor SMTP</label>
+                                            <input type="text" class="form-control" id="smtpHost" value="smtp.gmail.com">
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label for="smtpPort" class="form-label">Puerto</label>
+                                                <input type="number" class="form-control" id="smtpPort" value="587">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check mt-4 pt-2">
+                                                    <input class="form-check-input" type="checkbox" id="smtpSecure" checked>
+                                                    <label class="form-check-label" for="smtpSecure">
+                                                        Usar TLS/SSL
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="smtpUsername" class="form-label">Usuario SMTP</label>
+                                            <input type="email" class="form-control" id="smtpUsername" value="">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="smtpPassword" class="form-label">Contraseña SMTP</label>
+                                            <input type="password" class="form-control" id="smtpPassword" value="">
+                                        </div>
+                                        <button class="btn btn-outline-primary btn-sm" id="testEmail">
+                                            <i data-lucide="send" class="me-2"></i>
+                                            Enviar Email de Prueba
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Business Hours & Delivery -->
+                            <div class="col-lg-6 mb-4">
+                                <div class="card admin-card">
+                                    <div class="card-header bg-warning text-dark">
+                                        <h5 class="mb-0">
+                                            <i data-lucide="clock" class="me-2"></i>
+                                            Horarios y Entregas
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <h6 class="mb-3">Horarios de Atención</h6>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Lunes a Viernes</label>
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <input type="time" class="form-control form-control-sm" value="08:00">
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <input type="time" class="form-control form-control-sm" value="18:00">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Sábados</label>
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <input type="time" class="form-control form-control-sm" value="09:00">
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <input type="time" class="form-control form-control-sm" value="15:00">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-check mt-3">
+                                            <input class="form-check-input" type="checkbox" id="sundaysClosed" checked>
+                                            <label class="form-check-label" for="sundaysClosed">
+                                                Domingos cerrado
+                                            </label>
+                                        </div>
+
+                                        <h6 class="mt-4 mb-3">Configuración de Entregas</h6>
+                                        <div class="mb-3">
+                                            <label for="deliveryRadius" class="form-label">Radio de Entrega (km)</label>
+                                            <input type="number" class="form-control" id="deliveryRadius" value="15">
+                                        </div>
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" id="sameDayDelivery" checked>
+                                            <label class="form-check-label" for="sameDayDelivery">
+                                                Entrega el mismo día disponible
+                                            </label>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="minimumOrderAmount" class="form-label">Monto mínimo de pedido ($)</label>
+                                            <input type="number" class="form-control" id="minimumOrderAmount" value="20.00" step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Security & Backup -->
+                            <div class="col-lg-6 mb-4">
+                                <div class="card admin-card">
+                                    <div class="card-header bg-danger text-white">
+                                        <h5 class="mb-0">
+                                            <i data-lucide="shield" class="me-2"></i>
+                                            Seguridad y Respaldos
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <h6 class="mb-3">Respaldos Automáticos</h6>
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" id="enableAutoBackup" checked>
+                                            <label class="form-check-label" for="enableAutoBackup">
+                                                Habilitar respaldos automáticos
+                                            </label>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="backupFrequency" class="form-label">Frecuencia de Respaldo</label>
+                                            <select class="form-select" id="backupFrequency">
+                                                <option value="daily">Diario</option>
+                                                <option value="weekly" selected>Semanal</option>
+                                                <option value="monthly">Mensual</option>
+                                            </select>
+                                        </div>
+                                        <div class="d-grid gap-2">
+                                            <button class="btn btn-outline-primary" id="createBackup">
+                                                <i data-lucide="download" class="me-2"></i>
+                                                Crear Respaldo Ahora
+                                            </button>
+                                            <button class="btn btn-outline-secondary" id="viewBackups">
+                                                <i data-lucide="folder" class="me-2"></i>
+                                                Ver Respaldos
+                                            </button>
+                                        </div>
+
+                                        <h6 class="mt-4 mb-3">Configuración de Seguridad</h6>
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" id="enableTwoFactor" checked>
+                                            <label class="form-check-label" for="enableTwoFactor">
+                                                Habilitar autenticación de dos factores
+                                            </label>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="sessionTimeout" class="form-label">Tiempo de sesión (minutos)</label>
+                                            <input type="number" class="form-control" id="sessionTimeout" value="30">
+                                        </div>
+                                        <button class="btn btn-outline-warning" id="changeAdminPassword">
+                                            <i data-lucide="key" class="me-2"></i>
+                                            Cambiar Contraseña de Admin
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- System Information -->
+                            <div class="col-lg-6 mb-4">
+                                <div class="card admin-card">
+                                    <div class="card-header bg-secondary text-white">
+                                        <h5 class="mb-0">
+                                            <i data-lucide="monitor" class="me-2"></i>
+                                            Información del Sistema
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <small class="text-muted">Versión del Sistema</small>
+                                                <div class="fw-bold">FloresYa v2.0.0</div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Base de Datos</small>
+                                                <div class="fw-bold">PostgreSQL</div>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-3">
+                                            <div class="col-6">
+                                                <small class="text-muted">Última Actualización</small>
+                                                <div class="fw-bold">25/09/2024</div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Usuarios Registrados</small>
+                                                <div class="fw-bold" id="totalUsersCount">-</div>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-3">
+                                            <div class="col-6">
+                                                <small class="text-muted">Productos Activos</small>
+                                                <div class="fw-bold" id="activeProductsCount">-</div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Pedidos Este Mes</small>
+                                                <div class="fw-bold" id="monthlyOrdersCount">-</div>
+                                            </div>
+                                        </div>
+
+                                        <hr class="my-3">
+
+                                        <div class="d-grid gap-2">
+                                            <button class="btn btn-outline-primary" id="checkUpdates">
+                                                <i data-lucide="refresh-cw" class="me-2"></i>
+                                                Verificar Actualizaciones
+                                            </button>
+                                            <button class="btn btn-outline-success" id="systemStatus">
+                                                <i data-lucide="activity" class="me-2"></i>
+                                                Estado del Sistema
+                                            </button>
+                                            <button class="btn btn-outline-info" id="viewLogs">
+                                                <i data-lucide="file-text" class="me-2"></i>
+                                                Ver Logs del Sistema
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="text-center mt-4">
+                            <button class="btn btn-success btn-lg me-3" id="saveAllSettingsBottom">
+                                <i data-lucide="save" class="me-2"></i>
+                                Guardar Configuración
+                            </button>
+                            <button class="btn btn-outline-secondary btn-lg" id="resetSettings">
+                                <i data-lucide="rotate-ccw" class="me-2"></i>
+                                Restablecer a Valores por Defecto
+                            </button>
                         </div>
                     </div>
 

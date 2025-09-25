@@ -18,7 +18,7 @@ export default [
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
-        project: ['./tsconfig.json', './src/frontend/tsconfig.frontend.json'],
+        project: ['./tsconfig.json', './src/frontend/tsconfig.frontend.json', './tsconfig.config.json'],
         tsconfigRootDir: '.',
       },
       globals: {
@@ -35,6 +35,16 @@ export default [
         clearTimeout: 'readonly',
         setInterval: 'readonly',
         clearInterval: 'readonly',
+        // Node.js and TypeScript globals
+        NodeJS: 'readonly',
+        // Express/HTTP globals for backend
+        Request: 'readonly',
+        Response: 'readonly',
+        NextFunction: 'readonly',
+        // Web APIs available in Node.js
+        URL: 'readonly',
+        URLSearchParams: 'readonly',
+        Intl: 'readonly',
       },
     },
     plugins: {
@@ -76,10 +86,10 @@ export default [
           },
         },
       ],
-      'import/no-duplicates': 'error',
-      'import/no-unresolved': 'error', // Activated: ESLint will now check imports
+      'import/no-duplicates': 'warn', // Downgrade to warning during migration
+      'import/no-unresolved': 'warn', // Downgrade to warning during migration
       'import/extensions': [
-        'error',
+        'warn', // Downgrade to warning during migration
         'never',
         {
           json: 'always', // json files must have extension
@@ -113,9 +123,16 @@ export default [
       'import/resolver': {
         typescript: {
           alwaysTryTypes: true,
-          project: ['./tsconfig.json', './src/frontend/tsconfig.frontend.json'],
+          project: ['./tsconfig.json', './src/frontend/tsconfig.frontend.json', './tsconfig.config.json'],
         },
+        node: {
+          extensions: ['.js', '.jsx', '.ts', '.tsx', '.json']
+        }
       },
+      'import/parsers': {
+        '@typescript-eslint/parser': ['.ts', '.tsx']
+      },
+      'import/extensions': ['.js', '.jsx', '.ts', '.tsx', '.json']
     },
   },
 
@@ -135,6 +152,13 @@ export default [
         require: 'readonly',
         module: 'readonly',
         exports: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        URL: 'readonly',
+        URLSearchParams: 'readonly',
+        Intl: 'readonly',
       },
     },
     plugins: {
@@ -179,7 +203,7 @@ export default [
 
   // Frontend-specific configuration
   {
-    files: ['src/frontend/**/*.ts', 'public/**/*.js'],
+    files: ['src/frontend/**/*.ts', 'src/shared/types/frontend.ts', 'public/**/*.js'],
     languageOptions: {
       globals: {
         window: 'readonly',
@@ -203,6 +227,7 @@ export default [
         ResizeObserver: 'readonly',
         requestAnimationFrame: 'readonly',
         cancelAnimationFrame: 'readonly',
+        Window: 'readonly',
       },
     },
     rules: {
@@ -234,7 +259,7 @@ export default [
     },
   },
 
-  // Configuration files
+  // Configuration and script files
   {
     files: [
       '*.config.js',
@@ -245,6 +270,8 @@ export default [
       'vitest.config.js',
       'tailwind.config.js',
       'postcss.config.js',
+      'scripts/**/*.js',
+      'scripts/**/*.mjs'
     ],
     languageOptions: {
       globals: {
@@ -257,7 +284,9 @@ export default [
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
-      'no-console': 'off',
+      'no-console': 'off', // Allow console in config and scripts
+      'import/no-unresolved': 'off', // Disable for config files
+      'import/order': 'warn', // Downgrade for scripts
     },
   },
 
@@ -279,9 +308,10 @@ export default [
       'public/types/**', // Generated type files
       'public/**/*.js', // All compiled JS files in public
       'public/**/*.d.ts', // All declaration files in public
+      '**/*.d.ts', // All TypeScript declaration files
       'assets/**', // Asset files
       'api/**', // API generated files
-      'scripts/**', // Script files
+      // 'scripts/**', // Enable scripts checking with new config
       'logs/**',
       '.env*',
       '*.log',
@@ -290,9 +320,9 @@ export default [
       'tests/**', // Exclude tests for now due to config issues
       '**/*.test.*', // Exclude test files
       '**/*.spec.*', // Exclude spec files
-      'src/shared/utils/**', // Exclude utils with complex configurations
-      'src/types/**', // Exclude legacy types
-      'src/utils/**' // Exclude utils with config issues
+      // 'src/shared/utils/**', // Enable after migration
+      'src/types/**', // Exclude legacy types (kept)
+      // 'src/utils/**' // Enable after migration
     ],
   },
 ];

@@ -3,7 +3,7 @@
  * Handles orders management, filtering, pagination, and order details
  */
 
-import type { AdminOrder, OrdersFilters, OrderDetails, AdminPanelLogger } from './types';
+import type { AdminOrder, OrdersFilters, OrderDetails, AdminPanelLogger } from './types.js';
 
 export class AdminOrders {
   private logger: AdminPanelLogger;

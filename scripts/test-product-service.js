@@ -1,8 +1,9 @@
 /**
  * Script to test ProductService directly
  */
-import { ProductService } from '../src/services/ProductService.ts';
 import dotenv from 'dotenv';
+
+import { ProductService } from '../src/services/ProductService.ts';
 
 // Load environment variables
 dotenv.config();

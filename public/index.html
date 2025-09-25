@@ -65,6 +65,9 @@
     <!-- FloresYa Home Enhancements -->
     <link href="/css/home-enhancements.css" rel="stylesheet">
 
+    <!-- Advanced Tooltip System -->
+    <link href="/css/tooltips.css" rel="stylesheet">
+
     <!-- Preload critical resources -->
     <link rel="preload" href="/images/logoFloresYa.jpeg" as="image" importance="high">
     <link rel="modulepreload" href="/dist/frontend/utils/logger.js">
@@ -129,13 +132,13 @@
     <nav class="bg-white shadow-sm sticky top-0 z-50 navbar">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between h-16">
-                <a class="flex items-center" href="/">
-                    <img src="/images/logoFloresYa.jpeg" alt="FloresYa Logo" class="h-10 w-auto mr-2 logo-brand" data-critical="true" loading="eager">
+                <a class="flex items-center" href="/" data-tooltip="Ir a la página principal de FloresYa">
+                    <img src="/images/logoFloresYa.jpeg" alt="FloresYa Logo" class="h-10 w-auto mr-2 logo-brand" data-critical="true" loading="eager" data-tooltip="Logo de FloresYa - Floristería online">
                     <span class="text-xl font-bold text-primary-600">FloresYa</span>
                 </a>
 
                 <!-- Mobile menu button -->
-                <button class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500" type="button" id="mobile-menu-button">
+                <button class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500" type="button" id="mobile-menu-button" data-tooltip="Abrir menú de navegación">
                     <span class="sr-only">Abrir menú principal</span>
                     <i data-lucide="menu" class="h-6 w-6" id="menu-icon"></i>
                     <i data-lucide="x" class="h-6 w-6 hidden" id="close-icon"></i>
@@ -153,24 +156,24 @@
 
                     <div class="ml-4 flex items-center md:ml-6">
                         <!-- Cart Icon -->
-                        <a class="relative p-2 text-gray-700 hover:text-primary-600 transition-colors" href="#" id="cartToggle" title="Ver carrito">
-                            <i data-lucide="heart" class="h-6 w-6"></i>
-                            <span class="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center cart-badge" id="cartCount">0</span>
+                        <a class="relative p-2 text-gray-700 hover:text-primary-600 transition-colors" href="#" id="cartToggle" data-tooltip="Ver carrito de compras - 0 productos">
+                            <i data-lucide="heart" class="h-6 w-6" data-tooltip="Corazón representa productos favoritos"></i>
+                            <span class="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center cart-badge" id="cartCount" data-tooltip="Número de productos en el carrito">0</span>
                             <span class="absolute -top-1 -right-1 cart-pulse" id="cartPulse"></span>
                         </a>
 
                         <!-- User Dropdown -->
                         <div class="ml-3 relative hidden" id="userDropdown">
                             <div>
-                                <button class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500" id="user-menu-button">
-                                    <i data-lucide="user-circle" class="h-8 w-8 text-gray-700"></i>
+                                <button class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500" id="user-menu-button" data-tooltip="Abrir menú de usuario">
+                                    <i data-lucide="user-circle" class="h-8 w-8 text-gray-700" data-tooltip="Icono de perfil de usuario"></i>
                                 </button>
                             </div>
                             <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden" id="user-menu">
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" id="viewProfile">Mi Perfil</a>
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" id="viewOrders">Mis Pedidos</a>
-                                <a href="/pages/admin.html" class="hidden block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" id="adminPanel">
-                                    <i data-lucide="shield-check" class="h-4 w-4 inline mr-2"></i>Panel de Administrador
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" id="viewProfile" data-tooltip="Ver y editar información personal">Mi Perfil</a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" id="viewOrders" data-tooltip="Ver historial de pedidos realizados">Mis Pedidos</a>
+                                <a href="/pages/admin.html" class="hidden block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" id="adminPanel" data-tooltip="Acceder al panel de administración">
+                                    <i data-lucide="shield-check" class="h-4 w-4 inline mr-2" data-tooltip="Icono de administrador"></i>Panel de Administrador
                                 </a>
                                 <div class="border-t border-gray-100"></div>
                                 <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" id="logoutBtn">Cerrar Sesión</a>
@@ -178,12 +181,12 @@
                         </div>
 
                         <!-- Admin Panel Link -->
-                        <a class="hidden ml-3 text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium flex items-center" href="/pages/admin.html" id="adminPanelLink">
-                            <i data-lucide="shield-check" class="h-4 w-4 mr-1"></i>Panel Admin
+                        <a class="hidden ml-3 text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium flex items-center" href="/pages/admin.html" id="adminPanelLink" data-tooltip="Acceder al panel de administración">
+                            <i data-lucide="shield-check" class="h-4 w-4 mr-1" data-tooltip="Icono de administración"></i>Panel Admin
                         </a>
 
                         <!-- Login Button -->
-                        <a class="ml-3 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors" href="#" id="loginBtn">Iniciar Sesión</a>
+                        <a class="ml-3 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors" href="#" id="loginBtn" data-tooltip="Iniciar sesión en tu cuenta">Iniciar Sesión</a>
                     </div>
                 </div>
             </div>
@@ -247,11 +250,11 @@
                 </div>
 
                 <!-- Controls -->
-                <button class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-md transition-all z-10" type="button" id="carousel-prev">
+                <button class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-md transition-all z-10" type="button" id="carousel-prev" data-tooltip="Ver producto anterior">
                     <i data-lucide="chevron-left" class="h-6 w-6 text-gray-700"></i>
                     <span class="sr-only">Anterior</span>
                 </button>
-                <button class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-md transition-all z-10" type="button" id="carousel-next">
+                <button class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-md transition-all z-10" type="button" id="carousel-next" data-tooltip="Ver siguiente producto">
                     <i data-lucide="chevron-right" class="h-6 w-6 text-gray-700"></i>
                     <span class="sr-only">Siguiente</span>
                 </button>
@@ -272,22 +275,22 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                     <div class="md:col-span-2">
                         <div class="relative">
-                            <input type="text" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Buscar productos..." id="searchInput">
+                            <input type="text" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Buscar productos..." id="searchInput" data-tooltip="Buscar productos por nombre, descripción o categoría">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i data-lucide="search" class="h-5 w-5 text-gray-400"></i>
+                                <i data-lucide="search" class="h-5 w-5 text-gray-400" data-tooltip="Icono de búsqueda"></i>
                             </div>
-                            <button class="absolute inset-y-0 right-0 pr-3 flex items-center text-primary-600 hover:text-primary-700" type="button" id="searchBtn">
+                            <button class="absolute inset-y-0 right-0 pr-3 flex items-center text-primary-600 hover:text-primary-700" type="button" id="searchBtn" data-tooltip="Realizar búsqueda">
                                 <i data-lucide="search" class="h-5 w-5"></i>
                             </button>
                         </div>
                     </div>
                     <div>
-                        <select class="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="occasionFilter">
+                        <select class="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="occasionFilter" data-tooltip="Filtrar productos por ocasión especial">
                             <option value="">Todas las ocasiones</option>
                         </select>
                     </div>
                     <div>
-                        <select class="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="sortFilter">
+                        <select class="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="sortFilter" data-tooltip="Ordenar productos por criterio seleccionado">
                             <option value="created_at:desc">Más recientes</option>
                             <option value="price_usd:asc">Precio: Menor a mayor</option>
                             <option value="price_usd:desc">Precio: Mayor a menor</option>
@@ -372,8 +375,8 @@
     </main>
 
     <!-- Floating Action Button for Mobile -->
-    <button class="fixed bottom-5 right-5 bg-primary-600 hover:bg-primary-700 text-white p-4 rounded-full shadow-lg md:hidden z-40 transition-colors fab" onclick="document.getElementById('productos').scrollIntoView({behavior: 'smooth'});" title="Ver productos">
-        <i data-lucide="flower" class="h-6 w-6"></i>
+    <button class="fixed bottom-5 right-5 bg-primary-600 hover:bg-primary-700 text-white p-4 rounded-full shadow-lg md:hidden z-40 transition-colors fab" onclick="document.getElementById('productos').scrollIntoView({behavior: 'smooth'});" data-tooltip-left="Ver catálogo de productos">
+        <i data-lucide="flower" class="h-6 w-6" data-tooltip="Ir a productos"></i>
     </button>
 
     <!-- Footer -->
@@ -814,6 +817,9 @@
             window.addEventListener('load', ensureContentVisible);
         }
     </script>
+
+    <!-- Advanced Tooltip System -->
+    <script src="/js/tooltip-utils.js"></script>
 
     <!-- Custom JS - Load after critical styles -->
     <!-- 🌸 FloresYa TypeScript Modules - 100% Type-Safe Frontend -->

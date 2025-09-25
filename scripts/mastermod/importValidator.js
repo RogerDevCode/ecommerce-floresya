@@ -32,7 +32,7 @@ export class ImportValidator {
             const line = lines[i];
             const importMatch = line.match(/import\s+.*from\s+['"](.*)['"]/);
             if (importMatch) {
-              let importPath = importMatch[1];
+              const importPath = importMatch[1];
               let resolvedPath = null;
 
               if (importPath.startsWith('.')) {

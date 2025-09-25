@@ -3,7 +3,7 @@
  * Business logic for occasions management
  */
 
-import { type Occasion, type OccasionCreateRequest, type OccasionUpdateRequest } from '@shared/types';
+import { type Occasion, type OccasionCreateRequest, type OccasionUpdateRequest } from '../shared/types/index.js';
 
 import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
 
@@ -40,8 +40,7 @@ export class OccasionsService {
 
       return (data as Occasion[]) ?? [];
     } catch (error) {
-      console.error('OccasionsService.getActiveOccasions error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -61,8 +60,7 @@ export class OccasionsService {
 
       return (data as Occasion[]) ?? [];
     } catch (error) {
-      console.error('OccasionsService.getAllOccasions error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -86,8 +84,7 @@ export class OccasionsService {
 
       return data as Occasion;
     } catch (error) {
-      console.error('OccasionsService.getOccasionById error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -112,8 +109,7 @@ export class OccasionsService {
 
       return data as Occasion;
     } catch (error) {
-      console.error('OccasionsService.getOccasionBySlug error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -148,8 +144,7 @@ export class OccasionsService {
 
       return data;
     } catch (error) {
-      console.error('OccasionsService.createOccasion error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -178,8 +173,7 @@ export class OccasionsService {
 
       return data;
     } catch (error) {
-      console.error('OccasionsService.updateOccasion error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -204,8 +198,7 @@ export class OccasionsService {
         throw new Error(`Failed to delete occasion: ${error.message}`);
       }
     } catch (error) {
-      console.error('OccasionsService.deleteOccasion error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -227,8 +220,7 @@ export class OccasionsService {
 
       return (data as Occasion[]) ?? [];
     } catch (error) {
-      console.error('OccasionsService.getOccasionsByType error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -253,8 +245,7 @@ export class OccasionsService {
         throw new Error(`Failed to update display order: ${errors[0]?.error?.message}`);
       }
     } catch (error) {
-      console.error('OccasionsService.updateDisplayOrder error:', error);
-      throw error;
+            throw error;
     }
   }
 }

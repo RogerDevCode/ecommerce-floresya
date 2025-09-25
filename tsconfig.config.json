@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true
+  },
+  "include": [
+    "*.config.ts",
+    "*.config.js",
+    "*.config.mjs",
+    "eslint.config.js",
+    "tailwind.config.ts",
+    "postcss.config.js",
+    "vitest.config.js",
+    "vite.config.js"
+  ],
+  "exclude": []
+}

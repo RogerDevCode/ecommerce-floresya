@@ -130,7 +130,11 @@
       "Bash(PORT=3500 timeout 15s node dist/backend/app/server.js)",
       "Bash(PORT=3600 timeout 15s node dist/backend/app/server.js)",
       "Bash(PORT=3000 timeout 15s node dist/backend/app/server.js)",
-      "Bash(PORT=3020 timeout 5s node dist/backend/app/server.js)"
+      "Bash(PORT=3020 timeout 5s node dist/backend/app/server.js)",
+      "Bash(PORT=3001 timeout 10s node dist/backend/app/server.js)",
+      "Bash(killall:*)",
+      "Bash(PORT=3001 timeout 15s node dist/backend/app/server.js)",
+      "Bash(readlink:*)"
     ],
     "deny": [],
     "ask": []

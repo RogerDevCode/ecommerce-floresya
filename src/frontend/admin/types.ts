@@ -20,7 +20,7 @@ import type {
   Product,
   ProductImage,
   PaginationInfo
-} from '@shared/types';
+} from "shared/types/index";
 
 // Re-export admin types for local use
 export type {

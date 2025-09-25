@@ -6,6 +6,8 @@
 import crypto from 'crypto';
 import path from 'path';
 
+import sharp from 'sharp';
+
 import type {
   ImageSize,
   ProductImage,
@@ -13,8 +15,7 @@ import type {
   ImageUploadRequest,
   ProcessedImage,
   ImageUploadResult
-} from '@shared/types';
-import sharp from 'sharp';
+} from '../shared/types/index.js';
 
 import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
 
@@ -63,8 +64,7 @@ export class ImageService {
 
       return processedImages;
     } catch (error) {
-      console.error('ImageService.processImage error:', error);
-      throw new Error(`Failed to process image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            throw new Error(`Failed to process image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -75,47 +75,41 @@ export class ImageService {
     productId: number,
     processedImages: ProcessedImage[]
   ): Promise<Array<{ size: ImageSize; url: string; fileHash: string }>> {
-    try {
-      const uploadedImages: Array<{ size: ImageSize; url: string; fileHash: string }> = [];
+    const uploadedImages: Array<{ size: ImageSize; url: string; fileHash: string }> = [];
 
-      for (const image of processedImages) {
-        const filePath = `products/${productId}/${image.fileName}`;
+    for (const image of processedImages) {
+      const filePath = `products/${productId}/${image.fileName}`;
 
-        // Subir a Supabase Storage
-        const { error } = await typeSafeDatabaseService.getClient().storage
-          .from('product-images')
-          .upload(filePath, image.buffer, {
-            contentType: image.mimeType,
-            cacheControl: '31536000', // 1 año de cache
-            upsert: true
-          });
-
-        if (error) {
-          console.error(`Error uploading ${image.size} image:`, error);
-          throw new Error(`Failed to upload ${image.size} image: ${error.message}`);
-        }
-
-        // Obtener URL pública
-        const { data: urlData } = typeSafeDatabaseService.getClient().storage
-          .from('product-images')
-          .getPublicUrl(filePath);
-
-        if (!urlData?.publicUrl) {
-          throw new Error(`Failed to get public URL for ${image.size} image`);
-        }
-
-        uploadedImages.push({
-          size: image.size,
-          url: urlData.publicUrl,
-          fileHash: image.fileHash
+      // Subir a Supabase Storage
+      const { error } = await typeSafeDatabaseService.getClient().storage
+        .from('product-images')
+        .upload(filePath, image.buffer, {
+          contentType: image.mimeType,
+          cacheControl: '31536000', // 1 año de cache
+          upsert: true
         });
+
+      if (error) {
+        throw new Error(`Failed to upload ${image.size} image: ${error.message}`);
       }
 
-      return uploadedImages;
-    } catch (error) {
-      console.error('ImageService.uploadImagesToStorage error:', error);
-      throw error;
+      // Obtener URL pública
+      const { data: urlData } = typeSafeDatabaseService.getClient().storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+
+      if (!urlData?.publicUrl) {
+        throw new Error(`Failed to get public URL for ${image.size} image`);
+      }
+
+      uploadedImages.push({
+        size: image.size,
+        url: urlData.publicUrl,
+        fileHash: image.fileHash
+      });
     }
+
+    return uploadedImages;
   }
 
   /**
@@ -127,32 +121,27 @@ export class ImageService {
     uploadedImages: Array<{ size: ImageSize; url: string; fileHash: string }>,
     isPrimary = false
   ): Promise<ProductImage[]> {
-    try {
-      // Convert uploaded images to JSONB format for the transaction function
-      const imagesData = uploadedImages.map(image => ({
-        size: image.size,
-        url: image.url,
-        file_hash: image.fileHash,
-        mime_type: 'image/webp'
-      }));
+    // Convert uploaded images to JSONB format for the transaction function
+    const imagesData = uploadedImages.map(image => ({
+      size: image.size,
+      url: image.url,
+      file_hash: image.fileHash,
+      mime_type: 'image/webp'
+    }));
 
-      // Use PostgreSQL function for atomic image creation
-      const data = await typeSafeDatabaseService.executeRpc('create_product_images_atomic', {
-        product_id: productId,
-        image_index: imageIndex,
-        images_data: imagesData,
-        is_primary: isPrimary
-      });
+    // Use PostgreSQL function for atomic image creation
+    const data = await typeSafeDatabaseService.executeRpc('create_product_images_atomic', {
+      product_id: productId,
+      image_index: imageIndex,
+      images_data: imagesData,
+      is_primary: isPrimary
+    });
 
-      if (!data) {
-        throw new Error('No data returned from image creation transaction');
-      }
-
-      return data as ProductImage[];
-    } catch (error) {
-      console.error('ImageService.saveImageRecords error:', error);
-      throw error;
+    if (!data) {
+      throw new Error('No data returned from image creation transaction');
     }
+
+    return data as ProductImage[];
   }
 
   /**
@@ -195,8 +184,7 @@ export class ImageService {
         message: `Successfully uploaded ${uploadedImages.length} image variations for product "${productData.name}"`
       };
     } catch (error) {
-      console.error('ImageService.uploadProductImage error:', error);
-      return {
+            return {
         success: false,
         images: [],
         message: error instanceof Error ? error.message : 'Failed to upload image'
@@ -220,8 +208,7 @@ export class ImageService {
 
       return data as boolean;
     } catch (error) {
-      console.error('ImageService.deleteProductImages error:', error);
-      return false;
+            return false;
     }
   }
 
@@ -237,14 +224,12 @@ public async getProductImages(productId: number): Promise<ProductImage[]> {
       .order('image_index', { ascending: true });
 
     if (error) {
-      console.error('Error fetching product images:', error);
-      throw error;
+            throw error;
     }
 
     return (data ?? []) as ProductImage[];
   } catch (error) {
-    console.error('ImageService.getProductImages error:', error);
-    throw error;
+        throw error;
   }
 }
 
@@ -312,8 +297,7 @@ private async resizeImage(
 
        return { valid: true };
      } catch (error) {
-       console.error('ImageService.validateImageFile error:', error);
-       return { valid: false, error: 'Invalid file format' };
+              return { valid: false, error: 'Invalid file format' };
      }
    }
 
@@ -411,8 +395,7 @@ private async resizeImage(
         }
       };
     } catch (error) {
-      console.error('ImageService.getImagesGallery error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -471,8 +454,7 @@ private async resizeImage(
         message: `Successfully uploaded ${type} image`
       };
     } catch (error) {
-      console.error('ImageService.uploadSiteImage error:', error);
-      return {
+            return {
         success: false,
         message: error instanceof Error ? error.message : 'Failed to upload site image'
       };
@@ -491,8 +473,7 @@ public getCurrentSiteImages(): { hero: string; logo: string; } {
       logo: '/images/logoFloresYa.jpeg'
     };
   } catch (error) {
-    console.error('ImageService.getCurrentSiteImages error:', error);
-    // Devolver valores por defecto en caso de error
+        // Devolver valores por defecto en caso de error
     return {
       hero: '/images/hero-flowers.webp',
       logo: '/images/logoFloresYa.jpeg'
@@ -550,8 +531,7 @@ public getCurrentSiteImages(): { hero: string; logo: string; } {
           .eq('occasion_id', parseInt(occasionFilter));
 
         if (occasionError) {
-          console.warn('Error fetching products by occasion, ignoring filter:', occasionError.message);
-        } else if (occasionProducts) {
+                  } else if (occasionProducts) {
           const occasionProductIds = (occasionProducts as { product_id: number }[]).map(op => op.product_id);
           filteredProductIds = filteredProductIds.filter(id => occasionProductIds.includes(id));
         }
@@ -565,8 +545,7 @@ public getCurrentSiteImages(): { hero: string; logo: string; } {
         .in('product_id', filteredProductIds);
 
       if (imagesError) {
-        console.warn('Error fetching image counts, using 0 for all products:', imagesError.message);
-      }
+              }
 
       // Contar imágenes únicas por producto (cada image_index representa una imagen)
       const imageCountMap = new Map<number, number>();
@@ -614,8 +593,7 @@ public getCurrentSiteImages(): { hero: string; logo: string; } {
         products: productsWithCounts
       };
     } catch (error) {
-      console.error('ImageService.getProductsWithImageCounts error:', error);
-      throw error;
+            throw error;
     }
   }
 }

@@ -3,7 +3,7 @@
  * Handles image management, upload, gallery, and image operations
  */
 
-import type { ProductImage, AdminPanelLogger } from './types';
+import type { ProductImage, AdminPanelLogger } from './types.js';
 
 export class AdminImages {
   private logger: AdminPanelLogger;
@@ -362,8 +362,7 @@ export class AdminImages {
   private renderCurrentSiteImages(siteImages: unknown): void {
     // Implementation depends on site images structure
     this.logger.log('Site images loaded', 'info');
-    console.warn('Site images rendering implementation needed', siteImages);
-  }
+      }
 
   /**
    * Render products with image counts
@@ -371,8 +370,7 @@ export class AdminImages {
   private renderProductsWithImages(productsData: unknown): void {
     // Implementation depends on products data structure
     this.logger.log('Products with images loaded', 'info');
-    console.warn('Products with images rendering implementation needed', productsData);
-  }
+      }
 
   /**
    * Render images gallery
@@ -380,8 +378,7 @@ export class AdminImages {
   private renderImagesGallery(imagesData: unknown): void {
     // Implementation depends on images data structure
     this.logger.log('Images gallery loaded', 'info');
-    console.warn('Images gallery rendering implementation needed', imagesData);
-  }
+      }
 
   /**
    * Bind image events
@@ -486,6 +483,5 @@ export class AdminImages {
    */
   private showModal(_element: Element): void {
     // Implementation depends on UI framework (Bootstrap, etc.)
-    console.warn('Modal implementation needed');
-  }
+      }
 }

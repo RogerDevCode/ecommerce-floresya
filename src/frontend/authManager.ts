@@ -5,7 +5,7 @@
 
 
 // Import types from shared types
-import type { LoginCredentials } from '@shared/types';
+import type { LoginCredentials } from "shared/types/index";
 
 // Define types for authentication
 interface AuthUser {
@@ -98,8 +98,7 @@ export class AuthManager {
       }
 
     } catch (error: unknown) {
-      console.error('Login error:', error);
-      this.showAlert('Error al iniciar sesión. Inténtalo de nuevo.', 'danger');
+            this.showAlert('Error al iniciar sesión. Inténtalo de nuevo.', 'danger');
     } finally {
       // Reset button state
       const submitBtn = document.querySelector('#loginForm button[type="submit"]');
@@ -205,8 +204,7 @@ export class AuthManager {
       window.location.href = '/';
 
     } catch (error: unknown) {
-      console.error('[❌ AUTH] Error durante logout:', error);
-      // Even if there's an error, redirect to ensure security
+            // Even if there's an error, redirect to ensure security
       window.location.href = '/';
     }
   }
@@ -238,14 +236,11 @@ export class AuthManager {
       // Cleared ${keysToRemove.length + 3} localStorage items
 
     } catch (error: unknown) {
-      console.error('[❌ AUTH] Error limpiando localStorage:', error);
-      // Try to clear everything as fallback
+            // Try to clear everything as fallback
       try {
         localStorage.clear();
-        console.warn('localStorage completely cleared as fallback');
-      } catch (fallbackError) {
-        console.error('[❌ AUTH] Error en fallback de limpieza:', fallbackError);
-      }
+              } catch (fallbackError) {
+              }
     }
   }
 
@@ -266,8 +261,7 @@ export class AuthManager {
       }
 
     } catch (error: unknown) {
-      console.error('[❌ AUTH] Error limpiando cache:', error);
-    }
+          }
   }
 
   private redirectBasedOnRole(role: 'admin' | 'user'): void {

@@ -1,9 +1,10 @@
 // scripts/mastermod/typeSafetyValidator.js
 import fs from 'fs/promises';
 import path from 'path';
-import { glob } from 'glob';
+
 import { parse } from '@typescript-eslint/parser';
 import { analyze } from '@typescript-eslint/scope-manager';
+import { glob } from 'glob';
 
 export class TypeSafetyValidator {
   constructor(projectRoot, logger) {

@@ -6,7 +6,7 @@
 import { Router } from 'express';
 
 import { userController, userValidators } from '../../controllers/UserController.js';
-// import { authenticateAdmin } from '../middleware/authMiddleware'; // TEMPORAL: Commented for testing
+// import { authenticateAdmin } from '../middleware/authMiddleware.js'; // TEMPORAL: Commented for testing
 
 export function createUserRoutes(): Router {
   const router = Router();

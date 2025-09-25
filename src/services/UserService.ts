@@ -3,6 +3,8 @@
  * Business logic for user management with atomic operations
  */
 
+import * as bcrypt from 'bcryptjs';
+
 import {
   type ApiResponse,
   type UserCreateRequest,
@@ -10,8 +12,7 @@ import {
   type UserQuery,
   type UserResponse,
   type UserUpdateRequest
-} from '@shared/types';
-import * as bcrypt from 'bcryptjs';
+} from '../shared/types/index.js';
 
 import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
 
@@ -104,8 +105,7 @@ export class UserService {
       };
 
     } catch (error) {
-      console.error('UserService.getAllUsers error:', error);
-      return {
+            return {
         success: false,
         message: error instanceof Error ? error.message : 'Unknown error occurred',
         error: 'FETCH_USERS_ERROR'
@@ -150,8 +150,7 @@ export class UserService {
       };
 
     } catch (error) {
-      console.error('UserService.getUserById error:', error);
-      return {
+            return {
         success: false,
         message: error instanceof Error ? error.message : 'Unknown error occurred',
         error: 'FETCH_USER_ERROR'
@@ -196,8 +195,7 @@ export class UserService {
       };
 
     } catch (error) {
-      console.error('UserService.getUserByEmail error:', error);
-      return {
+            return {
         success: false,
         message: error instanceof Error ? error.message : 'Unknown error occurred',
         error: 'FETCH_USER_ERROR'
@@ -253,9 +251,7 @@ export class UserService {
       };
 
     } catch (error) {
-      console.error('UserService.createUser error:', error);
-
-      // Handle specific error cases
+            // Handle specific error cases
       if (error instanceof Error) {
         if (error.message.includes('already exists')) {
           return {
@@ -351,9 +347,7 @@ export class UserService {
       };
 
     } catch (error) {
-      console.error('UserService.updateUser error:', error);
-
-      // Handle specific error cases
+            // Handle specific error cases
       if (error instanceof Error) {
         if (error.message.includes('already exists')) {
           return {
@@ -410,8 +404,7 @@ export class UserService {
       };
 
     } catch (error) {
-      console.error('UserService.toggleUserActive error:', error);
-      return {
+            return {
         success: false,
         message: error instanceof Error ? error.message : 'Unknown error occurred',
         error: 'TOGGLE_USER_ERROR'
@@ -450,8 +443,7 @@ export class UserService {
       };
 
     } catch (error) {
-      console.error('UserService.deleteUser error:', error);
-      return {
+            return {
         success: false,
         message: error instanceof Error ? error.message : 'Unknown error occurred',
         error: 'DELETE_USER_ERROR'

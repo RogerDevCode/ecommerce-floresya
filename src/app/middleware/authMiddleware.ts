@@ -7,7 +7,7 @@ import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
 import { supabaseService } from '../../config/supabase.js';
-import type { AuthenticatedRequest } from '../../shared/types/index';
+import type { AuthenticatedRequest } from '../../shared/types/index.js';
 
 interface JWTPayload {
   sub: string; // user ID
@@ -37,8 +37,7 @@ export async function authenticate(req: AuthenticatedRequest, res: Response, nex
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     if (!process.env.JWT_SECRET) {
-      console.error('JWT_SECRET not configured');
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Server configuration error',
         error: 'JWT_SECRET_MISSING'
@@ -76,9 +75,7 @@ export async function authenticate(req: AuthenticatedRequest, res: Response, nex
     next();
 
   } catch (error) {
-    console.error('Authentication error:', error);
-
-    if (error instanceof jwt.JsonWebTokenError) {
+        if (error instanceof jwt.JsonWebTokenError) {
       res.status(401).json({
         success: false,
         message: 'Invalid token format',
@@ -130,8 +127,7 @@ export async function authenticateAdmin(req: AuthenticatedRequest, res: Response
     });
 
   } catch (error) {
-    console.error('Admin authentication error:', error);
-    res.status(500).json({
+        res.status(500).json({
       success: false,
       message: 'Authentication system error',
       error: 'AUTH_SYSTEM_ERROR'
@@ -165,8 +161,7 @@ export async function authenticateSupport(req: AuthenticatedRequest, res: Respon
     });
 
   } catch (error) {
-    console.error('Support authentication error:', error);
-    res.status(500).json({
+        res.status(500).json({
       success: false,
       message: 'Authentication system error',
       error: 'AUTH_SYSTEM_ERROR'
@@ -193,8 +188,7 @@ export async function optionalAuthenticate(req: AuthenticatedRequest, res: Respo
 
   } catch (error) {
     // If optional auth fails, continue without authentication
-    console.warn('Optional authentication failed:', error);
-    next();
+        next();
   }
 }
 

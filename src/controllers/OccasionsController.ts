@@ -69,22 +69,17 @@ export class OccasionsController {
    * Check if an occasion name already exists (ignoring diacritics)
    */
   private async checkOccasionNameExists(normalizedName: string, excludeId?: number): Promise<boolean> {
-    try {
-      const occasions = await typeSafeDatabaseService.getOccasionsForQuery(excludeId);
+    const occasions = await typeSafeDatabaseService.getOccasionsForQuery(excludeId);
 
-      if (!occasions || occasions.length === 0) {
-        return false;
-      }
-
-      // Check if any existing occasion has the same normalized name
-      return occasions.some(occasion => {
-        const existingNormalized = this.normalizeOccasionName(occasion.name);
-        return existingNormalized === normalizedName;
-      });
-    } catch (error) {
-      console.error('Error checking occasion name uniqueness:', error);
-      throw error;
+    if (!occasions || occasions.length === 0) {
+      return false;
     }
+
+    // Check if any existing occasion has the same normalized name
+    return occasions.some(occasion => {
+      const existingNormalized = this.normalizeOccasionName(occasion.name);
+      return existingNormalized === normalizedName;
+    });
   }
   /**
    * @swagger
@@ -142,7 +137,6 @@ export class OccasionsController {
         message: 'Occasions retrieved successfully'
       });
     } catch (error) {
-      console.error('OccasionsController.getOccasions error:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to fetch occasions',
@@ -219,7 +213,6 @@ export class OccasionsController {
         message: 'Occasion retrieved successfully'
       });
     } catch (error) {
-      console.error('OccasionsController.getOccasionById error:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to fetch occasion',
@@ -294,9 +287,8 @@ export class OccasionsController {
         return;
       }
 
-      const { name, type, description, is_active = true } = req.body as {
+      const { name, description, is_active = true } = req.body as {
         name: string;
-        type?: string;
         description?: string;
         is_active?: boolean;
       };
@@ -343,7 +335,6 @@ export class OccasionsController {
         message: 'Occasion created successfully'
       });
     } catch (error) {
-      console.error('OccasionsController.createOccasion error:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to create occasion',
@@ -427,9 +418,8 @@ export class OccasionsController {
       }
 
       const occasionId = parseInt(req.params.id);
-      const { name, type, description, is_active = true } = req.body as {
+      const { name, description, is_active = true } = req.body as {
         name?: string;
-        type?: string;
         description?: string;
         is_active?: boolean;
       };
@@ -494,10 +484,10 @@ export class OccasionsController {
             // Slug exists, generate unique slug with suffix
             let counter = 1;
             let uniqueSlug = `${newSlug}-${counter}`;
+            let conflictExists = true;
 
-             
-            while (true) {
-              const conflictExists = await typeSafeDatabaseService.checkOccasionSlugExists(uniqueSlug, occasionId);
+            while (conflictExists) {
+              conflictExists = await typeSafeDatabaseService.checkOccasionSlugExists(uniqueSlug, occasionId);
 
               if (!conflictExists) {
                 // Found unique slug
@@ -540,7 +530,6 @@ export class OccasionsController {
         message: 'Occasion updated successfully'
       });
     } catch (error) {
-      console.error('OccasionsController.updateOccasion error:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to update occasion',
@@ -655,7 +644,6 @@ export class OccasionsController {
         res.status(204).send();
       }
     } catch (error) {
-      console.error('OccasionsController.deleteOccasion error:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to delete occasion',

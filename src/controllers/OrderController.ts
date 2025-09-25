@@ -3,7 +3,6 @@
  * Complete order management with payments and status tracking
  */
 
-import type { AuthenticatedRequest } from '@shared/types';
 import { Request, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
 
@@ -13,6 +12,7 @@ import type {
   OrderUpdateRequest
 } from '../config/supabase.js';
 import { OrderService } from '../services/OrderService.js';
+import type { AuthenticatedRequest } from '../shared/types/index.js';
 
 // Factory function for dependency injection
 const createOrderService = () => new OrderService();
@@ -156,8 +156,7 @@ export class OrderController {
         message: 'Orders retrieved successfully'
       });
     } catch (error) {
-      console.error('OrderController.getOrders error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to fetch orders',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -239,8 +238,7 @@ export class OrderController {
         message: 'Order retrieved successfully'
       });
     } catch (error) {
-      console.error('OrderController.getOrderById error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to fetch order',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -382,8 +380,7 @@ export class OrderController {
         message: 'Order created successfully'
       });
     } catch (error) {
-      console.error('OrderController.createOrder error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to create order',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -497,8 +494,7 @@ export class OrderController {
         message: 'Order updated successfully'
       });
     } catch (error) {
-      console.error('OrderController.updateOrder error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to update order',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -594,8 +590,7 @@ export class OrderController {
         message: 'Order status updated successfully'
       });
     } catch (error) {
-      console.error('OrderController.updateOrderStatus error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to update order status',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -682,8 +677,7 @@ export class OrderController {
         message: 'Order status history retrieved successfully'
       });
     } catch (error) {
-      console.error('OrderController.getOrderStatusHistory error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to fetch order status history',
         error: error instanceof Error ? error.message : 'Unknown error'

@@ -15,10 +15,10 @@ import {
   type ProductUpdateRequest,
   type ProductWithImages,
   type RawProductWithImages
-} from '@shared/types';
+} from '../shared/types/index.js';
 
 // Import consolidated utility function
-import { omitFunction as _omitFunction } from '@shared/utils';
+import { omitFunction as _omitFunction } from '../shared/utils/index.js';
 
 import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
 
@@ -126,8 +126,7 @@ export class ProductService {
         total_count: carouselProducts.length
       } as CarouselResponse;
     } catch (error) {
-      console.error('ProductService.getCarouselProducts error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -238,8 +237,7 @@ export class ProductService {
         .order('image_index', { ascending: true });
 
       if (mediumImagesError) {
-        console.error('Error fetching medium images:', mediumImagesError);
-      }
+              }
 
       // Group medium images by product_id
       const mediumImagesByProduct: Record<number, string[]> = (mediumImagesData as Array<{product_id: number, url: string, image_index: number}> ?? []).reduce((acc: Record<number, string[]>, img) => {
@@ -273,8 +271,7 @@ export class ProductService {
         }
       };
     } catch (error) {
-      console.error('ProductService.getProducts error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -324,8 +321,7 @@ export class ProductService {
 
       return productWithImages;
     } catch (error) {
-      console.error('ProductService.getProductById error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -357,8 +353,7 @@ export class ProductService {
         occasion_ids: occasionIds
       };
     } catch (error) {
-      console.error('ProductService.getProductByIdWithOccasions error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -370,8 +365,7 @@ export class ProductService {
   private reorganizeCarouselOrder(desiredOrder: number, _excludeProductId?: number): Promise<void> {
     // This method is now deprecated - carousel reorganization is handled
     // atomically by the PostgreSQL function update_carousel_order_atomic
-    console.warn(`🔄 Carousel reorganization delegated to PostgreSQL function for position ${desiredOrder}`);
-    // _excludeProductId is kept for backward compatibility but not used
+        // _excludeProductId is kept for backward compatibility but not used
     return Promise.resolve();
   }
 
@@ -387,8 +381,7 @@ export class ProductService {
 
       // Handle carousel reorganization if carousel_order is provided
       if (carousel_order && carousel_order > 0) {
-        console.warn(`🔄 Reorganizing carousel for new product at position ${carousel_order}`);
-        await this.reorganizeCarouselOrder(carousel_order);
+                await this.reorganizeCarouselOrder(carousel_order);
       }
 
       // Prepare insert data according to actual schema (excluding occasion_ids)
@@ -405,9 +398,7 @@ export class ProductService {
       let createdProduct: Product;
 
       if (occasion_ids && occasion_ids.length > 0) {
-        console.warn(`🔄 Using transaction for product creation with ${occasion_ids.length} occasion associations`);
-
-        // Execute within a single transaction
+                // Execute within a single transaction
         const data = await typeSafeDatabaseService.executeRpc('create_product_with_occasions', {
           product_data: insertData,
           occasion_ids
@@ -418,12 +409,9 @@ export class ProductService {
         }
 
         createdProduct = data[0] as Product;
-        console.warn(`✅ Successfully created product ${createdProduct.id} with occasion associations via transaction`);
-      } else {
+              } else {
         // Simple product creation without occasions
-        console.warn('🔄 Creating product without occasion associations');
-
-        const { data, error } = await typeSafeDatabaseService.getClient()
+                const { data, error } = await typeSafeDatabaseService.getClient()
           .from('products')
           .insert(insertData as any)
           .select()
@@ -438,13 +426,11 @@ export class ProductService {
         }
 
         createdProduct = data as Product;
-        console.warn(`✅ Successfully created product ${createdProduct.id} without occasions`);
-      }
+              }
 
       return createdProduct;
     } catch (error) {
-      console.error('ProductService.createProduct error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -458,8 +444,7 @@ export class ProductService {
       // Handle carousel reorganization if carousel_order is being changed
       if (carousel_order !== undefined) {
         if (carousel_order && carousel_order > 0) {
-          console.warn(`🔄 Reorganizing carousel for product ${id} to position ${carousel_order}`);
-          await this.reorganizeCarouselOrder(carousel_order, id);
+                    await this.reorganizeCarouselOrder(carousel_order, id);
         }
       }
 
@@ -497,8 +482,7 @@ export class ProductService {
 
       return data as Product;
     } catch (error) {
-      console.error('ProductService.updateProduct error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -520,8 +504,7 @@ export class ProductService {
 
       return data as Product;
     } catch (error) {
-      console.error('ProductService.updateCarouselOrder error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -539,8 +522,7 @@ export class ProductService {
 
       return response.products;
     } catch (error) {
-      console.error('ProductService.getFeaturedProducts error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -558,8 +540,7 @@ export class ProductService {
 
       return response.products;
     } catch (error) {
-      console.error('ProductService.searchProducts error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -607,8 +588,7 @@ export class ProductService {
         console.warn(`✅ Product ${productId} physically deleted (no references)`);
       }
     } catch (error) {
-      console.error('ProductService.deleteProduct error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -656,15 +636,13 @@ export class ProductService {
 
       if (orderItemsError) {
         // If order_items table doesn't exist yet, continue
-        console.warn('Order items table may not exist yet:', orderItemsError.message);
-      } else if (orderItems && orderItems.length > 0) {
+              } else if (orderItems && orderItems.length > 0) {
         return true;
       }
 
       return false;
     } catch (error) {
-      console.error('Error checking product references:', error);
-      throw error;
+            throw error;
     }
   }
 }

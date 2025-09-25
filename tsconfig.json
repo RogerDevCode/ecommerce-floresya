@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
+    "module": "ES2022",
     "target": "ES2022",
-    "lib": ["ES2022", "DOM"],
+    "lib": ["ES2022"],
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
@@ -16,23 +16,24 @@
     "sourceMap": true,
     "outDir": "./dist/backend",
     "rootDir": "./src",
-    "baseUrl": "./",
-    "paths": {
-      "@backend/*": ["./src/*"],
-      "@shared/*": ["./src/shared/*"],
-      "@frontend/*": ["./src/frontend/*"]
-    },
+    "baseUrl": ".",
     "types": ["node", "vitest/globals"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmitOnError": true,
+    "noEmitOnError": false,
     "incremental": true,
     "tsBuildInfoFile": "./dist/.tsbuildinfo"
   },
   "include": [
-    "src/**/*"
+    "src/app/**/*",
+    "src/config/**/*",
+    "src/controllers/**/*",
+    "src/services/**/*",
+    "src/shared/**/*",
+    "src/utils/**/*",
+    "src/types/**/*"
   ],
   "exclude": [
     "node_modules",

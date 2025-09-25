@@ -74,7 +74,7 @@ class FloresYaServer {
     // CORS configuration
     const corsOrigins = process.env.NODE_ENV === 'production'
       ? ['https://ecommerce-floresya-7-q8xi75ljr-floresyas-projects.vercel.app', 'https://floresya.vercel.app', 'https://floresya.com']
-      : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:8080', 'http://127.0.0.1:8080'];
+      : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:3001', 'http://127.0.0.1:3001', 'http://localhost:8080', 'http://127.0.0.1:8080'];
 
     serverLogger.info('SECURITY', 'Configuring CORS', { origins: corsOrigins });
     this.app.use(cors({
@@ -267,7 +267,7 @@ class FloresYaServer {
 
     // Serve index.html for all non-API routes (SPA support)
     // Exclude: /api/, /dist/, files with extensions, and common asset paths
-    this.app.get(/^\/(?!api\/|dist\/|.*\.[^\/]+$)(.*)/, (req: Request, res: Response) => {
+    this.app.get(/^\/(?!api\/|dist\/|.*\.[^/]+$)(.*)/, (req: Request, res: Response) => {
       const indexPath = path.join(process.cwd(), 'public/index.html');
 
       // Log static file serving for debugging

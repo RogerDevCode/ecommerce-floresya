@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Pedidos - FloresYa Admin</title>
+
+    <!-- Tailwind CSS -->
+    <link rel="stylesheet" href="/css/styles.css">
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@0.451.0/dist/umd/lucide.js"></script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+
+    <style>
+        /* Custom animations and styles */
+        .order-status-badge {
+            @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+        }
+        .status-pending { @apply bg-yellow-100 text-yellow-800; }
+        .status-confirmed { @apply bg-blue-100 text-blue-800; }
+        .status-processing { @apply bg-purple-100 text-purple-800; }
+        .status-shipped { @apply bg-indigo-100 text-indigo-800; }
+        .status-delivered { @apply bg-green-100 text-green-800; }
+        .status-cancelled { @apply bg-red-100 text-red-800; }
+
+        .modal-overlay {
+            @apply fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4;
+        }
+        .modal-content {
+            @apply bg-white rounded-lg max-w-4xl w-full max-h-90vh overflow-y-auto;
+        }
+        .table-responsive {
+            @apply overflow-x-auto;
+        }
+        .action-btn {
+            @apply inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium rounded-md transition-colors;
+        }
+        .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700; }
+        .btn-success { @apply bg-green-600 text-white hover:bg-green-700; }
+        .btn-warning { @apply bg-yellow-600 text-white hover:bg-yellow-700; }
+        .btn-danger { @apply bg-red-600 text-white hover:bg-red-700; }
+        .btn-secondary { @apply bg-gray-600 text-white hover:bg-gray-700; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-white bg-opacity-90 z-50 hidden flex items-center justify-center">
+        <div class="text-center">
+            <div class="animate-spin w-12 h-12 border-4 border-pink-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p class="text-gray-600 text-lg">Cargando pedidos...</p>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button id="backBtn" class="flex items-center space-x-2 text-gray-600 hover:text-pink-600 transition-colors">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                        <span>Volver al Admin</span>
+                    </button>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+                    <i data-lucide="receipt" class="w-6 h-6 mr-2 text-pink-600"></i>
+                    Gestión de Pedidos
+                </h1>
+                <div class="flex items-center space-x-3">
+                    <button id="refreshBtn" class="flex items-center space-x-2 px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        <span>Actualizar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-6">
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                        <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Total</p>
+                        <p id="totalOrders" class="text-2xl font-semibold text-gray-900">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                        <i data-lucide="clock" class="w-6 h-6"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Pendientes</p>
+                        <p id="pendingOrders" class="text-2xl font-semibold text-yellow-600">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                        <i data-lucide="package" class="w-6 h-6"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Procesando</p>
+                        <p id="processingOrders" class="text-2xl font-semibold text-purple-600">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-indigo-100 text-indigo-600">
+                        <i data-lucide="truck" class="w-6 h-6"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Enviados</p>
+                        <p id="shippedOrders" class="text-2xl font-semibold text-indigo-600">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600">
+                        <i data-lucide="check-circle" class="w-6 h-6"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Entregados</p>
+                        <p id="deliveredOrders" class="text-2xl font-semibold text-green-600">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-red-100 text-red-600">
+                        <i data-lucide="x-circle" class="w-6 h-6"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Cancelados</p>
+                        <p id="cancelledOrders" class="text-2xl font-semibold text-red-600">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-4">
+                <!-- Search -->
+                <div class="flex-1 max-w-md">
+                    <div class="relative">
+                        <i data-lucide="search" class="absolute left-3 top-3 w-4 h-4 text-gray-400"></i>
+                        <input type="text" id="searchInput" placeholder="Buscar por número de pedido, cliente..."
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500">
+                    </div>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="flex space-x-3">
+                    <select id="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500">
+                        <option value="">Todos los estados</option>
+                        <option value="pending">Pendiente</option>
+                        <option value="confirmed">Confirmado</option>
+                        <option value="processing">Procesando</option>
+                        <option value="shipped">Enviado</option>
+                        <option value="delivered">Entregado</option>
+                        <option value="cancelled">Cancelado</option>
+                    </select>
+
+                    <select id="dateFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500">
+                        <option value="">Todas las fechas</option>
+                        <option value="today">Hoy</option>
+                        <option value="week">Esta semana</option>
+                        <option value="month">Este mes</option>
+                    </select>
+
+                    <button id="clearFilters" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                        Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="table-responsive">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pedido</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Productos</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Orders will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden p-8 text-center">
+                <div class="text-gray-400 mb-4">
+                    <i data-lucide="inbox" class="w-16 h-16 mx-auto"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No se encontraron pedidos</h3>
+                <p class="text-gray-500">No hay pedidos que coincidan con los filtros seleccionados.</p>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div id="pagination" class="flex items-center justify-between mt-6">
+            <div class="text-sm text-gray-700">
+                Mostrando <span id="showingFrom">0</span> a <span id="showingTo">0</span> de <span id="totalResults">0</span> resultados
+            </div>
+            <div class="flex space-x-2">
+                <button id="prevPage" class="px-3 py-1 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50">
+                    Anterior
+                </button>
+                <div id="pageNumbers" class="flex space-x-1">
+                    <!-- Page numbers will be populated here -->
+                </div>
+                <button id="nextPage" class="px-3 py-1 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50">
+                    Siguiente
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Order Details Modal -->
+    <div id="orderModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-semibold text-gray-900">
+                        <i data-lucide="receipt" class="w-5 h-5 inline mr-2"></i>
+                        Detalles del Pedido
+                    </h2>
+                    <button id="closeModal" class="text-gray-400 hover:text-gray-600">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <div id="orderDetails">
+                    <!-- Order details will be populated here -->
+                </div>
+            </div>
+
+            <div class="p-6 border-t border-gray-200 bg-gray-50">
+                <div class="flex justify-end space-x-3">
+                    <button id="cancelOrderBtn" class="action-btn btn-danger">
+                        <i data-lucide="x-circle" class="w-4 h-4 mr-1"></i>
+                        Cancelar Pedido
+                    </button>
+                    <button id="updateStatusBtn" class="action-btn btn-primary">
+                        <i data-lucide="edit" class="w-4 h-4 mr-1"></i>
+                        Actualizar Estado
+                    </button>
+                    <button id="printOrderBtn" class="action-btn btn-secondary">
+                        <i data-lucide="printer" class="w-4 h-4 mr-1"></i>
+                        Imprimir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Update Modal -->
+    <div id="statusModal" class="modal-overlay">
+        <div class="modal-content max-w-md">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Actualizar Estado del Pedido</h3>
+            </div>
+
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nuevo Estado</label>
+                        <select id="newStatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500">
+                            <option value="pending">Pendiente</option>
+                            <option value="confirmed">Confirmado</option>
+                            <option value="processing">Procesando</option>
+                            <option value="shipped">Enviado</option>
+                            <option value="delivered">Entregado</option>
+                            <option value="cancelled">Cancelado</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Notas (opcional)</label>
+                        <textarea id="statusNotes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500" placeholder="Agregar notas sobre el cambio de estado..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 border-t border-gray-200 bg-gray-50">
+                <div class="flex justify-end space-x-3">
+                    <button id="cancelStatusUpdate" class="action-btn btn-secondary">Cancelar</button>
+                    <button id="confirmStatusUpdate" class="action-btn btn-success">Actualizar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Toast -->
+    <div id="successToast" class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-full transition-transform duration-300 z-50">
+        <div class="flex items-center space-x-2">
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+            <span>Operación completada</span>
+        </div>
+    </div>
+
+    <!-- Error Toast -->
+    <div id="errorToast" class="fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-full transition-transform duration-300 z-50">
+        <div class="flex items-center space-x-2">
+            <i data-lucide="alert-circle" class="w-5 h-5"></i>
+            <span>Error en la operación</span>
+        </div>
+    </div>
+
+    <script type="module" src="/dist/frontend/admin/orders.js"></script>
+
+    <script type="module">
+        // === ORDERS MANAGEMENT CONTROLLER ===
+        class OrdersController {
+            constructor() {
+                this.orders = [];
+                this.filteredOrders = [];
+                this.currentPage = 1;
+                this.ordersPerPage = 10;
+                this.currentOrderId = null;
+
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.loadOrders();
+                this.initializeLucideIcons();
+            }
+
+            setupEventListeners() {
+                // Navigation
+                document.getElementById('backBtn').addEventListener('click', () => {
+                    window.location.href = '/pages/admin.html';
+                });
+
+                // Refresh
+                document.getElementById('refreshBtn').addEventListener('click', () => {
+                    this.loadOrders();
+                });
+
+                // Search and filters
+                document.getElementById('searchInput').addEventListener('input', () => {
+                    this.applyFilters();
+                });
+
+                document.getElementById('statusFilter').addEventListener('change', () => {
+                    this.applyFilters();
+                });
+
+                document.getElementById('dateFilter').addEventListener('change', () => {
+                    this.applyFilters();
+                });
+
+                document.getElementById('clearFilters').addEventListener('click', () => {
+                    document.getElementById('searchInput').value = '';
+                    document.getElementById('statusFilter').value = '';
+                    document.getElementById('dateFilter').value = '';
+                    this.applyFilters();
+                });
+
+                // Modal controls
+                document.getElementById('closeModal').addEventListener('click', () => {
+                    this.closeModal('orderModal');
+                });
+
+                document.getElementById('cancelStatusUpdate').addEventListener('click', () => {
+                    this.closeModal('statusModal');
+                });
+
+                document.getElementById('updateStatusBtn').addEventListener('click', () => {
+                    this.openStatusModal();
+                });
+
+                document.getElementById('confirmStatusUpdate').addEventListener('click', () => {
+                    this.updateOrderStatus();
+                });
+
+                document.getElementById('cancelOrderBtn').addEventListener('click', () => {
+                    this.cancelOrder();
+                });
+
+                document.getElementById('printOrderBtn').addEventListener('click', () => {
+                    this.printOrder();
+                });
+
+                // Pagination
+                document.getElementById('prevPage').addEventListener('click', () => {
+                    if (this.currentPage > 1) {
+                        this.currentPage--;
+                        this.renderOrders();
+                    }
+                });
+
+                document.getElementById('nextPage').addEventListener('click', () => {
+                    const totalPages = Math.ceil(this.filteredOrders.length / this.ordersPerPage);
+                    if (this.currentPage < totalPages) {
+                        this.currentPage++;
+                        this.renderOrders();
+                    }
+                });
+            }
+
+            async loadOrders() {
+                this.showLoading();
+
+                try {
+                    // Simulate API call - replace with actual API
+                    await this.sleep(1000);
+
+                    // Mock data - replace with actual API call
+                    this.orders = await this.getMockOrders();
+                    this.filteredOrders = [...this.orders];
+
+                    this.updateStatistics();
+                    this.renderOrders();
+
+                } catch (error) {
+                    console.error('Error loading orders:', error);
+                    this.showToast('Error al cargar los pedidos', 'error');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            async getMockOrders() {
+                // Mock data - replace with actual API call to /api/orders
+                return [
+                    {
+                        id: 'FY-001',
+                        customer: {
+                            name: 'María González',
+                            email: 'maria@email.com',
+                            phone: '+58 414 123 4567',
+                            address: 'Av. Principal, Caracas'
+                        },
+                        items: [
+                            { name: 'Ramo de Rosas Rojas', quantity: 1, price: 45.00 },
+                            { name: 'Tarjeta de Felicitación', quantity: 1, price: 5.00 }
+                        ],
+                        total: 50.00,
+                        status: 'pending',
+                        paymentMethod: 'transfer',
+                        paymentReference: 'REF123456',
+                        createdAt: new Date().toISOString(),
+                        notes: 'Entrega urgente para cumpleaños'
+                    },
+                    {
+                        id: 'FY-002',
+                        customer: {
+                            name: 'Carlos Rodríguez',
+                            email: 'carlos@email.com',
+                            phone: '+58 412 987 6543',
+                            address: 'Centro Comercial Los Ruices'
+                        },
+                        items: [
+                            { name: 'Arreglo Floral Mixto', quantity: 1, price: 65.00 }
+                        ],
+                        total: 65.00,
+                        status: 'confirmed',
+                        paymentMethod: 'zelle',
+                        paymentReference: 'ZELLE789',
+                        createdAt: new Date(Date.now() - 86400000).toISOString(),
+                        notes: ''
+                    },
+                    {
+                        id: 'FY-003',
+                        customer: {
+                            name: 'Ana Pérez',
+                            email: 'ana@email.com',
+                            phone: '+58 424 555 0123',
+                            address: 'Las Mercedes, Caracas'
+                        },
+                        items: [
+                            { name: 'Bouquet de Girasoles', quantity: 2, price: 35.00 }
+                        ],
+                        total: 70.00,
+                        status: 'processing',
+                        paymentMethod: 'mobile',
+                        paymentReference: 'MOV456789',
+                        createdAt: new Date(Date.now() - 172800000).toISOString(),
+                        notes: 'Para evento corporativo'
+                    }
+                ];
+            }
+
+            applyFilters() {
+                const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+                const statusFilter = document.getElementById('statusFilter').value;
+                const dateFilter = document.getElementById('dateFilter').value;
+
+                this.filteredOrders = this.orders.filter(order => {
+                    // Search filter
+                    const matchesSearch = !searchTerm ||
+                        order.id.toLowerCase().includes(searchTerm) ||
+                        order.customer.name.toLowerCase().includes(searchTerm) ||
+                        order.customer.email.toLowerCase().includes(searchTerm);
+
+                    // Status filter
+                    const matchesStatus = !statusFilter || order.status === statusFilter;
+
+                    // Date filter
+                    let matchesDate = true;
+                    if (dateFilter) {
+                        const orderDate = new Date(order.createdAt);
+                        const now = new Date();
+
+                        switch (dateFilter) {
+                            case 'today':
+                                matchesDate = orderDate.toDateString() === now.toDateString();
+                                break;
+                            case 'week':
+                                const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                                matchesDate = orderDate >= weekAgo;
+                                break;
+                            case 'month':
+                                const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+                                matchesDate = orderDate >= monthAgo;
+                                break;
+                        }
+                    }
+
+                    return matchesSearch && matchesStatus && matchesDate;
+                });
+
+                this.currentPage = 1;
+                this.renderOrders();
+            }
+
+            updateStatistics() {
+                const stats = this.orders.reduce((acc, order) => {
+                    acc.total++;
+                    acc[order.status] = (acc[order.status] || 0) + 1;
+                    return acc;
+                }, { total: 0 });
+
+                document.getElementById('totalOrders').textContent = stats.total || 0;
+                document.getElementById('pendingOrders').textContent = stats.pending || 0;
+                document.getElementById('processingOrders').textContent = stats.processing || 0;
+                document.getElementById('shippedOrders').textContent = stats.shipped || 0;
+                document.getElementById('deliveredOrders').textContent = stats.delivered || 0;
+                document.getElementById('cancelledOrders').textContent = stats.cancelled || 0;
+            }
+
+            renderOrders() {
+                const tbody = document.getElementById('ordersTableBody');
+                const emptyState = document.getElementById('emptyState');
+
+                if (this.filteredOrders.length === 0) {
+                    tbody.innerHTML = '';
+                    emptyState.classList.remove('hidden');
+                    this.updatePagination();
+                    return;
+                }
+
+                emptyState.classList.add('hidden');
+
+                // Pagination
+                const startIndex = (this.currentPage - 1) * this.ordersPerPage;
+                const endIndex = startIndex + this.ordersPerPage;
+                const paginatedOrders = this.filteredOrders.slice(startIndex, endIndex);
+
+                tbody.innerHTML = paginatedOrders.map(order => `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">${order.id}</div>
+                            <div class="text-sm text-gray-500">${this.formatDate(order.createdAt)}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">${order.customer.name}</div>
+                            <div class="text-sm text-gray-500">${order.customer.email}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900">
+                                ${order.items.map(item => `${item.quantity}x ${item.name}`).join(', ')}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">$${order.total.toFixed(2)}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="order-status-badge status-${order.status}">
+                                ${this.getStatusLabel(order.status)}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${this.formatDateTime(order.createdAt)}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button class="text-blue-600 hover:text-blue-900 mr-3" onclick="ordersController.viewOrder('${order.id}')">
+                                Ver
+                            </button>
+                            <button class="text-green-600 hover:text-green-900 mr-3" onclick="ordersController.quickStatusUpdate('${order.id}')">
+                                Estado
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+
+                this.updatePagination();
+                this.initializeLucideIcons();
+            }
+
+            updatePagination() {
+                const totalPages = Math.ceil(this.filteredOrders.length / this.ordersPerPage);
+                const startIndex = (this.currentPage - 1) * this.ordersPerPage;
+                const endIndex = Math.min(startIndex + this.ordersPerPage, this.filteredOrders.length);
+
+                document.getElementById('showingFrom').textContent = this.filteredOrders.length === 0 ? 0 : startIndex + 1;
+                document.getElementById('showingTo').textContent = endIndex;
+                document.getElementById('totalResults').textContent = this.filteredOrders.length;
+
+                document.getElementById('prevPage').disabled = this.currentPage === 1;
+                document.getElementById('nextPage').disabled = this.currentPage === totalPages;
+
+                // Generate page numbers
+                const pageNumbers = document.getElementById('pageNumbers');
+                pageNumbers.innerHTML = '';
+
+                for (let i = 1; i <= totalPages; i++) {
+                    if (i === this.currentPage || Math.abs(i - this.currentPage) <= 2) {
+                        const button = document.createElement('button');
+                        button.className = `px-3 py-1 text-sm font-medium rounded-md ${
+                            i === this.currentPage
+                                ? 'bg-pink-600 text-white'
+                                : 'bg-white border border-gray-300 text-gray-500 hover:bg-gray-50'
+                        }`;
+                        button.textContent = i;
+                        button.addEventListener('click', () => {
+                            this.currentPage = i;
+                            this.renderOrders();
+                        });
+                        pageNumbers.appendChild(button);
+                    }
+                }
+            }
+
+            viewOrder(orderId) {
+                const order = this.orders.find(o => o.id === orderId);
+                if (!order) return;
+
+                this.currentOrderId = orderId;
+
+                const orderDetails = document.getElementById('orderDetails');
+                orderDetails.innerHTML = `
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- Order Information -->
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">Información del Pedido</h3>
+                                <div class="bg-gray-50 p-4 rounded-lg space-y-3">
+                                    <div class="flex justify-between">
+                                        <span class="font-medium">Número:</span>
+                                        <span>${order.id}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="font-medium">Estado:</span>
+                                        <span class="order-status-badge status-${order.status}">${this.getStatusLabel(order.status)}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="font-medium">Fecha:</span>
+                                        <span>${this.formatDateTime(order.createdAt)}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="font-medium">Total:</span>
+                                        <span class="text-lg font-semibold text-green-600">$${order.total.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Customer Information -->
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">Información del Cliente</h3>
+                                <div class="bg-gray-50 p-4 rounded-lg space-y-3">
+                                    <div class="flex justify-between">
+                                        <span class="font-medium">Nombre:</span>
+                                        <span>${order.customer.name}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="font-medium">Email:</span>
+                                        <span>${order.customer.email}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="font-medium">Teléfono:</span>
+                                        <span>${order.customer.phone}</span>
+                                    </div>
+                                    <div>
+                                        <span class="font-medium">Dirección:</span>
+                                        <p class="mt-1 text-sm text-gray-600">${order.customer.address}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Payment Information -->
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">Información de Pago</h3>
+                                <div class="bg-gray-50 p-4 rounded-lg space-y-3">
+                                    <div class="flex justify-between">
+                                        <span class="font-medium">Método:</span>
+                                        <span>${this.getPaymentMethodLabel(order.paymentMethod)}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="font-medium">Referencia:</span>
+                                        <span>${order.paymentReference}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Order Items -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Productos</h3>
+                            <div class="space-y-3">
+                                ${order.items.map(item => `
+                                    <div class="bg-gray-50 p-4 rounded-lg">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-1">
+                                                <h4 class="font-medium text-gray-900">${item.name}</h4>
+                                                <p class="text-sm text-gray-600">Cantidad: ${item.quantity}</p>
+                                            </div>
+                                            <div class="text-right">
+                                                <p class="font-medium">$${(item.price * item.quantity).toFixed(2)}</p>
+                                                <p class="text-sm text-gray-600">$${item.price.toFixed(2)} c/u</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+
+                            ${order.notes ? `
+                                <div class="mt-6">
+                                    <h4 class="font-medium text-gray-900 mb-2">Notas</h4>
+                                    <div class="bg-yellow-50 p-3 rounded-lg">
+                                        <p class="text-sm text-gray-700">${order.notes}</p>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+
+                this.openModal('orderModal');
+                this.initializeLucideIcons();
+            }
+
+            openStatusModal() {
+                if (!this.currentOrderId) return;
+
+                const order = this.orders.find(o => o.id === this.currentOrderId);
+                if (order) {
+                    document.getElementById('newStatus').value = order.status;
+                    document.getElementById('statusNotes').value = '';
+                }
+
+                this.openModal('statusModal');
+            }
+
+            async updateOrderStatus() {
+                const newStatus = document.getElementById('newStatus').value;
+                const notes = document.getElementById('statusNotes').value;
+
+                if (!this.currentOrderId || !newStatus) return;
+
+                this.showLoading();
+
+                try {
+                    // Simulate API call - replace with actual API
+                    await this.sleep(1000);
+
+                    // Update order in memory (replace with actual API call)
+                    const orderIndex = this.orders.findIndex(o => o.id === this.currentOrderId);
+                    if (orderIndex !== -1) {
+                        this.orders[orderIndex].status = newStatus;
+                        if (notes) {
+                            this.orders[orderIndex].statusHistory = this.orders[orderIndex].statusHistory || [];
+                            this.orders[orderIndex].statusHistory.push({
+                                status: newStatus,
+                                notes: notes,
+                                updatedAt: new Date().toISOString()
+                            });
+                        }
+                    }
+
+                    this.closeModal('statusModal');
+                    this.closeModal('orderModal');
+                    this.loadOrders(); // Refresh data
+                    this.showToast('Estado actualizado correctamente');
+
+                } catch (error) {
+                    console.error('Error updating order status:', error);
+                    this.showToast('Error al actualizar el estado', 'error');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            async cancelOrder() {
+                if (!this.currentOrderId) return;
+
+                if (!confirm('¿Estás seguro de que quieres cancelar este pedido?')) return;
+
+                this.showLoading();
+
+                try {
+                    // Simulate API call - replace with actual API
+                    await this.sleep(1000);
+
+                    // Update order in memory (replace with actual API call)
+                    const orderIndex = this.orders.findIndex(o => o.id === this.currentOrderId);
+                    if (orderIndex !== -1) {
+                        this.orders[orderIndex].status = 'cancelled';
+                    }
+
+                    this.closeModal('orderModal');
+                    this.loadOrders(); // Refresh data
+                    this.showToast('Pedido cancelado correctamente');
+
+                } catch (error) {
+                    console.error('Error cancelling order:', error);
+                    this.showToast('Error al cancelar el pedido', 'error');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            printOrder() {
+                if (!this.currentOrderId) return;
+
+                const order = this.orders.find(o => o.id === this.currentOrderId);
+                if (!order) return;
+
+                // Create print content
+                const printContent = `
+                    <html>
+                        <head>
+                            <title>Pedido ${order.id}</title>
+                            <style>
+                                body { font-family: Arial, sans-serif; margin: 20px; }
+                                .header { text-align: center; margin-bottom: 30px; }
+                                .section { margin-bottom: 20px; }
+                                .section h3 { border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+                                .items table { width: 100%; border-collapse: collapse; }
+                                .items th, .items td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                                .items th { background-color: #f5f5f5; }
+                                .total { text-align: right; font-size: 18px; font-weight: bold; }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="header">
+                                <h1>🌸 FloresYa</h1>
+                                <h2>Pedido ${order.id}</h2>
+                                <p>Fecha: ${this.formatDateTime(order.createdAt)}</p>
+                            </div>
+
+                            <div class="section">
+                                <h3>Cliente</h3>
+                                <p><strong>Nombre:</strong> ${order.customer.name}</p>
+                                <p><strong>Email:</strong> ${order.customer.email}</p>
+                                <p><strong>Teléfono:</strong> ${order.customer.phone}</p>
+                                <p><strong>Dirección:</strong> ${order.customer.address}</p>
+                            </div>
+
+                            <div class="section items">
+                                <h3>Productos</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th>Cantidad</th>
+                                            <th>Precio Unit.</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${order.items.map(item => `
+                                            <tr>
+                                                <td>${item.name}</td>
+                                                <td>${item.quantity}</td>
+                                                <td>$${item.price.toFixed(2)}</td>
+                                                <td>$${(item.price * item.quantity).toFixed(2)}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                                <div class="total">
+                                    Total: $${order.total.toFixed(2)}
+                                </div>
+                            </div>
+
+                            <div class="section">
+                                <h3>Pago</h3>
+                                <p><strong>Método:</strong> ${this.getPaymentMethodLabel(order.paymentMethod)}</p>
+                                <p><strong>Referencia:</strong> ${order.paymentReference}</p>
+                            </div>
+
+                            ${order.notes ? `
+                                <div class="section">
+                                    <h3>Notas</h3>
+                                    <p>${order.notes}</p>
+                                </div>
+                            ` : ''}
+                        </body>
+                    </html>
+                `;
+
+                // Open print window
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+                printWindow.print();
+                printWindow.close();
+            }
+
+            quickStatusUpdate(orderId) {
+                this.currentOrderId = orderId;
+                this.openStatusModal();
+            }
+
+            openModal(modalId) {
+                document.getElementById(modalId).classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+
+            closeModal(modalId) {
+                document.getElementById(modalId).classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+
+            showLoading() {
+                document.getElementById('loadingOverlay').classList.remove('hidden');
+            }
+
+            hideLoading() {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }
+
+            showToast(message, type = 'success') {
+                const toast = document.getElementById(type === 'error' ? 'errorToast' : 'successToast');
+                toast.querySelector('span').textContent = message;
+
+                // Show toast
+                toast.classList.remove('translate-y-full');
+
+                // Hide after 3 seconds
+                setTimeout(() => {
+                    toast.classList.add('translate-y-full');
+                }, 3000);
+
+                this.initializeLucideIcons();
+            }
+
+            getStatusLabel(status) {
+                const labels = {
+                    pending: 'Pendiente',
+                    confirmed: 'Confirmado',
+                    processing: 'Procesando',
+                    shipped: 'Enviado',
+                    delivered: 'Entregado',
+                    cancelled: 'Cancelado'
+                };
+                return labels[status] || status;
+            }
+
+            getPaymentMethodLabel(method) {
+                const labels = {
+                    transfer: 'Transferencia Bancaria',
+                    mobile: 'Pago Móvil',
+                    zelle: 'Zelle'
+                };
+                return labels[method] || method;
+            }
+
+            formatDate(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('es-ES');
+            }
+
+            formatDateTime(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleString('es-ES');
+            }
+
+            sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            initializeLucideIcons() {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }
+        }
+
+        // Initialize controller and make it globally available
+        let ordersController;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Lucide icons
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+
+            // Initialize controller
+            ordersController = new OrdersController();
+
+            // Make controller globally available for inline event handlers
+            window.ordersController = ordersController;
+        });
+    </script>
+</body>
+</html>

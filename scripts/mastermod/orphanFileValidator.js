@@ -38,7 +38,7 @@ export class OrphanFileValidator {
           for (const line of lines) {
             const importMatch = line.match(/import\s+.*from\s+['"](.*)['"]/);
             if (importMatch) {
-              let importPath = importMatch[1];
+              const importPath = importMatch[1];
               if (importPath.startsWith('.')) {
                 let resolvedPath = path.resolve(path.dirname(fullPath), importPath);
                 if (!resolvedPath.endsWith('.ts')) {

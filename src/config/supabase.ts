@@ -8,7 +8,7 @@ import { SupabaseClient, createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 
 // Import all database types from consolidated source
-import type { Database } from '../shared/types/index';
+import type { Database } from '../shared/types/index.js';
 
 dotenv.config();
 
@@ -59,7 +59,7 @@ export type {
   CarouselResponse,
   OrderResponse,
   Database
-} from '../shared/types/index';
+} from '../shared/types/index.js';
 
 // ============================================
 // SUPABASE CONFIGURATION
@@ -116,8 +116,7 @@ class SupabaseManager {
       const { error } = await this.client.from('settings').select('id').limit(1);
       return !error;
     } catch (error) {
-      console.error('Supabase connection test failed:', error);
-      return false;
+            return false;
     }
   }
 
@@ -165,8 +164,9 @@ export function isValidUserRole(role: string): role is Database['public']['Table
 // ============================================
 
 // Re-export consolidated constants
-export {
-  Tables,
-  DEFAULT_PAGE_SIZE,
-  MAX_PAGE_SIZE
-} from '../shared/constants/index.js';
+// Temporarily commented out due to module resolution issues
+// export {
+//   Tables,
+//   DEFAULT_PAGE_SIZE,
+//   MAX_PAGE_SIZE
+// } from '../shared/constants/index.js';

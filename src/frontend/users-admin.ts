@@ -9,15 +9,17 @@ import type {
   UserFormData,
   UserQuery,
   UserResponse,
-  UserUpdateRequest,
+  UserUpdateRequest
+} from "shared/types/index";
+import type {
   WindowWithFloresyaLogger,
   WindowWithUsersAdmin
-} from '@shared/types';
+} from '../shared/types/frontend.js';
 
-import { api } from './services/apiClient';
+import { api } from './services/apiClient.js';
 
 // Extend window with our interfaces
-declare const window: WindowWithFloresyaLogger & WindowWithUsersAdmin & { usersAdmin: UsersAdminManager };
+declare const window: WindowWithFloresyaLogger & WindowWithUsersAdmin;
 
 interface UsersResponse {
   success: boolean;
@@ -129,7 +131,7 @@ class UsersAdminManager {
     void this.loadUsers();
   }
 
-  private async loadUsers(): Promise<void> {
+  public async loadUsers(): Promise<void> {
     const tableBody = document.getElementById('usersTableBody');
     if (!tableBody) {return;}
 
@@ -830,14 +832,10 @@ class UsersAdminManager {
       logger.info('UsersAdmin', `[API] ${message}`, data as never);
     } else {
       if (level === 'success' || level === 'api') {
-        console.warn(`[UsersAdmin] ${message}`, data);
-      } else if (level === 'error') {
-        console.error(`[UsersAdmin] ${message}`, data);
-      } else if (level === 'warn') {
-        console.warn(`[UsersAdmin] ${message}`, data);
-      } else {
-        console.warn(`[UsersAdmin] ${message}`, data);
-      }
+              } else if (level === 'error') {
+              } else if (level === 'warn') {
+              } else {
+              }
     }
   }
 }
@@ -847,10 +845,16 @@ if (document.readyState === 'loading') {
 document.addEventListener('DOMContentLoaded', () => {
   const manager = new UsersAdminManager();
   // Expose to window for pagination callbacks
-  (window as unknown as WindowWithFloresyaLogger & { usersAdmin: UsersAdminManager })['usersAdmin'] = manager;
+  (window as any).usersAdmin = {
+    goToPage: (page: number) => manager.goToPage(page),
+    loadUsers: () => manager.loadUsers()
+  };
 });
 } else {
 const manager = new UsersAdminManager();
 // Expose to window for pagination callbacks
-(window as unknown as WindowWithFloresyaLogger & { usersAdmin: UsersAdminManager })['usersAdmin'] = manager;
+(window as any).usersAdmin = {
+  goToPage: (page: number) => manager.goToPage(page),
+  loadUsers: () => manager.loadUsers()
+};
 }

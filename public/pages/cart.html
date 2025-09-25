@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrito de Compras - FloresYa</title>
+
+    <!-- Tailwind CSS - Single source -->
+    <link rel="stylesheet" href="/css/styles.css">
+
+    <!-- Advanced Tooltip System -->
+    <link href="/css/tooltips.css" rel="stylesheet">
+
+    <!-- SEO -->
+    <meta name="description" content="Tu carrito de compras en FloresYa - Revisa tus productos seleccionados">
+    <meta property="og:title" content="Carrito - FloresYa">
+    <meta property="og:description" content="Finaliza tu compra de flores">
+    <meta property="og:type" content="website">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@0.451.0/dist/umd/lucide.js"></script>
+
+    <!-- Advanced Tooltip System -->
+    <script src="/js/tooltip-utils.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Loading State -->
+    <div id="loading" class="fixed inset-0 bg-white z-50 flex items-center justify-center hidden">
+        <div class="text-center">
+            <div class="animate-spin w-8 h-8 border-4 border-pink-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p class="text-gray-600">Cargando carrito...</p>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button id="backBtn" class="flex items-center space-x-2 text-gray-600 hover:text-pink-600 transition-colors" data-tooltip="Volver al catálogo de productos">
+                        <i data-lucide="arrow-left" class="w-5 h-5" data-tooltip="Flecha hacia atrás"></i>
+                        <span>Continuar comprando</span>
+                    </button>
+                </div>
+                <h1 class="text-xl font-bold text-pink-600">🌸 FloresYa</h1>
+                <div class="flex items-center space-x-3">
+                    <span id="cartCount" class="text-sm text-gray-500">0 productos</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6 max-w-4xl">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Tu Carrito de Compras</h2>
+            <p class="text-gray-600">Revisa tus productos antes de continuar</p>
+        </div>
+
+        <!-- Cart Content -->
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Cart Items -->
+            <div class="lg:col-span-2">
+                <!-- Empty Cart State -->
+                <div id="emptyCart" class="hidden bg-white rounded-lg shadow-sm p-8 text-center">
+                    <div class="text-gray-400 mb-4">
+                        <i data-lucide="shopping-cart" class="w-16 h-16 mx-auto"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Tu carrito está vacío</h3>
+                    <p class="text-gray-600 mb-6">¡Agrega algunos productos hermosos para comenzar!</p>
+                    <button id="continueShopping" class="bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 transition-colors">
+                        Explorar Productos
+                    </button>
+                </div>
+
+                <!-- Cart Items List -->
+                <div id="cartItems" class="space-y-4">
+                    <!-- Items will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="lg:col-span-1">
+                <div id="orderSummary" class="bg-white rounded-lg shadow-sm p-6 sticky top-24">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Resumen del Pedido</h3>
+
+                    <div class="space-y-3 mb-6">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Subtotal (<span id="summaryItemCount">0</span> productos)</span>
+                            <span id="subtotal" class="text-gray-900">$0</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Envío</span>
+                            <span id="shipping" class="text-gray-900">Gratis</span>
+                        </div>
+                        <div class="border-t pt-3">
+                            <div class="flex justify-between text-lg font-semibold">
+                                <span class="text-gray-900">Total</span>
+                                <span id="total" class="text-pink-600">$0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="checkoutBtn" class="w-full bg-pink-600 text-white py-4 rounded-lg font-semibold hover:bg-pink-700 transition-colors mb-3 disabled:bg-gray-300 disabled:cursor-not-allowed">
+                        Proceder al Pago
+                    </button>
+
+                    <div class="text-center">
+                        <div class="flex items-center justify-center space-x-2 text-sm text-gray-500">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i>
+                            <span>Compra 100% segura</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Success Toast -->
+    <div id="successToast" class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-full transition-transform duration-300 z-50">
+        <div class="flex items-center space-x-2">
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+            <span>Producto actualizado</span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module">
+        // === SHOPPING CART CONTROLLER ===
+        class ShoppingCartController {
+            constructor() {
+                this.cart = JSON.parse(localStorage.getItem('floresyaCart') || '[]');
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.renderCart();
+                this.initializeLucideIcons();
+            }
+
+            setupEventListeners() {
+                // Back button
+                document.getElementById('backBtn').addEventListener('click', () => {
+                    window.history.back();
+                });
+
+                // Continue shopping
+                document.getElementById('continueShopping').addEventListener('click', () => {
+                    window.location.href = '/';
+                });
+
+                // Checkout button
+                document.getElementById('checkoutBtn').addEventListener('click', () => {
+                    if (this.cart.length > 0) {
+                        window.location.href = '/pages/payment.html';
+                    }
+                });
+            }
+
+            renderCart() {
+                const cartItemsContainer = document.getElementById('cartItems');
+                const emptyCartElement = document.getElementById('emptyCart');
+
+                if (this.cart.length === 0) {
+                    cartItemsContainer.innerHTML = '';
+                    emptyCartElement.classList.remove('hidden');
+                    this.updateOrderSummary();
+                    return;
+                }
+
+                emptyCartElement.classList.add('hidden');
+
+                cartItemsContainer.innerHTML = this.cart.map((item, index) => `
+                    <div class="bg-white rounded-lg shadow-sm p-6 cart-item" data-index="${index}">
+                        <div class="flex items-center space-x-4">
+                            <!-- Product Image -->
+                            <div class="flex-shrink-0">
+                                <img src="${item.image || '/images/placeholder-product.webp'}"
+                                     alt="${item.name}"
+                                     class="w-20 h-20 object-cover rounded-lg">
+                            </div>
+
+                            <!-- Product Info -->
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-lg font-semibold text-gray-900 truncate">${item.name}</h4>
+                                <p class="text-pink-600 font-semibold text-lg">${this.formatPrice(item.price)}</p>
+                                <p class="text-sm text-gray-500">Agregado el ${this.formatDate(item.addedAt)}</p>
+                            </div>
+
+                            <!-- Quantity Controls -->
+                            <div class="flex items-center space-x-3">
+                                <button class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors decrease-qty"
+                                        data-index="${index}">
+                                    <i data-lucide="minus" class="w-4 h-4"></i>
+                                </button>
+                                <span class="text-lg font-semibold w-8 text-center">${item.quantity}</span>
+                                <button class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors increase-qty"
+                                        data-index="${index}">
+                                    <i data-lucide="plus" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <!-- Item Total -->
+                            <div class="text-right">
+                                <p class="text-lg font-semibold text-gray-900">${this.formatPrice(item.price * item.quantity)}</p>
+                                <button class="text-red-500 hover:text-red-700 text-sm remove-item" data-index="${index}">
+                                    Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Add event listeners for quantity controls
+                this.setupCartItemListeners();
+                this.updateOrderSummary();
+                this.initializeLucideIcons();
+            }
+
+            setupCartItemListeners() {
+                // Quantity decrease
+                document.querySelectorAll('.decrease-qty').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const index = parseInt(e.currentTarget.dataset.index);
+                        this.updateQuantity(index, Math.max(1, this.cart[index].quantity - 1));
+                    });
+                });
+
+                // Quantity increase
+                document.querySelectorAll('.increase-qty').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const index = parseInt(e.currentTarget.dataset.index);
+                        this.updateQuantity(index, this.cart[index].quantity + 1);
+                    });
+                });
+
+                // Remove item
+                document.querySelectorAll('.remove-item').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const index = parseInt(e.currentTarget.dataset.index);
+                        this.removeItem(index);
+                    });
+                });
+            }
+
+            updateQuantity(index, newQuantity) {
+                if (newQuantity < 1) return;
+
+                this.cart[index].quantity = newQuantity;
+                this.saveCart();
+                this.renderCart();
+                this.showToast('Cantidad actualizada');
+            }
+
+            removeItem(index) {
+                this.cart.splice(index, 1);
+                this.saveCart();
+                this.renderCart();
+                this.showToast('Producto eliminado del carrito');
+            }
+
+            updateOrderSummary() {
+                const totalItems = this.cart.reduce((sum, item) => sum + item.quantity, 0);
+                const subtotal = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+                document.getElementById('cartCount').textContent = `${totalItems} producto${totalItems !== 1 ? 's' : ''}`;
+                document.getElementById('summaryItemCount').textContent = totalItems;
+                document.getElementById('subtotal').textContent = this.formatPrice(subtotal);
+                document.getElementById('total').textContent = this.formatPrice(subtotal);
+
+                const checkoutBtn = document.getElementById('checkoutBtn');
+                checkoutBtn.disabled = this.cart.length === 0;
+            }
+
+            saveCart() {
+                localStorage.setItem('floresyaCart', JSON.stringify(this.cart));
+            }
+
+            formatPrice(price) {
+                return new Intl.NumberFormat('es-CO', {
+                    style: 'currency',
+                    currency: 'COP',
+                    minimumFractionDigits: 0
+                }).format(price);
+            }
+
+            formatDate(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('es-ES');
+            }
+
+            showToast(message) {
+                const toast = document.getElementById('successToast');
+                toast.querySelector('span').textContent = message;
+
+                // Show toast
+                toast.classList.remove('translate-y-full');
+
+                // Hide after 3 seconds
+                setTimeout(() => {
+                    toast.classList.add('translate-y-full');
+                }, 3000);
+
+                this.initializeLucideIcons();
+            }
+
+            initializeLucideIcons() {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Lucide icons
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+
+            // Initialize controller
+            new ShoppingCartController();
+        });
+    </script>
+</body>
+</html>

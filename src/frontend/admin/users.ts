@@ -3,9 +3,9 @@
  * Handles user management, CRUD operations, and user table rendering
  */
 
-import type { UserRole } from '@shared/types';
+import type { UserRole } from "shared/types/index";
 
-import type { AdminUser, AdminPanelLogger } from './types';
+import type { AdminUser, AdminPanelLogger } from './types.js';
 
 export class AdminUsers {
   private logger: AdminPanelLogger;
@@ -344,6 +344,5 @@ export class AdminUsers {
   private showModal(_element: Element): void {
     // Implementation depends on UI framework (Bootstrap, etc.)
     // This is a placeholder
-    console.warn('Modal implementation needed');
-  }
+      }
 }

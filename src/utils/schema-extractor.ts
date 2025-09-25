@@ -10,6 +10,7 @@
 
 import { writeFileSync } from 'fs';
 import { join } from 'path';
+
 import { supabaseService } from '../config/supabase.js';
 
 // Configuración del extractor
@@ -101,9 +102,7 @@ class SupabaseSchemaExtractor {
     error?: string;
   }> {
     try {
-      console.warn('🌸 FloresYa Schema Extractor - Iniciando extracción...');
-
-      // Verificar conexión
+            // Verificar conexión
       const isConnected = await this.testConnection();
       if (!isConnected) {
         throw new Error('No se pudo conectar a Supabase');
@@ -120,18 +119,14 @@ class SupabaseSchemaExtractor {
         this.saveSchemaToFile(schemaSQL);
       }
 
-      console.warn('✅ Extracción completada exitosamente');
-      console.warn(`📊 Estadísticas:`, this.stats);
-
-      return {
+                  return {
         success: true,
         schema: schemaSQL,
         stats: this.stats
       };
 
     } catch (error) {
-      console.error('❌ Error durante la extracción:', error);
-      return {
+            return {
         success: false,
         error: error instanceof Error ? error.message : String(error)
       };
@@ -169,16 +164,14 @@ class SupabaseSchemaExtractor {
     const tablesInfo: TableInfo[] = [];
 
     for (const tableName of knownTables) {
-      console.warn(`🔍 Analizando tabla: ${tableName}`);
-
-      try {
+            try {
         const tableInfo = await this.extractTableInfo(tableName);
         tablesInfo.push(tableInfo);
         this.stats.totalRecords += tableInfo.recordCount;
         this.stats.totalIndexes += tableInfo.indexes.length;
         this.stats.totalConstraints += tableInfo.constraints.length;
-      } catch (error) {
-        console.warn(`⚠️  Error al analizar tabla ${tableName}:`, error);
+      } catch (_error) {
+        // Ignore table extraction errors and continue with other tables
       }
     }
 
@@ -719,8 +712,7 @@ ON CONFLICT (key) DO NOTHING;
   private saveSchemaToFile(schema: string): void {
     const outputPath = join(process.cwd(), this.config.outputFile);
     writeFileSync(outputPath, schema, 'utf8');
-    console.warn(`💾 Esquema guardado en: ${outputPath}`);
-  }
+      }
 
   /**
    * Método estático para uso rápido
@@ -774,11 +766,9 @@ export type { ExtractorConfig, TableInfo, SchemaStats };
 if (import.meta.url === `file://${process.argv[1]}`) {
   SupabaseSchemaExtractor.quickExtract()
     .then(() => {
-      console.warn('✅ Extracción de esquema completada');
-      process.exit(0);
+            process.exit(0);
     })
     .catch((error) => {
-      console.error('❌ Error:', error.message);
-      process.exit(1);
+            process.exit(1);
     });
 }

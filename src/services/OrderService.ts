@@ -16,7 +16,7 @@ import {
   type RawOrderStatusHistoryWithUser,
   type RawOrderWithItemsAndUser,
   type RawOrderWithItemsPaymentsHistory
-} from '@shared/types';
+} from '../shared/types/index.js';
 
 import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
 
@@ -105,8 +105,7 @@ export class OrderService {
         }
       };
     } catch (error) {
-      console.error('OrderService.getOrders error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -149,8 +148,7 @@ export class OrderService {
 
       return orderWithDetails;
     } catch (error) {
-      console.error('OrderService.getOrderById error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -189,8 +187,7 @@ export class OrderService {
       // The function returns the complete order with items
       return data as OrderWithItems;
     } catch (error) {
-      console.error('OrderService.createOrder error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -218,8 +215,7 @@ export class OrderService {
 
       return data as Order;
     } catch (error) {
-      console.error('OrderService.updateOrder error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -242,8 +238,7 @@ export class OrderService {
 
       return data as Order;
     } catch (error) {
-      console.error('OrderService.updateOrderStatus error:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -264,8 +259,7 @@ export class OrderService {
 
       return (data as RawOrderStatusHistoryWithUser[]) ?? [];
     } catch (error) {
-      console.error('OrderService.getOrderStatusHistory error:', error);
-      throw error;
+            throw error;
     }
   }
 

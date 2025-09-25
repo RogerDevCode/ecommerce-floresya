@@ -4,7 +4,7 @@
  * Sin distracciones. Solo información útil, cuando es útil.
  */
 
-import type { LogData, Logger, LogEntry } from '@shared/types';
+import type { LogData, Logger, LogEntry } from "shared/types/index";
 
 // Type definitions
 interface LogLevel {

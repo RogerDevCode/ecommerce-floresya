@@ -1,7 +1,7 @@
 // scripts/mastermod/unusedDependencyValidator.js
+import { execSync } from 'child_process';
 import fs from 'fs/promises';
 import path from 'path';
-import { execSync } from 'child_process';
 
 export class UnusedDependencyValidator {
   constructor(projectRoot, logger) {

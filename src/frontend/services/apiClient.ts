@@ -5,12 +5,6 @@
 
 // Import shared types
 import type {
-  RegisterData,
-  LogData,
-  CarouselResponse
-} from '@shared/types';
-
-import type {
   Product,
   Occasion,
   User,
@@ -18,6 +12,12 @@ import type {
   ApiResponse,
   ProductQuery
 } from '../../config/supabase.js';
+import type {
+  RegisterData,
+  LogData,
+  CarouselResponse
+} from "shared/types/index";
+
 
 // Note: Window interface extended in main.ts to avoid conflicts
 
@@ -48,14 +48,11 @@ export class FloresYaAPI {
 
       switch (level) {
         case 'error':
-          console.error(output, data);
-          break;
+                    break;
         case 'warn':
-          console.warn(output, data);
-          break;
+                    break;
         default:
-          console.warn(output, data);
-          break;
+                    break;
       }
     }
   }
@@ -499,8 +496,7 @@ export class FloresYaAPI {
   handleError(error: Error | string): void {
     const errorMessage = error instanceof Error ? error.message : error;
     this.log('❌ Handling error', { error: errorMessage }, 'error');
-    console.error('API Error:', error);
-    this.showNotification(errorMessage || 'Ha ocurrido un error', 'danger');
+        this.showNotification(errorMessage || 'Ha ocurrido un error', 'danger');
   }
 
   // Debounce utility for search

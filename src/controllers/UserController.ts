@@ -231,8 +231,7 @@ export class UserController {
       res.status(200).json(result);
 
     } catch (error) {
-      console.error('UserController.getAllUsers error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Internal server error',
         error: 'INTERNAL_ERROR'
@@ -309,8 +308,7 @@ export class UserController {
       res.status(200).json(result);
 
     } catch (error) {
-      console.error('UserController.getUserById error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Internal server error',
         error: 'INTERNAL_ERROR'
@@ -381,8 +379,7 @@ export class UserController {
       res.status(201).json(result);
 
     } catch (error) {
-      console.error('UserController.createUser error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Internal server error',
         error: 'INTERNAL_ERROR'
@@ -472,8 +469,7 @@ export class UserController {
       res.status(200).json(result);
 
     } catch (error) {
-      console.error('UserController.updateUser error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Internal server error',
         error: 'INTERNAL_ERROR'
@@ -550,8 +546,7 @@ export class UserController {
       res.status(200).json(result);
 
     } catch (error) {
-      console.error('UserController.toggleUserActive error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Internal server error',
         error: 'INTERNAL_ERROR'
@@ -684,8 +679,7 @@ export class UserController {
       }
 
     } catch (error) {
-      console.error('UserController.deleteUser error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Internal server error',
         error: 'INTERNAL_ERROR'
@@ -697,49 +691,44 @@ export class UserController {
    * Check if user has references in related tables
    */
   private async checkUserReferences(userId: number): Promise<boolean> {
+    // Use TypeSafe database service client for direct table access
+    const client = typeSafeDatabaseService.getClient();
+
+    // Check orders table
     try {
-      // Use TypeSafe database service client for direct table access
-      const client = typeSafeDatabaseService.getClient();
+      const { data: orders, error: ordersError } = await client
+        .from('orders')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(1);
 
-      // Check orders table
-      try {
-        const { data: orders, error: ordersError } = await client
-          .from('orders')
-          .select('id')
-          .eq('user_id', userId)
-          .limit(1);
-
-        if (ordersError) {
-          console.warn('Error checking user orders:', ordersError.message);
-        } else if (orders && orders.length > 0) {
-          return true;
-        }
-      } catch (orderError) {
-        console.warn('Could not check user orders:', orderError);
+      if (ordersError) {
+        return false;
+      } else if (orders && orders.length > 0) {
+        return true;
       }
-
-      // Check payments table
-      try {
-        const { data: payments, error: paymentsError } = await client
-          .from('payments')
-          .select('id')
-          .eq('user_id', userId)
-          .limit(1);
-
-        if (paymentsError) {
-          console.warn('Error checking user payments:', paymentsError.message);
-        } else if (payments && payments.length > 0) {
-          return true;
-        }
-      } catch (paymentError) {
-        console.warn('Could not check user payments:', paymentError);
-      }
-
+    } catch (orderError) {
       return false;
-    } catch (error) {
-      console.error('Error checking user references:', error);
-      throw error;
     }
+
+    // Check payments table
+    try {
+      const { data: payments, error: paymentsError } = await client
+        .from('payments')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(1);
+
+      if (paymentsError) {
+        return false;
+      } else if (payments && payments.length > 0) {
+        return true;
+      }
+    } catch (paymentError) {
+      return false;
+    }
+
+    return false;
   }
 }
 

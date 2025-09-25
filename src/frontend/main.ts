@@ -17,7 +17,7 @@ import type {
   ProductResponse,
   ProductWithImages,
   ProductWithOccasion
-} from '@shared/types';
+} from "shared/types/index";
 
 // Window interface extensions are now centralized in src/types/globals.ts.js
 
@@ -80,14 +80,11 @@ export class FloresYaApp {
 
       switch (level) {
         case 'error':
-          console.error(output, data);
-          break;
+                    break;
         case 'warn':
-          console.warn(output, data);
-          break;
+                    break;
         default:
-          console.warn(output, data);
-          break;
+                    break;
       }
     }
   }
@@ -215,85 +212,82 @@ export class FloresYaApp {
 
   private async loadCarousel(): Promise<void> {
     this.log('🔄 Cargando carrusel', {}, 'info');
-
     try {
-      // First try to load from API
       if (window.api) {
         const response = await window.api.getCarousel() as ApiResponse<CarouselResponse>;
 
+        // Log detallado de la respuesta completa
+        this.log('🔍 Respuesta completa del carousel API', {
+          success: response.success,
+          hasData: !!response.data,
+          dataKeys: response.data ? Object.keys(response.data) : [],
+          rawResponse: response
+        }, 'info');
+
         if (response.success && response.data) {
-          // Check if carousel_products exists and is an array, fallback to products for compatibility
-          const carouselProducts = response.data.carousel_products || response.data.products || [];
+          const carouselProducts = response.data.products || [];
+
+          // Log detallado de los productos
+          this.log('🔍 Productos del carousel recibidos', {
+            hasProducts: !!carouselProducts,
+            isArray: Array.isArray(carouselProducts),
+            count: carouselProducts.length,
+            firstProduct: carouselProducts[0] || null,
+            allProductIds: carouselProducts.map((p: any) => p.id)
+          }, 'info');
 
           if (Array.isArray(carouselProducts) && carouselProducts.length > 0) {
+            this.log('🎯 INICIANDO renderCarousel con productos', {
+              productCount: carouselProducts.length,
+              products: carouselProducts
+            }, 'success');
+
             this.renderCarousel(carouselProducts);
+
             this.log('✅ Carrusel cargado desde API', {
               count: carouselProducts.length
             }, 'success');
             return;
+          } else {
+            this.log('⚠️ Array de productos vacío o inválido', {
+              carouselProducts,
+              type: typeof carouselProducts
+            }, 'warn');
           }
+        } else {
+          this.log('❌ Respuesta API inválida', {
+            success: response.success,
+            data: response.data,
+            message: response.message
+          }, 'error');
         }
+      } else {
+        this.log('❌ window.api no disponible', {}, 'error');
       }
 
-      // If API fails or returns no data, try to use regular products
-      this.log('🔄 API del carrusel no disponible, usando productos regulares', {}, 'info');
+      // If API fails or returns no data, try to use regular products as fallback to show exactly 5
+      this.log('🔄 API del carrusel no disponible, usando productos regulares como fallback para mostrar 5 productos', {}, 'info');
       if (this.products.length > 0) {
-        // Use first 3 products as carousel items
-        const carouselProducts = this.products.slice(0, 3).map((product, index) => ({
+        // Use first 5 products as carousel items (or all if less than 5)
+        const carouselProducts = this.products.slice(0, 5).map((product, index) => ({
           ...product,
-          primary_thumb_url: product.primary_image_url || '/images/placeholder-product.webp',
+          primary_thumb_url: product.primary_image_url || product.images?.[0]?.url || '/images/placeholder-product.webp',
           carousel_order: index + 1
         }));
 
         this.renderCarousel(carouselProducts);
-        this.log('✅ Carrusel cargado con productos regulares', {
+        this.log('✅ Carrusel cargado con productos regulares como fallback', {
           count: carouselProducts.length
         }, 'success');
       } else {
-        // Create mock data for testing
-        this.log('🔄 No hay productos, creando carrusel de prueba', {}, 'info');
-        const mockProducts = [
-          {
-            id: 1,
-            name: 'Rosas Rojas Clásicas',
-            summary: 'Hermosas rosas rojas perfectas para expresar amor y pasión',
-            price_usd: 25.99,
-            primary_thumb_url: '/images/placeholder-product.webp',
-            stock: 10,
-            carousel_order: 1
-          },
-          {
-            id: 2,
-            name: 'Bouquet Primaveral',
-            summary: 'Colorido arreglo floral con las flores más frescas de la temporada',
-            price_usd: 32.50,
-            primary_thumb_url: '/images/placeholder-product.webp',
-            stock: 5,
-            carousel_order: 2
-          },
-          {
-            id: 3,
-            name: 'Orquídeas Elegantes',
-            summary: 'Sofisticadas orquídeas blancas para ocasiones especiales',
-            price_usd: 45.00,
-            primary_thumb_url: '/images/placeholder-product.webp',
-            stock: 3,
-            carousel_order: 3
-          }
-        ];
-
-        this.renderCarousel(mockProducts);
-        this.log('✅ Carrusel de prueba cargado', {
-          count: mockProducts.length
-        }, 'success');
+        // If no products at all are available, hide the carousel
+        this.hideCarousel();
+        this.log('ℹ️ No hay productos disponibles para el carrusel, ocultado', {}, 'info');
       }
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      this.log('❌ Error cargando carrusel', {
-        error: errorMessage
-      }, 'error');
-      this.showCarouselFallback();
+      this.log('❌ Error cargando carrusel', { error: errorMessage }, 'error');
+      this.hideCarousel();
     }
   }
 
@@ -324,8 +318,12 @@ export class FloresYaApp {
       ? imageToUse.url
       : (typeof imageToUse === 'string' ? imageToUse : '/images/placeholder-product.webp');
 
-    // Medium images for hover gallery effect
-    const mediumImages = (product as ProductWithImages & {medium_images?: string[]}).medium_images ?? [];
+    // Medium images for hover gallery effect - use the images array
+    const productImages = product.images ?? [];
+    const mediumImages = productImages
+      .filter(img => img && img.url)
+      .map(img => img.url)
+      .slice(0, 5); // Limit to 5 images for performance
     const mediumImagesJson = JSON.stringify(mediumImages);
 
     // Price formatting with proper currency display
@@ -1134,16 +1132,31 @@ export class FloresYaApp {
     }, 'info');
   }
 private renderCarousel(products: CarouselProduct[]): void {
+  this.log('🎨 EJECUTANDO renderCarousel', {
+    productCount: products.length,
+    firstProductId: products[0]?.id,
+    firstProductName: products[0]?.name
+  }, 'info');
+
   const indicators = document.getElementById('carouselIndicators');
   const slides = document.getElementById('carouselSlides');
 
+  this.log('🔍 Verificando contenedores DOM', {
+    hasIndicators: !!indicators,
+    hasSlides: !!slides
+  }, 'info');
+
   if (!indicators || !slides) {
-    this.log('⚠️ Contenedores del carrusel no encontrados', {}, 'warn');
+    this.log('⚠️ Contenedores del carrusel no encontrados', {
+      indicatorsElement: indicators,
+      slidesElement: slides
+    }, 'warn');
     return;
   }
 
   if (products.length === 0) {
-    this.showCarouselFallback();
+    this.log('⚠️ Array de productos vacío en renderCarousel', {}, 'warn');
+    this.hideCarousel();
     return;
   }
 
@@ -1230,6 +1243,13 @@ private renderCarousel(products: CarouselProduct[]): void {
       slideElement.classList.add('hidden');
     }
   });
+
+  // Make sure carousel container is visible after rendering
+  const container = document.getElementById('featuredCarousel');
+  if (container) {
+    container.style.display = 'block';
+    this.log('✅ Carousel container made visible', {}, 'success');
+  }
 
   this.log('✅ Carrusel configurado', {
     productCount: products.length,
@@ -1438,29 +1458,12 @@ private snapToNearest(pos: number): void {
   track.style.transform = `translateX(${-snapped}px)`;
 }
 */
-  private showCarouselFallback(): void {
+  private hideCarousel(): void {
     const container = document.getElementById('featuredCarousel');
-    if (!container) {return;}
-
-    const fallbackHtml = `
-      <div class="carousel-fallback" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; text-align: center; padding: 40px;">
-        <i data-lucide="flower" class="h-16 w-16 text-primary-600 mb-4"></i>
-        <h4 class="text-2xl font-bold text-gray-800 mb-3">Creaciones Destacadas</h4>
-        <p class="text-gray-600 mb-6 max-w-md">Descubre nuestros arreglos florales más populares y especiales</p>
-        <button class="bg-primary-600 hover:bg-primary-700 text-white py-3 px-6 rounded-lg transition-colors font-medium flex items-center" onclick="document.getElementById('productos').scrollIntoView({behavior: 'smooth'});">
-          <i data-lucide="arrow-down" class="h-4 w-4 mr-2"></i>Ver Productos
-        </button>
-      </div>
-    `;
-
-    container.innerHTML = fallbackHtml;
-
-    // Initialize Lucide icons for the fallback
-    if (typeof (window as any).lucide !== 'undefined') {
-      (window as any).lucide.createIcons();
+    if (container) {
+      container.style.display = 'none';
+      this.log('ℹ️ Carousel ocultado (sin productos)', {}, 'info');
     }
-
-    this.log('⚠️ Mostrando fallback del carrusel', {}, 'warn');
   }
 
   // Public methods for external access

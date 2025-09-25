@@ -3,7 +3,7 @@
  * Handles product detail page functionality including navigation, cart operations, and UI management
  */
 
-import type { ProductWithImagesAndOccasions, Product, CartItem } from '@shared/types';
+import type { ProductWithImagesAndOccasions, Product, CartItem, ProductImage } from "shared/types/index";
 
 import { FloresYaAPI } from './services/apiClient.js';
 
@@ -31,21 +31,15 @@ class ProductDetailManager {
 
   async init(): Promise<void> {
     try {
-      console.log('🔄 Initializing product detail page...');
-
-      // Get product ID from URL
+            // Get product ID from URL
       let productId = this.getProductIdFromURL();
 
       if (!productId) {
-        console.log('⚠️ No product ID in URL, using default product for testing');
-        // For testing purposes, use product ID 1 if no ID is provided
+                // For testing purposes, use product ID 1 if no ID is provided
         productId = 1;
-        console.log(`🔄 Using default product ID: ${productId}`);
-      }
+              }
 
-      console.log(`🔄 Loading product with ID: ${productId}`);
-
-      // Load all products to enable navigation
+            // Load all products to enable navigation
       await this.loadAllProducts();
 
       // Load specific product
@@ -59,10 +53,8 @@ class ProductDetailManager {
       this.initializeFloatingHub();
       this.setupDetailToggles();
 
-      console.log('✅ Product Detail initialized successfully');
-    } catch (error) {
-      console.error('❌ Error initializing product detail:', error);
-      this.showError('Error al cargar el producto. Verifique la conexión y vuelva a intentar.');
+          } catch (error) {
+            this.showError('Error al cargar el producto. Verifique la conexión y vuelva a intentar.');
     }
   }
 
@@ -72,8 +64,7 @@ class ProductDetailManager {
     const productId = idParam ? parseInt(idParam, 10) : null;
 
     if (!productId || isNaN(productId)) {
-      console.error('Invalid product ID in URL:', idParam);
-      return null;
+            return null;
     }
 
     return productId;
@@ -94,7 +85,13 @@ class ProductDetailManager {
             const productWithImages = p as Product & { images?: Array<{ id: number; url: string; alt_text?: string; display_order?: number; }> };
             return {
               ...p,
-              images: productWithImages.images ?? [],
+              images: (productWithImages.images ?? []).map((img: { id: number; url: string; alt_text?: string; display_order?: number; }) => ({
+                ...img,
+                product_id: p.id,
+                size: 'medium' as const,
+                is_primary: img.display_order === 1,
+                created_at: new Date().toISOString()
+              })),
               price: p.price_usd,
               occasion: undefined // Will be populated if needed
             } as ProductWithImagesAndOccasion;
@@ -119,8 +116,7 @@ class ProductDetailManager {
 
       // All products loaded via pagination
     } catch (error) {
-      console.error('Error loading all products:', error);
-    }
+          }
   }
 
   private sortProductsByOccasionAndName(products: ProductWithImagesAndOccasion[]): ProductWithImagesAndOccasion[] {
@@ -161,9 +157,7 @@ class ProductDetailManager {
 
   private async loadProduct(productId: number): Promise<void> {
     try {
-      console.log(`🔄 Attempting to load product ${productId} from API...`);
-
-      if (this.api && typeof this.api.getProductById === 'function') {
+            if (this.api && typeof this.api.getProductById === 'function') {
         const response = await this.api.getProductById(productId);
 
         if (response.success && response.data) {
@@ -175,7 +169,13 @@ class ProductDetailManager {
 
           this.product = {
             ...productData,
-            images: productData.images ?? [],
+            images: (productData.images ?? []).map((img: { id: number; url: string; alt_text?: string; display_order?: number; }) => ({
+              ...img,
+              product_id: productData.id,
+              size: 'medium' as const,
+              is_primary: img.display_order === 1,
+              created_at: new Date().toISOString()
+            })),
             price: productData.price_usd,
             occasion: undefined // Will be populated if needed
           };
@@ -186,26 +186,20 @@ class ProductDetailManager {
             this.currentProductIndex = 0;
           }
 
-          console.log(`✅ Product ${productId} loaded from API successfully`);
-          return;
+                    return;
         }
       }
 
       // If API fails or returns no data, use mock product data
-      console.log(`⚠️ API not available for product ${productId}, using mock data`);
-      this.loadMockProduct(productId);
+            this.loadMockProduct(productId);
 
     } catch (error) {
-      console.error(`❌ Error loading product ${productId} from API:`, error);
-      console.log('🔄 Falling back to mock data...');
-      this.loadMockProduct(productId);
+                  this.loadMockProduct(productId);
     }
   }
 
   private loadMockProduct(productId: number): void {
-    console.log(`🔄 Loading mock product data for ID: ${productId}`);
-
-    // Create mock product data for testing
+        // Create mock product data for testing
     this.product = {
       id: productId,
       name: `Hermoso Arreglo Floral #${productId}`,
@@ -219,37 +213,43 @@ class ProductDetailManager {
       price: 29.99 + (productId * 5),
       stock: 10,
       active: true,
+      is_featured: productId <= 3,
       images: [
         {
           id: 1,
+          product_id: productId,
           url: '/images/placeholder-product.webp',
           alt_text: `Imagen principal del arreglo floral #${productId}`,
-          display_order: 1
+          size: 'medium' as const,
+          is_primary: true,
+          display_order: 1,
+          created_at: new Date().toISOString()
         },
         {
           id: 2,
+          product_id: productId,
           url: '/images/placeholder-product-2.webp',
           alt_text: `Vista lateral del arreglo floral #${productId}`,
-          display_order: 2
+          size: 'medium' as const,
+          is_primary: false,
+          display_order: 2,
+          created_at: new Date().toISOString()
         }
       ],
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       primary_image_url: '/images/placeholder-product.webp',
       primary_thumb_url: '/images/placeholder-product.webp',
-      slug: `arreglo-floral-${productId}`,
       featured: productId <= 3,
       carousel_order: productId <= 3 ? productId : null
     };
 
     this.currentProductIndex = 0;
-    console.log(`✅ Mock product ${productId} loaded successfully`);
-  }
+      }
 
   private setupUI(): void {
     if (!this.product) {
-      console.error('setupUI: No product data available');
-      return;
+            return;
     }
 
     try {
@@ -268,8 +268,7 @@ class ProductDetailManager {
       this.showProductContent();
 
     } catch (error) {
-      console.error('Error during UI setup:', error);
-    }
+          }
   }
 
   private updateBreadcrumb(): void {
@@ -350,7 +349,7 @@ class ProductDetailManager {
     // Update thumbnails
     if (thumbnailContainer) {
       if (hasImages && images.length > 1) {
-        thumbnailContainer.innerHTML = images.map((image, index) => `
+        thumbnailContainer.innerHTML = images.map((image: ProductImage, index: number) => `
           <div class="thumbnail-wrapper ${index === 0 ? 'active' : ''}" data-index="${index}">
             <img src="${image.url}" alt="${image.alt_text ?? (this.product ? this.product.name : 'Product image')}"
                  class="img-fluid rounded cursor-pointer thumbnail-image"
@@ -568,13 +567,7 @@ class ProductDetailManager {
     this.showCartPanel();
     this.showAddToCartMessage();
 
-    console.log('🛒 Product added to cart', {
-      productId: this.product.id,
-      quantity,
-      cartSize: this.cart.length
-    });
-
-    return true;
+        return true;
   }
 
   private buyNow(): void {
@@ -627,8 +620,7 @@ class ProductDetailManager {
       try {
         this.cart = JSON.parse(savedCart);
       } catch (error) {
-        console.error('Error loading cart from session:', error);
-        this.cart = [];
+                this.cart = [];
       }
     }
   }
@@ -1158,8 +1150,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.productDetail = new ProductDetailManager() as any;
     await window.productDetail.init();
   } catch (error) {
-    console.error('Failed to initialize product detail:', error);
-  }
+      }
   })();
 });
 

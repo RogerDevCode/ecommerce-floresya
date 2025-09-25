@@ -3,7 +3,7 @@
  * Handles dashboard data loading, metrics, alerts, and activity feed
  */
 
-import type { DashboardMetrics, AlertData, ActivityData, AdminPanelLogger } from './types';
+import type { DashboardMetrics, AlertData, ActivityData, AdminPanelLogger } from './types.js';
 
 export class AdminDashboard {
   private logger: AdminPanelLogger;

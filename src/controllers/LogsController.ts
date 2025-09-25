@@ -3,9 +3,10 @@
  * Handles frontend log submissions for debugging and monitoring
  */
 
-import type { LogEntry } from '@shared/types';
 import { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
+
+import type { LogEntry } from '../shared/types/index.js';
 
 // Import consolidated logging types
 
@@ -102,10 +103,7 @@ export class LogsController {
         );
 
         if (errorsAndWarnings.length > 0) {
-            console.warn(`⚠️ Issues detected: ${errorsAndWarnings.length} errors/warnings`);
-            errorsAndWarnings.forEach((log) => {
-              console.warn(`[${log.level}] ${log.module}: ${log.message}`, log.data ?? {});
-            });
+            // Log errors and warnings were removed as requested
         }
       }
 
@@ -119,8 +117,7 @@ export class LogsController {
       });
 
     } catch (error) {
-      console.error('LogsController.receiveFrontendLogs error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to process frontend logs',
         error: error instanceof Error ? error.message : 'Unknown error'

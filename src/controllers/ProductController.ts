@@ -60,8 +60,7 @@ export class ProductController {
         message: 'Carousel products retrieved successfully'
       });
     } catch (error) {
-      console.error('ProductController.getCarousel error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to fetch carousel products',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -210,8 +209,7 @@ export class ProductController {
         message: 'Products retrieved successfully'
       });
     } catch (error) {
-      console.error('ProductController.getProducts error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to fetch products',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -273,8 +271,7 @@ export class ProductController {
         message: 'Featured products retrieved successfully'
       });
     } catch (error) {
-      console.error('ProductController.getFeatured error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to fetch featured products',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -352,8 +349,7 @@ export class ProductController {
         message: 'Product retrieved successfully'
       });
     } catch (error) {
-      console.error('ProductController.getProductById error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to fetch product',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -394,8 +390,7 @@ export class ProductController {
         message: 'Product with occasions retrieved successfully'
       });
     } catch (error) {
-      console.error('ProductController.getProductByIdWithOccasions error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to fetch product with occasions',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -487,8 +482,7 @@ export class ProductController {
         message: 'Search completed successfully'
       });
     } catch (error) {
-      console.error('ProductController.searchProducts error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Search failed',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -618,8 +612,7 @@ export class ProductController {
         message: 'Product created successfully'
       });
     } catch (error) {
-      console.error('ProductController.createProduct error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to create product',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -762,8 +755,7 @@ export class ProductController {
         message: 'Product updated successfully'
       });
     } catch (error) {
-      console.error('ProductController.updateProduct error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to update product',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -806,8 +798,7 @@ export class ProductController {
         message: 'Carousel order updated successfully'
       });
     } catch (error) {
-      console.error('ProductController.updateCarouselOrder error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to update carousel order',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -919,8 +910,7 @@ export class ProductController {
         res.status(204).send();
       }
     } catch (error) {
-      console.error('ProductController.deleteProduct error:', error);
-      res.status(500).json({
+            res.status(500).json({
         success: false,
         message: 'Failed to delete product',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -932,43 +922,39 @@ export class ProductController {
    * Check if product has references in related tables
    */
   private async checkProductReferences(productId: number): Promise<boolean> {
-    try {
-      // Check product_images table using TypeSafe service
-      const images = await typeSafeDatabaseService.getProductImages(productId);
-      if (images && images.length > 0) {
-        return true;
-      }
-
-      // Check product_occasions table using TypeSafe service
-      const occasionRefs = await typeSafeDatabaseService.getProductOccasionReferences(productId);
-      if (occasionRefs && occasionRefs.length > 0) {
-        return true;
-      }
-
-      // Check order_items table using direct client access
-      try {
-        const client = typeSafeDatabaseService.getClient();
-        const { data: orderItems, error: orderItemsError } = await client
-          .from('order_items')
-          .select('id')
-          .eq('product_id', productId)
-          .limit(1);
-
-        if (orderItemsError) {
-          // If order_items table doesn't exist yet, continue
-          console.warn('Order items table may not exist yet:', orderItemsError.message);
-        } else if (orderItems && orderItems.length > 0) {
-          return true;
-        }
-      } catch (orderError) {
-        console.warn('Could not check order items:', orderError);
-      }
-
-      return false;
-    } catch (error) {
-      console.error('Error checking product references:', error);
-      throw error;
+    // Check product_images table using TypeSafe service
+    const images = await typeSafeDatabaseService.getProductImages(productId);
+    if (images && images.length > 0) {
+      return true;
     }
+
+    // Check product_occasions table using TypeSafe service
+    const occasionRefs = await typeSafeDatabaseService.getProductOccasionReferences(productId);
+    if (occasionRefs && occasionRefs.length > 0) {
+      return true;
+    }
+
+    // Check order_items table using direct client access
+    try {
+      const client = typeSafeDatabaseService.getClient();
+      const { data: orderItems, error: orderItemsError } = await client
+        .from('order_items')
+        .select('id')
+        .eq('product_id', productId)
+        .limit(1);
+
+      if (orderItemsError) {
+        // If order_items table doesn't exist yet, continue
+        return false;
+      } else if (orderItems && orderItems.length > 0) {
+        return true;
+      }
+    } catch (orderError) {
+      // If there's an error accessing order_items, continue
+      return false;
+    }
+
+    return false;
   }
 }
 

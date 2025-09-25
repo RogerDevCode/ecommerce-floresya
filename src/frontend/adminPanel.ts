@@ -4,16 +4,16 @@
  * Refactored into modular components for better maintainability
  */
 
-import { AdminDashboard } from './admin/dashboard';
-import { AdminImages } from './admin/images';
-import { AdminOrders } from './admin/orders';
-import { AdminProducts } from './admin/products';
+import { AdminDashboard } from './admin/dashboard.js';
+import { AdminImages } from './admin/images.js';
+import { AdminOrders } from './admin/orders.js';
+import { AdminProducts } from './admin/products.js';
 import type {
   AdminUser,
   AdminPanelLogger
-} from './admin/types';
-import { AdminUsers } from './admin/users';
-import { FloresYaAPI } from './services/apiClient';
+} from './admin/types.js';
+import { AdminUsers } from './admin/users.js';
+import { FloresYaAPI } from './services/apiClient.js';
 
 class AdminPanel implements AdminPanelLogger {
   private api: FloresYaAPI;
@@ -82,9 +82,7 @@ class AdminPanel implements AdminPanelLogger {
     const timestamp = new Date().toISOString();
     const prefix = level === 'error' ? '❌' : level === 'success' ? '✅' : level === 'warn' ? '⚠️' : 'ℹ️';
 
-    console.warn(`[${timestamp}] ${prefix} ${message}`);
-
-    // Could also send to logging service here
+        // Could also send to logging service here
   }
 
   /**
@@ -426,8 +424,7 @@ if (!document.querySelector('[data-dynamic-admin-init]')) {
     const adminPanel = new AdminPanel();
     window.adminPanel = adminPanel;
     adminPanel.init().catch(error => {
-      console.error('❌ Critical: AdminPanel initialization failed:', error);
-      alert('Error crítico: No se pudo cargar el panel de administración. Por favor, recargue la página.');
+            alert('Error crítico: No se pudo cargar el panel de administración. Por favor, recargue la página.');
     });
   });
 }

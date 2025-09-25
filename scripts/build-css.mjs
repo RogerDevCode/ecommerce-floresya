@@ -8,9 +8,10 @@
 import { readFile, writeFile, mkdir } from 'fs/promises'
 import { dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
-import postcss from 'postcss'
+
 import tailwindcss from '@tailwindcss/postcss'
 import autoprefixer from 'autoprefixer'
+import postcss from 'postcss'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)

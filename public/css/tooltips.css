@@ -1,0 +1,271 @@
+/**
+ * 🌸 FloresYa Advanced Tooltip System
+ * Modern, accessible tooltips with smooth animations and positioning
+ */
+
+/* Base tooltip styles */
+.tooltip-trigger {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip-trigger[data-tooltip]:hover::after,
+.tooltip-trigger[data-tooltip]:focus::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  z-index: 9999;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  max-width: 250px;
+  white-space: normal;
+  word-wrap: break-word;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  animation: tooltip-fadeIn 0.2s ease-out forwards;
+  pointer-events: none;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.tooltip-trigger[data-tooltip]:hover::before,
+.tooltip-trigger[data-tooltip]:focus::before {
+  content: "";
+  position: absolute;
+  z-index: 9999;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  opacity: 0;
+  animation: tooltip-fadeIn 0.2s ease-out forwards;
+}
+
+/* Tooltip positioning variants */
+
+/* Top tooltip (default) */
+.tooltip-trigger[data-tooltip]:hover::after,
+.tooltip-trigger[data-tooltip]:focus::after,
+.tooltip-trigger[data-tooltip-top]:hover::after,
+.tooltip-trigger[data-tooltip-top]:focus::after {
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.tooltip-trigger[data-tooltip]:hover::before,
+.tooltip-trigger[data-tooltip]:focus::before,
+.tooltip-trigger[data-tooltip-top]:hover::before,
+.tooltip-trigger[data-tooltip-top]:focus::before {
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px 6px 0 6px;
+  border-color: rgba(0, 0, 0, 0.9) transparent transparent transparent;
+}
+
+/* Bottom tooltip */
+.tooltip-trigger[data-tooltip-bottom]:hover::after,
+.tooltip-trigger[data-tooltip-bottom]:focus::after {
+  content: attr(data-tooltip-bottom);
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.tooltip-trigger[data-tooltip-bottom]:hover::before,
+.tooltip-trigger[data-tooltip-bottom]:focus::before {
+  top: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 6px 6px 6px;
+  border-color: transparent transparent rgba(0, 0, 0, 0.9) transparent;
+}
+
+/* Left tooltip */
+.tooltip-trigger[data-tooltip-left]:hover::after,
+.tooltip-trigger[data-tooltip-left]:focus::after {
+  content: attr(data-tooltip-left);
+  top: 50%;
+  right: calc(100% + 8px);
+  transform: translateY(-50%);
+}
+
+.tooltip-trigger[data-tooltip-left]:hover::before,
+.tooltip-trigger[data-tooltip-left]:focus::before {
+  top: 50%;
+  right: calc(100% + 2px);
+  transform: translateY(-50%);
+  border-width: 6px 0 6px 6px;
+  border-color: transparent transparent transparent rgba(0, 0, 0, 0.9);
+}
+
+/* Right tooltip */
+.tooltip-trigger[data-tooltip-right]:hover::after,
+.tooltip-trigger[data-tooltip-right]:focus::after {
+  content: attr(data-tooltip-right);
+  top: 50%;
+  left: calc(100% + 8px);
+  transform: translateY(-50%);
+}
+
+.tooltip-trigger[data-tooltip-right]:hover::before,
+.tooltip-trigger[data-tooltip-right]:focus::before {
+  top: 50%;
+  left: calc(100% + 2px);
+  transform: translateY(-50%);
+  border-width: 6px 6px 6px 0;
+  border-color: transparent rgba(0, 0, 0, 0.9) transparent transparent;
+}
+
+/* Tooltip color variations */
+.tooltip-trigger.tooltip-success[data-tooltip]:hover::after,
+.tooltip-trigger.tooltip-success[data-tooltip]:focus::after {
+  background-color: #10b981;
+}
+
+.tooltip-trigger.tooltip-success[data-tooltip]:hover::before,
+.tooltip-trigger.tooltip-success[data-tooltip]:focus::before {
+  border-top-color: #10b981;
+}
+
+.tooltip-trigger.tooltip-warning[data-tooltip]:hover::after,
+.tooltip-trigger.tooltip-warning[data-tooltip]:focus::after {
+  background-color: #f59e0b;
+}
+
+.tooltip-trigger.tooltip-warning[data-tooltip]:hover::before,
+.tooltip-trigger.tooltip-warning[data-tooltip]:focus::before {
+  border-top-color: #f59e0b;
+}
+
+.tooltip-trigger.tooltip-error[data-tooltip]:hover::after,
+.tooltip-trigger.tooltip-error[data-tooltip]:focus::after {
+  background-color: #ef4444;
+}
+
+.tooltip-trigger.tooltip-error[data-tooltip]:hover::before,
+.tooltip-trigger.tooltip-error[data-tooltip]:focus::before {
+  border-top-color: #ef4444;
+}
+
+.tooltip-trigger.tooltip-info[data-tooltip]:hover::after,
+.tooltip-trigger.tooltip-info[data-tooltip]:focus::after {
+  background-color: #3b82f6;
+}
+
+.tooltip-trigger.tooltip-info[data-tooltip]:hover::before,
+.tooltip-trigger.tooltip-info[data-tooltip]:focus::before {
+  border-top-color: #3b82f6;
+}
+
+.tooltip-trigger.tooltip-primary[data-tooltip]:hover::after,
+.tooltip-trigger.tooltip-primary[data-tooltip]:focus::after {
+  background-color: #db2777;
+}
+
+.tooltip-trigger.tooltip-primary[data-tooltip]:hover::before,
+.tooltip-trigger.tooltip-primary[data-tooltip]:focus::before {
+  border-top-color: #db2777;
+}
+
+/* Animation keyframes */
+@keyframes tooltip-fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes tooltip-fadeIn-bottom {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  .tooltip-trigger[data-tooltip]:hover::after,
+  .tooltip-trigger[data-tooltip]:focus::after {
+    max-width: 200px;
+    font-size: 0.8125rem;
+    padding: 6px 10px;
+  }
+
+  /* Hide tooltips on touch devices to prevent interference */
+  @media (hover: none) {
+    .tooltip-trigger[data-tooltip]:hover::after,
+    .tooltip-trigger[data-tooltip]:hover::before,
+    .tooltip-trigger[data-tooltip]:focus::after,
+    .tooltip-trigger[data-tooltip]:focus::before {
+      display: none;
+    }
+  }
+}
+
+/* Accessibility improvements */
+.tooltip-trigger:focus {
+  outline: 2px solid #db2777;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Special tooltip for disabled elements */
+.tooltip-trigger.disabled[data-tooltip]:hover::after,
+.tooltip-trigger.disabled[data-tooltip]:focus::after {
+  background-color: #6b7280;
+}
+
+.tooltip-trigger.disabled[data-tooltip]:hover::before,
+.tooltip-trigger.disabled[data-tooltip]:focus::before {
+  border-top-color: #6b7280;
+}
+
+/* Tooltip for buttons and interactive elements */
+button.tooltip-trigger,
+a.tooltip-trigger,
+input.tooltip-trigger,
+textarea.tooltip-trigger,
+select.tooltip-trigger {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Long tooltip content handling */
+.tooltip-trigger[data-tooltip-long]:hover::after,
+.tooltip-trigger[data-tooltip-long]:focus::after {
+  content: attr(data-tooltip-long);
+  max-width: 300px;
+  white-space: normal;
+  word-wrap: break-word;
+  text-align: left;
+  line-height: 1.5;
+}
+
+/* Tooltip with icons */
+.tooltip-trigger.has-icon[data-tooltip]:hover::after,
+.tooltip-trigger.has-icon[data-tooltip]:focus::after {
+  padding-left: 28px;
+  position: relative;
+}
+
+.tooltip-trigger.has-icon[data-tooltip]:hover::after::before,
+.tooltip-trigger.has-icon[data-tooltip]:focus::after::before {
+  content: "ℹ";
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: bold;
+}

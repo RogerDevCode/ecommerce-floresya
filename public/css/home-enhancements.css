@@ -97,6 +97,38 @@
   background: var(--floresya-cream);
 }
 
+/* === MISSING UTILITY CLASSES === */
+.btn-outline-primary {
+  background: transparent;
+  border: 2px solid var(--floresya-primary);
+  color: var(--floresya-primary);
+  padding: 10px 20px;
+  border-radius: var(--floresya-border-radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--floresya-transition-fast);
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+.btn-outline-primary:hover {
+  background: var(--floresya-primary);
+  color: var(--floresya-white);
+  transform: translateY(-1px);
+  box-shadow: var(--floresya-shadow);
+}
+
+.hover-lift {
+  transition: var(--floresya-transition);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--floresya-shadow-lg);
+}
+
 .product-btn-cart:hover {
   background: var(--floresya-gradient-garden);
   color: white;
@@ -233,7 +265,7 @@
 }
 
 .carousel-slide {
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   min-height: 400px;
@@ -256,6 +288,7 @@
 }
 
 .carousel-slide.active {
+  display: flex;
   opacity: 1;
   visibility: visible;
 }
@@ -278,6 +311,7 @@
 }
 
 .carousel-slide.hidden {
+  display: none !important;
   opacity: 0 !important;
   visibility: hidden !important;
 }

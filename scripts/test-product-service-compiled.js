@@ -1,8 +1,9 @@
 /**
  * Script to test ProductService using compiled JS files
  */
-import { ProductService } from '../dist/backend/services/ProductService.js';
 import dotenv from 'dotenv';
+
+import { ProductService } from '../dist/backend/services/ProductService.js';
 
 // Load environment variables
 dotenv.config();

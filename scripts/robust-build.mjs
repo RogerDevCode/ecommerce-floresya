@@ -8,8 +8,8 @@
  * ============================================
  */
 
-import { promises as fs } from 'fs';
 import { spawn } from 'child_process';
+import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -285,29 +285,22 @@ async function buildFrontend() {
     // Try to build frontend, but don't fail if it has errors
     await runCommand('npx', ['tsc', '-p', 'src/frontend/tsconfig.frontend.json']);
     log('SUCCESS', 'Frontend TypeScript build completed');
+
+    // Run post-build script to fix structure
+    log('BUILD', 'Running post-build frontend script...');
+    await runCommand('node', ['scripts/post-build-frontend.js']);
+    log('SUCCESS', 'Post-build frontend script completed');
   } catch (error) {
-    log('WARNING', `Frontend TypeScript build failed: ${error.message} - Continuing build process`);
+    log('WARNING', `Frontend build failed: ${error.message} - Continuing build process`);
     // Frontend compilation errors are not critical for deployment
   }
 }
 
 async function copyFrontendAssets() {
-  log('BUILD', 'Copying frontend assets...');
-  try {
-    await ensureDirectories();
-    // Copy frontend assets directly (no npm script available)
-    await runCommand('bash', ['-c', 'cp -r public/* dist/frontend/ 2>/dev/null || true']);
-    log('SUCCESS', 'Frontend assets copied');
-  } catch (error) {
-    log('WARNING', `Asset copy failed: ${error.message}`);
-    // Try alternative copy method
-    try {
-      await runCommand('bash', ['-c', 'cp -r public/* dist/frontend/ 2>/dev/null || true']);
-      log('SUCCESS', 'Frontend assets copied (fallback method)');
-    } catch (fallbackError) {
-      log('WARNING', `Fallback copy also failed: ${fallbackError.message}`);
-    }
-  }
+  // REMOVED: Unnecessary copying of public assets
+  // The server serves static files from public/ directory directly
+  // and compiled JS from dist/frontend/ separately
+  log('BUILD', 'Frontend assets copy skipped - served from public/ directly');
 }
 
 async function fixFrontendStructure() {
@@ -342,14 +335,22 @@ async function validateBuild() {
   ];
 
   const optionalFiles = [
-    'dist/frontend/css/styles.css',
     'dist/frontend/main.js',
-    'dist/frontend/authManager.js'
+    'dist/frontend/authManager.js',
+    'dist/frontend/utils/logger.js',
+    'dist/frontend/services/apiClient.js'
+  ];
+
+  // CSS files are served from public/ directory (not copied to dist/)
+  const publicAssets = [
+    'public/css/styles.css',
+    'public/css/home-enhancements.css',
+    'public/index.html'
   ];
 
   let criticalValid = true;
   let optionalValid = true;
-  let builtFiles = [];
+  const builtFiles = [];
 
   // Check critical files
   for (const file of criticalFiles) {
@@ -376,6 +377,18 @@ async function validateBuild() {
       optionalValid = true;
     } catch {
       log('WARNING', `✗ ${file} missing (optional)`);
+    }
+  }
+
+  // Validate public assets (CSS, HTML)
+  for (const asset of publicAssets) {
+    const fullPath = path.join(PROJECT_ROOT, asset);
+    try {
+      await fs.access(fullPath);
+      log('SUCCESS', `✓ ${asset} exists`);
+      builtFiles.push(asset);
+    } catch {
+      log('WARNING', `✗ ${asset} missing (public asset)`);
     }
   }
 
@@ -410,9 +423,8 @@ async function main() {
     // Step 4: Build Frontend (non-critical)
     await buildFrontend();
 
-    // Step 5: Copy assets and fix structure
+    // Step 5: Copy assets (now skipped - served from public/)
     await copyFrontendAssets();
-    await fixFrontendStructure();
 
     // Step 6: Validate critical files exist
     await validateBuild();

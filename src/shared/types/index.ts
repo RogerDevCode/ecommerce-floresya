@@ -582,10 +582,6 @@ export interface LogQueryResult {
   has_more: boolean;
 }
 
-export interface WindowWithFloresyaLogger extends Window {
-  floresyaLogger?: Logger;
-}
-
 // ============================================
 // ERROR HANDLING TYPES AND UTILITIES
 // ============================================
@@ -661,19 +657,9 @@ export interface CarouselManager {
 }
 
 // ============================================
-// WINDOW EXTENSIONS FOR FRONTEND
-// ============================================
-
-export interface WindowWithUsersAdmin extends Window {
-  usersAdmin?: {
-    goToPage(page: number): void;
-    loadUsers(): void;
-  };
-}
-
-// ============================================
 // ADMIN PANEL TYPES
 // ============================================
+// Note: Window-related types moved to /shared/types/frontend.ts for DOM context
 
 export interface AdminUser extends User {
   // Inherits all User properties but focuses on admin display

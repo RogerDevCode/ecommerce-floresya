@@ -4,8 +4,8 @@
  * Uses consolidated types from single source of truth
  */
 import { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '../shared/types/index';
-export type { OccasionType, OrderStatus, PaymentStatus, PaymentMethodType, UserRole, ImageSize, User, Product, ProductImage, Occasion, ProductOccasion, Order, OrderItem, OrderStatusHistory, PaymentMethod, Payment, Setting, ProductWithImages, ProductWithOccasions, ProductWithImagesAndOccasions, OrderWithItems, OrderWithItemsAndPayments, CarouselProduct, ProductQuery, ProductCreateRequest, ProductUpdateRequest, OccasionCreateRequest, OccasionUpdateRequest, OrderCreateRequest, OrderUpdateRequest, PaymentCreateRequest, UserCreateRequest, UserUpdateRequest, UserQuery, UserResponse, UserListResponse, ApiResponse, ValidationError, PaginationInfo, ProductResponse, CarouselResponse, OrderResponse, Database } from '../shared/types/index';
+import type { Database } from '../shared/types/index.js';
+export type { OccasionType, OrderStatus, PaymentStatus, PaymentMethodType, UserRole, ImageSize, User, Product, ProductImage, Occasion, ProductOccasion, Order, OrderItem, OrderStatusHistory, PaymentMethod, Payment, Setting, ProductWithImages, ProductWithOccasions, ProductWithImagesAndOccasions, OrderWithItems, OrderWithItemsAndPayments, CarouselProduct, ProductQuery, ProductCreateRequest, ProductUpdateRequest, OccasionCreateRequest, OccasionUpdateRequest, OrderCreateRequest, OrderUpdateRequest, PaymentCreateRequest, UserCreateRequest, UserUpdateRequest, UserQuery, UserResponse, UserListResponse, ApiResponse, ValidationError, PaginationInfo, ProductResponse, CarouselResponse, OrderResponse, Database } from '../shared/types/index.js';
 declare class SupabaseManager {
     private static instance;
     readonly client: SupabaseClient<Database>;
@@ -36,4 +36,4 @@ export declare function getSupabaseMetrics(): {
 };
 export declare function isValidOrderStatus(status: string): status is Database['public']['Tables']['orders']['Row']['status'];
 export declare function isValidUserRole(role: string): role is Database['public']['Tables']['users']['Row']['role'];
-export { Tables, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '../shared/constants/index';
+export { Tables, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '../shared/constants/index.js';

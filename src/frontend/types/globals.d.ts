@@ -9,7 +9,7 @@ import type {
   WindowWithCart,
   Logger,
   CartManager
-} from '@shared/types';
+} from "shared/types/index";
 
 // Extend the global Window interface
 declare global {

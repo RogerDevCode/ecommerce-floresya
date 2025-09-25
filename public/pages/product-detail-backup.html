@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del Producto - FloresYa</title>
+
+    <!-- BULLETPROOF CSS Loading - Silicon Valley Zero Debt -->
+    <link rel="stylesheet" href="/css/styles.css" media="all">
+    <link rel="stylesheet" href="/css/product-detail.css" media="all">
+
+    <!-- Critical inline styles to prevent FOUC -->
+    <style>
+        /* Critical above-the-fold styles */
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            background: #ffffff;
+            color: #1f2937;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+        .loading { display: flex; justify-content: center; align-items: center; min-height: 200px; }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: #ec4899; color: white; border: none; }
+        .btn-primary:hover { background: #db2777; }
+    </style>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@0.451.0/dist/umd/lucide.js"></script>
+
+    <!-- Preload critical resources -->
+    <link rel="modulepreload" href="/dist/frontend/utils/logger.js">
+    <link rel="modulepreload" href="/dist/frontend/services/apiClient.js">
+
+    <!-- SEO and Social -->
+    <meta name="description" content="Detalle del producto - FloresYa, tu floristería en línea de confianza">
+    <meta property="og:title" content="Producto - FloresYa">
+    <meta property="og:description" content="Hermosos arreglos florales para toda ocasión">
+    <meta property="og:type" content="product">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+
+</head>
+<body>
+    <!-- Floating Action Hub -->
+    <div class="floating-action-hub" id="floating-hub">
+        <div class="hub-main-button" id="hub-toggle">
+            <i data-lucide="plus" class="hub-icon"></i>
+        </div>
+        <div class="hub-actions" id="hub-actions">
+            <button class="hub-action-btn" id="hub-home" title="Ir a Inicio">
+                <i data-lucide="home"></i>
+            </button>
+            <button class="hub-action-btn" id="hub-back" title="Volver">
+                <i data-lucide="arrow-left"></i>
+            </button>
+            <button class="hub-action-btn" id="hub-cart" title="Ver Carrito">
+                <i data-lucide="shopping-cart"></i>
+                <span class="hub-badge" id="hub-cart-badge">0</span>
+            </button>
+            <button class="hub-action-btn" id="hub-login" title="Iniciar Sesión">
+                <i data-lucide="user"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Enhanced Navigation Bar -->
+    <div class="smart-nav-bar" id="smart-nav">
+        <div class="nav-section nav-left">
+            <button id="prev-product-btn" class="nav-arrow-btn" title="Producto anterior">
+                <i data-lucide="chevron-left"></i>
+            </button>
+            <div class="product-counter-modern">
+                <i data-lucide="package" class="me-2"></i>
+                <span id="product-counter">1 de 1</span>
+            </div>
+        </div>
+
+        <div class="nav-section nav-center">
+            <div class="smart-breadcrumb" id="smart-breadcrumb">
+                <a href="/" class="breadcrumb-link">
+                    <i data-lucide="home"></i>
+                </a>
+                <i data-lucide="chevron-right" class="breadcrumb-separator"></i>
+                <a href="/#productos" class="breadcrumb-link" id="return-link">Productos</a>
+                <i data-lucide="chevron-right" class="breadcrumb-separator"></i>
+                <span class="breadcrumb-current" id="current-product">Producto</span>
+            </div>
+        </div>
+
+        <div class="nav-section nav-right">
+            <button id="next-product-btn" class="nav-arrow-btn" title="Siguiente producto">
+                <i data-lucide="chevron-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Cart Overlay -->
+    <div class="cart-overlay" id="cart-overlay" onclick="productDetail.hideCartPanel()"></div>
+
+    <!-- Cart Panel -->
+    <div class="cart-panel" id="cart-panel">
+        <div class="p-3 border-bottom">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i data-lucide="shopping-cart" class="me-2"></i>
+                    Carrito (<span id="cart-count">0</span>)
+                </h5>
+                <button class="btn btn-sm btn-outline-secondary" onclick="productDetail.hideCartPanel()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+        </div>
+        <div class="p-3" id="cart-items">
+            <p class="text-muted text-center">Tu carrito está vacío</p>
+        </div>
+        <div class="border-top p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <strong>Total: <span id="cart-total">$0.00</span></strong>
+            </div>
+            <div class="d-grid gap-2">
+                <a href="/pages/payment.html" class="btn btn-success">
+                    <i data-lucide="credit-card" class="me-2"></i>
+                    Proceder al Pago
+                </a>
+                <button class="btn btn-outline-secondary" onclick="productDetail.hideCartPanel()">
+                    Seguir Comprando
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="d-flex justify-content-center align-items-center">
+        <div class="text-center">
+            <div class="spinner-border text-success mb-3 loading-spinner-large" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="text-muted">Cargando producto...</p>
+        </div>
+    </div>
+
+    <!-- Main Product Content -->
+    <div id="product-content">
+        <!-- Quick Actions Bar -->
+        <div class="quick-actions-bar">
+            <div class="container-fluid">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="quick-nav-left">
+                        <button id="back-btn" class="quick-btn quick-btn-ghost">
+                            <i data-lucide="arrow-left"></i>
+                            <span>Volver</span>
+                        </button>
+                    </div>
+
+                    <div class="quick-nav-center">
+                        <div class="product-title-preview" id="product-title-preview">
+                            <span class="loading-text">Cargando...</span>
+                        </div>
+                    </div>
+
+                    <div class="quick-nav-right">
+                        <button id="login-btn" class="quick-btn quick-btn-ghost me-2">
+                            <i data-lucide="user"></i>
+                            <span>Cuenta</span>
+                        </button>
+                        <button id="cart-toggle" class="quick-btn quick-btn-primary position-relative">
+                            <i data-lucide="shopping-cart"></i>
+                            <span>Carrito</span>
+                            <span id="cart-badge" class="cart-badge-modern cart-badge-hidden">0</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Detail Section -->
+        <div class="container my-5 product-detail-container">
+            <div class="row">
+                <!-- Product Images Column (Left) -->
+                <div class="col-lg-6 mb-4">
+                    <div class="product-images-container">
+                        <!-- Main Image -->
+                        <div class="text-center mb-3">
+                            <img id="main-image"
+                                 src="/images/placeholder-product-2.webp"
+                                 alt="Producto"
+                                 class="img-fluid main-product-image"
+                                 class="main-product-image">
+
+                            <!-- Image Counter Overlay -->
+                            <div class="position-absolute bottom-0 start-0 m-3">
+                                <span class="badge bg-dark bg-opacity-75 text-white">
+                                    <i data-lucide="images" class="me-1"></i>
+                                    <span id="current-image">1</span> / <span id="total-images">1</span>
+                                </span>
+                            </div>
+
+                            <!-- Zoom Indicator -->
+                            <div class="position-absolute top-0 end-0 m-3">
+                                <span class="badge bg-dark bg-opacity-75 text-white">
+                                    <i data-lucide="zoom-in" class="me-1"></i>Click para ampliar
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Image Thumbnails -->
+                        <div id="image-thumbnails" class="d-flex gap-2 justify-content-center flex-wrap">
+                            <!-- Thumbnails will be populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Information Column (Right) -->
+                <div class="col-lg-6">
+                    <div class="product-info-section">
+                        <!-- Product Title -->
+                        <h1 id="product-name" class="display-6 fw-bold text-dark mb-3">
+                            Cargando producto...
+                        </h1>
+
+                        <!-- Occasion Badge -->
+                        <div class="mb-3">
+                            <span class="badge-occasion" id="product-occasion-badge">
+                                <i data-lucide="heart" class="me-1"></i>
+                                <span id="product-occasion">Ocasión especial</span>
+                            </span>
+                        </div>
+
+                        <!-- Price Section -->
+                        <div class="price-section">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="text-muted me-2">Precio:</span>
+                                <h2 id="product-price" class="text-success fw-bold mb-0">$0.00</h2>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i data-lucide="check-circle" class="text-success me-2"></i>
+                                <span class="text-muted">Disponible para entrega</span>
+                            </div>
+                            <div class="d-flex align-items-center mt-1">
+                                <i data-lucide="truck" class="text-success me-2"></i>
+                                <span class="text-muted">Entrega el mismo día disponible</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="action-buttons mb-4">
+                            <div class="row g-3">
+                                <div class="col-12 col-md-6">
+                                    <button id="add-to-cart-btn" class="btn btn-add-cart btn-lg w-100">
+                                        <i data-lucide="shopping-cart" class="me-2"></i>
+                                        Agregar al Carrito
+                                    </button>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <button id="buy-now-btn" class="btn btn-buy-now btn-lg w-100">
+                                        <i data-lucide="zap" class="me-2"></i>
+                                        Comprar Ahora
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Product Description -->
+                        <div class="product-description-section">
+                            <h5 class="fw-bold mb-3">
+                                <i data-lucide="info" class="me-2"></i>
+                                Descripción del Producto
+                            </h5>
+                            <p id="product-description" class="text-muted lh-lg">
+                                Hermoso arreglo floral perfecto para cualquier ocasión especial.
+                                Elaborado con las flores más frescas y de la mejor calidad.
+                            </p>
+                        </div>
+
+                        <!-- Product Features -->
+                        <div class="product-features">
+                            <h6 class="fw-bold mb-3">Características:</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i data-lucide="flower" class="text-success me-2"></i>
+                                    Flores frescas del día
+                                </li>
+                                <li class="mb-2">
+                                    <i data-lucide="award" class="text-success me-2"></i>
+                                    Diseño profesional
+                                </li>
+                                <li class="mb-2">
+                                    <i data-lucide="gift" class="text-success me-2"></i>
+                                    Incluye tarjeta de dedicatoria
+                                </li>
+                                <li class="mb-2">
+                                    <i data-lucide="shield-check" class="text-success me-2"></i>
+                                    Garantía de frescura
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Contact Info -->
+                        <div class="contact-info mt-4 p-3 bg-light rounded">
+                            <h6 class="fw-bold mb-2">
+                                <i data-lucide="message-circle" class="me-2"></i>
+                                ¿Necesitas ayuda personalizada?
+                            </h6>
+                            <p class="mb-0 text-muted">
+                                Contáctanos para personalizar tu pedido o resolver cualquier duda.
+                            </p>
+                            <div class="mt-2">
+                                <button class="btn btn-outline-success btn-sm me-2">
+                                    <i data-lucide="message-circle" class="me-1"></i>
+                                    WhatsApp
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm">
+                                    <i data-lucide="phone" class="me-1"></i>
+                                    Llamar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/dist/frontend/utils/logger.js"></script>
+    <script type="module" src="/dist/frontend/services/apiClient.js"></script>
+    <script type="module" src="/dist/frontend/product-detail.js"></script>
+    <script type="module" src="/dist/frontend/scroll-effects-fix.js"></script>
+
+    <!-- Performance Monitoring (Silicon Valley Standard) -->
+    <script>
+        // Simple, bulletproof performance monitoring
+        window.floresYaPerf = {
+            cssLoadTime: performance.now(),
+            logPerformance: function() {
+                const loadTime = performance.now() - this.cssLoadTime;
+                console.log('🌸 FloresYa CSS Load Time:', loadTime.toFixed(2) + 'ms');
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            window.floresYaPerf.logPerformance();
+        });
+    </script>
+
+    <!-- Initialize Lucide Icons -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>
