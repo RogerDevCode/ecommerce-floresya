@@ -70,8 +70,6 @@
 
     <!-- Preload critical resources -->
     <link rel="preload" href="/images/logoFloresYa.jpeg" as="image" importance="high">
-    <link rel="modulepreload" href="/dist/frontend/utils/logger.js">
-    <link rel="modulepreload" href="/dist/frontend/services/apiClient.js">
     <link rel="modulepreload" href="/dist/frontend/main.js">
 
     <!-- DNS prefetch for external domains -->
@@ -822,12 +820,10 @@
     <script src="/js/tooltip-utils.js"></script>
 
     <!-- Custom JS - Load after critical styles -->
-    <!-- 🌸 FloresYa TypeScript Modules - 100% Type-Safe Frontend -->
-    <script type="module" src="/dist/frontend/utils/logger.js"></script>
+    <!-- 🌸 FloresYa TypeScript Modules - 100% Type-Safe Frontend with tRPC -->
+    <!-- Bundled with Vite -->
     <script type="module" src="/dist/frontend/services/apiClient.js"></script>
     <script type="module" src="/dist/frontend/main.js"></script>
-
-    <!-- Authentication System -->
     <script type="module" src="/dist/frontend/authManager.js"></script>
 
     <!-- Scroll Effects Fix -->

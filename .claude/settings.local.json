@@ -134,7 +134,19 @@
       "Bash(PORT=3001 timeout 10s node dist/backend/app/server.js)",
       "Bash(killall:*)",
       "Bash(PORT=3001 timeout 15s node dist/backend/app/server.js)",
-      "Bash(readlink:*)"
+      "Bash(readlink:*)",
+      "Bash(PORT=3010 timeout 15s npm start)",
+      "Bash(./qs-ultra-robust.sh:*)",
+      "Bash(python3:*)",
+      "Bash(PORT=3002 timeout 8s node dist/backend/app/server.js)",
+      "Bash(psql:*)",
+      "Bash(PORT=3001 timeout 30s node dist/backend/app/server.js)",
+      "Bash(PORT=3100 timeout 20s node dist/backend/app/server.js)",
+      "Bash(PORT=3300 timeout 10s node dist/backend/app/server.js)",
+      "Bash(PORT=3010 node dist/backend/app/server.js)",
+      "Bash(PORT=3020 node dist/backend/app/server.js)",
+      "Bash(PORT=3050 node dist/backend/app/server.js)",
+      "Bash(PORT=3080 node dist/backend/app/server.js)"
     ],
     "deny": [],
     "ask": []

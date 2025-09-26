@@ -185,17 +185,22 @@ class SupabaseSchemaExtractor {
   private async extractTableInfo(tableName: string): Promise<TableInfo> {
     // Obtener conteo de registros
     const { count } = await supabaseService
-      .from(tableName)
+      .from(tableName as any)
       .select('*', { count: 'exact', head: true });
 
     // Obtener muestra de datos para inferir estructura
     const { data: sampleData } = await supabaseService
-      .from(tableName)
+      .from(tableName as any)
       .select('*')
       .limit(3);
 
+    // Validar que sampleData no contenga errores
+    const validSampleData = Array.isArray(sampleData) && sampleData.every(item =>
+      item != null && typeof item === 'object' && !(item as any)?.error
+    ) ? sampleData as unknown as Record<string, unknown>[] : [];
+
     // Inferir columnas desde los datos de muestra
-    const columns = this.inferColumnsFromData(sampleData ?? [], tableName);
+    const columns = this.inferColumnsFromData(validSampleData, tableName);
 
     // Generar índices basados en conocimiento del esquema
     const indexes = this.generateKnownIndexes(tableName);
@@ -209,7 +214,7 @@ class SupabaseSchemaExtractor {
       columns,
       indexes,
       constraints,
-      sampleData: sampleData?.slice(0, 2) // Solo primeros 2 registros como muestra
+      sampleData: validSampleData.slice(0, 2) // Solo primeros 2 registros como muestra
     };
   }
 

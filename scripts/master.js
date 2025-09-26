@@ -4,33 +4,32 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 // Core Validators (Nivel 1 + 2)
-import { APIRouteValidator } from './mastermod/apiRouteValidator.js';
-import { ArchitectureValidator } from './mastermod/architectureValidator.js';
-import { AutoFixValidator } from './mastermod/autoFixValidator.js';
-import { BuildValidator } from './mastermod/buildValidator.js';
-import { ComplexityValidator } from './mastermod/complexityValidator.js';
-import { ConfigValidator } from './mastermod/configValidator.js';
-import { ConsoleLogValidator } from './mastermod/consoleLogValidator.js';
-import { EnvVariableValidator } from './mastermod/envVariableValidator.js';
-import { FileTreeMapper } from './mastermod/fileTreeMapper.js';
-import { HTMLReferenceValidator } from './mastermod/htmlReferenceValidator.js';
-import { ImportValidator } from './mastermod/importValidator.js';
-import { NamingConventionValidator } from './mastermod/namingConventionValidator.js';
-import { OrphanFileValidator } from './mastermod/orphanFileValidator.js';
-import { PerformanceValidator } from './mastermod/performanceValidator.js';
-import { ReportGenerator } from './mastermod/reportGenerator.js';
-import { SecurityValidator } from './mastermod/securityValidator.js';
-import { SymbolValidator } from './mastermod/symbolValidator.js';
-import { TestingValidator } from './mastermod/testingValidator.js';
-import { TypeSafetyValidator } from './mastermod/typeSafetyValidator.js';
-import { UnusedDependencyValidator } from './mastermod/unusedDependencyValidator.js';
+import { APIRouteValidator } from './mastermod/apiRouteValidator';
+import { ArchitectureValidator } from './mastermod/architectureValidator';
+import { AutoFixValidator } from './mastermod/autoFixValidator';
+import { BuildValidator } from './mastermod/buildValidator';
+import { ComplexityValidator } from './mastermod/complexityValidator';
+import { ConfigValidator } from './mastermod/configValidator';
+import { ConsoleLogValidator } from './mastermod/consoleLogValidator';
+import { EnvVariableValidator } from './mastermod/envVariableValidator';
+import { FileTreeMapper } from './mastermod/fileTreeMapper';
+import { HTMLReferenceValidator } from './mastermod/htmlReferenceValidator';
+import { ImportValidator } from './mastermod/importValidator';
+import { NamingConventionValidator } from './mastermod/namingConventionValidator';
+import { OrphanFileValidator } from './mastermod/orphanFileValidator';
+import { PerformanceValidator } from './mastermod/performanceValidator';
+import { ReportGenerator } from './mastermod/reportGenerator';
+import { SecurityValidator } from './mastermod/securityValidator';
+import { SymbolValidator } from './mastermod/symbolValidator';
+import { TestingValidator } from './mastermod/testingValidator';
+import { TypeSafetyValidator } from './mastermod/typeSafetyValidator';
+import { UnusedDependencyValidator } from './mastermod/unusedDependencyValidator';
+// Logger
+import { Logger } from './mastermod/utils/logger';
 
 // Enterprise Validators (Nivel 3 - Critical)
 
 // Report Generator
-
-// Logger
-import { Logger } from './mastermod/utils/logger.js';
 
 class MasterValidator {
   constructor() {

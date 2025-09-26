@@ -336,6 +336,73 @@ body {
   animation: fadeInUp 0.6s ease-out forwards;
 }
 
+/* === CROSSFADE ANIMATIONS FOR HOVER === */
+.crossfade-out {
+  opacity: 0;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.crossfade-in {
+  opacity: 1;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* === PRODUCT CARD HOVER STATES === */
+.product-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+}
+
+.product-card.is-hovering .product-card-image img {
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Group hover effects for navigation buttons */
+.product-card:hover .image-nav-prev,
+.product-card:hover .image-nav-next {
+  opacity: 1;
+  visibility: visible;
+}
+
+.image-nav-prev,
+.image-nav-next {
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  z-index: 10;
+}
+
+.image-nav-prev {
+  left: 8px;
+}
+
+.image-nav-next {
+  right: 8px;
+}
+
+.image-nav-prev:hover,
+.image-nav-next:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-50%) scale(1.1);
+}
+
 /* === LOADING STATES === */
 .skeleton {
   background: linear-gradient(

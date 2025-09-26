@@ -123,9 +123,10 @@ export class FloresYaApp {
       const api = window.api;
 
       // Load occasions for filtering
-      const occasionsResponse = await api.getOccasions() as ApiResponse<Occasion[]>;
-      if (occasionsResponse.success && occasionsResponse.data) {
-        this.occasions = occasionsResponse.data;
+      const occasionsResponse = await api.getOccasions(); // ZOD VALIDATED
+      if (occasionsResponse && typeof occasionsResponse === 'object' && 'success' in occasionsResponse && occasionsResponse.success && 'data' in occasionsResponse && Array.isArray(occasionsResponse.data)) {
+        const typedResponse = occasionsResponse as { success: true; data: Occasion[] };
+        this.occasions = typedResponse.data;
         this.populateOccasionFilter();
         this.log('✅ Ocasiones cargadas', { count: this.occasions.length }, 'success');
       } else {
@@ -163,11 +164,11 @@ export class FloresYaApp {
         ...this.currentFilters
       };
 
-      const response = await window.api.getProducts(params) as ApiResponse<ProductResponse>;
+      const response = await window.api.getProducts(params); // ZOD VALIDATED
 
-      if (response.success && response.data) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        let products = (response.data.products ?? []).map((p: Product) => {
+      if (response && typeof response === 'object' && 'success' in response && response.success && 'data' in response && response.data) {
+        const typedResponse = response as { success: true; data: { products: Product[]; pagination?: Pagination } };
+        let products = (typedResponse.data.products ?? []).map((p: Product) => {
           const productWithImages = p as ProductWithImages;
           return {
             ...productWithImages,
@@ -187,8 +188,8 @@ export class FloresYaApp {
 
         this.renderProducts(this.products);
 
-        if (response.data.pagination) {
-          this.renderPagination(response.data.pagination);
+        if (typedResponse.data.pagination) {
+          this.renderPagination(typedResponse.data.pagination);
         }
 
         this.log('✅ Productos cargados', {
@@ -214,18 +215,20 @@ export class FloresYaApp {
     this.log('🔄 Cargando carrusel', {}, 'info');
     try {
       if (window.api) {
-        const response = await window.api.getCarousel() as ApiResponse<CarouselResponse>;
+        const response: Awaited<ReturnType<typeof window.api.getCarousel>> = await window.api.getCarousel(); // ZOD VALIDATED
 
         // Log detallado de la respuesta completa
         this.log('🔍 Respuesta completa del carousel API', {
-          success: response.success,
-          hasData: !!response.data,
-          dataKeys: response.data ? Object.keys(response.data) : [],
+          success: response && typeof response === 'object' && 'success' in response ? response.success : 'unknown',
+          hasData: response && typeof response === 'object' && 'data' in response ? !!response.data : false,
           rawResponse: response
         }, 'info');
 
-        if (response.success && response.data) {
-          const carouselProducts = response.data.products || [];
+        if (response && typeof response === 'object' && 'success' in response && response.success && 'data' in response && response.data) {
+          const typedResponse = response as { success: true; data: { carousel_products?: CarouselProduct[]; products?: CarouselProduct[] } };
+          // Access carousel products with proper typing
+          // The API response can have either 'products' or 'carousel_products' field for compatibility
+          const carouselProducts = typedResponse.data.carousel_products || typedResponse.data.products || [];
 
           // Log detallado de los productos
           this.log('🔍 Productos del carousel recibidos', {
@@ -233,7 +236,7 @@ export class FloresYaApp {
             isArray: Array.isArray(carouselProducts),
             count: carouselProducts.length,
             firstProduct: carouselProducts[0] || null,
-            allProductIds: carouselProducts.map((p: any) => p.id)
+            allProductIds: carouselProducts.map(p => p.id)
           }, 'info');
 
           if (Array.isArray(carouselProducts) && carouselProducts.length > 0) {
@@ -256,9 +259,9 @@ export class FloresYaApp {
           }
         } else {
           this.log('❌ Respuesta API inválida', {
-            success: response.success,
-            data: response.data,
-            message: response.message
+            success: response && typeof response === 'object' && 'success' in response ? response.success : 'unknown',
+            data: response && typeof response === 'object' && 'data' in response ? response.data : undefined,
+            message: response && typeof response === 'object' && 'message' in response ? response.message : undefined
           }, 'error');
         }
       } else {
@@ -269,10 +272,17 @@ export class FloresYaApp {
       this.log('🔄 API del carrusel no disponible, usando productos regulares como fallback para mostrar 5 productos', {}, 'info');
       if (this.products.length > 0) {
         // Use first 5 products as carousel items (or all if less than 5)
+        // Map regular products to carousel products format to match expected type
         const carouselProducts = this.products.slice(0, 5).map((product, index) => ({
           ...product,
+          id: product.id,
+          name: product.name,
+          summary: product.summary || product.description,
+          price_usd: product.price_usd,
+          carousel_order: product.carousel_order || index + 1,
+          primary_image_url: product.primary_image_url,
           primary_thumb_url: product.primary_image_url || product.images?.[0]?.url || '/images/placeholder-product.webp',
-          carousel_order: index + 1
+          images: product.images
         }));
 
         this.renderCarousel(carouselProducts);
@@ -318,12 +328,16 @@ export class FloresYaApp {
       ? imageToUse.url
       : (typeof imageToUse === 'string' ? imageToUse : '/images/placeholder-product.webp');
 
-    // Medium images for hover gallery effect - use the images array
+    // Medium images for hover gallery effect - use medium_images field if available
     const productImages = product.images ?? [];
-    const mediumImages = productImages
-      .filter(img => img && img.url)
-      .map(img => img.url)
-      .slice(0, 5); // Limit to 5 images for performance
+    // Check if product has medium_images field (from ProductService)
+    const mediumImagesArray = ('medium_images' in product && Array.isArray((product as any).medium_images))
+      ? (product as any).medium_images as string[]
+      : productImages
+          .filter(img => img && img.url && img.size === 'medium')
+          .map(img => img.url);
+
+    const mediumImages = mediumImagesArray.slice(0, 5); // Limit to 5 images for performance
     const mediumImagesJson = JSON.stringify(mediumImages);
 
     // Price formatting with proper currency display
@@ -1009,7 +1023,7 @@ export class FloresYaApp {
     void imageElement.offsetHeight;
 
     // Precargar la nueva imagen con manejo de errores
-    const preloadImage = new Image();
+    const preloadImage = document.createElement('img');
 
     const handleImageLoad = () => {
       // Verificar que el elemento aún existe y está visible

@@ -1,22 +1,46 @@
 /**
- * FloresYa API Service - TypeScript Edition
- * Comprehensive API client with full type safety
+ * FloresYa API Service - ZOD VALIDATED EDITION
+ * Runtime validated API client with ZERO generics
  */
 
-// Import shared types
+
+import { z } from 'zod';
+
+import {
+  ProductApiResponseSchema,
+  ProductListApiResponseSchema,
+  UserApiResponseSchema,
+  UserListApiResponseSchema,
+  CarouselApiResponseSchema,
+  OccasionSchema
+} from '../../shared/types/index.js';
 import type {
+  RegisterData,
+  LogData,
+  CarouselResponse
+,
   Product,
   Occasion,
   User,
   PaginationInfo as Pagination,
   ApiResponse,
-  ProductQuery
-} from '../../config/supabase.js';
-import type {
-  RegisterData,
-  LogData,
-  CarouselResponse
+  ProductQuery,
+  ProductListApiResponse,
+  CarouselApiResponse
 } from "shared/types/index";
+
+
+// Import Zod schemas for validation
+
+// Create quick schema for occasions array response
+const OccasionsApiResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.array(OccasionSchema).optional(),
+  message: z.string().optional(),
+  error: z.string().optional(),
+  errors: z.array(z.any()).optional(),
+});
+type OccasionsApiResponse = z.infer<typeof OccasionsApiResponseSchema>;
 
 
 // Note: Window interface extended in main.ts to avoid conflicts
@@ -37,29 +61,75 @@ export class FloresYaAPI {
     }
   }
 
+  // ============================================
+  // ZOD VALIDATION HELPERS - FRONTEND EDITION
+  // ============================================
+
+  /**
+   * Validates API response with Zod schema and provides detailed error logging
+   */
+  private validateResponse<T>(schema: z.ZodSchema<T>, data: unknown, endpoint: string): T {
+    try {
+      return schema.parse(data);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const errorMessages = error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
+        this.log(`❌ Response validation failed for ${endpoint}`, {
+          errors: errorMessages,
+          receivedData: data
+        }, 'error');
+        throw new Error(`[${endpoint}] API response validation failed: ${errorMessages}`);
+      }
+      throw error;
+    }
+  }
+
   private log(message: string, data: LogData | null = null, level: 'info' | 'success' | 'error' | 'warn' = 'info'): void {
-    // Use window.logger if available
-    if (window.logger) {
-      window.logger[level]('API', message, data);
-    } else {
+    // Only show important logs to reduce console noise
+    const isDevelopment = process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost';
+
+    // Always show errors and warnings
+    if (level === 'error' || level === 'warn') {
       const prefix = '[🌐 API]';
       const timestamp = new Date().toISOString();
       const output = `${prefix} [${level.toUpperCase()}] ${timestamp} — ${message}`;
 
-      switch (level) {
-        case 'error':
-                    break;
-        case 'warn':
-                    break;
-        default:
-                    break;
+      if (level === 'error') {
+        console.error(output, data || '');
+      } else {
+        console.warn(output, data || '');
+      }
+      return;
+    }
+
+    // Show success logs only for critical operations (auth, creation, etc.)
+    const isCriticalSuccess = level === 'success' && (
+      message.includes('Login successful') ||
+      message.includes('Registration successful') ||
+      message.includes('created successfully') ||
+      message.includes('deleted successfully') ||
+      message.includes('uploaded successfully')
+    );
+
+    // Show info logs only in development or for critical operations
+    const shouldShowInfo = isDevelopment || isCriticalSuccess;
+
+    if (shouldShowInfo) {
+      // Use window.logger if available
+      if (window.logger) {
+        window.logger[level]('API', message, data);
+      } else {
+        const prefix = '[🌐 API]';
+        const timestamp = new Date().toISOString();
+        const output = `${prefix} [${level.toUpperCase()}] ${timestamp} — ${message}`;
+        console.log(output, data || '');
       }
     }
   }
 
   // Helper method to get headers
   private getHeaders(includeAuth = false): Record<string, string> {
-    this.log('🔄 Getting headers', { includeAuth }, 'info');
+    // Removed verbose log for headers
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json'
@@ -67,7 +137,7 @@ export class FloresYaAPI {
 
     if (includeAuth && this.token) {
           headers.Authorization = `Bearer ${this.token}`;
-          this.log('✅ Authorization header added', {}, 'success');
+          // Authorization header added silently
         }
 
     return headers;
@@ -104,7 +174,7 @@ export class FloresYaAPI {
   ): Promise<ApiResponse<T>> {
     const startTime = Date.now();
     const url = `${this.baseURL}${endpoint}`;
-    this.log('🔄 Fetching data', { url, method: options.method || 'GET' }, 'info');
+    // Fetching data (verbose log removed)
 
     // Check connectivity before making request
     const isConnected = await this.checkConnectivity();
@@ -193,7 +263,7 @@ export class FloresYaAPI {
   }
 
   // Products API
-  async getProducts(filters: ProductQuery = {}): Promise<ApiResponse<{ products: Product[], pagination: Pagination }>> {
+  async getProducts(filters: ProductQuery = {}): Promise<ProductListApiResponse> {
     const params = new URLSearchParams();
 
     // Filter out undefined values and handle boolean conversion
@@ -216,8 +286,11 @@ export class FloresYaAPI {
     const queryString = params.toString();
     const endpoint = `/products${queryString ? `?${queryString}` : ''}`;
 
-    this.log('🔄 Getting products', filters, 'info');
-    return this.fetchData<{ products: Product[], pagination: Pagination }>(endpoint);
+    // Getting products (verbose log removed)
+
+    // 🔥 FETCH WITH ZOD VALIDATION!
+    const rawResponse = await this.fetchData<{ products: Product[], pagination: Pagination }>(endpoint);
+    return this.validateResponse(ProductListApiResponseSchema, rawResponse, endpoint);
   }
 
   async getProduct(id: number): Promise<ApiResponse<Product>> {
@@ -259,9 +332,12 @@ export class FloresYaAPI {
   }
 
   // Occasions API
-  async getOccasions(): Promise<ApiResponse<Occasion[]>> {
-    this.log('🔄 Getting occasions', {}, 'info');
-    return this.fetchData<Occasion[]>('/occasions');
+  async getOccasions(): Promise<OccasionsApiResponse> {
+    // Getting occasions (verbose log removed)
+
+    // 🔥 FETCH WITH ZOD VALIDATION!
+    const rawResponse = await this.fetchData<Occasion[]>('/occasions');
+    return this.validateResponse(OccasionsApiResponseSchema, rawResponse, '/occasions');
   }
 
   async getOccasionById(id: number): Promise<ApiResponse<{ occasion: Occasion }>> {
@@ -301,20 +377,23 @@ export class FloresYaAPI {
   }
 
   // Carousel API
-  async getCarousel(): Promise<ApiResponse<CarouselResponse>> {
-    this.log('🔄 Getting carousel products', {}, 'info');
-    const response = await this.fetchData<CarouselResponse>('/products/carousel');
+  async getCarousel(): Promise<CarouselApiResponse> {
+    // Getting carousel products (verbose log removed)
+
+    // 🔥 FETCH WITH ZOD VALIDATION!
+    const rawResponse = await this.fetchData<CarouselResponse>('/products/carousel');
+    const validatedResponse = this.validateResponse(CarouselApiResponseSchema, rawResponse, '/products/carousel');
 
     // Log the actual data structure for debugging
-    if (response.success && response.data) {
-      const carouselProducts = response.data.carousel_products || response.data.products || [];
-      this.log('✅ Carousel data received', {
+    if (validatedResponse.success && validatedResponse.data) {
+      const carouselProducts = validatedResponse.data.carousel_products || validatedResponse.data.products || [];
+      this.log('✅ Carousel data validated and received', {
         count: carouselProducts.length,
         firstProduct: carouselProducts[0] ?? null
       }, 'success');
     }
 
-    return response;
+    return validatedResponse;
   }
 
   // Settings API
@@ -440,7 +519,7 @@ export class FloresYaAPI {
       const parts = token.split('.');
       if (parts.length !== 3 || !parts[1]) return null;
 
-      const decodedPayload = atob(parts[1]);
+      const decodedPayload = typeof window?.atob !== 'undefined' ? window.atob(parts[1]) : typeof globalThis?.atob !== 'undefined' ? globalThis.atob(parts[1]) : typeof Buffer !== 'undefined' ? Buffer.from(parts[1], 'base64').toString('utf8') : parts[1];
       if (!decodedPayload) return null;
 
       const payload = JSON.parse(decodedPayload) as { user?: User };
@@ -504,7 +583,7 @@ export class FloresYaAPI {
     func: T,
     wait: number
   ): (...args: Parameters<T>) => void {
-    this.log('🔄 Creating debounce function', { wait }, 'info');
+    // Creating debounce function (verbose log removed)
 
     let timeout: NodeJS.Timeout;
     return function executedFunction(...args: Parameters<T>) {

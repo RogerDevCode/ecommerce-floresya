@@ -280,16 +280,11 @@ async function buildBackend() {
 }
 
 async function buildFrontend() {
-  log('BUILD', 'Building Frontend TypeScript...');
+  log('BUILD', 'Building Frontend with Vite...');
   try {
-    // Try to build frontend, but don't fail if it has errors
-    await runCommand('npx', ['tsc', '-p', 'src/frontend/tsconfig.frontend.json']);
-    log('SUCCESS', 'Frontend TypeScript build completed');
-
-    // Run post-build script to fix structure
-    log('BUILD', 'Running post-build frontend script...');
-    await runCommand('node', ['scripts/post-build-frontend.js']);
-    log('SUCCESS', 'Post-build frontend script completed');
+    // Use Vite to build frontend with proper bundling
+    await runCommand('npx', ['vite', 'build']);
+    log('SUCCESS', 'Frontend Vite build completed');
   } catch (error) {
     log('WARNING', `Frontend build failed: ${error.message} - Continuing build process`);
     // Frontend compilation errors are not critical for deployment
@@ -304,25 +299,7 @@ async function copyFrontendAssets() {
 }
 
 async function fixFrontendStructure() {
-  log('BUILD', 'Fixing frontend directory structure...');
-  try {
-    // Fix frontend structure manually (no npm script available)
-    const nestedPath = path.join(PROJECT_ROOT, 'dist/frontend/frontend');
-    try {
-      const stats = await fs.stat(nestedPath);
-      if (stats.isDirectory()) {
-        await runCommand('bash', ['-c', 'mv dist/frontend/frontend/* dist/frontend/ 2>/dev/null || true']);
-        await runCommand('rm', ['-rf', 'dist/frontend/frontend']);
-        log('SUCCESS', 'Frontend structure fixed (manual method)');
-      } else {
-        log('INFO', 'No nested frontend directory found - structure is already correct');
-      }
-    } catch {
-      log('INFO', 'No nested frontend directory found - structure is already correct');
-    }
-  } catch (error) {
-    log('WARNING', `Frontend structure fix failed: ${error.message}`);
-  }
+  log('INFO', 'Vite generates correct structure - no fixes needed');
 }
 
 async function validateBuild() {

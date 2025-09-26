@@ -19,6 +19,8 @@ import supabaseManager from '../config/supabase.js';
 import { swaggerSpec, swaggerUi } from '../config/swagger.js';
 import { serverLogger } from '../utils/serverLogger.js';
 
+// Import tRPC setup
+
 import { createDashboardRoutes } from './routes/dashboardRoutes.js';
 import { createImageRoutes } from './routes/imageRoutes.js';
 import { createLogsRoutes } from './routes/logsRoutes.js';
@@ -26,7 +28,7 @@ import { createOccasionsRoutes } from './routes/occasionsRoutes.js';
 import { createOrderRoutes } from './routes/orderRoutes.js';
 import { createProductRoutes } from './routes/productRoutes.js';
 import { createSchemaRoutes } from './routes/schemaRoutes.js';
-import { createUserRoutes } from './routes/userRoutes.js';
+import { setupTRPCMiddleware } from './trpc/trpcMiddleware.js';
 
 
 // Import comprehensive logging system
@@ -60,10 +62,10 @@ class FloresYaServer {
         directives: {
           defaultSrc: ["'self'"],
           styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://unpkg.com"],
-          scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://unpkg.com"],
+          scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://unpkg.com"],
           scriptSrcAttr: ["'self'", "'unsafe-inline'"],
           imgSrc: ["'self'", "data:", "https:", "blob:"],
-          connectSrc: ["'self'", "https://*.supabase.co"],
+          connectSrc: ["'self'", "https://*.supabase.co", "https://cdn.jsdelivr.net"],
           fontSrc: ["'self'", "https://cdn.jsdelivr.net"]
         }
       },
@@ -107,6 +109,37 @@ class FloresYaServer {
     serverLogger.info('PERF', 'Enabling response compression');
     this.app.use(compression());
 
+    // MIME type middleware for global content type management
+    this.app.use((req, res, next) => {
+      // Set default content type options
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      
+      // If the response doesn't already have a Content-Type, try to determine it from the URL
+      if (!res.getHeader('Content-Type')) {
+        const url = req.url.toLowerCase();
+        if (url.includes('.js')) {
+          res.setHeader('Content-Type', 'application/javascript');
+        } else if (url.includes('.css')) {
+          res.setHeader('Content-Type', 'text/css');
+        } else if (url.includes('.json')) {
+          res.setHeader('Content-Type', 'application/json');
+        } else if (url.includes('.png')) {
+          res.setHeader('Content-Type', 'image/png');
+        } else if (url.includes('.jpg') || url.includes('.jpeg')) {
+          res.setHeader('Content-Type', 'image/jpeg');
+        } else if (url.includes('.webp')) {
+          res.setHeader('Content-Type', 'image/webp');
+        } else if (url.includes('.gif')) {
+          res.setHeader('Content-Type', 'image/gif');
+        } else if (url.includes('.svg')) {
+          res.setHeader('Content-Type', 'image/svg+xml');
+        } else if (url.includes('.ico')) {
+          res.setHeader('Content-Type', 'image/x-icon');
+        }
+      }
+      next();
+    });
+
     // Body parsing middleware
     serverLogger.info('SYSTEM', 'Setting up body parsers', { jsonLimit: '10mb', urlencodedLimit: '10mb' });
     this.app.use(express.json({ limit: '10mb' }));
@@ -128,6 +161,94 @@ class FloresYaServer {
       }
     }));
 
+    // MIME type compatibility routes for symlinks (fallback for symlink issues)
+    const frontendPath = path.join(distPath, 'frontend');
+    this.app.get('/dist/frontend/main', (req, res) => {
+      res.sendFile(path.join(frontendPath, 'main.js'), {
+        headers: {
+          'Content-Type': 'application/javascript',
+          'X-Content-Type-Options': 'nosniff'
+        }
+      });
+    });
+
+    this.app.get('/dist/frontend/auth', (req, res) => {
+      res.sendFile(path.join(frontendPath, 'authManager.js'), {
+        headers: {
+          'Content-Type': 'application/javascript',
+          'X-Content-Type-Options': 'nosniff'
+        }
+      });
+    });
+    this.app.get('/dist/frontend/utils/logger', (req, res) => {
+      res.sendFile(path.join(frontendPath, 'utils', 'logger.js'), {
+        headers: {
+          'Content-Type': 'application/javascript',
+          'X-Content-Type-Options': 'nosniff'
+        }
+      });
+    });
+    
+    // Frontend aliases for common frontend modules (handles nested paths)
+    this.app.get('/frontend/*', (req, res) => {
+      const filePath = req.params[0]; // This captures everything after /frontend/
+      const fullPath = path.join(frontendPath, filePath);
+      
+      res.sendFile(fullPath, (err) => {
+        if (err) {
+          res.status(404).send('File not found');
+        }
+      });
+    });
+    this.app.get('/dist/frontend/services/apiClient', (req, res) => {
+      res.sendFile(path.join(frontendPath, 'services', 'apiClient.js'), {
+        headers: {
+          'Content-Type': 'application/javascript',
+          'X-Content-Type-Options': 'nosniff'
+        }
+      });
+    });
+    this.app.get('/dist/frontend/services/api', (req, res) => {
+      res.sendFile(path.join(frontendPath, 'services', 'apiClient.js'), {
+        headers: {
+          'Content-Type': 'application/javascript',
+          'X-Content-Type-Options': 'nosniff'
+        }
+      });
+    });
+    this.app.get('/dist/frontend/scroll-effects-fix', (req, res) => {
+      res.sendFile(path.join(frontendPath, 'scroll-effects-fix.js'), {
+        headers: {
+          'Content-Type': 'application/javascript',
+          'X-Content-Type-Options': 'nosniff'
+        }
+      });
+    });
+    this.app.get('/dist/frontend/adminPanel', (req, res) => {
+      res.sendFile(path.join(frontendPath, 'adminPanel.js'), {
+        headers: {
+          'Content-Type': 'application/javascript',
+          'X-Content-Type-Options': 'nosniff'
+        }
+      });
+    });
+    this.app.get('/dist/frontend/product-detail', (req, res) => {
+      res.sendFile(path.join(frontendPath, 'productDetail.js'), {
+        headers: {
+          'Content-Type': 'application/javascript',
+          'X-Content-Type-Options': 'nosniff'
+        }
+      });
+    });
+    this.app.get('/dist/frontend/users-admin', (req, res) => {
+      res.sendFile(path.join(frontendPath, 'usersAdmin.js'), {
+        headers: {
+          'Content-Type': 'application/javascript',
+          'X-Content-Type-Options': 'nosniff'
+        }
+      });
+    });
+
     // Static files middleware (public directory)
     const publicPath = path.join(process.cwd(), 'public');
     const staticMaxAge = process.env.NODE_ENV === 'production' ? '1y' : '0';
@@ -136,10 +257,27 @@ class FloresYaServer {
       maxAge: staticMaxAge
     });
 
+    // Configure static files with proper MIME types for images
     this.app.use(express.static(publicPath, {
       maxAge: process.env.NODE_ENV === 'production' ? '1y' : '0',
       etag: true,
-      lastModified: true
+      lastModified: true,
+      setHeaders: (res, filePath) => {
+        // Set appropriate MIME types for different image formats
+        if (filePath.endsWith('.webp')) {
+          res.setHeader('Content-Type', 'image/webp');
+        } else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+          res.setHeader('Content-Type', 'image/jpeg');
+        } else if (filePath.endsWith('.png')) {
+          res.setHeader('Content-Type', 'image/png');
+        } else if (filePath.endsWith('.gif')) {
+          res.setHeader('Content-Type', 'image/gif');
+        } else if (filePath.endsWith('.svg')) {
+          res.setHeader('Content-Type', 'image/svg+xml');
+        } else if (filePath.endsWith('.ico')) {
+          res.setHeader('Content-Type', 'image/x-icon');
+        }
+      }
     }));
 
     // Request logging middleware
@@ -223,7 +361,11 @@ class FloresYaServer {
       res.status(200).json(healthData);
     });
 
-    // API routes with logging
+    // tRPC routes - Type-safe API
+    serverLogger.info('SYSTEM', 'Setting up tRPC routes');
+    setupTRPCMiddleware(this.app);
+
+    // Legacy REST API routes with logging (mantenidas para compatibilidad)
     serverLogger.info('SYSTEM', 'Setting up product routes');
     this.app.use('/api/products', createProductRoutes());
 
@@ -239,8 +381,8 @@ class FloresYaServer {
     serverLogger.info('SYSTEM', 'Setting up image routes');
     this.app.use('/api/images', createImageRoutes());
 
-    serverLogger.info('SYSTEM', 'Setting up user routes');
-    this.app.use('/api/users', createUserRoutes());
+    // Legacy user routes removed - now handled via tRPC userRouter
+    // serverLogger.info('SYSTEM', 'User operations now available via /trpc/user.*');
 
     serverLogger.info('SYSTEM', 'Setting up schema routes');
     this.app.use('/api/admin/schema', createSchemaRoutes());
@@ -267,7 +409,26 @@ class FloresYaServer {
 
     // Serve index.html for all non-API routes (SPA support)
     // Exclude: /api/, /dist/, files with extensions, and common asset paths
-    this.app.get(/^\/(?!api\/|dist\/|.*\.[^/]+$)(.*)/, (req: Request, res: Response) => {
+    this.app.get('*', (req: Request, res: Response, next) => {
+      // Check if the request is for an API route
+      if (req.path.startsWith('/api/')) {
+        next();
+        return;
+      }
+      
+      // Check if the request is for a static file (has an extension)
+      if (path.extname(req.path)) {
+        next();
+        return;
+      }
+      
+      // Check if the request is for dist files
+      if (req.path.startsWith('/dist/')) {
+        next();
+        return;
+      }
+      
+      // Serve index.html for SPA routing
       const indexPath = path.join(process.cwd(), 'public/index.html');
 
       // Log static file serving for debugging
@@ -285,6 +446,7 @@ class FloresYaServer {
             path: req.path,
             indexPath
           });
+          next(err);
         }
       });
     });

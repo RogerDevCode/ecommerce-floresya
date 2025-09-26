@@ -3,9 +3,9 @@
  * Handles user management, CRUD operations, and user table rendering
  */
 
+import type { AdminUser, AdminPanelLogger } from './types.js';
 import type { UserRole } from "shared/types/index";
 
-import type { AdminUser, AdminPanelLogger } from './types.js';
 
 export class AdminUsers {
   private logger: AdminPanelLogger;
@@ -104,24 +104,22 @@ export class AdminUsers {
    */
   public async deleteUser(userId: number): Promise<void> {
     try {
-      if (!confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
-        return;
+      if (typeof window?.confirm !== 'undefined' &&
+          window.confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
+        this.logger.log(`Deleting user ${userId}`, 'info');
+
+        const response = await fetch(`/api/admin/users/${userId}`, {
+          method: 'DELETE'
+        });
+
+        if (!response.ok) throw new Error('Failed to delete user');
+
+        this.logger.log(`User ${userId} deleted successfully`, 'success');
+        this.showSuccess('Usuario eliminado exitosamente');
+
+        // Reload users to reflect changes
+        void this.loadUsersData();
       }
-
-      this.logger.log(`Deleting user ${userId}`, 'info');
-
-      const response = await fetch(`/api/admin/users/${userId}`, {
-        method: 'DELETE'
-      });
-
-      if (!response.ok) throw new Error('Failed to delete user');
-
-      this.logger.log(`User ${userId} deleted successfully`, 'success');
-      this.showSuccess('Usuario eliminado exitosamente');
-
-      // Reload users to reflect changes
-      void this.loadUsersData();
-
     } catch (error: unknown) {
       this.logger.log('Error deleting user: ' + (error instanceof Error ? error.message : 'Unknown error'), 'error');
       this.showError('Error al eliminar usuario');

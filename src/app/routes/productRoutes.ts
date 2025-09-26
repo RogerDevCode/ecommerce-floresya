@@ -5,8 +5,8 @@
 
 import { Router } from 'express';
 
-import { ImageController, imageValidators } from '../../controllers/ImageController.js';
-import { ProductController, productValidators } from '../../controllers/ProductController.js';
+import { ImageController } from '../../controllers/ImageController.js';
+import { ProductController } from '../../controllers/ProductController.js';
 
 export function createProductRoutes(): Router {
   const router = Router();
@@ -21,55 +21,46 @@ export function createProductRoutes(): Router {
 
   // GET /api/products/search - Search products
   router.get('/search',
-    productValidators.searchProducts,
     productController.searchProducts.bind(productController)
   );
 
   // GET /api/products/:id/images - Get product images
   router.get('/:productId/images',
-    imageValidators.getProductImages,
     imageController.getProductImages.bind(imageController)
   );
 
   // GET /api/products/:id/with-occasions - Get single product with occasions for editing
   router.get('/:id/with-occasions',
-    productValidators.getProductById,
     productController.getProductByIdWithOccasions.bind(productController)
   );
 
   // GET /api/products/:id - Get single product
   router.get('/:id',
-    productValidators.getProductById,
     productController.getProductById.bind(productController)
   );
 
   // GET /api/products - Get all products with filtering
   router.get('/',
-    productValidators.getProducts,
     productController.getProducts.bind(productController)
   );
 
   // POST /api/products - Create new product (admin only)
   router.post('/',
-    productValidators.createProduct,
     productController.createProduct.bind(productController)
   );
 
   // PUT /api/products/:id - Update product (admin only)
   router.put('/:id',
-    productValidators.updateProduct,
     productController.updateProduct.bind(productController)
   );
 
   // PATCH /api/products/:id/carousel - Update carousel order (admin only)
   router.patch('/:id/carousel',
-    productValidators.updateCarouselOrder,
     productController.updateCarouselOrder.bind(productController)
   );
 
   // DELETE /api/products/:id - Delete product (conditional)
   router.delete('/:id',
-    productValidators.deleteProduct,
     productController.deleteProduct.bind(productController)
   );
 

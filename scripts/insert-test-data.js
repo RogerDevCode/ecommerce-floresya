@@ -230,13 +230,6 @@ async function insertTestData() {
       console.log('⚠️ No se insertaron imágenes - productos no encontrados');
     }
 
-    if (imagesError) {
-      console.error('❌ Error insertando imágenes:', imagesError);
-      return;
-    }
-
-    console.log('✅ Imágenes insertadas:', imagesData?.length || 0);
-
     // Insertar ocasiones de prueba
     const { data: occasionsData, error: occasionsError } = await supabase
       .from('occasions')

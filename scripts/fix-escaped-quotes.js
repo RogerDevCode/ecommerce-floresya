@@ -5,7 +5,7 @@ const filePath = './vercel.json';
 let content = fs.readFileSync(filePath, 'utf8');
 
 // Fix the escaped quotes
-content = content.replace(/\\\"/g, '\"');
+content = content.replace(/\\"/g, '"');
 content = content.replace(/\\\\/g, '\\');
 
 // Write back the corrected content

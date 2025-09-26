@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Procesar Pago - FloresYa</title>
     
+    <!-- Import maps for resolving bare module specifiers -->
+    <script type="importmap">
+    {
+      "imports": {
+        "@trpc/client": "https://cdn.jsdelivr.net/npm/@trpc/client@11.6.0/+esm",
+        "zod": "https://cdn.jsdelivr.net/npm/zod@3.22.4/+esm"
+      }
+    }
+    </script>
+
     <!-- Tailwind CSS -->
     <link href="/css/styles.css" rel="stylesheet">
     <!-- Lucide Icons -->
@@ -206,7 +216,6 @@
     </div>
 
     <!-- Custom JS -->
-    <script type="module" src="/dist/frontend/services/apiClient.js"></script>
     <!-- <script src="/js/payment.js"></script> ARCHIVO NO EXISTE - COMENTADO -->
     <script type="module" src="/dist/frontend/scroll-effects-fix.js"></script>
 

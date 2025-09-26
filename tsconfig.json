@@ -24,7 +24,8 @@
     "isolatedModules": true,
     "noEmitOnError": false,
     "incremental": true,
-    "tsBuildInfoFile": "./dist/.tsbuildinfo"
+    "tsBuildInfoFile": "./dist/backend/.tsbuildinfo",
+    "composite": true
   },
   "include": [
     "src/app/**/*",

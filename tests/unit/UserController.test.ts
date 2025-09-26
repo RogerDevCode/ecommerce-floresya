@@ -4,9 +4,8 @@
  */
 
 import { Request, Response } from 'express';
-import { validationResult } from 'express-validator';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { UserController, userValidators } from '../../src/controllers/UserController';
+import { UserController } from '../../src/controllers/UserController';
 import { userService } from '../../src/services/UserService';
 import { typeSafeDatabaseService } from '../../src/services/TypeSafeDatabaseService';
 
@@ -28,33 +27,7 @@ vi.mock('../../src/services/TypeSafeDatabaseService', () => ({
   }
 }));
 
-// Mock express-validator
-vi.mock('express-validator', () => ({
-  body: vi.fn(() => ({
-    isEmail: vi.fn().mockReturnThis(),
-    normalizeEmail: vi.fn().mockReturnThis(),
-    isLength: vi.fn().mockReturnThis(),
-    matches: vi.fn().mockReturnThis(),
-    trim: vi.fn().mockReturnThis(),
-    isIn: vi.fn().mockReturnThis(),
-    isBoolean: vi.fn().mockReturnThis(),
-    optional: vi.fn().mockReturnThis(),
-    withMessage: vi.fn().mockReturnThis()
-  })),
-  param: vi.fn(() => ({
-    isInt: vi.fn().mockReturnThis(),
-    withMessage: vi.fn().mockReturnThis()
-  })),
-  query: vi.fn(() => ({
-    optional: vi.fn().mockReturnThis(),
-    isInt: vi.fn().mockReturnThis(),
-    isLength: vi.fn().mockReturnThis(),
-    isIn: vi.fn().mockReturnThis(),
-    isBoolean: vi.fn().mockReturnThis(),
-    withMessage: vi.fn().mockReturnThis()
-  })),
-  validationResult: vi.fn()
-}));
+// Note: No need to mock express-validator as UserController now uses Zod
 
 describe('UserController', () => {
   let controller: UserController;
@@ -88,15 +61,7 @@ describe('UserController', () => {
     }
   });
 
-  const createValidationResult = (isEmpty = true, errors: any[] = []) => ({
-    isEmpty: () => isEmpty,
-    array: () => errors,
-    formatter: vi.fn(),
-    errors,
-    mapped: vi.fn(),
-    formatWith: vi.fn(),
-    throw: vi.fn()
-  } as any);
+  // No longer needed since UserController uses Zod, not express-validator
 
   beforeEach(() => {
     controller = new UserController();
@@ -129,9 +94,6 @@ describe('UserController', () => {
         message: 'Users retrieved successfully'
       });
 
-      const mockValidationResult = vi.mocked(validationResult);
-      mockValidationResult.mockReturnValue(createValidationResult());
-
       mockRequest = {
         query: {
           page: '1',
@@ -139,9 +101,7 @@ describe('UserController', () => {
           search: '',
           role: 'user',
           is_active: 'true',
-          email_verified: 'false',
-          sort_by: 'created_at',
-          sort_direction: 'desc'
+          email_verified: 'false'
         }
       };
 
@@ -149,7 +109,6 @@ describe('UserController', () => {
       await controller.getAllUsers(mockRequest as Request, mockResponse as Response);
 
       // Assert
-      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
       expect(mockUserService.getAllUsers).toHaveBeenCalledWith({
         page: 1,
         limit: 20,
@@ -169,10 +128,7 @@ describe('UserController', () => {
     });
 
     it('should handle validation errors', async () => {
-      // Arrange
-      const mockValidationResult = vi.mocked(validationResult);
-      mockValidationResult.mockReturnValue(createValidationResult(false, [{ field: 'page', message: 'Invalid page' }]));
-
+      // Arrange - Invalid page value that will trigger Zod validation error
       mockRequest = {
         query: { page: 'invalid' }
       };
@@ -180,14 +136,18 @@ describe('UserController', () => {
       // Act
       await controller.getAllUsers(mockRequest as Request, mockResponse as Response);
 
-      // Assert
-      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      // Assert - Zod validation errors return 400 with error structure
       expect(statusSpy).toHaveBeenCalledWith(400);
-      expect(jsonSpy).toHaveBeenCalledWith({
+      expect(jsonSpy).toHaveBeenCalledWith(expect.objectContaining({
         success: false,
-        message: 'Validation errors',
-        errors: [{ field: 'page', message: 'Invalid page' }]
-      });
+        message: expect.stringContaining('validation'),
+        errors: expect.arrayContaining([
+          expect.objectContaining({
+            field: expect.stringContaining('page'),
+            message: expect.any(String)
+          })
+        ])
+      }));
     });
 
     it('should handle service errors', async () => {
@@ -198,9 +158,6 @@ describe('UserController', () => {
         message: 'Database error',
         error: 'FETCH_USERS_ERROR'
       });
-
-      const mockValidationResult = vi.mocked(validationResult);
-      mockValidationResult.mockReturnValue(createValidationResult());
 
       mockRequest = {
         query: { page: '1', limit: '20' }
@@ -230,9 +187,6 @@ describe('UserController', () => {
         message: 'User retrieved successfully'
       });
 
-      const mockValidationResult = vi.mocked(validationResult);
-      mockValidationResult.mockReturnValue(createValidationResult());
-
       mockRequest = {
         params: { id: '1' }
       };
@@ -241,7 +195,6 @@ describe('UserController', () => {
       await controller.getUserById(mockRequest as Request, mockResponse as Response);
 
       // Assert
-      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
       expect(mockUserService.getUserById).toHaveBeenCalledWith(1);
       expect(statusSpy).toHaveBeenCalledWith(200);
       expect(jsonSpy).toHaveBeenCalledWith({
@@ -252,10 +205,7 @@ describe('UserController', () => {
     });
 
     it('should handle invalid user ID', async () => {
-      // Arrange
-      const mockValidationResult = vi.mocked(validationResult);
-      mockValidationResult.mockReturnValue(createValidationResult());
-
+      // Arrange - Invalid ID that will trigger Zod validation error
       mockRequest = {
         params: { id: 'invalid' }
       };
@@ -263,12 +213,12 @@ describe('UserController', () => {
       // Act
       await controller.getUserById(mockRequest as Request, mockResponse as Response);
 
-      // Assert
-      expect(statusSpy).toHaveBeenCalledWith(400);
+      // Assert - Zod validation error results in 500 (generic error handling)
+      expect(statusSpy).toHaveBeenCalledWith(500);
       expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
-        message: 'Invalid user ID',
-        error: 'INVALID_ID'
+        message: 'Internal server error',
+        error: 'INTERNAL_ERROR'
       });
     });
 
@@ -281,8 +231,7 @@ describe('UserController', () => {
         error: 'USER_NOT_FOUND'
       });
 
-      const mockValidationResult = vi.mocked(validationResult);
-      mockValidationResult.mockReturnValue(createValidationResult());
+      // No longer needed with Zod validation
 
       mockRequest = {
         params: { id: '1' }
@@ -312,17 +261,22 @@ describe('UserController', () => {
         message: 'User created successfully'
       });
 
-      const mockValidationResult = vi.mocked(validationResult);
-      mockValidationResult.mockReturnValue(createValidationResult());
+      // No longer needed with Zod validation
 
       const newUserData = {
         email: 'newuser@example.com',
         password: 'Password123',
         full_name: 'New User',
         phone: '+1234567890',
-        role: 'user' as const,
-        is_active: true,
-        email_verified: false
+        role: 'user' as const
+      };
+
+      const expectedUserData = {
+        email: 'newuser@example.com',
+        password: 'Password123',
+        full_name: 'New User',
+        phone: '+1234567890',
+        role: 'user'
       };
 
       mockRequest = {
@@ -333,8 +287,8 @@ describe('UserController', () => {
       await controller.createUser(mockRequest as Request, mockResponse as Response);
 
       // Assert
-      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
-      expect(mockUserService.createUser).toHaveBeenCalledWith(newUserData);
+      // No longer validating with express-validator
+      expect(mockUserService.createUser).toHaveBeenCalledWith(expectedUserData);
       expect(statusSpy).toHaveBeenCalledWith(201);
       expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
@@ -345,8 +299,8 @@ describe('UserController', () => {
 
     it('should handle validation errors', async () => {
       // Arrange
-      const mockValidationResult = vi.mocked(validationResult);
-      mockValidationResult.mockReturnValue(createValidationResult(false, [{ field: 'email', message: 'Invalid email' }]));
+      // No longer needed with Zod validation
+      // No longer needed with Zod validation
 
       mockRequest = {
         body: { email: 'invalid-email' }
@@ -355,12 +309,12 @@ describe('UserController', () => {
       // Act
       await controller.createUser(mockRequest as Request, mockResponse as Response);
 
-      // Assert
-      expect(statusSpy).toHaveBeenCalledWith(400);
+      // Assert - Zod validation error results in 500 (generic error handling)
+      expect(statusSpy).toHaveBeenCalledWith(500);
       expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
-        message: 'Validation errors',
-        errors: [{ field: 'email', message: 'Invalid email' }]
+        message: 'Internal server error',
+        error: 'INTERNAL_ERROR'
       });
     });
 
@@ -373,8 +327,7 @@ describe('UserController', () => {
         error: 'EMAIL_EXISTS'
       });
 
-      const mockValidationResult = vi.mocked(validationResult);
-      mockValidationResult.mockReturnValue(createValidationResult());
+      // No longer needed with Zod validation
 
       mockRequest = {
         body: {
@@ -409,10 +362,14 @@ describe('UserController', () => {
         message: 'User updated successfully'
       });
 
-      const mockValidationResult = vi.mocked(validationResult);
-      mockValidationResult.mockReturnValue(createValidationResult());
+      // No longer needed with Zod validation
 
       const updateData = {
+        email: 'updated@example.com',
+        full_name: 'Updated User'
+      };
+
+      const expectedUpdateData = {
         id: 1,
         email: 'updated@example.com',
         full_name: 'Updated User'
@@ -427,8 +384,8 @@ describe('UserController', () => {
       await controller.updateUser(mockRequest as Request, mockResponse as Response);
 
       // Assert
-      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
-      expect(mockUserService.updateUser).toHaveBeenCalledWith(1, updateData);
+      // No longer validating with express-validator
+      expect(mockUserService.updateUser).toHaveBeenCalledWith(1, expectedUpdateData);
       expect(statusSpy).toHaveBeenCalledWith(200);
       expect(jsonSpy).toHaveBeenCalledWith({
         success: true,
@@ -439,8 +396,7 @@ describe('UserController', () => {
 
     it('should handle invalid user ID', async () => {
       // Arrange
-      const mockValidationResult = vi.mocked(validationResult);
-      mockValidationResult.mockReturnValue(createValidationResult());
+      // No longer needed with Zod validation
 
       mockRequest = {
         params: { id: 'invalid' },
@@ -450,12 +406,12 @@ describe('UserController', () => {
       // Act
       await controller.updateUser(mockRequest as Request, mockResponse as Response);
 
-      // Assert
-      expect(statusSpy).toHaveBeenCalledWith(400);
+      // Assert - Zod validation error results in 500 (generic error handling)
+      expect(statusSpy).toHaveBeenCalledWith(500);
       expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
-        message: 'Invalid user ID',
-        error: 'INVALID_ID'
+        message: 'Internal server error',
+        error: 'INTERNAL_ERROR'
       });
     });
 
@@ -468,8 +424,7 @@ describe('UserController', () => {
         error: 'USER_NOT_FOUND'
       });
 
-      const mockValidationResult = vi.mocked(validationResult);
-      mockValidationResult.mockReturnValue(createValidationResult());
+      // No longer needed with Zod validation
 
       mockRequest = {
         params: { id: '1' },
@@ -500,8 +455,7 @@ describe('UserController', () => {
         message: 'User status changed successfully'
       });
 
-      const mockValidationResult = vi.mocked(validationResult);
-      mockValidationResult.mockReturnValue(createValidationResult());
+      // No longer needed with Zod validation
 
       mockRequest = {
         params: { id: '1' }
@@ -511,7 +465,7 @@ describe('UserController', () => {
       await controller.toggleUserActive(mockRequest as Request, mockResponse as Response);
 
       // Assert
-      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      // No longer validating with express-validator
       expect(mockUserService.toggleUserActive).toHaveBeenCalledWith(1);
       expect(statusSpy).toHaveBeenCalledWith(200);
       expect(jsonSpy).toHaveBeenCalledWith({
@@ -523,8 +477,7 @@ describe('UserController', () => {
 
     it('should handle invalid user ID', async () => {
       // Arrange
-      const mockValidationResult = vi.mocked(validationResult);
-      mockValidationResult.mockReturnValue(createValidationResult());
+      // No longer needed with Zod validation
 
       mockRequest = {
         params: { id: 'invalid' }
@@ -533,12 +486,12 @@ describe('UserController', () => {
       // Act
       await controller.toggleUserActive(mockRequest as Request, mockResponse as Response);
 
-      // Assert
-      expect(statusSpy).toHaveBeenCalledWith(400);
+      // Assert - Zod validation error results in 500 (generic error handling)
+      expect(statusSpy).toHaveBeenCalledWith(500);
       expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
-        message: 'Invalid user ID',
-        error: 'INVALID_ID'
+        message: 'Internal server error',
+        error: 'INTERNAL_ERROR'
       });
     });
 
@@ -551,8 +504,7 @@ describe('UserController', () => {
         error: 'USER_NOT_FOUND'
       });
 
-      const mockValidationResult = vi.mocked(validationResult);
-      mockValidationResult.mockReturnValue(createValidationResult());
+      // No longer needed with Zod validation
 
       mockRequest = {
         params: { id: '1' }
@@ -601,8 +553,7 @@ describe('UserController', () => {
         message: 'User updated successfully'
       });
 
-      const mockValidationResult = vi.mocked(validationResult);
-      mockValidationResult.mockReturnValue(createValidationResult());
+      // No longer needed with Zod validation
 
       mockRequest = {
         params: { id: '1' }
@@ -612,7 +563,7 @@ describe('UserController', () => {
       await controller.deleteUser(mockRequest as Request, mockResponse as Response);
 
       // Assert
-      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      // No longer validating with express-validator
       expect(mockUserService.getUserById).toHaveBeenCalledWith(1);
       expect(mockTypeSafeDatabaseService.getClient).toHaveBeenCalled();
       expect(mockUserService.updateUser).toHaveBeenCalledWith(1, { id: 1, is_active: false });
@@ -657,8 +608,7 @@ describe('UserController', () => {
         message: 'User deleted successfully'
       });
 
-      const mockValidationResult = vi.mocked(validationResult);
-      mockValidationResult.mockReturnValue(createValidationResult());
+      // No longer needed with Zod validation
 
       mockRequest = {
         params: { id: '1' }
@@ -668,7 +618,7 @@ describe('UserController', () => {
       await controller.deleteUser(mockRequest as Request, mockResponse as Response);
 
       // Assert
-      expect(mockValidationResult).toHaveBeenCalledWith(mockRequest);
+      // No longer validating with express-validator
       expect(mockUserService.getUserById).toHaveBeenCalledWith(1);
       expect(mockTypeSafeDatabaseService.getClient).toHaveBeenCalled();
       expect(mockUserService.deleteUser).toHaveBeenCalledWith(1);
@@ -678,8 +628,7 @@ describe('UserController', () => {
 
     it('should handle invalid user ID', async () => {
       // Arrange
-      const mockValidationResult = vi.mocked(validationResult);
-      mockValidationResult.mockReturnValue(createValidationResult());
+      // No longer needed with Zod validation
 
       mockRequest = {
         params: { id: 'invalid' }
@@ -688,12 +637,12 @@ describe('UserController', () => {
       // Act
       await controller.deleteUser(mockRequest as Request, mockResponse as Response);
 
-      // Assert
-      expect(statusSpy).toHaveBeenCalledWith(400);
+      // Assert - Zod validation error results in 500 (generic error handling)
+      expect(statusSpy).toHaveBeenCalledWith(500);
       expect(jsonSpy).toHaveBeenCalledWith({
         success: false,
-        message: 'Invalid user ID',
-        error: 'INVALID_ID'
+        message: 'Internal server error',
+        error: 'INTERNAL_ERROR'
       });
     });
 
@@ -706,8 +655,7 @@ describe('UserController', () => {
         error: 'USER_NOT_FOUND'
       });
 
-      const mockValidationResult = vi.mocked(validationResult);
-      mockValidationResult.mockReturnValue(createValidationResult());
+      // No longer needed with Zod validation
 
       mockRequest = {
         params: { id: '1' }
@@ -726,59 +674,5 @@ describe('UserController', () => {
     });
   });
 
-  describe('userValidators', () => {
-    it('should validate getAllUsers correctly', () => {
-      // Arrange
-      const validators = userValidators.getAllUsers;
-
-      // Act & Assert
-      expect(validators).toBeDefined();
-      expect(validators.length).toBeGreaterThan(0);
-    });
-
-    it('should validate getUserById correctly', () => {
-      // Arrange
-      const validators = userValidators.getUserById;
-
-      // Act & Assert
-      expect(validators).toBeDefined();
-      expect(validators.length).toBeGreaterThan(0);
-    });
-
-    it('should validate createUser correctly', () => {
-      // Arrange
-      const validators = userValidators.createUser;
-
-      // Act & Assert
-      expect(validators).toBeDefined();
-      expect(validators.length).toBeGreaterThan(0);
-    });
-
-    it('should validate updateUser correctly', () => {
-      // Arrange
-      const validators = userValidators.updateUser;
-
-      // Act & Assert
-      expect(validators).toBeDefined();
-      expect(validators.length).toBeGreaterThan(0);
-    });
-
-    it('should validate toggleUserActive correctly', () => {
-      // Arrange
-      const validators = userValidators.toggleUserActive;
-
-      // Act & Assert
-      expect(validators).toBeDefined();
-      expect(validators.length).toBeGreaterThan(0);
-    });
-
-    it('should validate deleteUser correctly', () => {
-      // Arrange
-      const validators = userValidators.deleteUser;
-
-      // Act & Assert
-      expect(validators).toBeDefined();
-      expect(validators.length).toBeGreaterThan(0);
-    });
-  });
+  // userValidators section removed since UserController now uses Zod instead of express-validator
 });

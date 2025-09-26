@@ -6,7 +6,7 @@
 
 import { readFileSync, writeFileSync } from 'fs';
 
-import { glob } from 'glob';
+// import { glob } from 'glob'; // Unused - commented out to fix ESLint
 
 console.log('🔧 Completing path fixes...');
 

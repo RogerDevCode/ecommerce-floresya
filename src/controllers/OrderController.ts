@@ -4,15 +4,97 @@
  */
 
 import { Request, Response } from 'express';
-import { body, param, query, validationResult } from 'express-validator';
+import { z } from 'zod';
 
-import type {
-  OrderCreateRequest,
-  OrderStatus,
-  OrderUpdateRequest
-} from '../config/supabase.js';
 import { OrderService } from '../services/OrderService.js';
-import type { AuthenticatedRequest } from '../shared/types/index.js';
+import {
+  // Validation Schemas
+  OrderCreateRequestSchema,
+  OrderUpdateRequestSchema,
+  OrderStatusUpdateRequestSchema,
+  OrderQueryRequestSchema,
+  ProductIdParamsSchema,
+  // Types only (no unused schemas)
+  OrderCreateRequestValidated,
+  OrderUpdateRequestValidated,
+  OrderStatusUpdateRequestValidated,
+  OrderQueryRequestValidated,
+  ProductIdParamsValidated,
+  OrderStatus,
+  // Interface types
+  AuthenticatedRequest,
+} from '../shared/types/index.js';
+
+// ============================================
+// ZOD VALIDATION HELPERS - STANDARDIZED
+// ============================================
+
+/**
+ * Validates request body with Zod schema
+ */
+function validateRequestBody<T>(schema: z.ZodSchema<T>, req: Request): T {
+  try {
+    return schema.parse(req.body);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const errors = error.issues.map(issue => ({
+        field: issue.path.join('.'),
+        message: issue.message,
+        code: issue.code
+      }));
+      throw new ValidationError('Request body validation failed', errors);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Validates request params with Zod schema
+ */
+function validateRequestParams<T>(schema: z.ZodSchema<T>, req: Request): T {
+  try {
+    return schema.parse(req.params);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const errors = error.issues.map(issue => ({
+        field: issue.path.join('.'),
+        message: issue.message,
+        code: issue.code
+      }));
+      throw new ValidationError('Request params validation failed', errors);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Validates request query with Zod schema
+ */
+function validateRequestQuery<T>(schema: z.ZodSchema<T>, req: Request): T {
+  try {
+    return schema.parse(req.query);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const errors = error.issues.map(issue => ({
+        field: issue.path.join('.'),
+        message: issue.message,
+        code: issue.code
+      }));
+      throw new ValidationError('Request query validation failed', errors);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Custom validation error class
+ */
+class ValidationError extends Error {
+  constructor(public message: string, public errors: Array<{ field: string; message: string; code: string }>) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
 
 // Factory function for dependency injection
 const createOrderService = () => new OrderService();
@@ -127,25 +209,18 @@ export class OrderController {
    */
   public async getOrders(req: Request, res: Response): Promise<void> {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        res.status(400).json({
-          success: false,
-          message: 'Invalid query parameters',
-          errors: errors.array()
-        });
-        return;
-      }
+      // 🔥 ZOD RUNTIME VALIDATION!
+      const queryParams = validateRequestQuery(OrderQueryRequestSchema, req);
 
       const query = {
-        page: req.query.page ? parseInt(req.query.page as string) : 1,
-        limit: req.query.limit ? Math.min(parseInt(req.query.limit as string), 100) : 20,
-        status: req.query.status as OrderStatus,
-        customer_email: req.query.customer_email as string,
-        date_from: req.query.date_from as string,
-        date_to: req.query.date_to as string,
-        sort_by: (req.query.sort_by as 'created_at' | 'total_amount_usd' | 'status') ?? 'created_at',
-        sort_direction: (req.query.sort_direction as 'asc' | 'desc') ?? 'desc'
+        page: queryParams.page ?? 1,
+        limit: Math.min(queryParams.limit ?? 20, 100),
+        status: queryParams.status,
+        customer_email: queryParams.customer_email,
+        date_from: queryParams.date_from,
+        date_to: queryParams.date_to,
+        sort_by: queryParams.sort_by ?? 'created_at',
+        sort_direction: queryParams.sort_direction ?? 'desc'
       };
 
       const result = await this.orderService.getOrders(query);
@@ -211,17 +286,9 @@ export class OrderController {
    */
   public async getOrderById(req: Request, res: Response): Promise<void> {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        res.status(400).json({
-          success: false,
-          message: 'Invalid order ID',
-          errors: errors.array()
-        });
-        return;
-      }
-
-      const orderId = parseInt(req.params.id);
+      // 🔥 ZOD RUNTIME VALIDATION!
+      const params = validateRequestParams(ProductIdParamsSchema, req);
+      const orderId = params.id;
       const order = await this.orderService.getOrderById(orderId);
 
       if (!order) {
@@ -361,17 +428,8 @@ export class OrderController {
    */
   public async createOrder(req: Request, res: Response): Promise<void> {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        res.status(400).json({
-          success: false,
-          message: 'Validation failed',
-          errors: errors.array()
-        });
-        return;
-      }
-
-      const orderData: OrderCreateRequest = req.body;
+      // 🔥 ZOD RUNTIME VALIDATION!
+      const orderData = validateRequestBody(OrderCreateRequestSchema, req);
       const order = await this.orderService.createOrder(orderData);
 
       res.status(201).json({
@@ -465,18 +523,10 @@ export class OrderController {
    */
   public async updateOrder(req: Request, res: Response): Promise<void> {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        res.status(400).json({
-          success: false,
-          message: 'Validation failed',
-          errors: errors.array()
-        });
-        return;
-      }
-
-      const orderId = parseInt(req.params.id);
-      const updateData: OrderUpdateRequest = { ...req.body, id: orderId };
+      // 🔥 ZOD RUNTIME VALIDATION!
+      const params = validateRequestParams(ProductIdParamsSchema, req);
+      const bodyData = validateRequestBody(OrderUpdateRequestSchema.omit({ id: true }), req);
+      const updateData = { ...bodyData, id: params.id };
 
       if (Object.keys(req.body).length === 0) {
         res.status(400).json({
@@ -568,18 +618,11 @@ export class OrderController {
    */
   public async updateOrderStatus(req: Request, res: Response): Promise<void> {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        res.status(400).json({
-          success: false,
-          message: 'Validation failed',
-          errors: errors.array()
-        });
-        return;
-      }
-
-      const orderId = parseInt(req.params.id);
-      const { status, notes } = req.body;
+      // 🔥 ZOD RUNTIME VALIDATION!
+      const params = validateRequestParams(ProductIdParamsSchema, req);
+      const bodyData = validateRequestBody(OrderStatusUpdateRequestSchema, req);
+      const orderId = params.id;
+      const { status, notes } = bodyData;
       const userId = (req as unknown as AuthenticatedRequest).user?.id; // From auth middleware
 
       const order = await this.orderService.updateOrderStatus(orderId, status, notes, userId);
@@ -668,7 +711,9 @@ export class OrderController {
    */
   public async getOrderStatusHistory(req: Request, res: Response): Promise<void> {
     try {
-      const orderId = parseInt(req.params.id);
+      // 🔥 ZOD RUNTIME VALIDATION!
+      const params = validateRequestParams(ProductIdParamsSchema, req);
+      const orderId = params.id;
       const history = await this.orderService.getOrderStatusHistory(orderId);
 
       res.status(200).json({
@@ -686,39 +731,8 @@ export class OrderController {
   }
 }
 
-// Validation middleware
-export const orderValidators = {
-  getOrders: [
-    query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
-    query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
-    query('status').optional().isIn(['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled']).withMessage('Invalid status'),
-    query('sort_by').optional().isIn(['created_at', 'total_amount_usd', 'status']).withMessage('Invalid sort field'),
-    query('sort_direction').optional().isIn(['asc', 'desc']).withMessage('Sort direction must be asc or desc')
-  ],
-
-  getOrderById: [
-    param('id').isInt({ min: 1 }).withMessage('Order ID must be a positive integer')
-  ],
-
-  createOrder: [
-    body('customer_email').isEmail().withMessage('Valid email is required'),
-    body('customer_name').notEmpty().isLength({ min: 2, max: 100 }).withMessage('Customer name must be 2-100 characters'),
-    body('delivery_address').notEmpty().isLength({ min: 10, max: 500 }).withMessage('Delivery address must be 10-500 characters'),
-    body('items').isArray({ min: 1 }).withMessage('Order must contain at least one item'),
-    body('items.*.product_id').isInt({ min: 1 }).withMessage('Product ID must be a positive integer'),
-    body('items.*.quantity').isInt({ min: 1 }).withMessage('Quantity must be a positive integer')
-  ],
-
-  updateOrder: [
-    param('id').isInt({ min: 1 }).withMessage('Order ID must be a positive integer'),
-    body('status').optional().isIn(['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled']).withMessage('Invalid status'),
-    body('delivery_date').optional().isISO8601().withMessage('Invalid delivery date format'),
-    body('admin_notes').optional().isLength({ max: 1000 }).withMessage('Admin notes must not exceed 1000 characters')
-  ],
-
-  updateOrderStatus: [
-    param('id').isInt({ min: 1 }).withMessage('Order ID must be a positive integer'),
-    body('status').isIn(['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled']).withMessage('Valid status is required'),
-    body('notes').optional().isLength({ max: 500 }).withMessage('Notes must not exceed 500 characters')
-  ]
-};
+// ============================================
+// ZOD VALIDATION COMPLETE - EXPRESS-VALIDATOR REMOVED
+// ============================================
+// All validation now handled by Zod schemas with runtime type safety
+// OrderController fully migrated to enterprise-grade validation

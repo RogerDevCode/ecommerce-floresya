@@ -22,7 +22,7 @@ export const MAX_PAGE_SIZE = 100;
 // DATABASE TABLE NAMES
 // ============================================
 
-export const Tables = {
+export const TABLE_NAMES = {
   USERS: 'users',
   PRODUCTS: 'products',
   PRODUCT_IMAGES: 'product_images',

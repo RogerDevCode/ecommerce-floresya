@@ -287,6 +287,57 @@
   visibility: hidden;
 }
 
+/* === CAROUSEL ARROW IMPROVEMENTS === */
+#carousel-prev,
+#carousel-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 30 !important; /* Higher than slide content */
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px);
+  border: 2px solid var(--floresya-primary-light);
+  border-radius: 50%;
+  padding: 12px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 25px rgba(236, 72, 153, 0.2);
+}
+
+#carousel-prev {
+  left: 16px;
+}
+
+#carousel-next {
+  right: 16px;
+}
+
+#carousel-prev:hover,
+#carousel-next:hover {
+  background: var(--floresya-primary) !important;
+  border-color: var(--floresya-primary);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 12px 35px rgba(236, 72, 153, 0.35);
+}
+
+#carousel-prev:hover i,
+#carousel-next:hover i {
+  color: white !important;
+}
+
+#carousel-prev i,
+#carousel-next i {
+  color: var(--floresya-primary);
+  width: 20px;
+  height: 20px;
+  transition: color 0.3s ease;
+}
+
 .carousel-slide.active {
   display: flex;
   opacity: 1;
@@ -319,6 +370,10 @@
 .carousel-image-container {
   flex: 0 0 300px;
   max-width: 300px;
+  min-height: 300px; /* Fixed height regardless of content */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .carousel-image-container img {
@@ -327,20 +382,31 @@
   object-fit: cover;
   border-radius: var(--floresya-border-radius);
   box-shadow: var(--floresya-shadow);
+  flex-shrink: 0; /* Prevent image from shrinking */
 }
 
 .carousel-content {
   flex: 1;
   max-width: 400px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center content vertically */
+  min-height: 300px; /* Match image container height */
 }
 
 .carousel-title {
-  font-size: 2rem;
+  font-size: 1.8rem; /* Slightly smaller to accommodate long names */
   font-weight: 800;
   color: var(--floresya-text);
   margin-bottom: 16px;
   line-height: 1.2;
+  /* Limit title to 2 lines for consistency */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  min-height: 2.16rem; /* 1.8rem * 1.2 line-height */
 }
 
 .carousel-description {

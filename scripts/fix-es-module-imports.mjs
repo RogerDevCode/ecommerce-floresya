@@ -5,6 +5,7 @@
  */
 
 import { readFileSync, writeFileSync } from 'fs';
+
 import { glob } from 'glob';
 
 console.log('🔧 Fixing ES module imports by adding .js extensions...');

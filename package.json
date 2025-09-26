@@ -14,8 +14,8 @@
     "build": "npm run clean && npm run build:css && npm run build:backend && npm run build:frontend",
     "build:backend": "tsc -p tsconfig.json",
     "build:backend:watch": "tsc -p tsconfig.json --watch",
-    "build:frontend": "tsc -p src/frontend/tsconfig.frontend.json && node scripts/post-build-frontend.js",
-    "build:frontend:watch": "tsc -p src/frontend/tsconfig.frontend.json --watch",
+    "build:frontend": "vite build",
+    "build:frontend:watch": "vite build --watch",
     "build:css": "postcss src/styles.css -o public/css/styles.css",
     "build:css:watch": "postcss src/styles.css -o public/css/styles.css --watch",
     "build:prod": "NODE_ENV=production npm run build",
@@ -48,13 +48,16 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
+    "@tanstack/react-query": "^5.90.2",
+    "@trpc/client": "^11.6.0",
+    "@trpc/react-query": "^11.6.0",
+    "@trpc/server": "^11.6.0",
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-rate-limit": "^7.1.5",
-    "express-validator": "^7.2.1",
     "glob": "^11.0.3",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
@@ -65,7 +68,8 @@
     "swagger-ui-express": "^5.0.0",
     "tailwindcss": "^4.0.0",
     "uuid": "^9.0.1",
-    "winston": "^3.11.0"
+    "winston": "^3.11.0",
+    "zod": "^4.1.11"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.13",
@@ -82,6 +86,7 @@
     "@types/uuid": "^9.0.7",
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@typescript-eslint/parser": "^6.15.0",
+    "@vitejs/plugin-react": "^5.0.3",
     "@vitejs/plugin-vue": "^4.5.2",
     "@vitest/coverage-v8": "^1.1.0",
     "@vitest/ui": "^1.1.0",
@@ -99,8 +104,11 @@
     "postcss-cli": "^11.0.1",
     "prettier": "^3.1.1",
     "rimraf": "^5.0.5",
+    "supabase": "^2.45.5",
     "supertest": "^6.3.3",
+    "ts-to-zod": "^4.0.1",
     "typescript": "^5.3.3",
+    "vite": "^7.1.7",
     "vitest": "^1.1.0"
   },
   "keywords": [

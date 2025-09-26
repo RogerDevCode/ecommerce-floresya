@@ -139,7 +139,8 @@ export class AdminProducts {
    */
   public async deleteProduct(productId: number): Promise<void> {
     try {
-      if (!confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+      if (typeof window?.confirm !== 'undefined' &&
+          !window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
         return;
       }
 
@@ -176,7 +177,7 @@ export class AdminProducts {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ is_available: newStatus })
+        body: JSON.stringify({ active: newStatus })
       });
 
       if (!response.ok) throw new Error('Failed to update product availability');
@@ -291,20 +292,17 @@ export class AdminProducts {
         <td><strong>#${product.id}</strong></td>
         <td>
           <div class="d-flex align-items-center">
-            ${product.image_url ?
-              `<img src="${product.image_url}" alt="${product.name}" class="me-2 rounded" style="width: 40px; height: 40px; object-fit: cover;">` :
-              `<div class="me-2 bg-light rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="bi bi-image text-muted"></i></div>`
-            }
+            ${product.id ? `<img src="/images/products/${product.id}.jpg" alt="${product.name}" class="me-2 rounded" style="width: 40px; height: 40px; object-fit: cover;" onerror="this.src='/images/placeholder-product.webp'">` : `<div class="me-2 bg-light rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="bi bi-image text-muted"></i></div>`}
             <div>
               <div class="fw-medium">${product.name}</div>
               ${product.description ? `<small class="text-muted">${product.description.substring(0, 50)}...</small>` : ''}
             </div>
           </div>
         </td>
-        <td>$${product.price_usd.toFixed(2)}</td>
+        <td>${product.price_usd.toFixed(2)}</td>
         <td>
-          <span class="badge bg-${product.is_available ? 'success' : 'secondary'}">
-            ${product.is_available ? 'Disponible' : 'No disponible'}
+          <span class="badge bg-${product.stock && product.stock > 0 ? 'success' : 'secondary'}">
+            ${product.stock && product.stock > 0 ? 'Disponible' : 'No disponible'}
           </span>
         </td>
         <td>${new Date(product.created_at).toLocaleDateString()}</td>
@@ -318,10 +316,10 @@ export class AdminProducts {
                     title="Ver imágenes">
               <i class="bi bi-images"></i>
             </button>
-            <button class="btn btn-outline-${product.is_available ? 'warning' : 'success'}"
-                    onclick="adminPanel.products.toggleProductAvailability(${product.id}, ${product.is_available})"
-                    title="${product.is_available ? 'Deshabilitar' : 'Habilitar'} producto">
-              <i class="bi bi-${product.is_available ? 'pause' : 'play'}"></i>
+            <button class="btn btn-outline-${product.active ? 'warning' : 'success'}"
+                    onclick="adminPanel.products.toggleProductAvailability(${product.id}, ${product.active})"
+                    title="${product.active ? 'Deshabilitar' : 'Habilitar'} producto">
+              <i class="bi bi-${product.active ? 'pause' : 'play'}"></i>
             </button>
             <button class="btn btn-outline-danger" onclick="adminPanel.products.deleteProduct(${product.id})"
                     title="Eliminar producto">
@@ -449,7 +447,7 @@ export class AdminProducts {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
       price_usd: parseFloat(formData.get('price_usd') as string),
-      is_available: formData.get('is_available') === 'true',
+      active: formData.get('is_available') === 'true',
       category_id: formData.get('category_id') ? parseInt(formData.get('category_id') as string) : undefined,
       occasion_id: formData.get('occasion_id') ? parseInt(formData.get('occasion_id') as string) : undefined
     };

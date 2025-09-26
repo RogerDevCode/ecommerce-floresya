@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # 🌸 FloresYa - Enterprise E-commerce Platform
 
 ## Project Overview
-Enterprise-grade TypeScript e-commerce platform for flower delivery with **absolute zero tolerance for code quality violations**. Built with Node.js/Express, Supabase PostgreSQL, and deployed on Vercel. Implements Silicon Valley-grade **Single Source of Truth (SSOT)** architecture with complete type safety enforcement.
+Enterprise-grade TypeScript e-commerce platform for flower delivery with **absolute zero tolerance for code quality violations**. Built with Node.js/Express, **tRPC for end-to-end type safety**, Supabase PostgreSQL, and deployed on Vercel. Implements Silicon Valley-grade **Single Source of Truth (SSOT)** architecture with complete type safety enforcement between frontend and backend.
 
 ## Core Architecture Principles
 
@@ -15,13 +15,32 @@ Enterprise-grade TypeScript e-commerce platform for flower delivery with **absol
 - Shared utilities in `src/shared/`
 - Legacy type files removed to prevent duplication
 
-### TypeSafe Database Architecture
-The project uses `TypeSafeDatabaseService` (not legacy `DatabaseService`) with strict typing:
+### tRPC Type-Safe API Architecture
+The project uses **tRPC** for end-to-end type safety between frontend and backend:
 ```typescript
-// ✅ CORRECT: TypeSafe approach
+// ✅ CORRECT: tRPC approach with full type safety
+const result = await trpc.user.login.mutate({ email, password });
+// TypeScript knows the exact shape of result.data
+
+// ❌ LEGACY: REST API with manual typing
+const response = await fetch('/api/users/login', { /* ... */ });
+const data = response.json() as any; // Type safety lost
+```
+
+**tRPC Architecture:**
+- `src/app/trpc/` - Server-side tRPC routers and configuration
+- `src/frontend/trpc/` - Client-side tRPC hooks and utilities
+- `/trpc` endpoint exposes all type-safe procedures
+- Automatic type inference from server to client
+
+### TypeSafe Database Architecture
+The project uses `TypeSafeDatabaseService` with Supabase-generated types:
+```typescript
+// ✅ CORRECT: TypeSafe approach with Supabase types
+import type { Database } from '../shared/types/schema_supabase.js';
 const client: SupabaseClient<Database> = createClient<Database>(url, key);
 
-// ❌ WRONG: Casting approach
+// ❌ WRONG: Manual casting approach
 const db = supabaseService as any;
 ```
 
@@ -66,32 +85,61 @@ node scripts/validate-ssot.js
 
 ```
 src/
-├── types/                    # ❌ LEGACY (FORBIDDEN TO USE)
-│   ├── database.ts          # ❌ DEPRECATED - Use shared/types/index.ts
-│   ├── api.ts              # ❌ DEPRECATED - Use shared/types/index.ts
-│   ├── admin.ts            # ❌ DEPRECATED - Use shared/types/index.ts
-│   └── logging.ts          # ❌ DEPRECATED - Use shared/types/index.ts
-├── services/               # Business logic layer
-│   ├── TypeSafeDatabaseService.ts  # ✅ PRIMARY - ZERO 'any' types
-│   └── *Service.ts         # Domain services (User, Product, etc.)
-├── controllers/            # HTTP request handlers
 ├── app/                   # Express server setup
-│   ├── routes/            # Route definitions
+│   ├── trpc/              # ✅ tRPC ROUTERS (Type-safe API)
+│   │   ├── router.ts      # Main app router combining all domains
+│   │   ├── trpc.ts        # Base tRPC configuration & context
+│   │   ├── trpcMiddleware.ts # Express middleware integration
+│   │   └── routers/       # Domain-specific routers
+│   │       ├── userRouter.ts     # User operations (login, register, etc.)
+│   │       ├── productRouter.ts  # Product operations (CRUD, search)
+│   │       ├── orderRouter.ts    # Order operations (user orders, status)
+│   │       ├── occasionRouter.ts # Occasion operations (list, filter)
+│   │       ├── imageRouter.ts    # Image operations (upload, resize)
+│   │       └── dashboardRouter.ts # Admin dashboard stats
+│   ├── routes/            # ❌ LEGACY REST routes (maintained for compatibility)
 │   └── middleware/        # Auth, validation middleware
+├── services/              # Business logic layer
+│   ├── TypeSafeDatabaseService.ts  # ✅ PRIMARY - ZERO 'any' types
+│   └── *Service.ts        # Domain services (User, Product, etc.)
+├── controllers/           # ❌ LEGACY HTTP request handlers (being replaced by tRPC)
 ├── frontend/              # TypeScript frontend code
+│   ├── trpc/              # ✅ tRPC CLIENT (Type-safe frontend)
+│   │   ├── client.ts      # Main tRPC client configuration
+│   │   ├── index.ts       # Consolidated exports
+│   │   ├── demo.ts        # Usage examples and demos
+│   │   └── hooks/         # Custom hooks for each domain
+│   │       ├── useAuth.ts      # Login, register, profile hooks
+│   │       ├── useProducts.ts  # Product management hooks
+│   │       ├── useOrders.ts    # Order management hooks
+│   │       ├── useOccasions.ts # Occasion hooks
+│   │       └── useDashboard.ts # Dashboard hooks
 │   ├── admin/             # Admin panel modules
-│   ├── services/          # Frontend API clients
-│   └── types/             # ❌ LEGACY - Use shared/types/index.ts
+│   └── services/          # ❌ LEGACY API clients (being replaced by tRPC)
 └── shared/                # ✅ SSOT Cross-cutting utilities
-    └── types/             # ✅ EXCLUSIVE SOURCE OF TRUTH
-        └── index.ts       # ✅ ALL TYPE DEFINITIONS (1,000+ lines)
+    ├── types/             # ✅ EXCLUSIVE SOURCE OF TRUTH
+    │   ├── index.ts       # ✅ Zod schemas & re-exported Supabase types
+    │   └── schema_supabase.ts # ✅ AUTO-GENERATED Supabase types
+    └── utils/             # Shared utilities
+        └── typeGuards.ts  # Runtime type validation helpers
 ```
 
 ### Key Files Reference
-- `src/shared/types/index.ts:1` - Master consolidated type definitions
+**tRPC Architecture:**
+- `src/app/trpc/router.ts:15` - Main tRPC app router with type inference
+- `src/app/trpc/trpc.ts:41` - tRPC instance configuration & middlewares
+- `src/frontend/trpc/client.ts:11` - Frontend tRPC client with auth headers
+- `src/frontend/trpc/hooks/useAuth.ts:18` - Authentication hooks
+
+**SSOT Types:**
+- `src/shared/types/schema_supabase.ts:9` - Auto-generated Supabase Database types
+- `src/shared/types/index.ts:19` - Zod schemas + re-exported Database types
+- `src/shared/utils/typeGuards.ts:20` - Runtime type validation helpers
+
+**Legacy (Being Migrated):**
 - `src/services/TypeSafeDatabaseService.ts:24` - Main database service class
-- `src/app/server.ts:1` - Express server entry point
-- `package.json:11` - Build scripts and dependencies
+- `src/app/server.ts:231` - Express server entry point with tRPC integration
+- `package.json:50` - Build scripts and tRPC dependencies
 
 ## Development Guidelines
 
@@ -114,9 +162,43 @@ All critical database operations use atomic PostgreSQL functions:
 
 ### Frontend Architecture
 - Vanilla TypeScript compiled to `dist/frontend/`
+- **tRPC hooks** for type-safe API communication (replacing legacy apiClient)
 - Static files served from `public/`
 - Tailwind CSS for styling
-- Type-safe API communication
+
+### tRPC Development Workflow
+**Server-side (Adding new API endpoint):**
+```typescript
+// 1. Add procedure to appropriate router
+export const userRouter = router({
+  getUserProfile: protectedProcedure
+    .output(z.object({ success: z.boolean(), data: UserSchema }))
+    .query(async ({ ctx }) => {
+      // Implementation with full type safety
+      return { success: true, data: ctx.user };
+    }),
+});
+```
+
+**Client-side (Using the endpoint):**
+```typescript
+// 2. Create hook in frontend/trpc/hooks/
+export function useUserProfile() {
+  return {
+    async getProfile() {
+      return safeTRPCCall(() => trpc.user.getUserProfile.query());
+    },
+  };
+}
+
+// 3. Use in components with full type safety
+const { getProfile } = useUserProfile();
+const result = await getProfile();
+if (result.success) {
+  // TypeScript knows exact shape of result.data
+  console.log(result.data.data.email); // Fully typed!
+}
+```
 
 ## Testing Strategy
 

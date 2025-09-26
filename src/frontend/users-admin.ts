@@ -3,6 +3,13 @@
  * Complete user management interface with advanced features
  */
 
+
+import type {
+  WindowWithFloresyaLogger,
+  WindowWithUsersAdmin
+} from '../shared/types/frontend.js';
+
+import { api } from './services/apiClient.js';
 import type {
   PaginationInfo,
   UserCreateRequest,
@@ -11,12 +18,6 @@ import type {
   UserResponse,
   UserUpdateRequest
 } from "shared/types/index";
-import type {
-  WindowWithFloresyaLogger,
-  WindowWithUsersAdmin
-} from '../shared/types/frontend.js';
-
-import { api } from './services/apiClient.js';
 
 // Extend window with our interfaces
 declare const window: WindowWithFloresyaLogger & WindowWithUsersAdmin;
@@ -120,7 +121,7 @@ class UsersAdminManager {
 
     this.currentQuery = {
       ...this.currentQuery,
-      role: (roleFilter as 'user' | 'admin' | 'support') || undefined,
+      role: (roleFilter as 'user' | 'admin') || undefined,
       is_active: statusFilter ? statusFilter === 'true' : undefined,
       email_verified: emailVerifiedFilter ? emailVerifiedFilter === 'true' : undefined,
       sort_by: (sortBy as 'email' | 'full_name' | 'role' | 'created_at' | 'updated_at') || 'created_at',
@@ -510,10 +511,8 @@ class UsersAdminManager {
     const userRow = document.querySelector(`tr[data-user-id="${userId}"]`);
     const userEmail = userRow?.querySelector('td:first-child span')?.textContent || 'el usuario';
 
-    const confirmed = confirm(
-      `¿Está seguro de eliminar a ${userEmail}?\n\n` +
-      'Esta acción no se puede deshacer. Solo se puede eliminar usuarios que no tengan órdenes o pagos asociados.'
-    );
+    const confirmed = typeof window?.confirm !== 'undefined' &&
+                      window.confirm('¿Estás seguro de que deseas eliminar este usuario?');
 
     if (!confirmed) {return;}
 
@@ -559,7 +558,7 @@ class UsersAdminManager {
           email: formData.email,
           full_name: formData.full_name,
           phone: formData.phone || undefined,
-          role: formData.role as 'user' | 'admin' | 'support',
+          role: formData.role as 'user' | 'admin',
           is_active: formData.is_active,
           email_verified: formData.email_verified
         };
@@ -581,7 +580,7 @@ class UsersAdminManager {
           password: formData.password,
           full_name: formData.full_name,
           phone: formData.phone || undefined,
-          role: formData.role as 'user' | 'admin' | 'support',
+          role: formData.role as 'user' | 'admin',
           is_active: formData.is_active,
           email_verified: formData.email_verified
         };
@@ -753,7 +752,6 @@ class UsersAdminManager {
   private getRoleBadgeClass(role: string): string {
     switch (role) {
       case 'admin': return 'bg-danger';
-      case 'support': return 'bg-warning text-dark';
       case 'user': return 'bg-primary';
       default: return 'bg-secondary';
     }
@@ -762,7 +760,6 @@ class UsersAdminManager {
   private getRoleIcon(role: string): string {
     switch (role) {
       case 'admin': return 'bi-shield-fill-check';
-      case 'support': return 'bi-headset';
       case 'user': return 'bi-person-fill';
       default: return 'bi-question-circle';
     }
@@ -771,7 +768,6 @@ class UsersAdminManager {
   private getRoleLabel(role: string): string {
     switch (role) {
       case 'admin': return 'Administrador';
-      case 'support': return 'Soporte';
       case 'user': return 'Usuario';
       default: return role;
     }

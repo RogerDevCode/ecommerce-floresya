@@ -5,7 +5,7 @@
 
 import { Router } from 'express';
 
-import { LogsController, logsValidators } from '../../controllers/LogsController.js';
+import { LogsController } from '../../controllers/LogsController.js';
 
 export function createLogsRoutes(): Router {
   const router = Router();
@@ -14,7 +14,6 @@ export function createLogsRoutes(): Router {
   // POST /api/logs/frontend - Receive frontend logs
   router.post(
     '/frontend',
-    logsValidators.receiveFrontendLogs,
     logsController.receiveFrontendLogs.bind(logsController)
   );
 

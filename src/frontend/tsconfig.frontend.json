@@ -6,10 +6,12 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "outDir": "../../dist/frontend",
     "rootDir": "..",
-    "declaration": false,
-    "declarationMap": false,
+    "declaration": true,
+    "declarationMap": true,
     "types": ["node"],
     "baseUrl": "..",
+    "composite": true,
+    "tsBuildInfoFile": "../../dist/frontend/.tsbuildinfo",
     "paths": {
       "shared/*": ["shared/*"],
       "config/*": ["config/*"]
@@ -18,7 +20,9 @@
   "include": [
     "**/*",
     "../shared/**/*",
-    "../config/**/*"
+    "../config/**/*",
+    "../app/trpc/**/*",
+    "../services/**/*"
   ],
   "exclude": [
     "node_modules",

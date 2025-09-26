@@ -1,17 +1,20 @@
 /**
- * 🌸 FloresYa User Service - Enterprise TypeScript Edition
- * Business logic for user management with atomic operations
+ * 🌸 FloresYa User Service - ZOD VALIDATED EDITION
+ * Business logic for user management with runtime validation
  */
 
 import * as bcrypt from 'bcryptjs';
 
 import {
-  type ApiResponse,
-  type UserCreateRequest,
-  type UserListResponse,
-  type UserQuery,
-  type UserResponse,
-  type UserUpdateRequest
+  // API Response types (NO MORE GENERICS!)
+  UserApiResponse,
+  UserListApiResponse,
+  // Types only
+  UserCreateRequest,
+  UserListResponse,
+  UserQuery,
+  UserResponse,
+  UserUpdateRequest
 } from '../shared/types/index.js';
 
 import { typeSafeDatabaseService } from './TypeSafeDatabaseService.js';
@@ -37,7 +40,7 @@ export class UserService {
   /**
    * Get all users with optional filtering and pagination
    */
-  public async getAllUsers(query: UserQuery = {}): Promise<ApiResponse<UserListResponse>> {
+  public async getAllUsers(query: UserQuery = {}): Promise<UserListApiResponse> {
     try {
       const {
         page = 1,
@@ -116,7 +119,7 @@ export class UserService {
   /**
    * Get user by ID
    */
-  public async getUserById(id: number): Promise<ApiResponse<UserResponse>> {
+  public async getUserById(id: number): Promise<UserApiResponse> {
     try {
       if (!id || isNaN(id)) {
         return {
@@ -161,7 +164,7 @@ export class UserService {
   /**
    * Get user by email
    */
-  public async getUserByEmail(email: string): Promise<ApiResponse<UserResponse>> {
+  public async getUserByEmail(email: string): Promise<UserApiResponse> {
     try {
       if (!email?.trim()) {
         return {
@@ -206,7 +209,7 @@ export class UserService {
   /**
    * Create new user using atomic transaction
    */
-  public async createUser(userData: UserCreateRequest): Promise<ApiResponse<UserResponse>> {
+  public async createUser(userData: UserCreateRequest): Promise<UserApiResponse> {
     try {
       // Validate input
       const validation = this.validateUserData(userData, true);
@@ -280,7 +283,7 @@ export class UserService {
   /**
    * Update user using atomic transaction
    */
-  public async updateUser(id: number, userData: UserUpdateRequest): Promise<ApiResponse<UserResponse>> {
+  public async updateUser(id: number, userData: UserUpdateRequest): Promise<UserApiResponse> {
     try {
       if (!id || isNaN(id)) {
         return {
@@ -376,7 +379,7 @@ export class UserService {
   /**
    * Toggle user active status
    */
-  public async toggleUserActive(id: number): Promise<ApiResponse<UserResponse>> {
+  public async toggleUserActive(id: number): Promise<UserApiResponse> {
     try {
       if (!id || isNaN(id)) {
         return {
@@ -415,7 +418,7 @@ export class UserService {
   /**
    * Delete user with safety checks
    */
-  public async deleteUser(id: number): Promise<ApiResponse<{ deleted_user: { id: number; email: string; full_name?: string } }>> {
+  public async deleteUser(id: number): Promise<{ success: boolean; data?: { deleted_user: { id: number; email: string; full_name?: string } }; message?: string; error?: string }> {
     try {
       if (!id || isNaN(id)) {
         return {

@@ -6,11 +6,9 @@
  */
 
 import { readFileSync, writeFileSync } from 'fs';
-import { resolve, dirname, relative } from 'path';
+import { dirname, relative } from 'path';
 
 import { glob } from 'glob';
-
-const PROJECT_ROOT = resolve('.');
 
 console.log('🔧 Fixing relative import paths for new structure...');
 
@@ -25,8 +23,7 @@ for (const filePath of files) {
   const originalContent = content;
   let modifiedContent = content;
 
-  // Get file directory to calculate correct relative paths
-  const fileDir = dirname(filePath);
+  // Calculate correct relative paths
 
   // Function to calculate correct relative path
   const getRelativePath = (from, to) => {

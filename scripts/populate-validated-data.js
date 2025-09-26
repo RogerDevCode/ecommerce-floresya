@@ -5,6 +5,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import { populateProductImages } from './populate-product-images.js';
 
 // Load environment variables
 dotenv.config();
@@ -482,8 +483,17 @@ async function main() {
     const users = await insertUsers();
     const products = await insertProducts();
 
-    // Insert related data
-    const images = await insertProductImages(products);
+    // Insert related data with improved image handling
+    console.log('\n🖼️ Recreando tabla product-images con imágenes reales de Supabase Storage...');
+    try {
+      await populateProductImages();
+      console.log('✅ Imágenes reales asignadas desde Supabase Storage');
+    } catch (imageError) {
+      console.warn('⚠️ Error con imágenes reales, usando imágenes de respaldo:', imageError.message);
+      const images = await insertProductImages(products);
+      console.log(`✅ ${images.length} imágenes de respaldo insertadas`);
+    }
+
     await linkProductsToOccasions(products, occasions);
     await insertSampleOrders(products, users);
 

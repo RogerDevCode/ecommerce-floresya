@@ -4,10 +4,93 @@
  */
 
 import { Request, Response } from 'express';
-import { body, param, query, validationResult } from 'express-validator';
 import multer from 'multer';
+import { z } from 'zod';
 
 import { ImageService } from '../services/ImageService.js';
+import {
+  // Validation Schemas
+  ProductIdParamsSchema,
+  ImageUploadRequestSchema,
+  SiteImageUploadRequestSchema,
+  ImageGalleryQueryRequestSchema,
+  // Types only (no unused schemas)
+  ImageUploadRequestValidated,
+  SiteImageUploadRequestValidated,
+  ImageGalleryQueryRequestValidated,
+  ProductIdParamsValidated,
+} from '../shared/types/index.js';
+
+// ============================================
+// ZOD VALIDATION HELPERS - STANDARDIZED
+// ============================================
+
+/**
+ * Validates request body with Zod schema
+ */
+function validateRequestBody<T>(schema: z.ZodSchema<T>, req: Request): T {
+  try {
+    return schema.parse(req.body);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const errors = error.issues.map(issue => ({
+        field: issue.path.join('.'),
+        message: issue.message,
+        code: issue.code
+      }));
+      throw new ValidationError('Request body validation failed', errors);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Validates request params with Zod schema
+ */
+function validateRequestParams<T>(schema: z.ZodSchema<T>, req: Request): T {
+  try {
+    return schema.parse(req.params);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const errors = error.issues.map(issue => ({
+        field: issue.path.join('.'),
+        message: issue.message,
+        code: issue.code
+      }));
+      throw new ValidationError('Request params validation failed', errors);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Validates request query with Zod schema
+ */
+function validateRequestQuery<T>(schema: z.ZodSchema<T>, req: Request): T {
+  try {
+    return schema.parse(req.query);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const errors = error.issues.map(issue => ({
+        field: issue.path.join('.'),
+        message: issue.message,
+        code: issue.code
+      }));
+      throw new ValidationError('Request query validation failed', errors);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Custom validation error class
+ */
+class ValidationError extends Error {
+  constructor(public message: string, public errors: Array<{ field: string; message: string; code: string }>) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
 
 // Factory function for dependency injection
 const createImageService = () => new ImageService();
@@ -101,17 +184,6 @@ export class ImageController {
    */
   public async uploadProductImage(req: Request, res: Response): Promise<void> {
     try {
-      // Validar parámetros de la request
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        res.status(400).json({
-          success: false,
-          message: 'Validation failed',
-          errors: errors.array()
-        });
-        return;
-      }
-
       // Verificar que se recibió un archivo
       if (!req.file) {
         res.status(400).json({
@@ -121,9 +193,12 @@ export class ImageController {
         return;
       }
 
-      const productId = parseInt(req.params.productId);
-      const imageIndex = parseInt(req.body.imageIndex ?? '0');
-      const isPrimary = req.body.isPrimary === 'true';
+      // 🔥 ZOD RUNTIME VALIDATION!
+      const paramsData = { ...req.params, ...req.body };
+      const validatedParams = ImageUploadRequestSchema.parse(paramsData);
+      const productId = validatedParams.productId;
+      const imageIndex = validatedParams.imageIndex ?? 0;
+      const isPrimary = validatedParams.isPrimary ?? false;
 
       // Validar el archivo de imagen
        const validation = this.imageService.validateImageFile(req.file);
@@ -203,17 +278,9 @@ export class ImageController {
    */
   public async deleteProductImages(req: Request, res: Response): Promise<void> {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        res.status(400).json({
-          success: false,
-          message: 'Validation failed',
-          errors: errors.array()
-        });
-        return;
-      }
-
-      const productId = parseInt(req.params.productId);
+      // 🔥 ZOD RUNTIME VALIDATION!
+      const params = validateRequestParams(z.object({ productId: z.string().transform(val => parseInt(val, 10)).pipe(z.number().int().positive()) }), req);
+      const productId = params.productId;
 
       const success = await this.imageService.deleteProductImages(productId);
 
@@ -287,17 +354,9 @@ export class ImageController {
    */
   public async getProductImages(req: Request, res: Response): Promise<void> {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        res.status(400).json({
-          success: false,
-          message: 'Validation errors',
-          errors: errors.array()
-        });
-        return;
-      }
-
-      const productId = parseInt(req.params.productId ?? '0');
+      // 🔥 ZOD RUNTIME VALIDATION!
+      const params = validateRequestParams(z.object({ productId: z.string().transform(val => parseInt(val, 10)).pipe(z.number().int().positive()) }), req);
+      const productId = params.productId;
 
       const images = await this.imageService.getProductImages(productId);
 
@@ -394,9 +453,11 @@ export class ImageController {
    */
   public async getImagesGallery(req: Request, res: Response): Promise<void> {
     try {
-      const filter = req.query.filter as 'all' | 'used' | 'unused' ?? 'all';
-      const page = parseInt(req.query.page as string) ?? 1;
-      const limit = Math.min(parseInt(req.query.limit as string) ?? 20, 100);
+      // 🔥 ZOD RUNTIME VALIDATION!
+      const queryParams = validateRequestQuery(ImageGalleryQueryRequestSchema, req);
+      const filter = queryParams.filter ?? 'all';
+      const page = queryParams.page ?? 1;
+      const limit = Math.min(queryParams.limit ?? 20, 100);
 
       const result = await this.imageService.getImagesGallery(filter, page, limit);
 
@@ -461,16 +522,6 @@ export class ImageController {
    */
   public async uploadSiteImage(req: Request, res: Response): Promise<void> {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        res.status(400).json({
-          success: false,
-          message: 'Validation failed',
-          errors: errors.array()
-        });
-        return;
-      }
-
       if (!req.file) {
         res.status(400).json({
           success: false,
@@ -479,14 +530,9 @@ export class ImageController {
         return;
       }
 
-      const type = req.body.type as 'hero' | 'logo';
-      if (!['hero', 'logo'].includes(type)) {
-        res.status(400).json({
-          success: false,
-          message: 'Invalid image type. Must be "hero" or "logo"'
-        });
-        return;
-      }
+      // 🔥 ZOD RUNTIME VALIDATION!
+      const bodyData = validateRequestBody(SiteImageUploadRequestSchema, req);
+      const type = bodyData.type;
 
       const validation = this.imageService.validateImageFile(req.file);
        if (!validation.valid) {
@@ -648,29 +694,8 @@ export class ImageController {
 // Middleware para subir archivos
 export const imageUpload = upload.single('image');
 
-// Validation middleware
-export const imageValidators = {
-  uploadProductImage: [
-    param('productId').isInt({ min: 1 }).withMessage('Product ID must be a positive integer'),
-    body('imageIndex').optional().isInt({ min: 0 }).withMessage('Image index must be a non-negative integer'),
-    body('isPrimary').optional().isIn(['true', 'false']).withMessage('isPrimary must be true or false')
-  ],
-
-  deleteProductImages: [
-    param('productId').isInt({ min: 1 }).withMessage('Product ID must be a positive integer')
-  ],
-
-  getProductImages: [
-    param('productId').isInt({ min: 1 }).withMessage('Product ID must be a positive integer')
-  ],
-
-  getImagesGallery: [
-    query('filter').optional().isIn(['all', 'used', 'unused']).withMessage('Filter must be all, used, or unused'),
-    query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
-    query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
-  ],
-
-  uploadSiteImage: [
-    body('type').isIn(['hero', 'logo']).withMessage('Type must be hero or logo')
-  ]
-};
+// ============================================
+// ZOD VALIDATION COMPLETE - EXPRESS-VALIDATOR REMOVED
+// ============================================
+// All validation now handled by Zod schemas with runtime type safety
+// ImageController fully migrated to enterprise-grade validation

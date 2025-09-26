@@ -34,15 +34,15 @@ export class ImageService {
    * Procesa una imagen y crea las 4 variaciones de tamaño
    */
   public async processImage(file: MulterFile): Promise<ProcessedImage[]> {
-    try {
-      const originalBuffer = file.buffer;
-      const baseFileName = this.generateFileName(file.originalname);
-      const fileHash = this.generateFileHash(originalBuffer);
+    const originalBuffer = file.buffer;
+    const baseFileName = this.generateFileName(file.originalname);
+    const fileHash = this.generateFileHash(originalBuffer);
 
-      const processedImages: ProcessedImage[] = [];
+    const processedImages: ProcessedImage[] = [];
 
-      // Procesar cada tamaño
-      for (const [size, dimensions] of Object.entries(this.IMAGE_SIZES)) {
+    // Procesar cada tamaño
+    for (const [size, dimensions] of Object.entries(this.IMAGE_SIZES)) {
+      try {
         const processedBuffer = await this.resizeImage(
           originalBuffer,
           dimensions.width,
@@ -60,12 +60,12 @@ export class ImageService {
           mimeType: 'image/webp',
           fileHash
         });
+      } catch (error) {
+        throw new Error(`Failed to process ${size} image: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
-
-      return processedImages;
-    } catch (error) {
-            throw new Error(`Failed to process image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+
+    return processedImages;
   }
 
   /**
@@ -216,7 +216,6 @@ export class ImageService {
  * Obtener imágenes de un producto específico
  */
 public async getProductImages(productId: number): Promise<ProductImage[]> {
-  try {
     const { data, error } = await typeSafeDatabaseService.getClient()
       .from('product_images')
       .select('*')
@@ -224,13 +223,10 @@ public async getProductImages(productId: number): Promise<ProductImage[]> {
       .order('image_index', { ascending: true });
 
     if (error) {
-            throw error;
+      throw new Error(`Failed to fetch product images: ${error.message}`);
     }
 
     return (data ?? []) as ProductImage[];
-  } catch (error) {
-        throw error;
-  }
 }
 
 /**
@@ -277,28 +273,24 @@ private async resizeImage(
     * Valida que el archivo sea una imagen válida
     */
    public validateImageFile(file: MulterFile): { valid: boolean; error?: string } {
-     try {
-       // Verificar que el archivo existe
-       if (!file) {
-         return { valid: false, error: 'No file provided' };
-       }
-
-       // Verificar tamaño máximo (5MB)
-       const maxSize = 5 * 1024 * 1024; // 5MB
-       if (file.size > maxSize) {
-         return { valid: false, error: 'Image file size must be less than 5MB' };
-       }
-
-       // Verificar tipo MIME
-       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-       if (!allowedTypes.includes(file.mimetype)) {
-         return { valid: false, error: 'Only JPEG, PNG, and WebP images are allowed' };
-       }
-
-       return { valid: true };
-     } catch (error) {
-              return { valid: false, error: 'Invalid file format' };
+     // Verificar que el archivo existe
+     if (!file) {
+       return { valid: false, error: 'No file provided' };
      }
+
+     // Verificar tamaño máximo (5MB)
+     const maxSize = 5 * 1024 * 1024; // 5MB
+     if (file.size > maxSize) {
+       return { valid: false, error: 'Image file size must be less than 5MB' };
+     }
+
+     // Verificar tipo MIME
+     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+     if (!allowedTypes.includes(file.mimetype)) {
+       return { valid: false, error: 'Only JPEG, PNG, and WebP images are allowed' };
+     }
+
+     return { valid: true };
    }
 
   /**
@@ -321,7 +313,6 @@ private async resizeImage(
       pages: number;
     };
   }> {
-    try {
       let query = typeSafeDatabaseService.getClient()
         .from('product_images')
         .select(`
@@ -394,9 +385,6 @@ private async resizeImage(
           pages: totalPages
         }
       };
-    } catch (error) {
-            throw error;
-    }
   }
 
   /**
@@ -465,20 +453,12 @@ private async resizeImage(
  * Obtiene las imágenes actuales del sitio
  */
 public getCurrentSiteImages(): { hero: string; logo: string; } {
-  try {
-    // Por ahora, devolver valores por defecto
-    // En el futuro, esto podría venir de una tabla settings
-    return {
-      hero: '/images/hero-flowers.webp',
-      logo: '/images/logoFloresYa.jpeg'
-    };
-  } catch (error) {
-        // Devolver valores por defecto en caso de error
-    return {
-      hero: '/images/hero-flowers.webp',
-      logo: '/images/logoFloresYa.jpeg'
-    };
-  }
+  // Por ahora, devolver valores por defecto
+  // En el futuro, esto podría venir de una tabla settings
+  return {
+    hero: '/images/hero-flowers.webp',
+    logo: '/images/logoFloresYa.jpeg'
+  };
 }
 
   /**
@@ -497,103 +477,101 @@ public getCurrentSiteImages(): { hero: string; logo: string; } {
       image_count: number;
     }>;
   }> {
-    try {
-      // Construir consulta base para productos
-      let productsQuery = typeSafeDatabaseService.getClient()
-        .from('products')
-        .select('id, name, price_usd, active');
+    // Construir consulta base para productos
+    let productsQuery = typeSafeDatabaseService.getClient()
+      .from('products')
+      .select('id, name, price_usd, active');
 
-      // Aplicar filtro de estado del producto
-      if (productStatus === 'active') {
-        productsQuery = productsQuery.eq('active', true);
-      } else if (productStatus === 'inactive') {
-        productsQuery = productsQuery.eq('active', false);
+    // Aplicar filtro de estado del producto
+    if (productStatus === 'active') {
+      productsQuery = productsQuery.eq('active', true);
+    } else if (productStatus === 'inactive') {
+      productsQuery = productsQuery.eq('active', false);
+    }
+    // Para 'all' no aplicamos filtro de estado
+
+    const { data: allProducts, error: productsError } = await productsQuery;
+
+    if (productsError) {
+      throw new Error(`Failed to fetch products: ${productsError.message}`);
+    }
+
+    if (!allProducts || allProducts.length === 0) {
+      return { products: [] };
+    }
+
+    // Si hay filtro de ocasión, necesitamos obtener productos que tengan esa ocasión
+    let filteredProductIds = (allProducts as { id: number }[]).map(p => p.id);
+
+    if (occasionFilter && occasionFilter !== 'general') {
+      const { data: occasionProducts, error: occasionError } = await typeSafeDatabaseService.getClient()
+        .from('product_occasions')
+        .select('product_id')
+        .eq('occasion_id', parseInt(occasionFilter));
+
+      if (occasionError) {
+        console.warn('Warning: Failed to fetch occasion products:', occasionError.message);
+      } else if (occasionProducts) {
+        const occasionProductIds = (occasionProducts as { product_id: number }[]).map(op => op.product_id);
+        filteredProductIds = filteredProductIds.filter(id => occasionProductIds.includes(id));
       }
-      // Para 'all' no aplicamos filtro de estado
+    }
 
-      const { data: allProducts, error: productsError } = await productsQuery;
+    // Obtener conteo de imágenes para los productos filtrados
+    // Agrupar por product_id para contar imágenes únicas (no por tamaño)
+    const { data: imageCounts, error: imagesError } = await typeSafeDatabaseService.getClient()
+      .from('product_images')
+      .select('product_id, image_index')
+      .in('product_id', filteredProductIds);
 
-      if (productsError) {
-        throw new Error(`Failed to fetch products: ${productsError.message}`);
-      }
+    if (imagesError) {
+      console.warn('Warning: Failed to fetch image counts:', imagesError.message);
+    }
 
-      if (!allProducts || allProducts.length === 0) {
-        return { products: [] };
-      }
-
-      // Si hay filtro de ocasión, necesitamos obtener productos que tengan esa ocasión
-      let filteredProductIds = (allProducts as { id: number }[]).map(p => p.id);
-
-      if (occasionFilter && occasionFilter !== 'general') {
-        const { data: occasionProducts, error: occasionError } = await typeSafeDatabaseService.getClient()
-          .from('product_occasions')
-          .select('product_id')
-          .eq('occasion_id', parseInt(occasionFilter));
-
-        if (occasionError) {
-                  } else if (occasionProducts) {
-          const occasionProductIds = (occasionProducts as { product_id: number }[]).map(op => op.product_id);
-          filteredProductIds = filteredProductIds.filter(id => occasionProductIds.includes(id));
+    // Contar imágenes únicas por producto (cada image_index representa una imagen)
+    const imageCountMap = new Map<number, number>();
+    if (imageCounts) {
+      // Usar un Set para evitar duplicados por image_index
+      const uniqueImages = new Map<number, Set<number>>();
+      imageCounts.forEach((image: { product_id: number; image_index: number }) => {
+        if (!uniqueImages.has(image.product_id)) {
+          uniqueImages.set(image.product_id, new Set());
         }
-      }
-
-      // Obtener conteo de imágenes para los productos filtrados
-      // Agrupar por product_id para contar imágenes únicas (no por tamaño)
-      const { data: imageCounts, error: imagesError } = await typeSafeDatabaseService.getClient()
-        .from('product_images')
-        .select('product_id, image_index')
-        .in('product_id', filteredProductIds);
-
-      if (imagesError) {
-              }
-
-      // Contar imágenes únicas por producto (cada image_index representa una imagen)
-      const imageCountMap = new Map<number, number>();
-      if (imageCounts) {
-        // Usar un Set para evitar duplicados por image_index
-        const uniqueImages = new Map<number, Set<number>>();
-        imageCounts.forEach((image: { product_id: number; image_index: number }) => {
-          if (!uniqueImages.has(image.product_id)) {
-            uniqueImages.set(image.product_id, new Set());
-          }
-          uniqueImages.get(image.product_id)?.add(image.image_index);
-        });
-
-        // Contar los sets únicos
-        uniqueImages.forEach((imageIndexes, productId) => {
-          imageCountMap.set(productId, imageIndexes.size);
-        });
-      }
-
-      // Filtrar productos según los criterios aplicados
-      const filteredProducts = allProducts.filter((product: { id: number }) => filteredProductIds.includes(product.id));
-
-      // Combinar productos filtrados con conteo de imágenes
-      const productsWithCounts = filteredProducts.map((product: { id: number; name: string; price_usd: number }) => ({
-        id: product.id,
-        name: product.name,
-        price_usd: product.price_usd,
-        image_count: imageCountMap.get(product.id) ?? 0
-      }));
-
-      // Ordenar según los parámetros
-      productsWithCounts.sort((a, b) => {
-        let comparison = 0;
-
-        if (sortBy === 'name') {
-          comparison = (a as { name: string }).name.localeCompare((b as { name: string }).name);
-        } else if (sortBy === 'image_count') {
-          comparison = (a as { image_count: number }).image_count - (b as { image_count: number }).image_count;
-        }
-
-        return sortDirection === 'desc' ? -comparison : comparison;
+        uniqueImages.get(image.product_id)?.add(image.image_index);
       });
 
-      return {
-        products: productsWithCounts
-      };
-    } catch (error) {
-            throw error;
+      // Contar los sets únicos
+      uniqueImages.forEach((imageIndexes, productId) => {
+        imageCountMap.set(productId, imageIndexes.size);
+      });
     }
+
+    // Filtrar productos según los criterios aplicados
+    const filteredProducts = allProducts.filter((product: { id: number }) => filteredProductIds.includes(product.id));
+
+    // Combinar productos filtrados con conteo de imágenes
+    const productsWithCounts = filteredProducts.map((product: { id: number; name: string; price_usd: number }) => ({
+      id: product.id,
+      name: product.name,
+      price_usd: product.price_usd,
+      image_count: imageCountMap.get(product.id) ?? 0
+    }));
+
+    // Ordenar según los parámetros
+    productsWithCounts.sort((a, b) => {
+      let comparison = 0;
+
+      if (sortBy === 'name') {
+        comparison = (a as { name: string }).name.localeCompare((b as { name: string }).name);
+      } else if (sortBy === 'image_count') {
+        comparison = (a as { image_count: number }).image_count - (b as { image_count: number }).image_count;
+      }
+
+      return sortDirection === 'desc' ? -comparison : comparison;
+    });
+
+    return {
+      products: productsWithCounts
+    };
   }
 }

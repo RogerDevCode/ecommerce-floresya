@@ -118,7 +118,8 @@ export class AdminImages {
    */
   public async deleteProductImage(imageId: number): Promise<void> {
     try {
-      if (!confirm('¿Estás seguro de que deseas eliminar esta imagen?')) {
+      if (typeof window?.confirm !== 'undefined' &&
+          !window.confirm('¿Estás seguro de que deseas eliminar esta imagen?')) {
         return;
       }
 
@@ -332,14 +333,14 @@ export class AdminImages {
     imagesContainer.innerHTML = images.map(image => `
       <div class="image-card" data-image-id="${image.id}">
         <div class="image-wrapper">
-          <img src="${image.url}" alt="${image.product_name ?? 'Imagen'}" class="image-preview">
+          <img src="${image.url}" alt="${image.size}" class="image-preview">
           ${image.is_primary ? '<span class="primary-badge">Principal</span>' : ''}
         </div>
         <div class="image-info">
-          <h6 class="image-title">${image.product_name ?? 'Sin producto'}</h6>
+          <h6 class="image-title">Producto ID: ${image.product_id}</h6>
           <div class="image-meta">
             <span class="size-badge">${image.size}</span>
-            <small class="text-muted">${new Date(image.created_at).toLocaleDateString()}</small>
+            <small class="text-muted">${new Date(image.created_at ?? '').toLocaleDateString()}</small>
           </div>
         </div>
         <div class="image-actions">

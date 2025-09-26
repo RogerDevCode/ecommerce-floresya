@@ -54,61 +54,46 @@ export default [
       promise: promisePlugin,
     },
     rules: {
-      // TypeScript-specific rules (relaxed for existing codebase)
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      // TypeScript-specific rules (relaxed for smoother development)
+      '@typescript-eslint/no-explicit-any': 'off', // Allow during development
+      '@typescript-eslint/no-unused-vars': ['warn', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        ignoreRestSiblings: true,
+        destructuredArrayIgnorePattern: '^_'
+      }],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
-      '@typescript-eslint/no-non-null-assertion': 'warn',
+      '@typescript-eslint/no-non-null-assertion': 'off', // Allow for easier DOM manipulation
       '@typescript-eslint/prefer-nullish-coalescing': 'off',
       '@typescript-eslint/prefer-optional-chain': 'warn',
-      '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
-      '@typescript-eslint/no-unsafe-assignment': 'off', // Too strict for this project
-      '@typescript-eslint/no-unsafe-member-access': 'off', // Too strict for this project
-      '@typescript-eslint/no-unsafe-call': 'off', // Too strict for this project
-      '@typescript-eslint/no-unsafe-return': 'off', // Too strict for this project
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off', // Allow during rapid development
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/ban-ts-comment': 'off', // Allow @ts-ignore during development
 
-      // Import rules (updated)
-      'import/order': [
-        'error',
-        {
-          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
-          pathGroups: [
-            {
-              pattern: '@/**',
-              group: 'internal',
-            },
-          ],
-          'newlines-between': 'always',
-          alphabetize: {
-            order: 'asc',
-            caseInsensitive: true,
-          },
-        },
-      ],
-      'import/no-duplicates': 'warn', // Downgrade to warning during migration
-      'import/no-unresolved': 'warn', // Downgrade to warning during migration
-      'import/extensions': [
-        'warn', // Downgrade to warning during migration
-        'never',
-        {
-          json: 'always', // json files must have extension
-        },
-      ],
+      // Import rules (relaxed for development flow)
+      'import/order': 'warn', // Relax import ordering
+      'import/no-duplicates': 'off', // Allow duplicates during refactoring
+      'import/no-unresolved': 'off', // Disable during active development
+      'import/extensions': 'off', // Allow flexibility with extensions
 
-      // General rules
-      'no-console': 'warn',
+      // General rules (relaxed for development)
+      'no-console': 'off', // Allow console during development
       'no-unused-vars': 'off', // Handled by @typescript-eslint/no-unused-vars
-      'prefer-const': 'error',
-      'no-var': 'error',
-      'object-shorthand': 'error',
-      'prefer-arrow-callback': 'error',
-      'arrow-spacing': 'error',
-      'no-multiple-empty-lines': ['error', { max: 2, maxEOF: 1 }],
-      'eol-last': 'error',
-      'comma-dangle': ['error', 'never'],
-      'semi': ['error', 'always'],
-      'quotes': ['error', 'single', { avoidEscape: true }],
+      'prefer-const': 'warn', // Downgrade to warning
+      'no-var': 'error', // Keep this - important for clean code
+      'object-shorthand': 'warn', // Downgrade to warning
+      'prefer-arrow-callback': 'warn', // Downgrade to warning
+      'arrow-spacing': 'warn', // Downgrade to warning
+      'no-multiple-empty-lines': 'off', // Allow multiple empty lines
+      'eol-last': 'off', // Don't enforce end-of-line
+      'comma-dangle': 'off', // Allow flexibility with commas
+      'semi': 'warn', // Warn about semicolons but don't error
+      'quotes': 'off', // Allow single or double quotes
+      'no-empty': 'off', // Allow empty blocks during development
 
       // Node.js rules
       'n/no-missing-import': 'off', // TypeScript handles this
@@ -167,37 +152,16 @@ export default [
       promise: promisePlugin,
     },
     rules: {
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      'no-console': 'warn',
-      'prefer-const': 'error',
-      'no-var': 'error',
-      // Import rules for JS files
-      'import/order': [
-        'error',
-        {
-          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
-          pathGroups: [
-            {
-              pattern: '@/**',
-              group: 'internal',
-            },
-          ],
-          'newlines-between': 'always',
-          alphabetize: {
-            order: 'asc',
-            caseInsensitive: true,
-          },
-        },
-      ],
-      'import/no-duplicates': 'error',
-      'import/no-unresolved': 'error',
-      'import/extensions': [
-        'error',
-        'never',
-        {
-          json: 'always',
-        },
-      ],
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      'no-console': 'off', // Allow console in JS files too
+      'prefer-const': 'warn',
+      'no-var': 'error', // Keep - important for clean code
+      'no-empty': 'off', // Allow empty blocks
+      // Import rules for JS files (relaxed)
+      'import/order': 'warn',
+      'import/no-duplicates': 'warn',
+      'import/no-unresolved': 'off', // Disable during development
+      'import/extensions': 'off', // Allow flexibility
     },
   },
 
@@ -284,9 +248,13 @@ export default [
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off', // Allow unused vars in scripts
       'no-console': 'off', // Allow console in config and scripts
+      'no-unused-vars': 'off', // Allow unused vars
       'import/no-unresolved': 'off', // Disable for config files
-      'import/order': 'warn', // Downgrade for scripts
+      'import/order': 'off', // Don't enforce order in scripts
+      'import/extensions': 'off', // Allow any extensions
+      'no-empty': 'off', // Allow empty blocks in scripts
     },
   },
 

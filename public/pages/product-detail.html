@@ -145,8 +145,23 @@
     </div>
 
     <!-- Scripts -->
+    <script type="module" src="/frontend/productDetail.js"></script>
     <script type="module">
-        // === PRODUCT DETAIL CONTROLLER ===
+        // === SIMPLE LOADER - USE COMPILED VERSION ===
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize Lucide icons
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+
+            // Hide loading state
+            const loadingElement = document.getElementById('loading');
+            if (loadingElement) {
+                loadingElement.style.display = 'none';
+            }
+        });
+
+        // === FALLBACK CONTROLLER ===
         class ProductDetailController {
             constructor() {
                 this.productId = null;

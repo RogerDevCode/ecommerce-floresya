@@ -102,8 +102,7 @@ export class AuthManager {
     } finally {
       // Reset button state
       const submitBtn = document.querySelector('#loginForm button[type="submit"]');
-      if (!(submitBtn instanceof HTMLButtonElement)) return;
-      if (submitBtn) {
+      if (submitBtn instanceof HTMLButtonElement) {
         submitBtn.disabled = false;
         submitBtn.innerHTML = 'Iniciar Sesión';
       }
@@ -111,35 +110,23 @@ export class AuthManager {
   }
 
   private async authenticateUser(credentials: LoginCredentials): Promise<AuthResponse> {
-    // Mock authentication for development - replace with real API call
     // TODO: Replace with actual authentication service call
-    const mockUsers: Array<{ email: string; password: string; user: AuthUser }> = [
-      {
-        email: 'admin@floresya.com',
-        password: process.env.DEV_ADMIN_PASSWORD || 'temp-admin-pass',
-        user: { id: 1, email: 'admin@floresya.com', name: 'Administrador', role: 'admin' }
-      },
-      {
-        email: 'cliente@floresya.com',
-        password: process.env.DEV_CLIENT_PASSWORD || 'temp-client-pass',
-        user: { id: 2, email: 'cliente@floresya.com', name: 'Cliente', role: 'user' }
-      }
-    ];
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const foundUser = mockUsers.find(u => u.email === credentials.email && u.password === credentials.password);
-
-    if (foundUser) {
-      return {
-        success: true,
-        user: foundUser.user
-      };
-    } else {
+      // Make actual API call to authentication service
+      // This is a placeholder - implement real authentication
+      console.warn('Authentication service not implemented - using placeholder');
+      
       return {
         success: false,
-        message: 'Email o contraseña incorrectos'
+        message: 'Servicio de autenticación no implementado'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Error al conectar con el servicio de autenticación'
       };
     }
   }

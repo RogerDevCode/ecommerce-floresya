@@ -41,226 +41,202 @@ export class OrderService {
    * @returns Promise<OrderResponse> - Orders with pagination info
    */
   public async getOrders(query: OrderQuery = {}): Promise<OrderResponse> {
-    try {
-      const {
-        page = 1,
-        limit = 20,
-        status,
-        customer_email,
-        date_from,
-        date_to,
-        sort_by = 'created_at',
-        sort_direction = 'desc'
-      } = query;
+    const {
+      page = 1,
+      limit = 20,
+      status,
+      customer_email,
+      date_from,
+      date_to,
+      sort_by = 'created_at',
+      sort_direction = 'desc'
+    } = query;
 
-      const offset = (page - 1) * limit;
+    const offset = (page - 1) * limit;
 
-      let queryBuilder = getDb()
-        .from('orders')
-        .select(`
-          *,
-          order_items(*),
-          users(id, full_name, email)
-        `, { count: 'exact' });
+    let queryBuilder = getDb()
+      .from('orders')
+      .select(`
+        *,
+        order_items(*),
+        users(id, full_name, email)
+      `, { count: 'exact' });
 
-      // Apply filters
-      if (status) {
-        queryBuilder = queryBuilder.eq('status', status);
-      }
-      if (customer_email) {
-        queryBuilder = queryBuilder.ilike('customer_email', `%${customer_email}%`);
-      }
-      if (date_from) {
-        queryBuilder = queryBuilder.gte('created_at', date_from);
-      }
-      if (date_to) {
-        queryBuilder = queryBuilder.lte('created_at', date_to);
-      }
-
-      const ascending = sort_direction === 'asc';
-      queryBuilder = queryBuilder.order(sort_by, { ascending });
-      queryBuilder = queryBuilder.range(offset, offset + limit - 1);
-
-      const { data, error, count } = await queryBuilder;
-
-      if (error) {
-        throw new Error(`Failed to fetch orders: ${error.message}`);
-      }
-
-      const ordersWithItems: OrderWithItems[] = (data as RawOrderWithItemsAndUser[] ?? []).map((order) => ({
-        ...order,
-        items: order.order_items ?? [],
-        user: order.users ? { ...order.users } : undefined
-      }));
-
-      const totalPages = Math.ceil((count ?? 0) / limit);
-
-      return {
-        orders: ordersWithItems,
-        pagination: {
-          current_page: page,
-          total_pages: totalPages,
-          total_items: count ?? 0,
-          items_per_page: limit
-        }
-      };
-    } catch (error) {
-            throw error;
+    // Apply filters
+    if (status) {
+      queryBuilder = queryBuilder.eq('status', status);
     }
+    if (customer_email) {
+      queryBuilder = queryBuilder.ilike('customer_email', `%${customer_email}%`);
+    }
+    if (date_from) {
+      queryBuilder = queryBuilder.gte('created_at', date_from);
+    }
+    if (date_to) {
+      queryBuilder = queryBuilder.lte('created_at', date_to);
+    }
+
+    const ascending = sort_direction === 'asc';
+    queryBuilder = queryBuilder.order(sort_by, { ascending });
+    queryBuilder = queryBuilder.range(offset, offset + limit - 1);
+
+    const { data, error, count } = await queryBuilder;
+
+    if (error) {
+      throw new Error(`Failed to fetch orders: ${error.message}`);
+    }
+
+    const ordersWithItems: OrderWithItems[] = (data as RawOrderWithItemsAndUser[] ?? []).map((order) => ({
+      ...order,
+      items: order.order_items ?? [],
+      user: order.users ? { ...order.users } : undefined
+    }));
+
+    const totalPages = Math.ceil((count ?? 0) / limit);
+
+    return {
+      orders: ordersWithItems,
+      pagination: {
+        current_page: page,
+        total_pages: totalPages,
+        total_items: count ?? 0,
+        items_per_page: limit
+      }
+    };
   }
 
   /**
    * Get single order by ID with items and payments
    */
   public async getOrderById(id: number): Promise<OrderWithItemsAndPayments | null> {
-    try {
-      const { data, error } = await getDb()
-        .from('orders')
-        .select(`
-          *,
-          order_items(*),
-          payments(*),
-          order_status_history(*, users(full_name)),
-          users(id, full_name, email)
-        `)
-        .eq('id', id)
-        .single();
+    const { data, error } = await getDb()
+      .from('orders')
+      .select(`
+        *,
+        order_items(*),
+        payments(*),
+        order_status_history(*, users(full_name)),
+        users(id, full_name, email)
+      `)
+      .eq('id', id)
+      .single();
 
-      if (error) {
-        if (error.code === 'PGRST116') {
-          return null; // Order not found
-        }
-        throw new Error(`Failed to fetch order: ${error.message}`);
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null; // Order not found
       }
-
-      if (!data) {
-        return null;
-      }
-
-      const rawData = data as RawOrderWithItemsPaymentsHistory;
-      const orderWithDetails: OrderWithItemsAndPayments = {
-        ...rawData,
-        items: rawData.order_items ?? [],
-        payments: rawData.payments ?? [],
-        status_history: rawData.order_status_history ?? [],
-        user: rawData.users ? { ...rawData.users } : undefined
-      };
-
-      return orderWithDetails;
-    } catch (error) {
-            throw error;
+      throw new Error(`Failed to fetch order: ${error.message}`);
     }
+
+    if (!data) {
+      return null;
+    }
+
+    const rawData = data as RawOrderWithItemsPaymentsHistory;
+    const orderWithDetails: OrderWithItemsAndPayments = {
+      ...rawData,
+      items: rawData.order_items ?? [],
+      payments: rawData.payments ?? [],
+      status_history: rawData.order_status_history ?? [],
+      user: rawData.users ? { ...rawData.users } : undefined
+    };
+
+    return orderWithDetails;
   }
 
   /**
    * Create new order with items using transaction
    */
   public async createOrder(orderData: OrderCreateRequest): Promise<OrderWithItems> {
-    try {
-      const { items, total_amount_usd } = await this.calculateOrderTotals(orderData.items);
+    const { items, total_amount_usd } = await this.calculateOrderTotals(orderData.items);
 
-      const { items: _items, ...orderFields } = orderData; // Exclude items from order insert
-      void _items; // Silence unused variable warning
+    const { items: _items, ...orderFields } = orderData; // Exclude items from order insert
+    void _items; // Silence unused variable warning
 
-      // Use PostgreSQL function for atomic transaction
-      const data = await typeSafeDatabaseService.executeRpc('create_order_with_items', {
-        order_data: {
-          ...orderFields,
-          status: 'pending',
-          total_amount_usd
-        },
-        order_items: items.map(item => ({
-          product_id: item.product_id,
-          product_name: item.product_name,
-          product_summary: item.product_summary,
-          unit_price_usd: item.unit_price_usd,
-          quantity: item.quantity,
-          subtotal_usd: item.subtotal_usd
-        }))
-      });
+    // Use PostgreSQL function for atomic transaction
+    const data = await typeSafeDatabaseService.executeRpc('create_order_with_items', {
+      order_data: {
+        ...orderFields,
+        status: 'pending',
+        total_amount_usd
+      },
+      order_items: items.map(item => ({
+        product_id: item.product_id,
+        product_name: item.product_name,
+        product_summary: item.product_summary,
+        unit_price_usd: item.unit_price_usd,
+        quantity: item.quantity,
+        subtotal_usd: item.subtotal_usd
+      }))
+    });
 
 
-      if (!data) {
-        throw new Error('No data returned from order creation transaction');
-      }
-
-      // The function returns the complete order with items
-      return data as OrderWithItems;
-    } catch (error) {
-            throw error;
+    if (!data) {
+      throw new Error('No data returned from order creation transaction');
     }
+
+    // The function returns the complete order with items
+    return data as OrderWithItems;
   }
 
   /**
    * Update order (admin only)
    */
   public async updateOrder(updateData: OrderUpdateRequest): Promise<Order> {
-    try {
-      const { id, ...updates } = updateData;
+    const { id, ...updates } = updateData;
 
-      const { data, error } = await getDb()
-        .from('orders')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+    const { data, error } = await getDb()
+      .from('orders')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
 
-      if (error) {
-        throw new Error(`Failed to update order: ${error.message}`);
-      }
-
-      if (!data) {
-        throw new Error('No data returned from order update');
-      }
-
-      return data as Order;
-    } catch (error) {
-            throw error;
+    if (error) {
+      throw new Error(`Failed to update order: ${error.message}`);
     }
+
+    if (!data) {
+      throw new Error('No data returned from order update');
+    }
+
+    return data as Order;
   }
 
   /**
    * Update order status with history tracking using transaction
    */
   public async updateOrderStatus(orderId: number, newStatus: OrderStatus, notes?: string, changedBy?: number): Promise<Order> {
-    try {
-      // Use PostgreSQL function for atomic status update with history
-      const data = await typeSafeDatabaseService.executeRpc('update_order_status_with_history', {
-        order_id: orderId,
-        new_status: newStatus,
-        notes: notes ?? null,
-        changed_by: changedBy ?? null
-      });
+    // Use PostgreSQL function for atomic status update with history
+    const data = await typeSafeDatabaseService.executeRpc('update_order_status_with_history', {
+      order_id: orderId,
+      new_status: newStatus,
+      notes: notes ?? null,
+      changed_by: changedBy ?? null
+    });
 
-      if (!data) {
-        throw new Error('No data returned from order status update transaction');
-      }
-
-      return data as Order;
-    } catch (error) {
-            throw error;
+    if (!data) {
+      throw new Error('No data returned from order status update transaction');
     }
+
+    return data as Order;
   }
 
   /**
    * Get order status history
    */
   public async getOrderStatusHistory(orderId: number): Promise<OrderStatusHistory[]> {
-    try {
-      const { data, error } = await getDb()
-        .from('order_status_history')
-        .select(`*, users(full_name)`)
-        .eq('order_id', orderId)
-        .order('created_at', { ascending: false });
+    const { data, error } = await getDb()
+      .from('order_status_history')
+      .select(`*, users(full_name)`)
+      .eq('order_id', orderId)
+      .order('created_at', { ascending: false });
 
-      if (error) {
-        throw new Error(`Failed to fetch order status history: ${error.message}`);
-      }
-
-      return (data as RawOrderStatusHistoryWithUser[]) ?? [];
-    } catch (error) {
-            throw error;
+    if (error) {
+      throw new Error(`Failed to fetch order status history: ${error.message}`);
     }
+
+    return (data as RawOrderStatusHistoryWithUser[]) ?? [];
   }
 
   /**

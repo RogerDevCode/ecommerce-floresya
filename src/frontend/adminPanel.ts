@@ -333,7 +333,9 @@ class AdminPanel implements AdminPanelLogger {
   private showError(message: string): void {
     // Could implement toast notifications here
     this.log(message, 'error');
-    alert(message);
+    if (typeof window?.alert !== 'undefined') {
+        window.alert(message);
+      }
   }
 
   /**
@@ -424,7 +426,9 @@ if (!document.querySelector('[data-dynamic-admin-init]')) {
     const adminPanel = new AdminPanel();
     window.adminPanel = adminPanel;
     adminPanel.init().catch(error => {
-            alert('Error crítico: No se pudo cargar el panel de administración. Por favor, recargue la página.');
+            if (typeof window?.alert !== 'undefined') {
+        window.alert('Error crítico: No se pudo cargar el panel de administración. Por favor, recargue la página.');
+      }
     });
   });
 }

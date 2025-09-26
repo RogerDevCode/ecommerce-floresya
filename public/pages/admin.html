@@ -6,6 +6,16 @@
     <meta name="description" content="Panel de Administración - FloresYa">
     <title>Panel de Administración - FloresYa</title>
 
+    <!-- Import maps for resolving bare module specifiers -->
+    <script type="importmap">
+    {
+      "imports": {
+        "@trpc/client": "https://cdn.jsdelivr.net/npm/@trpc/client@11.6.0/+esm",
+        "zod": "https://cdn.jsdelivr.net/npm/zod@3.22.4/+esm"
+      }
+    }
+    </script>
+
     <!-- Tailwind CSS -->
     <link href="/css/styles.css" rel="stylesheet">
     <!-- Lucide Icons -->
@@ -2797,7 +2807,7 @@
     </script>
 
     <!-- Load Admin Module -->
-    <script type="module" src="/dist/frontend/admin.js"></script>
+    <script type="module" src="/dist/frontend/adminPanel.js"></script>
 
     <!-- Initialize Lucide Icons -->
     <script>
@@ -2992,7 +3002,7 @@
                 console.log(`[🌸 Admin] 📊 Attempt ${initializationAttempts}/${MAX_ATTEMPTS}`);
 
                 // Dynamic import with error handling - COMPILED JavaScript FILE
-                const module = await import('/dist/frontend/admin.js');
+                const module = await import('/dist/frontend/adminPanel.js');
                 console.log('[🌸 Admin] ✅ Module loaded successfully');
 
                 const AdminPanel = module.default;
@@ -3092,7 +3102,7 @@
                 console.log('📦 Intentando cargar módulo admin.js...');
                 const startTime = Date.now();
 
-                const module = await import('/dist/frontend/admin.js');
+                const module = await import('/dist/frontend/adminPanel.js');
                 const loadTime = Date.now() - startTime;
 
                 console.log(`✅ Módulo cargado exitosamente en ${loadTime}ms`);

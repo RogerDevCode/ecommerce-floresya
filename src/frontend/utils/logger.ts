@@ -150,7 +150,7 @@ export class FloresYaLogger implements Logger {
 
     const originalFetch = window.fetch;
     window.fetch = async (...args) => {
-      const startTime = performance.now();
+      const startTime = (typeof window !== 'undefined' && window.performance) ? window.performance.now() : Date.now();
       const url = args[0] instanceof Request ? args[0].url : args[0];
       const method = args[1]?.method || 'GET';
 
@@ -159,7 +159,7 @@ export class FloresYaLogger implements Logger {
 
       try {
         const response = await originalFetch(...args);
-        const endTime = performance.now();
+        const endTime = (typeof window !== 'undefined' && window.performance) ? window.performance.now() : Date.now();
 
         // Only log non-successful requests to reduce verbosity
         if (!response.ok) {
@@ -172,7 +172,7 @@ export class FloresYaLogger implements Logger {
 
         return response;
       } catch (error: unknown) {
-        const endTime = performance.now();
+        const endTime = (typeof window !== 'undefined' && window.performance) ? window.performance.now() : Date.now();
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         this.error('FETCH', `${method} ${url} - Failed`, {
           error: errorMessage,

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FloresYa - tRPC Demo</title>
+    <script type="importmap">
+    {
+      "imports": {
+        "@trpc/client": "https://cdn.jsdelivr.net/npm/@trpc/client@11.6.0/+esm",
+        "zod": "https://cdn.jsdelivr.net/npm/zod@3.22.4/+esm"
+      }
+    }
+    </script>
+    <link href="/css/styles.css" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@0.451.0/dist/umd/lucide.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; }
+        .demo-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 16px 0;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .success { color: #10b981; background: #ecfdf5; padding: 12px; border-radius: 6px; }
+        .error { color: #ef4444; background: #fef2f2; padding: 12px; border-radius: 6px; }
+        .loading { color: #3b82f6; }
+        .btn {
+            background: #db2777;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 4px;
+        }
+        .btn:hover { background: #be185d; }
+        .btn:disabled { background: #94a3b8; cursor: not-allowed; }
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+        .status { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+        .status-success { background: #dcfce7; color: #166534; }
+        .status-error { background: #fecaca; color: #991b1b; }
+        .status-loading { background: #dbeafe; color: #1d4ed8; }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">🌸 FloresYa - tRPC Demo</h1>
+            <p class="text-xl text-gray-600">Demostración de integración tRPC con type safety completo</p>
+            <div class="mt-6">
+                <div class="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full">
+                    <i data-lucide="check-circle" class="h-5 w-5 mr-2"></i>
+                    <span>tRPC Server: <span id="server-status">Verificando...</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo Grid -->
+        <div class="grid">
+            <!-- Authentication Demo -->
+            <div class="demo-card">
+                <h3 class="text-xl font-semibold mb-4 flex items-center">
+                    <i data-lucide="key" class="h-5 w-5 mr-2 text-blue-600"></i>
+                    Autenticación tRPC
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <button class="btn" onclick="demoLogin('admin')">Login Admin</button>
+                        <button class="btn" onclick="demoLogin('user')">Login Cliente</button>
+                        <button class="btn" onclick="demoLogout()">Logout</button>
+                    </div>
+                    <div id="auth-result" class="min-h-[50px]"></div>
+                </div>
+            </div>
+
+            <!-- Products Demo -->
+            <div class="demo-card">
+                <h3 class="text-xl font-semibold mb-4 flex items-center">
+                    <i data-lucide="package" class="h-5 w-5 mr-2 text-green-600"></i>
+                    Productos tRPC
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <button class="btn" onclick="demoGetProducts()">Cargar Productos</button>
+                        <button class="btn" onclick="demoGetActiveProducts()">Productos Activos</button>
+                        <button class="btn" onclick="demoGetProductById(1)">Producto #1</button>
+                    </div>
+                    <div id="products-result" class="min-h-[100px]"></div>
+                </div>
+            </div>
+
+            <!-- Occasions Demo -->
+            <div class="demo-card">
+                <h3 class="text-xl font-semibold mb-4 flex items-center">
+                    <i data-lucide="heart" class="h-5 w-5 mr-2 text-pink-600"></i>
+                    Ocasiones tRPC
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <button class="btn" onclick="demoGetOccasions()">Cargar Ocasiones</button>
+                    </div>
+                    <div id="occasions-result" class="min-h-[100px]"></div>
+                </div>
+            </div>
+
+            <!-- Orders Demo (Requires Auth) -->
+            <div class="demo-card">
+                <h3 class="text-xl font-semibold mb-4 flex items-center">
+                    <i data-lucide="shopping-cart" class="h-5 w-5 mr-2 text-orange-600"></i>
+                    Órdenes tRPC
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <button class="btn" onclick="demoGetUserOrders()">Mis Órdenes</button>
+                        <button class="btn" onclick="demoGetOrdersByStatus('pending')">Órdenes Pendientes</button>
+                    </div>
+                    <div id="orders-result" class="min-h-[100px]"></div>
+                </div>
+            </div>
+
+            <!-- Dashboard Demo (Requires Admin) -->
+            <div class="demo-card">
+                <h3 class="text-xl font-semibold mb-4 flex items-center">
+                    <i data-lucide="bar-chart" class="h-5 w-5 mr-2 text-purple-600"></i>
+                    Dashboard tRPC
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <button class="btn" onclick="demoGetDashboardStats()">Estadísticas Admin</button>
+                    </div>
+                    <div id="dashboard-result" class="min-h-[100px]"></div>
+                </div>
+            </div>
+
+            <!-- Type Safety Demo -->
+            <div class="demo-card">
+                <h3 class="text-xl font-semibold mb-4 flex items-center">
+                    <i data-lucide="shield-check" class="h-5 w-5 mr-2 text-indigo-600"></i>
+                    Type Safety
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <button class="btn" onclick="demoTypeSafety()">Test Type Safety</button>
+                        <button class="btn" onclick="demoValidationError()">Test Validation</button>
+                    </div>
+                    <div id="type-result" class="min-h-[100px]"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-time Console -->
+        <div class="mt-12">
+            <div class="demo-card">
+                <h3 class="text-xl font-semibold mb-4 flex items-center">
+                    <i data-lucide="terminal" class="h-5 w-5 mr-2 text-gray-600"></i>
+                    Console en Tiempo Real
+                    <button class="btn ml-auto text-sm" onclick="clearConsole()">Limpiar</button>
+                </h3>
+                <div id="console-output" class="bg-gray-900 text-green-400 p-4 rounded-lg min-h-[200px] font-mono text-sm overflow-y-auto max-h-[300px]">
+                    <div class="opacity-70">[FloresYa tRPC Demo] Console iniciado...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- tRPC Demo Script -->
+    <script type="module">
+        // Import tRPC functionality
+        import { trpc, handleTRPCError, isAuthenticated, saveAuthData, clearAuthData } from '/dist/frontend/trpc/index.js';
+
+        // Make tRPC available globally for demo buttons
+        window.trpc = trpc;
+        window.tRPCUtils = { handleTRPCError, isAuthenticated, saveAuthData, clearAuthData };
+
+        // Console functionality
+        window.logToConsole = function(message, type = 'info') {
+            const console = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                info: 'text-green-400',
+                success: 'text-blue-400',
+                error: 'text-red-400',
+                warn: 'text-yellow-400'
+            };
+
+            const div = document.createElement('div');
+            div.className = colors[type] || colors.info;
+            div.innerHTML = `<span class="opacity-70">[${timestamp}]</span> ${message}`;
+            console.appendChild(div);
+            console.scrollTop = console.scrollHeight;
+        };
+
+        window.clearConsole = function() {
+            document.getElementById('console-output').innerHTML = '<div class="opacity-70">[FloresYa tRPC Demo] Console limpio...</div>';
+        };
+
+        // Status update functions
+        window.updateStatus = function(elementId, content, type = 'info') {
+            const element = document.getElementById(elementId);
+            const statusClass = type === 'error' ? 'error' : type === 'success' ? 'success' : 'loading';
+            element.innerHTML = `<div class="${statusClass}">${content}</div>`;
+        };
+
+        // Demo functions
+        window.demoLogin = async function(role) {
+            const resultDiv = 'auth-result';
+            const email = role === 'admin' ? 'admin@floresya.com' : 'cliente@floresya.com';
+            const password = role === 'admin' ? 'admin' : 'cliente';
+
+            updateStatus(resultDiv, `<div class="loading">🔐 Iniciando sesión como ${role}...</div>`);
+            logToConsole(`Attempting login as ${role} (${email})`);
+
+            try {
+                const result = await trpc.user.login.mutate({ email, password });
+
+                if (result.success && result.data) {
+                    const { token, user } = result.data;
+                    saveAuthData(token, user);
+
+                    updateStatus(resultDiv, `
+                        <div class="success">
+                            ✅ Login exitoso como <strong>${user.email}</strong> (${user.role})
+                            <br><small>Token guardado automáticamente</small>
+                        </div>
+                    `);
+                    logToConsole(`✅ Login successful for ${user.email} (${user.role})`, 'success');
+                } else {
+                    throw new Error(result.message || 'Login failed');
+                }
+            } catch (error) {
+                const errorMsg = handleTRPCError(error);
+                updateStatus(resultDiv, `<div class="error">❌ ${errorMsg}</div>`);
+                logToConsole(`❌ Login error: ${errorMsg}`, 'error');
+            }
+        };
+
+        window.demoLogout = function() {
+            clearAuthData();
+            updateStatus('auth-result', '<div class="success">✅ Sesión cerrada exitosamente</div>');
+            logToConsole('✅ User logged out', 'success');
+        };
+
+        window.demoGetProducts = async function() {
+            const resultDiv = 'products-result';
+            updateStatus(resultDiv, '<div class="loading">📦 Cargando productos...</div>');
+            logToConsole('Loading products via tRPC...');
+
+            try {
+                const result = await trpc.product.list.query({ page: 1, limit: 5, active: true });
+
+                if (result.success && result.data) {
+                    const { products, pagination } = result.data;
+                    updateStatus(resultDiv, `
+                        <div class="success">
+                            ✅ ${products.length} productos cargados
+                            <pre>${JSON.stringify({ products: products.slice(0, 2), pagination }, null, 2)}</pre>
+                        </div>
+                    `);
+                    logToConsole(`✅ Loaded ${products.length} products`, 'success');
+                }
+            } catch (error) {
+                const errorMsg = handleTRPCError(error);
+                updateStatus(resultDiv, `<div class="error">❌ ${errorMsg}</div>`);
+                logToConsole(`❌ Products error: ${errorMsg}`, 'error');
+            }
+        };
+
+        window.demoGetActiveProducts = async function() {
+            const resultDiv = 'products-result';
+            updateStatus(resultDiv, '<div class="loading">🌟 Cargando productos activos...</div>');
+            logToConsole('Loading active products...');
+
+            try {
+                const result = await trpc.product.getActive.query({ limit: 5 });
+
+                if (result.success && result.data) {
+                    updateStatus(resultDiv, `
+                        <div class="success">
+                            ✅ Productos activos cargados
+                            <pre>${JSON.stringify(result.data, null, 2)}</pre>
+                        </div>
+                    `);
+                    logToConsole(`✅ Loaded active products`, 'success');
+                }
+            } catch (error) {
+                const errorMsg = handleTRPCError(error);
+                updateStatus(resultDiv, `<div class="error">❌ ${errorMsg}</div>`);
+                logToConsole(`❌ Active products error: ${errorMsg}`, 'error');
+            }
+        };
+
+        window.demoGetProductById = async function(id) {
+            const resultDiv = 'products-result';
+            updateStatus(resultDiv, `<div class="loading">🔍 Cargando producto #${id}...</div>`);
+            logToConsole(`Loading product #${id}...`);
+
+            try {
+                const result = await trpc.product.getById.query({ id });
+
+                if (result.success && result.data) {
+                    updateStatus(resultDiv, `
+                        <div class="success">
+                            ✅ Producto cargado
+                            <pre>${JSON.stringify(result.data, null, 2)}</pre>
+                        </div>
+                    `);
+                    logToConsole(`✅ Loaded product #${id}`, 'success');
+                }
+            } catch (error) {
+                const errorMsg = handleTRPCError(error);
+                updateStatus(resultDiv, `<div class="error">❌ ${errorMsg}</div>`);
+                logToConsole(`❌ Product #${id} error: ${errorMsg}`, 'error');
+            }
+        };
+
+        window.demoGetOccasions = async function() {
+            const resultDiv = 'occasions-result';
+            updateStatus(resultDiv, '<div class="loading">💕 Cargando ocasiones...</div>');
+            logToConsole('Loading occasions...');
+
+            try {
+                const result = await trpc.occasion.list.query();
+
+                if (result.success && result.data) {
+                    updateStatus(resultDiv, `
+                        <div class="success">
+                            ✅ ${result.data.length} ocasiones cargadas
+                            <pre>${JSON.stringify(result.data, null, 2)}</pre>
+                        </div>
+                    `);
+                    logToConsole(`✅ Loaded ${result.data.length} occasions`, 'success');
+                }
+            } catch (error) {
+                const errorMsg = handleTRPCError(error);
+                updateStatus(resultDiv, `<div class="error">❌ ${errorMsg}</div>`);
+                logToConsole(`❌ Occasions error: ${errorMsg}`, 'error');
+            }
+        };
+
+        window.demoGetUserOrders = async function() {
+            const resultDiv = 'orders-result';
+            if (!isAuthenticated()) {
+                updateStatus(resultDiv, '<div class="error">❌ Debes iniciar sesión primero</div>');
+                return;
+            }
+
+            updateStatus(resultDiv, '<div class="loading">🛍️ Cargando órdenes del usuario...</div>');
+            logToConsole('Loading user orders...');
+
+            try {
+                const result = await trpc.order.getUserOrders.query();
+
+                if (result.success && result.data) {
+                    updateStatus(resultDiv, `
+                        <div class="success">
+                            ✅ ${result.data.length} órdenes encontradas
+                            <pre>${JSON.stringify(result.data, null, 2)}</pre>
+                        </div>
+                    `);
+                    logToConsole(`✅ Loaded ${result.data.length} orders`, 'success');
+                }
+            } catch (error) {
+                const errorMsg = handleTRPCError(error);
+                updateStatus(resultDiv, `<div class="error">❌ ${errorMsg}</div>`);
+                logToConsole(`❌ User orders error: ${errorMsg}`, 'error');
+            }
+        };
+
+        window.demoGetOrdersByStatus = async function(status) {
+            const resultDiv = 'orders-result';
+            if (!isAuthenticated()) {
+                updateStatus(resultDiv, '<div class="error">❌ Debes iniciar sesión primero</div>');
+                return;
+            }
+
+            updateStatus(resultDiv, `<div class="loading">📋 Cargando órdenes con status: ${status}...</div>`);
+            logToConsole(`Loading orders with status: ${status}...`);
+
+            try {
+                const result = await trpc.order.getByStatus.query({ status });
+
+                if (result.success && result.data) {
+                    updateStatus(resultDiv, `
+                        <div class="success">
+                            ✅ ${result.data.length} órdenes con status "${status}"
+                            <pre>${JSON.stringify(result.data, null, 2)}</pre>
+                        </div>
+                    `);
+                    logToConsole(`✅ Loaded ${result.data.length} orders with status "${status}"`, 'success');
+                }
+            } catch (error) {
+                const errorMsg = handleTRPCError(error);
+                updateStatus(resultDiv, `<div class="error">❌ ${errorMsg}</div>`);
+                logToConsole(`❌ Orders by status error: ${errorMsg}`, 'error');
+            }
+        };
+
+        window.demoGetDashboardStats = async function() {
+            const resultDiv = 'dashboard-result';
+            if (!isAuthenticated()) {
+                updateStatus(resultDiv, '<div class="error">❌ Debes iniciar sesión como admin primero</div>');
+                return;
+            }
+
+            updateStatus(resultDiv, '<div class="loading">📊 Cargando estadísticas del dashboard...</div>');
+            logToConsole('Loading dashboard stats...');
+
+            try {
+                const result = await trpc.dashboard.getStats.query();
+
+                if (result.success && result.data) {
+                    updateStatus(resultDiv, `
+                        <div class="success">
+                            ✅ Estadísticas del dashboard
+                            <pre>${JSON.stringify(result.data, null, 2)}</pre>
+                        </div>
+                    `);
+                    logToConsole(`✅ Dashboard stats loaded`, 'success');
+                }
+            } catch (error) {
+                const errorMsg = handleTRPCError(error);
+                updateStatus(resultDiv, `<div class="error">❌ ${errorMsg}</div>`);
+                logToConsole(`❌ Dashboard stats error: ${errorMsg}`, 'error');
+            }
+        };
+
+        window.demoTypeSafety = async function() {
+            const resultDiv = 'type-result';
+            updateStatus(resultDiv, '<div class="loading">🛡️ Demostrando type safety...</div>');
+            logToConsole('Testing TypeScript inference and type safety...');
+
+            // This will show TypeScript type inference in action
+            updateStatus(resultDiv, `
+                <div class="success">
+                    ✅ Type Safety Demo:
+                    <ul class="mt-2 text-sm">
+                        <li>• tRPC infiere automáticamente los tipos de respuesta</li>
+                        <li>• TypeScript detecta errores en tiempo de compilación</li>
+                        <li>• Autocompletado completo en el editor</li>
+                        <li>• Validación Zod en runtime</li>
+                        <li>• Sin necesidad de definir tipos manualmente</li>
+                    </ul>
+                    <br>
+                    <strong>Ejemplo:</strong> <code>trpc.user.login.mutate({ email, password })</code>
+                    <br>TypeScript sabe exactamente qué propiedades tiene la respuesta.
+                </div>
+            `);
+            logToConsole('✅ Type safety features demonstrated', 'success');
+        };
+
+        window.demoValidationError = async function() {
+            const resultDiv = 'type-result';
+            updateStatus(resultDiv, '<div class="loading">🔍 Probando validación Zod...</div>');
+            logToConsole('Testing Zod validation with invalid data...');
+
+            try {
+                // This will trigger Zod validation error
+                await trpc.user.login.mutate({
+                    email: "email-invalido", // Invalid email format
+                    password: "" // Empty password
+                });
+            } catch (error) {
+                const errorMsg = handleTRPCError(error);
+                updateStatus(resultDiv, `
+                    <div class="success">
+                        ✅ Validación Zod funcionando correctamente:
+                        <br><br>
+                        <div class="error">Error capturado: ${errorMsg}</div>
+                        <br>
+                        <small>tRPC + Zod detectó automáticamente datos inválidos y devolvió un error estructurado.</small>
+                    </div>
+                `);
+                logToConsole(`✅ Zod validation working: ${errorMsg}`, 'success');
+            }
+        };
+
+        // Check server status
+        async function checkServerStatus() {
+            try {
+                const result = await trpc.occasion.list.query();
+                document.getElementById('server-status').innerHTML = `
+                    <span class="text-green-700">✅ Conectado</span>
+                `;
+                logToConsole('✅ tRPC Server connection verified', 'success');
+            } catch (error) {
+                document.getElementById('server-status').innerHTML = `
+                    <span class="text-red-700">❌ Error de conexión</span>
+                `;
+                logToConsole('❌ tRPC Server connection failed', 'error');
+            }
+        }
+
+        // Initialize demo
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+            checkServerStatus();
+            logToConsole('🌸 FloresYa tRPC Demo initialized');
+        });
+    </script>
+</body>
+</html>

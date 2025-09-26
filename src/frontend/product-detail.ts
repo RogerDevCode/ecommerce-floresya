@@ -3,9 +3,9 @@
  * Handles product detail page functionality including navigation, cart operations, and UI management
  */
 
+import { FloresYaAPI } from './services/apiClient.js';
 import type { ProductWithImagesAndOccasions, Product, CartItem, ProductImage } from "shared/types/index";
 
-import { FloresYaAPI } from './services/apiClient.js';
 
 type ProductWithImagesAndOccasion = ProductWithImagesAndOccasions;
 
@@ -86,13 +86,18 @@ class ProductDetailManager {
             return {
               ...p,
               images: (productWithImages.images ?? []).map((img: { id: number; url: string; alt_text?: string; display_order?: number; }) => ({
-                ...img,
+                id: img.id,
                 product_id: p.id,
+                url: img.url,
                 size: 'medium' as const,
                 is_primary: img.display_order === 1,
-                created_at: new Date().toISOString()
+                created_at: new Date().toISOString(),
+                file_hash: img.alt_text || "", // Use alt_text as file_hash if available
+                image_index: img.display_order || 0, // Use display_order as image_index
+                mime_type: "image/jpeg", // Set default mime_type
+                updated_at: new Date().toISOString() // Set updated_at
               })),
-              price: p.price_usd,
+              price: p.price_usd, // Add the price alias for compatibility
               occasion: undefined // Will be populated if needed
             } as ProductWithImagesAndOccasion;
           });
@@ -157,7 +162,7 @@ class ProductDetailManager {
 
   private async loadProduct(productId: number): Promise<void> {
     try {
-            if (this.api && typeof this.api.getProductById === 'function') {
+      if (this.api && typeof this.api.getProductById === 'function') {
         const response = await this.api.getProductById(productId);
 
         if (response.success && response.data) {
@@ -170,13 +175,17 @@ class ProductDetailManager {
           this.product = {
             ...productData,
             images: (productData.images ?? []).map((img: { id: number; url: string; alt_text?: string; display_order?: number; }) => ({
-              ...img,
+              id: img.id,
               product_id: productData.id,
-              size: 'medium' as const,
+              url: img.url,
+              size: 'medium',
               is_primary: img.display_order === 1,
-              created_at: new Date().toISOString()
+              created_at: new Date().toISOString(),
+              file_hash: "", // Placeholder for missing field
+              image_index: img.display_order || 0, // Use display_order as image_index
+              mime_type: "image/jpeg", // Default mime_type
+              updated_at: new Date().toISOString() // Default updated_at
             })),
-            price: productData.price_usd,
             occasion: undefined // Will be populated if needed
           };
 
@@ -190,62 +199,18 @@ class ProductDetailManager {
         }
       }
 
-      // If API fails or returns no data, use mock product data
-            this.loadMockProduct(productId);
+      // If API fails or returns no data, show error
+      this.showError('Error al cargar el producto. El servicio no está disponible.');
 
     } catch (error) {
-                  this.loadMockProduct(productId);
+      this.showError('Error al cargar el producto. Por favor, inténtelo de nuevo.');
     }
   }
 
-  private loadMockProduct(productId: number): void {
-        // Create mock product data for testing
-    this.product = {
-      id: productId,
-      name: `Hermoso Arreglo Floral #${productId}`,
-      summary: 'Exquisito arreglo floral creado especialmente para momentos únicos y ocasiones especiales.',
-      description: `Este hermoso arreglo floral combina las flores más frescas y elegantes en una composición perfecta. Ideal para expresar amor, gratitud o simplemente alegrar el día de alguien especial.
-
-      Incluye flores de temporada seleccionadas cuidadosamente por nuestros expertos floristas. Cada arreglo es único y puede variar ligeramente según la disponibilidad de flores frescas.
-
-      Perfecto para: Aniversarios, cumpleaños, san valentín, día de la madre, graduaciones, o cualquier momento especial que merece ser celebrado con la belleza natural de las flores.`,
-      price_usd: 29.99 + (productId * 5), // Vary price by ID
-      price: 29.99 + (productId * 5),
-      stock: 10,
-      active: true,
-      is_featured: productId <= 3,
-      images: [
-        {
-          id: 1,
-          product_id: productId,
-          url: '/images/placeholder-product.webp',
-          alt_text: `Imagen principal del arreglo floral #${productId}`,
-          size: 'medium' as const,
-          is_primary: true,
-          display_order: 1,
-          created_at: new Date().toISOString()
-        },
-        {
-          id: 2,
-          product_id: productId,
-          url: '/images/placeholder-product-2.webp',
-          alt_text: `Vista lateral del arreglo floral #${productId}`,
-          size: 'medium' as const,
-          is_primary: false,
-          display_order: 2,
-          created_at: new Date().toISOString()
-        }
-      ],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      primary_image_url: '/images/placeholder-product.webp',
-      primary_thumb_url: '/images/placeholder-product.webp',
-      featured: productId <= 3,
-      carousel_order: productId <= 3 ? productId : null
-    };
-
-    this.currentProductIndex = 0;
-      }
+  private showProductNotFoundError(productId: number): void {
+    // Show product not found error
+    this.showError(`Producto con ID ${productId} no encontrado.`);
+  }
 
   private setupUI(): void {
     if (!this.product) {
@@ -300,7 +265,7 @@ class ProductDetailManager {
       const formattedPrice = new Intl.NumberFormat('es-VE', {
         style: 'currency',
         currency: 'USD'
-      }).format(this.product.price);
+      }).format(this.product.price_usd);
       priceElement.textContent = formattedPrice;
     }
 
@@ -334,7 +299,7 @@ class ProductDetailManager {
         const primaryImage = images[0];
         if (primaryImage) {
           mainImage.src = primaryImage.url;
-          mainImage.alt = primaryImage.alt_text ?? this.product.name;
+          mainImage.alt = this.product.name;
         }
       } else {
         mainImage.src = '/images/placeholder-product-2.webp';
@@ -351,7 +316,7 @@ class ProductDetailManager {
       if (hasImages && images.length > 1) {
         thumbnailContainer.innerHTML = images.map((image: ProductImage, index: number) => `
           <div class="thumbnail-wrapper ${index === 0 ? 'active' : ''}" data-index="${index}">
-            <img src="${image.url}" alt="${image.alt_text ?? (this.product ? this.product.name : 'Product image')}"
+            <img src="${image.url}" alt="${this.product ? this.product.name : 'Product image'}"
                  class="img-fluid rounded cursor-pointer thumbnail-image"
                  style="width: 80px; height: 80px; object-fit: cover;">
           </div>
@@ -461,7 +426,7 @@ class ProductDetailManager {
       const image = this.product.images[index];
       if (image) {
         mainImage.src = image.url;
-        mainImage.alt = image.alt_text ?? this.product.name;
+        mainImage.alt = this.product.name;
       }
     }
 
@@ -555,7 +520,7 @@ class ProductDetailManager {
       this.cart.push({
         productId: this.product.id,
         name: this.product.name,
-        price: this.product.price,
+        price: this.product.price_usd,
         image: mainImage,
         quantity
       });

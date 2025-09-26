@@ -1,14 +1,126 @@
 /**
- * 🌸 FloresYa User Controller - Enterprise TypeScript Edition
- * RESTful API controller with comprehensive validation and security
+ * 🌸 FloresYa User Controller - ZOD VALIDATED EDITION
+ * RESTful API controller with runtime Zod validation - NO MORE EXPRESS-VALIDATOR!
  */
 
 import { Request, Response } from 'express';
-import { body, param, query, validationResult } from 'express-validator';
+import { z } from 'zod';
 
-import { type UserCreateRequest, UserQuery, UserUpdateRequest } from '../config/supabase.js';
 import { typeSafeDatabaseService } from '../services/TypeSafeDatabaseService.js';
 import { userService } from '../services/UserService.js';
+import {
+  // Types only (no unused schemas)
+  UserCreateRequest,
+  UserQuery,
+  UserUpdateRequest,
+  UserApiResponse,
+  UserListApiResponse
+} from '../shared/types/index.js';
+
+// ============================================
+// ZOD VALIDATION HELPERS - GOODBYE EXPRESS-VALIDATOR!
+// ============================================
+
+/**
+ * Validates request body with Zod schema
+ */
+function validateRequestBody<T>(schema: z.ZodSchema<T>, req: Request): T {
+  try {
+    return schema.parse(req.body);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const errors = error.issues.map(issue => ({
+        field: issue.path.join('.'),
+        message: issue.message,
+        code: issue.code
+      }));
+      throw new ValidationError('Request body validation failed', errors);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Validates request params with Zod schema
+ */
+function validateRequestParams<T>(schema: z.ZodSchema<T>, req: Request): T {
+  try {
+    return schema.parse(req.params);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const errors = error.issues.map(issue => ({
+        field: issue.path.join('.'),
+        message: issue.message,
+        code: issue.code
+      }));
+      throw new ValidationError('Request params validation failed', errors);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Validates request query with Zod schema
+ */
+function validateRequestQuery<T>(schema: z.ZodSchema<T>, req: Request): T {
+  try {
+    return schema.parse(req.query);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const errors = error.issues.map(issue => ({
+        field: issue.path.join('.'),
+        message: issue.message,
+        code: issue.code
+      }));
+      throw new ValidationError('Request query validation failed', errors);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Custom validation error class
+ */
+class ValidationError extends Error {
+  constructor(public message: string, public errors: Array<{ field: string; message: string; code: string }>) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
+// ============================================
+// ZOD REQUEST SCHEMAS FOR VALIDATION
+// ============================================
+
+const UserIdParamsSchema = z.object({
+  id: z.string().transform(val => parseInt(val, 10)).pipe(z.number().int().positive())
+});
+
+const UserCreateRequestSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+  full_name: z.string().min(1).optional(),
+  phone: z.string().optional(),
+  role: z.enum(['user', 'admin']).default('user')
+});
+
+const UserUpdateRequestSchema = z.object({
+  email: z.string().email().optional(),
+  full_name: z.string().optional(),
+  phone: z.string().optional(),
+  role: z.enum(['user', 'admin']).optional(),
+  is_active: z.boolean().optional(),
+  email_verified: z.boolean().optional()
+}).strict(); // Prevent additional fields
+
+const UserQuerySchema = z.object({
+  page: z.string().transform(val => parseInt(val, 10)).pipe(z.number().int().positive()).optional(),
+  limit: z.string().transform(val => parseInt(val, 10)).pipe(z.number().int().positive().max(100)).optional(),
+  search: z.string().optional(),
+  role: z.enum(['user', 'admin']).optional(),
+  is_active: z.string().transform(val => val === 'true').pipe(z.boolean()).optional(),
+  email_verified: z.string().transform(val => val === 'true').pipe(z.boolean()).optional()
+});
 
 export class UserController {
 
@@ -199,39 +311,45 @@ export class UserController {
    */
   public async getAllUsers(req: Request, res: Response): Promise<void> {
     try {
-      // Check for validation errors
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
+      // 🔥 ZOD RUNTIME VALIDATION - NO MORE MANUAL PARSING!
+      const query = validateRequestQuery(UserQuerySchema, req);
+
+      // Convert to UserQuery type (with defaults)
+      const userQuery: UserQuery = {
+        page: query.page ?? 1,
+        limit: query.limit ?? 20,
+        search: query.search,
+        role: query.role,
+        is_active: query.is_active,
+        email_verified: query.email_verified,
+        sort_by: 'created_at', // Default
+        sort_direction: 'desc' // Default
+      };
+
+      // Call service with validated query
+      const result: UserListApiResponse = await userService.getAllUsers(userQuery);
+
+      // Service response already validated
+      const validatedResponse = result;
+
+      if (!validatedResponse.success) {
+        res.status(500).json(validatedResponse);
+        return;
+      }
+
+      res.status(200).json(validatedResponse);
+
+    } catch (error) {
+      if (error instanceof ValidationError) {
         res.status(400).json({
           success: false,
-          message: 'Validation errors',
-          errors: errors.array()
+          message: error.message,
+          errors: error.errors
         });
         return;
       }
 
-      const query: UserQuery = {
-        page: parseInt(req.query.page as string) ?? 1,
-        limit: parseInt(req.query.limit as string) ?? 20,
-        search: req.query.search as string,
-        role: req.query.role as 'user' | 'admin' | 'support',
-        is_active: req.query.is_active ? req.query.is_active === 'true' : undefined,
-        email_verified: req.query.email_verified ? req.query.email_verified === 'true' : undefined,
-        sort_by: req.query.sort_by as 'email' | 'full_name' | 'role' | 'created_at' | 'updated_at' ?? 'created_at',
-        sort_direction: req.query.sort_direction as 'asc' | 'desc' ?? 'desc'
-      };
-
-      const result = await userService.getAllUsers(query);
-
-      if (!result.success) {
-        res.status(500).json(result);
-        return;
-      }
-
-      res.status(200).json(result);
-
-    } catch (error) {
-            res.status(500).json({
+      res.status(500).json({
         success: false,
         message: 'Internal server error',
         error: 'INTERNAL_ERROR'
@@ -278,26 +396,11 @@ export class UserController {
    */
   public async getUserById(req: Request, res: Response): Promise<void> {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        res.status(400).json({
-          success: false,
-          message: 'Validation errors',
-          errors: errors.array()
-        });
-        return;
-      }
+      // 🔥 ZOD RUNTIME VALIDATION - AUTOMATIC ID PARSING & VALIDATION!
+      const params = validateRequestParams(UserIdParamsSchema, req);
 
-      const id = parseInt(req.params.id ?? '0');
-      if (isNaN(id) || id <= 0) {
-        res.status(400).json({
-          success: false,
-          message: 'Invalid user ID',
-          error: 'INVALID_ID'
-        });
-        return;
-      }
-      const result = await userService.getUserById(id);
+      // Call service with validated ID
+      const result: UserApiResponse = await userService.getUserById(params.id);
 
       if (!result.success) {
         const statusCode = result.error === 'USER_NOT_FOUND' ? 404 : 500;
@@ -354,18 +457,16 @@ export class UserController {
    */
   public async createUser(req: Request, res: Response): Promise<void> {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        res.status(400).json({
-          success: false,
-          message: 'Validation errors',
-          errors: errors.array()
-        });
-        return;
-      }
+      // 🔥 ZOD RUNTIME VALIDATION - CREATE USER!
+      const validatedData = validateRequestBody(UserCreateRequestSchema, req);
 
-      const userData: UserCreateRequest = req.body;
-      const result = await userService.createUser(userData);
+      // Convert to expected type
+      const userData: UserCreateRequest = {
+        ...validatedData,
+        full_name: validatedData.full_name || '' // Ensure required field
+      };
+
+      const result: UserApiResponse = await userService.createUser(userData);
 
       if (!result.success) {
         let statusCode = 500;
@@ -434,27 +535,17 @@ export class UserController {
    */
   public async updateUser(req: Request, res: Response): Promise<void> {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        res.status(400).json({
-          success: false,
-          message: 'Validation errors',
-          errors: errors.array()
-        });
-        return;
-      }
+      // 🔥 ZOD VALIDATION - PARAMS + BODY!
+      const params = validateRequestParams(UserIdParamsSchema, req);
+      const validatedData = validateRequestBody(UserUpdateRequestSchema, req);
 
-      const id = parseInt(req.params.id ?? '0');
-      if (isNaN(id) || id <= 0) {
-        res.status(400).json({
-          success: false,
-          message: 'Invalid user ID',
-          error: 'INVALID_ID'
-        });
-        return;
-      }
-      const userData: UserUpdateRequest = { ...req.body, id };
-      const result = await userService.updateUser(id, userData);
+      // Convert to expected type with ID
+      const userData: UserUpdateRequest = {
+        ...validatedData,
+        id: params.id
+      };
+
+      const result: UserApiResponse = await userService.updateUser(params.id, userData);
 
       if (!result.success) {
         let statusCode = 500;
@@ -516,26 +607,9 @@ export class UserController {
    */
   public async toggleUserActive(req: Request, res: Response): Promise<void> {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        res.status(400).json({
-          success: false,
-          message: 'Validation errors',
-          errors: errors.array()
-        });
-        return;
-      }
-
-      const id = parseInt(req.params.id ?? '0');
-      if (isNaN(id) || id <= 0) {
-        res.status(400).json({
-          success: false,
-          message: 'Invalid user ID',
-          error: 'INVALID_ID'
-        });
-        return;
-      }
-      const result = await userService.toggleUserActive(id);
+      // 🔥 ZOD VALIDATION - TOGGLE USER ACTIVE!
+      const params = validateRequestParams(UserIdParamsSchema, req);
+      const result: UserApiResponse = await userService.toggleUserActive(params.id);
 
       if (!result.success) {
         const statusCode = result.error === 'USER_NOT_FOUND' ? 404 : 500;
@@ -606,28 +680,11 @@ export class UserController {
    */
   public async deleteUser(req: Request, res: Response): Promise<void> {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        res.status(400).json({
-          success: false,
-          message: 'Validation errors',
-          errors: errors.array()
-        });
-        return;
-      }
-
-      const id = parseInt(req.params.id ?? '0');
-      if (isNaN(id) || id <= 0) {
-        res.status(400).json({
-          success: false,
-          message: 'Invalid user ID',
-          error: 'INVALID_ID'
-        });
-        return;
-      }
+      // 🔥 ZOD VALIDATION - DELETE USER!
+      const params = validateRequestParams(UserIdParamsSchema, req);
 
       // Get user data first to check references
-      const userData = await userService.getUserById(id);
+      const userData = await userService.getUserById(params.id);
       if (!userData.success) {
         res.status(404).json({
           success: false,
@@ -638,11 +695,11 @@ export class UserController {
       }
 
       // Check for references in related tables
-      const hasReferences = await this.checkUserReferences(id);
+      const hasReferences = await this.checkUserReferences(params.id);
 
       if (hasReferences) {
         // Logical deletion - just deactivate
-        const updateResult = await userService.updateUser(id, { id, is_active: false });
+        const updateResult = await userService.updateUser(params.id, { id: params.id, is_active: false });
 
         if (!updateResult.success) {
           res.status(500).json({
@@ -664,7 +721,7 @@ export class UserController {
         });
       } else {
         // Physical deletion - no references, safe to delete
-        const result = await userService.deleteUser(id);
+        const result = await userService.deleteUser(params.id);
 
         if (!result.success) {
           let statusCode = 500;
@@ -732,135 +789,8 @@ export class UserController {
   }
 }
 
-// Validation middleware using express-validator
-export const userValidators = {
-  // Validation for getting all users
-  getAllUsers: [
-    query('page')
-      .optional()
-      .isInt({ min: 1 })
-      .withMessage('Page must be a positive integer'),
-    query('limit')
-      .optional()
-      .isInt({ min: 1, max: 100 })
-      .withMessage('Limit must be between 1 and 100'),
-    query('search')
-      .optional()
-      .isLength({ max: 100 })
-      .withMessage('Search term too long'),
-    query('role')
-      .optional()
-      .isIn(['user', 'admin', 'support'])
-      .withMessage('Invalid role'),
-    query('is_active')
-      .optional()
-      .isBoolean()
-      .withMessage('is_active must be boolean'),
-    query('email_verified')
-      .optional()
-      .isBoolean()
-      .withMessage('email_verified must be boolean'),
-    query('sort_by')
-      .optional()
-      .isIn(['email', 'full_name', 'role', 'created_at', 'updated_at'])
-      .withMessage('Invalid sort field'),
-    query('sort_direction')
-      .optional()
-      .isIn(['asc', 'desc'])
-      .withMessage('Invalid sort direction')
-  ],
+// 🔥 LEGACY EXPRESS-VALIDATOR REMOVED - NOW USING ZOD POWER!
+// All validation now handled by Zod schemas with runtime validation
 
-  // Validation for getting user by ID
-  getUserById: [
-    param('id')
-      .isInt({ min: 1 })
-      .withMessage('User ID must be a positive integer')
-  ],
-
-  // Validation for creating user
-  createUser: [
-    body('email')
-      .isEmail()
-      .normalizeEmail()
-      .withMessage('Valid email is required'),
-    body('password')
-      .isLength({ min: 8 })
-      .withMessage('Password must be at least 8 characters')
-      .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-      .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
-    body('full_name')
-      .trim()
-      .isLength({ min: 2, max: 100 })
-      .withMessage('Full name must be between 2 and 100 characters'),
-    body('phone')
-      .optional()
-      .matches(/^\+?\d{10,15}$/)
-      .withMessage('Phone must be 10-15 digits with optional + prefix'),
-    body('role')
-      .isIn(['user', 'admin', 'support'])
-      .withMessage('Role must be user, admin, or support'),
-    body('is_active')
-      .optional()
-      .isBoolean()
-      .withMessage('is_active must be boolean'),
-    body('email_verified')
-      .optional()
-      .isBoolean()
-      .withMessage('email_verified must be boolean')
-  ],
-
-  // Validation for updating user
-  updateUser: [
-    param('id')
-      .isInt({ min: 1 })
-      .withMessage('User ID must be a positive integer'),
-    body('email')
-      .optional()
-      .isEmail()
-      .normalizeEmail()
-      .withMessage('Valid email is required'),
-    body('password')
-      .optional()
-      .isLength({ min: 8 })
-      .withMessage('Password must be at least 8 characters')
-      .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-      .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
-    body('full_name')
-      .optional()
-      .trim()
-      .isLength({ min: 2, max: 100 })
-      .withMessage('Full name must be between 2 and 100 characters'),
-    body('phone')
-      .optional()
-      .matches(/^\+?\d{10,15}$/)
-      .withMessage('Phone must be 10-15 digits with optional + prefix'),
-    body('role')
-      .optional()
-      .isIn(['user', 'admin', 'support'])
-      .withMessage('Role must be user, admin, or support'),
-    body('is_active')
-      .optional()
-      .isBoolean()
-      .withMessage('is_active must be boolean'),
-    body('email_verified')
-      .optional()
-      .isBoolean()
-      .withMessage('email_verified must be boolean')
-  ],
-
-  // Validation for toggling user active status
-  toggleUserActive: [
-    param('id')
-      .isInt({ min: 1 })
-      .withMessage('User ID must be a positive integer')
-  ],
-
-  // Validation for deleting user
-  deleteUser: [
-    param('id')
-      .isInt({ min: 1 })
-      .withMessage('User ID must be a positive integer')
-  ]
-};
-
+// Export controller instance
 export const userController = new UserController();
